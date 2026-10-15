@@ -8,7 +8,7 @@ Social Media Compliance web portal for ZenaTech. Built with **React 19**, **Type
 
 ```mermaid
 flowchart TD
-    subgraph BrowserClient [Browser / Client Environment :6000]
+    subgraph BrowserClient [Browser / Client Environment :5179]
         AppRoot[React 19 App Root]
         AuthRouter[React Router v7 Protected Routes]
         AppShellLayout[AppShell Layout: Sidebar, TopBar, Breadcrumbs]
@@ -36,7 +36,7 @@ flowchart TD
         ToastNotifications[Sonner Toasts]
     end
 
-    subgraph BackendAPI [FastAPI Backend Service :8900]
+    subgraph BackendAPI [FastAPI Backend Service :8009]
         RestAPI[/api/auth, /api/configuration, /api/logs]
         SSEStream[/api/notifications/stream]
     end
@@ -58,7 +58,7 @@ flowchart TD
 
 | Category | Technology | Description |
 | :--- | :--- | :--- |
-| **Framework & Build** | [React 19](https://react.dev/), [Vite 8](https://vitejs.dev/) | Lightning fast ES module builds, pinned port `6000` |
+| **Framework & Build** | [React 19](https://react.dev/), [Vite 8](https://vitejs.dev/) | Lightning fast ES module builds, pinned port `5179` |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) | Strict typings for models, API responses, and prop contracts |
 | **Styling & Theme** | [Tailwind CSS v4](https://tailwindcss.com/), `@shadcn/react`, `next-themes` | Modern utility CSS with custom CSS variables and dark mode support |
 | **Data Fetching & Cache**| [TanStack React Query v5](https://tanstack.com/query) | Stale-time caching, automatic retries, and optimistic mutations |
@@ -108,7 +108,7 @@ internal_portal_social_media_compliance_dashboard_front/
 │   ├── App.tsx             # Application router
 │   └── main.tsx            # Entry point
 ├── package.json
-└── vite.config.ts          # Vite configuration pinned to port 6000
+└── vite.config.ts          # Vite configuration pinned to port 5179
 ```
 
 ---
@@ -122,15 +122,15 @@ npm install
 
 ### 2. Environment Variables (.env)
 ```env
-# Backend API Base URL (FastAPI running on port 8900)
-VITE_API_BASE_URL=http://localhost:8900
+# Backend API Base URL (FastAPI running on port 8009)
+VITE_API_BASE_URL=http://localhost:8009
 ```
 
 ### 3. Run Development Server
 ```bash
 npm run dev
 ```
-Open application at `http://localhost:6000`.
+Open application at `http://localhost:5179`.
 
 ### 4. Build for Production
 ```bash
