@@ -1,47 +1,179 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   addMonths,
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
   format,
+  isBefore,
   isSameDay,
   isSameMonth,
   isToday,
   startOfMonth,
   startOfWeek,
   subMonths,
-} from 'date-fns';
-import { ChevronLeft, ChevronRight, CalendarDays, CalendarClock, Loader2 } from 'lucide-react';
+} from "date-fns";
+import {
+  AlertTriangle,
+  CalendarCheck2,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Crown,
+  FlaskConical,
+  RotateCcw,
+  Send,
+} from "lucide-react";
 
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from '@/components/video/PlatformIcon';
-import { SubmissionStatusBadge } from '@/components/submissions/submissionUi';
-import { submissionService } from '@/services/submissionService';
-import type { SubmissionSummary } from '@/types/submission';
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import DemoPoster from "@/components/video/DemoPoster";
+import { ChannelAvatar, CoverThumb } from "@/components/submissions/PostPreview";
+import { MODE_LABELS, clearPublished, fromSubmission, publishInfo, publishKey, sampleItems, usePublished } from "@/lib/contentCalendar";
+import { useAuth } from "@/lib/AuthContext";
+import { submissionService } from "@/services/submissionService";
+import type { CalendarItem, PublishRecord } from "@/types/calendar";
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const platformName = (p: string) => PLATFORM_LABELS[p as SocialPlatform] ?? p;
 
-const STATUS_DOT: Record<string, string> = {
-  DRAFT: 'bg-zinc-400',
-  IN_REVIEW: 'bg-blue-500',
-  CHANGES_REQUESTED: 'bg-amber-500',
-  APPROVED: 'bg-emerald-500',
-  REJECTED: 'bg-red-500',
+type ItemState = "READY" | "PARTIAL" | "DONE";
+
+function stateOf(item: CalendarItem, published: Record<string, PublishRecord>): ItemState {
+  const done = item.platforms.filter((p) => published[publishKey(item.id, p)]).length;
+  return done === 0 ? "READY" : done === item.platforms.length ? "DONE" : "PARTIAL";
+}
+
+const STATE_STYLE: Record<ItemState, { chip: string; label: string; dot: string }> = {
+  READY: { chip: "border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100", label: "Ready to publish", dot: "bg-emerald-500" },
+  PARTIAL: { chip: "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-100", label: "Partly published", dot: "bg-amber-500" },
+  DONE: { chip: "border-blue-500/40 bg-blue-500/10 text-blue-900 dark:text-blue-100", label: "Drafts created", dot: "bg-blue-500" },
 };
+
+function Thumb({ item, className = "" }: { item: CalendarItem; className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-md bg-muted ${className}`}>
+      {item.media ? (
+        <CoverThumb cover={item.media} contentType={item.contentType} caption={item.caption} showPlay={false} />
+      ) : (
+        <DemoPoster variant={item.poster ?? "dusk"} className="w-full h-full" />
+      )}
+    </div>
+  );
+}
+
+function AgendaItem({
+  item,
+  published,
+  overdue,
+  highlighted,
+}: {
+  item: CalendarItem;
+  published: Record<string, PublishRecord>;
+  overdue: boolean;
+  highlighted: boolean;
+}) {
+  const navigate = useNavigate();
+  const state = stateOf(item, published);
+  return (
+    <div
+      className={`rounded-xl border p-3 space-y-2.5 transition-colors ${
+        highlighted ? "border-primary/60 ring-2 ring-primary/15" : overdue ? "border-red-500/40" : "border-border/80"
+      }`}
+    >
+      <div className="flex gap-3">
+        <Thumb item={item} className="w-20 aspect-video shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">{item.title}</p>
+          <p className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-1.5">
+            <span className="font-mono">{item.referenceCode}</span>
+            <span>· {format(new Date(item.publishAt), "h:mm a")}</span>
+            {item.score != null && <span>· Check {item.score}/100</span>}
+          </p>
+          <p className="mt-1 flex items-center gap-1.5 text-[11px] min-w-0">
+            <ChannelAvatar account={item.account} size="sm" />
+            <span className="truncate font-medium">{item.account?.account_name ?? "No channel"}</span>
+            {item.account?.is_ceo && <Crown className="w-3 h-3 text-amber-600 shrink-0" />}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+        <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-px font-semibold ${STATE_STYLE[state].chip}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${STATE_STYLE[state].dot}`} /> {STATE_STYLE[state].label}
+        </span>
+        {overdue && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-1.5 py-px font-semibold text-red-700 dark:text-red-300">
+            <AlertTriangle className="w-3 h-3" /> Past its publish time
+          </span>
+        )}
+        {item.approvedBy && <span className="text-muted-foreground">Approved · {item.approvedBy}</span>}
+        {item.source === "sample" && <span className="rounded bg-muted px-1.5 py-px text-muted-foreground">Sample</span>}
+      </div>
+
+      <div className="divide-y divide-border/60 rounded-lg border border-border/60">
+        {item.platforms.map((p) => {
+          const record = published[publishKey(item.id, p)];
+          const info = publishInfo(p);
+          return (
+            <div key={p} className="flex items-center gap-2 px-2.5 py-1.5">
+              <PlatformIcon platform={p as SocialPlatform} className="w-4 h-4 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-foreground">{platformName(p)}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {record
+                    ? `${MODE_LABELS[record.mode]} created ${format(new Date(record.at), "MMM d, h:mm a")}`
+                    : `Creates: ${MODE_LABELS[info.mode].toLowerCase()}`}
+                </p>
+              </div>
+              {record ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-[11px] gap-1 text-blue-700 dark:text-blue-300"
+                  onClick={() => navigate(`/content-calendar/publish/${item.id}/${p}`)}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> View
+                </Button>
+              ) : (
+                <Button size="sm" className="h-7 px-2.5 text-[11px] gap-1" onClick={() => navigate(`/content-calendar/publish/${item.id}/${p}`)}>
+                  <Send className="w-3.5 h-3.5" /> Publish
+                </Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function ContentCalendarPage() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [platform, setPlatform] = useState("all");
+  const published = usePublished();
 
-  const { data: submissions = [], isLoading } = useQuery({
-    queryKey: ['submissions', ''],
-    queryFn: () => submissionService.list(),
+  // Approved content is company-wide for people who can see everyone's content; otherwise their own.
+  const { hasPermission } = useAuth();
+  const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
+  const { data: submissions = [] } = useQuery({
+    queryKey: ["submissions", scope],
+    queryFn: () => submissionService.list(undefined, scope),
+    staleTime: 0,
   });
+
+  const items = useMemo(() => {
+    const real = submissions.map(fromSubmission).filter((i): i is CalendarItem => Boolean(i));
+    return [...real, ...sampleItems()].sort((a, b) => a.publishAt.localeCompare(b.publishAt));
+  }, [submissions]);
+  const visible = useMemo(() => (platform === "all" ? items : items.filter((i) => i.platforms.includes(platform))), [items, platform]);
 
   const days = useMemo(
     () =>
@@ -49,149 +181,242 @@ export default function ContentCalendarPage() {
         start: startOfWeek(startOfMonth(month), { weekStartsOn: 1 }),
         end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }),
       }),
-    [month],
+    [month]
   );
-
-  // Content is placed on its planned publish date; submissions without one aren't scheduled yet.
   const byDay = useMemo(() => {
-    const map = new Map<string, SubmissionSummary[]>();
-    for (const s of submissions) {
-      if (!s.publish_at) continue;
-      const key = format(new Date(s.publish_at), 'yyyy-MM-dd');
-      map.set(key, [...(map.get(key) ?? []), s]);
+    const map = new Map<string, CalendarItem[]>();
+    for (const item of visible) {
+      const key = format(new Date(item.publishAt), "yyyy-MM-dd");
+      map.set(key, [...(map.get(key) ?? []), item]);
     }
     return map;
-  }, [submissions]);
+  }, [visible]);
 
-  const selected = byDay.get(format(selectedDay, 'yyyy-MM-dd')) ?? [];
-  const unscheduledCount = submissions.filter((s) => !s.publish_at).length;
+  const now = new Date();
+  const isOverdue = (item: CalendarItem) => isBefore(new Date(item.publishAt), now) && stateOf(item, published) !== "DONE";
+  const inMonth = visible.filter((i) => isSameMonth(new Date(i.publishAt), month));
+  const stats = {
+    approved: inMonth.length,
+    ready: inMonth.filter((i) => stateOf(i, published) !== "DONE").length,
+    drafted: inMonth.reduce((n, i) => n + i.platforms.filter((p) => published[publishKey(i.id, p)]).length, 0),
+    overdue: visible.filter(isOverdue).length,
+  };
+  const platforms = useMemo(() => [...new Set(items.flatMap((i) => i.platforms))], [items]);
 
-  const goToToday = () => {
-    const today = new Date();
-    setMonth(startOfMonth(today));
-    setSelectedDay(today);
+  const selected = byDay.get(format(selectedDay, "yyyy-MM-dd")) ?? [];
+  const upcoming = visible.filter((i) => !isBefore(new Date(i.publishAt), now) && stateOf(i, published) !== "DONE").slice(0, 3);
+  const hasSamples = items.some((i) => i.source === "sample");
+
+  const agendaRef = useRef<HTMLDivElement | null>(null);
+  const selectDay = (day: Date, itemId: string | null = null) => {
+    setSelectedDay(day);
+    setHighlightId(itemId);
+    if (!isSameMonth(day, month)) setMonth(startOfMonth(day));
+    // Below the `wide` breakpoint the agenda sits under the calendar; bring a clicked post into view.
+    if (itemId && !window.matchMedia("(min-width: 1400px)").matches) {
+      requestAnimationFrame(() => agendaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 pb-12 animate-in fade-in slide-in-from-bottom-3 duration-500">
+    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-12 animate-in fade-in duration-300">
       <DashboardHeader
         title="Content Calendar"
-        subtitle={
-          unscheduledCount > 0
-            ? `Submissions by planned publish date. ${unscheduledCount} without a date aren't shown.`
-            : 'Submissions by planned publish date.'
-        }
+        subtitle="Approved content by publish date. Publish creates a draft on each platform, so the post gets a final look before it goes live."
         actions={
-          <>
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="outline" size="icon" className="size-8" onClick={() => setMonth((m) => subMonths(m, 1))} title="Previous month">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="size-8" onClick={() => setMonth((m) => addMonths(m, 1))} title="Next month">
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </>
+          <div className="flex flex-wrap items-center gap-2">
+            {hasSamples && (
+              <span className="inline-flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                <FlaskConical className="w-3.5 h-3.5" /> Sample data · publishing is simulated
+              </span>
+            )}
+            {Object.keys(published).length > 0 && (
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={clearPublished} title="Clear simulated publishes">
+                <RotateCcw className="w-3.5 h-3.5" /> Reset demo
+              </Button>
+            )}
+          </div>
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-primary" />
-              {format(month, 'MMMM yyyy')}
-            </CardTitle>
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">
-              {WEEKDAYS.map((d) => (
-                <div key={d} className="py-1">
-                  {d}
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        {[
+          { label: "Approved this month", value: stats.approved, icon: CalendarDays, tone: "" },
+          { label: "Waiting to publish", value: stats.ready, icon: Send, tone: "" },
+          { label: "Drafts created", value: stats.drafted, icon: CalendarCheck2, tone: "" },
+          {
+            label: "Past publish time",
+            value: stats.overdue,
+            icon: AlertTriangle,
+            tone: stats.overdue ? "border-red-500/40 bg-red-500/5 text-red-700 dark:text-red-300" : "",
+          },
+        ].map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label} className={`py-3 px-3 gap-1 border-border/80 shadow-xs ${tone}`}>
+            <p className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {label} <Icon className="w-4 h-4" />
+            </p>
+            <p className="text-2xl font-bold tabular-nums">{value}</p>
+          </Card>
+        ))}
+      </div>
+
+      {/* The agenda only sits beside the calendar on wide screens; on laptops it goes underneath so the month keeps its width. */}
+      <div className="grid grid-cols-1 wide:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
+        <Card className="min-w-0 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 px-3 sm:px-4 py-3">
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setMonth((m) => subMonths(m, 1))} aria-label="Previous month">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <h2 className="min-w-[130px] text-center text-sm font-semibold">{format(month, "MMMM yyyy")}</h2>
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setMonth((m) => addMonths(m, 1))} aria-label="Next month">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs ml-1" onClick={() => selectDay(new Date())}>
+                Today
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {["all", ...platforms].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-pressed={platform === p}
+                  title={p === "all" ? "All platforms" : platformName(p)}
+                  onClick={() => setPlatform(p)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors ${
+                    platform === p ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {p === "all" ? "All" : <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
+                </button>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-border bg-border">
-              {days.map((day) => {
-                const dayItems = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
-                const isSelected = isSameDay(day, selectedDay);
-                return (
-                  <button
-                    key={day.toISOString()}
-                    type="button"
-                    onClick={() => setSelectedDay(day)}
-                    className={`flex flex-col items-stretch gap-1 min-h-16 sm:min-h-24 p-1.5 text-left transition-colors bg-card hover:bg-accent/60
-                      ${isSameMonth(day, month) ? '' : 'text-muted-foreground/50'}
-                      ${isSelected ? 'ring-2 ring-inset ring-primary' : ''}`}
-                  >
-                    <span
-                      className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full
-                        ${isToday(day) ? 'bg-primary text-primary-foreground' : ''}`}
-                    >
-                      {format(day, 'd')}
-                    </span>
-                    <div className="hidden sm:flex flex-col gap-0.5">
-                      {dayItems.slice(0, 2).map((s) => (
-                        <span key={s.id} className="flex items-center gap-1 truncate rounded bg-muted px-1 py-0.5 text-[10px] font-medium">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[s.status] ?? 'bg-zinc-400'}`} />
-                          <span className="truncate">{s.title}</span>
-                        </span>
-                      ))}
-                      {dayItems.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground">+{dayItems.length - 2} more</span>
-                      )}
-                    </div>
-                    {dayItems.length > 0 && <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-primary mx-auto" />}
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{format(selectedDay, 'EEEE, MMM d')}</CardTitle>
-            <CardDescription>
-              {selected.length} item{selected.length === 1 ? '' : 's'} planned
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {selected.length === 0 ? (
-              <div className="flex flex-col items-center text-center py-8 text-muted-foreground">
-                <CalendarClock className="w-7 h-7 mb-2 opacity-60" />
-                <p className="text-xs">Nothing planned for this day.</p>
-                <Link to="/submissions/new" className="mt-3 text-xs font-medium text-primary hover:underline">
-                  Create a new submission
-                </Link>
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] border-b border-border/60 bg-muted/30 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {WEEKDAYS.map((d) => (
+              <div key={d} className="py-1.5">
+                {d}
               </div>
-            ) : (
-              selected.map((s) => (
-                <Link
-                  key={s.id}
-                  to={`/submissions/${s.id}`}
-                  className="block rounded-lg border border-border p-3 space-y-1.5 hover:bg-muted/40 transition-colors"
+            ))}
+          </div>
+          {/* minmax(0,1fr) keeps all seven days the same width however long the post titles are. */}
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))]">
+            {days.map((day) => {
+              const key = format(day, "yyyy-MM-dd");
+              const dayItems = byDay.get(key) ?? [];
+              const isSelected = isSameDay(day, selectedDay);
+              return (
+                <div
+                  key={key}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${format(day, "EEEE, MMMM d")}: ${dayItems.length} post${dayItems.length === 1 ? "" : "s"}`}
+                  onClick={() => selectDay(day)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      selectDay(day);
+                    }
+                  }}
+                  className={`min-w-0 min-h-[64px] sm:min-h-[112px] border-b border-r border-border/50 p-1 sm:p-1.5 text-left cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
+                    isSelected ? "bg-primary/5" : "hover:bg-muted/40"
+                  } ${isSameMonth(day, month) ? "" : "bg-muted/20 text-muted-foreground/60"}`}
                 >
-                  <p className="text-sm font-medium truncate" title={s.title}>
-                    {s.title}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <SubmissionStatusBadge status={s.status} />
-                    {s.platforms.map((p) => (
-                      <span key={p} title={PLATFORM_LABELS[p as SocialPlatform] ?? p}>
-                        <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />
-                      </span>
+                  <span
+                    className={`inline-grid place-items-center w-6 h-6 rounded-full text-[11px] font-semibold ${
+                      isToday(day) ? "bg-primary text-primary-foreground" : isSelected ? "ring-1 ring-primary text-primary" : ""
+                    }`}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  {/* Phones: dots. Larger screens: one chip per post. */}
+                  <div className="mt-0.5 flex flex-wrap gap-0.5 sm:hidden">
+                    {dayItems.map((i) => (
+                      <span key={i.id} className={`w-1.5 h-1.5 rounded-full ${isOverdue(i) ? "bg-red-500" : STATE_STYLE[stateOf(i, published)].dot}`} />
                     ))}
                   </div>
-                  <p className="text-[11px] text-muted-foreground font-mono">
-                    {s.reference_code} · {format(new Date(s.publish_at!), 'p')}
-                  </p>
-                </Link>
-              ))
+                  <div className="mt-1 hidden sm:flex flex-col gap-1">
+                    {dayItems.slice(0, 3).map((i) => {
+                      const st = stateOf(i, published);
+                      return (
+                        <button
+                          key={i.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            selectDay(day, i.id);
+                          }}
+                          className={`w-full min-w-0 overflow-hidden rounded-md border px-1.5 py-1 text-left text-[10px] leading-tight transition-shadow hover:shadow-sm ${STATE_STYLE[st].chip} ${
+                            isOverdue(i) ? "border-red-500/60" : ""
+                          }`}
+                          title={`${i.title} · ${format(new Date(i.publishAt), "h:mm a")} · ${i.platforms.map(platformName).join(", ")} · ${STATE_STYLE[st].label}`}
+                        >
+                          <span className="flex items-center gap-1 min-w-0">
+                            {i.platforms.slice(0, 2).map((p) => (
+                              <PlatformIcon key={p} platform={p as SocialPlatform} className="w-3 h-3 shrink-0" />
+                            ))}
+                            {i.platforms.length > 2 && <span className="shrink-0 font-semibold opacity-70">+{i.platforms.length - 2}</span>}
+                            <span className="ml-auto hidden tablet:inline shrink-0 tabular-nums opacity-70">
+                              {format(new Date(i.publishAt), "h:mma").toLowerCase()}
+                            </span>
+                          </span>
+                          <span className="block truncate font-semibold">{i.title}</span>
+                        </button>
+                      );
+                    })}
+                    {dayItems.length > 3 && <span className="text-[10px] text-muted-foreground px-1">+{dayItems.length - 3} more</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap gap-3 px-4 py-2.5 text-[11px] text-muted-foreground">
+            {(Object.keys(STATE_STYLE) as ItemState[]).map((s) => (
+              <span key={s} className="inline-flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${STATE_STYLE[s].dot}`} /> {STATE_STYLE[s].label}
+              </span>
+            ))}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500" /> Past its publish time
+            </span>
+          </div>
+        </Card>
+
+        <Card ref={agendaRef} className="min-w-0 scroll-mt-4 py-0 gap-0 border-border/80 shadow-xs wide:sticky wide:top-4">
+          <div className="border-b border-border/70 px-4 py-3">
+            <p className="text-sm font-semibold">{format(selectedDay, "EEEE, MMMM d")}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {selected.length ? `${selected.length} approved post${selected.length === 1 ? "" : "s"}` : "Nothing scheduled"}
+            </p>
+          </div>
+          {/* Under the calendar there's room for two posts side by side; beside it, one column that scrolls. */}
+          <div className="p-3 grid gap-3 tablet:grid-cols-2 wide:grid-cols-1 items-start wide:max-h-[calc(100vh-220px)] wide:overflow-y-auto">
+            {selected.map((item) => (
+              <AgendaItem key={item.id} item={item} published={published} overdue={isOverdue(item)} highlighted={item.id === highlightId} />
+            ))}
+            {selected.length === 0 && upcoming.length > 0 && (
+              <div className="space-y-2 tablet:col-span-2 wide:col-span-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Next up</p>
+                {upcoming.map((i) => (
+                  <button
+                    key={i.id}
+                    type="button"
+                    onClick={() => selectDay(new Date(i.publishAt), i.id)}
+                    className="w-full flex items-center gap-2.5 rounded-lg border border-border/70 p-2 text-left hover:border-primary/40"
+                  >
+                    <Thumb item={i} className="w-14 aspect-video shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold truncate">{i.title}</span>
+                      <span className="block text-[11px] text-muted-foreground">{format(new Date(i.publishAt), "EEE MMM d, h:mm a")}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>

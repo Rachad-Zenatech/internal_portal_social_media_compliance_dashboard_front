@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Bookmark,
   FileText,
@@ -179,6 +179,7 @@ export default function PostPreview({
   title,
   caption,
   media,
+  mediaNode,
   whenLabel,
 }: {
   platform: SocialPlatform | string;
@@ -186,8 +187,12 @@ export default function PostPreview({
   title: string;
   caption?: string | null;
   media?: SubmissionFile | null;
+  /** Shown instead of an uploaded file, e.g. an illustration for sample content. */
+  mediaNode?: ReactNode;
   whenLabel: string;
 }) {
+  const hasMedia = Boolean(media || mediaNode);
+  const mediaEl = media ? null : mediaNode;
   const name = account?.account_name || "No channel selected";
   const handle = account?.handle ? `@${account.handle.replace(/^@/, "")}` : null;
   const text = caption?.trim() || "";
@@ -196,7 +201,7 @@ export default function PostPreview({
   if (VERTICAL.includes(platform)) {
     return (
       <div className="mx-auto w-[260px] aspect-[9/16] rounded-[22px] overflow-hidden bg-black relative shadow-lg ring-1 ring-black/10">
-        {media ? <Media file={media} vertical /> : <div className="w-full h-full bg-gradient-to-b from-neutral-800 to-black" />}
+        {media ? <Media file={media} vertical /> : mediaEl ?? <div className="w-full h-full bg-gradient-to-b from-neutral-800 to-black" />}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 pr-12 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white space-y-1">
           <p className="text-[12px] font-bold">{handle ?? name}</p>
           {text ? <p className="text-[11px] leading-snug line-clamp-3">{text}</p> : <p className="text-[11px] italic opacity-60">No caption yet</p>}
@@ -222,7 +227,7 @@ export default function PostPreview({
     return (
       <div className="rounded-xl overflow-hidden border border-border bg-card">
         <div className="aspect-video bg-black grid place-items-center">
-          {media ? <Media file={media} vertical={false} /> : <Play className="w-8 h-8 text-white/40" />}
+          {media ? <Media file={media} vertical={false} /> : mediaEl ?? <Play className="w-8 h-8 text-white/40" />}
         </div>
         <div className="p-3 flex gap-2.5">
           <ChannelAvatar account={account} />
@@ -266,10 +271,8 @@ export default function PostPreview({
           {text ? <Caption text={text} /> : <p className="italic text-muted-foreground">No caption yet</p>}
         </div>
       )}
-      {media && (
-        <div className="bg-black">
-          <Media file={media} vertical={false} />
-        </div>
+      {hasMedia && (
+        <div className="bg-black">{media ? <Media file={media} vertical={false} /> : <div className="aspect-video">{mediaEl}</div>}</div>
       )}
       {mediaFirst && (
         <div className="px-3 pt-3 text-[13px] leading-relaxed">

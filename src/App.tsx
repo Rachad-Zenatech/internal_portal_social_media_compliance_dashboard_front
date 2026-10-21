@@ -25,6 +25,7 @@ const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsLi
 const SubmissionDetailPage = lazy(() => import("./pages/Submissions/SubmissionDetailPage"));
 const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
+const PublishDraftPage = lazy(() => import("./pages/ContentCalendar/PublishDraftPage"));
 const AuditLog = lazy(() => import("./pages/Log/AuditLog"));
 const SystemLogsPage = lazy(() => import("./pages/Logs/SystemLogsPage"));
 const Login = lazy(() => import("./pages/Login"));
@@ -36,6 +37,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/socials", navigationCode: "DASHBOARD", element: <SocialMediaPage /> },
   { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
   { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
+  { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
   { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
   { path: "/compliance/rules", navigationCode: "DASHBOARD", element: <ComplianceRulesPage /> },
   { path: "/configurations/integrations", navigationCode: "CONFIG_ROLES", element: <OAuthIntegrations /> },
