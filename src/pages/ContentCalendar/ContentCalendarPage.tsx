@@ -14,29 +14,33 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, CalendarDays, Video, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, CalendarClock, Loader2 } from 'lucide-react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { complianceService, type VideoJob } from '@/services/complianceService';
+import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from '@/components/video/PlatformIcon';
+import { SubmissionStatusBadge } from '@/components/submissions/submissionUi';
+import { submissionService } from '@/services/submissionService';
+import type { SubmissionSummary } from '@/types/submission';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const STATUS_STYLES: Record<VideoJob['status'], string> = {
-  COMPLETED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
-  PROCESSING: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300',
-  FAILED: 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300',
+const STATUS_DOT: Record<string, string> = {
+  DRAFT: 'bg-zinc-400',
+  IN_REVIEW: 'bg-blue-500',
+  CHANGES_REQUESTED: 'bg-amber-500',
+  APPROVED: 'bg-emerald-500',
+  REJECTED: 'bg-red-500',
 };
 
 export default function ContentCalendarPage() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
 
-  const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ['compliance', 'videoJobs'],
-    queryFn: () => complianceService.listVideoJobs().catch(() => [] as VideoJob[]),
+  const { data: submissions = [], isLoading } = useQuery({
+    queryKey: ['submissions', ''],
+    queryFn: () => submissionService.list(),
   });
 
   const days = useMemo(
@@ -48,18 +52,19 @@ export default function ContentCalendarPage() {
     [month],
   );
 
-  const jobsByDay = useMemo(() => {
-    const map = new Map<string, VideoJob[]>();
-    for (const job of jobs) {
-      const key = format(new Date(job.created_at), 'yyyy-MM-dd');
-      const list = map.get(key) ?? [];
-      list.push(job);
-      map.set(key, list);
+  // Content is placed on its planned publish date; submissions without one aren't scheduled yet.
+  const byDay = useMemo(() => {
+    const map = new Map<string, SubmissionSummary[]>();
+    for (const s of submissions) {
+      if (!s.publish_at) continue;
+      const key = format(new Date(s.publish_at), 'yyyy-MM-dd');
+      map.set(key, [...(map.get(key) ?? []), s]);
     }
     return map;
-  }, [jobs]);
+  }, [submissions]);
 
-  const selectedJobs = jobsByDay.get(format(selectedDay, 'yyyy-MM-dd')) ?? [];
+  const selected = byDay.get(format(selectedDay, 'yyyy-MM-dd')) ?? [];
+  const unscheduledCount = submissions.filter((s) => !s.publish_at).length;
 
   const goToToday = () => {
     const today = new Date();
@@ -71,7 +76,11 @@ export default function ContentCalendarPage() {
     <div className="w-full max-w-7xl mx-auto space-y-6 pb-12 animate-in fade-in slide-in-from-bottom-3 duration-500">
       <DashboardHeader
         title="Content Calendar"
-        subtitle="See screened social media content by day."
+        subtitle={
+          unscheduledCount > 0
+            ? `Submissions by planned publish date. ${unscheduledCount} without a date aren't shown.`
+            : 'Submissions by planned publish date.'
+        }
         actions={
           <>
             <Button variant="outline" size="sm" onClick={goToToday}>
@@ -106,7 +115,7 @@ export default function ContentCalendarPage() {
             </div>
             <div className="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-border bg-border">
               {days.map((day) => {
-                const dayJobs = jobsByDay.get(format(day, 'yyyy-MM-dd')) ?? [];
+                const dayItems = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
                 const isSelected = isSameDay(day, selectedDay);
                 return (
                   <button
@@ -124,21 +133,17 @@ export default function ContentCalendarPage() {
                       {format(day, 'd')}
                     </span>
                     <div className="hidden sm:flex flex-col gap-0.5">
-                      {dayJobs.slice(0, 2).map((job) => (
-                        <span
-                          key={job.job_id}
-                          className={`truncate rounded px-1 py-0.5 text-[10px] font-medium ${STATUS_STYLES[job.status]}`}
-                        >
-                          {job.video_title || job.filename}
+                      {dayItems.slice(0, 2).map((s) => (
+                        <span key={s.id} className="flex items-center gap-1 truncate rounded bg-muted px-1 py-0.5 text-[10px] font-medium">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[s.status] ?? 'bg-zinc-400'}`} />
+                          <span className="truncate">{s.title}</span>
                         </span>
                       ))}
-                      {dayJobs.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground">+{dayJobs.length - 2} more</span>
+                      {dayItems.length > 2 && (
+                        <span className="text-[10px] text-muted-foreground">+{dayItems.length - 2} more</span>
                       )}
                     </div>
-                    {dayJobs.length > 0 && (
-                      <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-primary mx-auto" />
-                    )}
+                    {dayItems.length > 0 && <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-primary mx-auto" />}
                   </button>
                 );
               })}
@@ -150,34 +155,40 @@ export default function ContentCalendarPage() {
           <CardHeader>
             <CardTitle className="text-base">{format(selectedDay, 'EEEE, MMM d')}</CardTitle>
             <CardDescription>
-              {selectedJobs.length} item{selectedJobs.length === 1 ? '' : 's'} on this day
+              {selected.length} item{selected.length === 1 ? '' : 's'} planned
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {selectedJobs.length === 0 ? (
+            {selected.length === 0 ? (
               <div className="flex flex-col items-center text-center py-8 text-muted-foreground">
-                <Video className="w-7 h-7 mb-2 opacity-60" />
-                <p className="text-xs">Nothing screened on this day.</p>
-                <Link to="/new-submission" className="mt-3 text-xs font-medium text-primary hover:underline">
+                <CalendarClock className="w-7 h-7 mb-2 opacity-60" />
+                <p className="text-xs">Nothing planned for this day.</p>
+                <Link to="/submissions/new" className="mt-3 text-xs font-medium text-primary hover:underline">
                   Create a new submission
                 </Link>
               </div>
             ) : (
-              selectedJobs.map((job) => (
-                <div key={job.job_id} className="rounded-lg border border-border p-3 space-y-1.5">
-                  <p className="text-sm font-medium truncate" title={job.video_title || job.filename}>
-                    {job.video_title || job.filename}
+              selected.map((s) => (
+                <Link
+                  key={s.id}
+                  to={`/submissions/${s.id}`}
+                  className="block rounded-lg border border-border p-3 space-y-1.5 hover:bg-muted/40 transition-colors"
+                >
+                  <p className="text-sm font-medium truncate" title={s.title}>
+                    {s.title}
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline" className="text-[10px]">
-                      {job.platform}
-                    </Badge>
-                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${STATUS_STYLES[job.status]}`}>
-                      {job.status}
-                    </span>
+                    <SubmissionStatusBadge status={s.status} />
+                    {s.platforms.map((p) => (
+                      <span key={p} title={PLATFORM_LABELS[p as SocialPlatform] ?? p}>
+                        <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />
+                      </span>
+                    ))}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">{format(new Date(job.created_at), 'p')}</p>
-                </div>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {s.reference_code} · {format(new Date(s.publish_at!), 'p')}
+                  </p>
+                </Link>
               ))
             )}
           </CardContent>
