@@ -83,7 +83,7 @@
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
+    --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -238,5 +238,13 @@
 
   .animate-pop-in {
     animation: pop-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Page canvas behind the content: a neutral light grey, so white cards and the top bar stand out from it. */
+  .app-canvas {
+    background-color: oklch(0.975 0 0);
+  }
+  .dark .app-canvas {
+    background-color: var(--background);
   }
 }

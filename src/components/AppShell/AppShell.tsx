@@ -45,7 +45,7 @@ export default function AppShell({ children }: Props) {
         <TopBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <main
           ref={mainRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden p-2.5 sm:p-3.5 md:p-4 bg-background"
+          className="app-canvas flex-1 overflow-y-auto overflow-x-hidden p-2.5 sm:p-3.5 md:p-4"
         >
           <Breadcrumbs />
           <div className="w-full min-w-0 pb-8">
