@@ -553,14 +553,32 @@ export default function VideoComplianceScannerPage() {
       return;
     }
 
+    let lastVideoTime = videoRef.current ? videoRef.current.currentTime : 0;
+    let lastClockTime = performance.now();
+
     const onFrame = (now: number) => {
       if (videoRef.current && videoUrl) {
-        // Query exact video currentTime directly on every animation frame (60fps)
-        const exactTime = videoRef.current.currentTime;
-        setCurrentTime(exactTime);
+        if (videoRef.current.paused) {
+          setCurrentTime(videoRef.current.currentTime);
+          setIsPlaying(false);
+          return;
+        }
+
+        const currentVideoTime = videoRef.current.currentTime;
+        // If the HTML5 video clock updated, re-anchor our clock reference
+        if (currentVideoTime !== lastVideoTime) {
+          lastVideoTime = currentVideoTime;
+          lastClockTime = now;
+        }
+
+        // Interpolate smooth time between video clock updates (60fps)
+        const currentRate = videoRef.current.playbackRate || playbackRate;
+        const elapsedSinceAnchor = ((now - lastClockTime) / 1000) * currentRate;
+        const smoothTime = Math.min(duration, lastVideoTime + elapsedSinceAnchor);
+        setCurrentTime(smoothTime);
 
         // Guard against playing past unbuffered chunk in progressive mode
-        if (effectiveUploadPercent < 100 && exactTime >= maxBufferedSec) {
+        if (effectiveUploadPercent < 100 && smoothTime >= maxBufferedSec) {
           videoRef.current.pause();
           setIsPlaying(false);
           toast.warning(
@@ -569,7 +587,7 @@ export default function VideoComplianceScannerPage() {
           return;
         }
 
-        if (videoRef.current.ended) {
+        if (videoRef.current.ended || smoothTime >= duration) {
           setIsPlaying(false);
           return;
         }
@@ -1984,21 +2002,28 @@ export default function VideoComplianceScannerPage() {
                 {/* Scrubber Track with Buffered Chunk Range Visualizer */}
                 <div className="relative flex-1 h-8 flex items-center select-none group">
                   {/* Visual Segments Track */}
-                  <div className="absolute inset-x-0 h-3 rounded-full bg-muted/70 overflow-hidden flex shadow-inner">
+                  <div className="absolute inset-x-0 h-3 rounded-full bg-muted/70 overflow-hidden shadow-inner">
                     {segments.map((seg) => {
                       const isWithinBuffered = seg.startSec <= maxBufferedSec;
+                      const leftPercent = (seg.startSec / duration) * 100;
                       const widthPercent = ((seg.endSec - seg.startSec) / duration) * 100;
                       return (
                         <div
                           key={seg.id}
                           onClick={() => seekTo(seg.startSec)}
-                          style={{ width: `${widthPercent}%` }}
+                          style={{
+                            position: "absolute",
+                            left: `${leftPercent}%`,
+                            width: `${widthPercent}%`,
+                            top: 0,
+                            bottom: 0,
+                          }}
                           title={
                             isWithinBuffered
                               ? `${formatTime(seg.startSec)} - ${formatTime(seg.endSec)}: ${seg.text}`
                               : `[Chunk Uploading...] Available once buffered.`
                           }
-                          className={`h-full cursor-pointer transition-opacity border-r border-background/20 ${
+                          className={`cursor-pointer transition-opacity border-r border-background/20 ${
                             isWithinBuffered
                               ? seg.risk === "RED"
                                 ? "bg-red-600 hover:opacity-85"
@@ -2043,10 +2068,11 @@ export default function VideoComplianceScannerPage() {
                   <div
                     style={{
                       left: `${(Math.min(currentTime, duration) / duration) * 100}%`,
-                      transition: isDragging ? "none" : "left 60ms linear",
                       willChange: "left",
                     }}
-                    className="absolute top-0 bottom-0 pointer-events-none transform -translate-x-1/2 flex items-center justify-center z-10"
+                    className={`absolute top-0 bottom-0 pointer-events-none transform -translate-x-1/2 flex items-center justify-center z-10 ${
+                      isDragging ? "scale-110" : ""
+                    }`}
                   >
                     <div className="w-2.5 h-6 bg-zinc-950 dark:bg-zinc-100 rounded-full shadow-lg ring-2 ring-primary flex items-center justify-center">
                       <div className="w-0.5 h-3 bg-zinc-500 dark:bg-zinc-400 rounded-full" />

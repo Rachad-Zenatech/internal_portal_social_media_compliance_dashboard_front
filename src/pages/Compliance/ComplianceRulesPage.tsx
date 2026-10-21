@@ -788,7 +788,7 @@ export default function ComplianceRulesPage() {
           }
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto p-6">
           <form onSubmit={handleSubmitForm} className="space-y-4">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold">
@@ -1041,7 +1041,7 @@ export default function ComplianceRulesPage() {
 
       {/* QUICK GUIDE MODAL */}
       <Dialog open={isQuickGuideOpen} onOpenChange={setIsQuickGuideOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-full sm:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-y-auto p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />
