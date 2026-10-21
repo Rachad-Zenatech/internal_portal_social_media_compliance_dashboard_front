@@ -226,6 +226,8 @@ export default function VideoComplianceScannerPage() {
   const [commentTimeMode, setCommentTimeMode] = useState<"POINT" | "RANGE" | "NONE">("POINT");
   const [rangeStartSec, setRangeStartSec] = useState<number>(0);
   const [rangeEndSec, setRangeEndSec] = useState<number>(10);
+  const [rangeStartInput, setRangeStartInput] = useState<string>("(0:00)");
+  const [rangeEndInput, setRangeEndInput] = useState<string>("(0:10)");
   const [activeCommentId, setActiveCommentId] = useState<string | null>("comm-1");
 
   // Playback state
@@ -820,6 +822,36 @@ export default function VideoComplianceScannerPage() {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  const parseTimeToSeconds = (str: string): number => {
+    if (!str) return 0;
+    const clean = str.trim().replace(/[()]/g, "");
+    if (!clean) return 0;
+    if (clean.includes(":")) {
+      const parts = clean.split(":");
+      if (parts.length === 2) {
+        const mins = parseInt(parts[0], 10) || 0;
+        const secs = parseFloat(parts[1]) || 0;
+        return Math.max(0, mins * 60 + secs);
+      }
+      if (parts.length === 3) {
+        const hrs = parseInt(parts[0], 10) || 0;
+        const mins = parseInt(parts[1], 10) || 0;
+        const secs = parseFloat(parts[2]) || 0;
+        return Math.max(0, hrs * 3600 + mins * 60 + secs);
+      }
+    }
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : Math.max(0, num);
+  };
+
+  useEffect(() => {
+    setRangeStartInput(`(${formatTime(rangeStartSec)})`);
+  }, [rangeStartSec]);
+
+  useEffect(() => {
+    setRangeEndInput(`(${formatTime(rangeEndSec)})`);
+  }, [rangeEndSec]);
 
   // Active segment
   const activeSegment = useMemo(() => {
@@ -2105,7 +2137,13 @@ export default function VideoComplianceScannerPage() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => setRangeStartSec(Math.round(currentTime))}
+                        onClick={() => {
+                          const cur = Math.round(currentTime);
+                          setRangeStartSec(cur);
+                          if (rangeEndSec <= cur) {
+                            setRangeEndSec(Math.min(duration, cur + 3));
+                          }
+                        }}
                         className="h-6 px-1.5 text-[10px] gap-1 font-semibold"
                         title="Set start time to current video playhead"
                       >
@@ -2115,7 +2153,15 @@ export default function VideoComplianceScannerPage() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => setRangeEndSec(Math.round(currentTime))}
+                        onClick={() => {
+                          const cur = Math.round(currentTime);
+                          if (cur <= rangeStartSec) {
+                            setRangeStartSec(Math.max(0, cur - 3));
+                            setRangeEndSec(cur);
+                          } else {
+                            setRangeEndSec(cur);
+                          }
+                        }}
                         className="h-6 px-1.5 text-[10px] gap-1 font-semibold"
                         title="Set end time to current video playhead"
                       >
@@ -2154,27 +2200,60 @@ export default function VideoComplianceScannerPage() {
                 {commentTimeMode === "RANGE" && (
                   <div className="p-2 rounded-lg bg-muted/30 border border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-muted-foreground">From:</span>
+                      <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                        From:
+                      </span>
                       <input
-                        type="number"
-                        min={0}
-                        max={duration}
-                        value={rangeStartSec}
-                        onChange={(e) => setRangeStartSec(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-14 h-6 text-xs px-1.5 rounded border border-border bg-background font-mono text-center font-bold"
+                        type="text"
+                        value={rangeStartInput}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setRangeStartInput(val);
+                          const parsed = parseTimeToSeconds(val);
+                          if (!isNaN(parsed)) {
+                            const clamped = Math.min(duration, Math.max(0, Math.round(parsed)));
+                            setRangeStartSec(clamped);
+                            if (rangeEndSec <= clamped) {
+                              setRangeEndSec(Math.min(duration, clamped + 3));
+                            }
+                          }
+                        }}
+                        onBlur={() => {
+                          setRangeStartInput(`(${formatTime(rangeStartSec)})`);
+                        }}
+                        placeholder="(0:00)"
+                        className="w-18 h-6 text-xs px-1.5 rounded border border-border bg-background font-mono text-center font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                        title="Start time - editable (e.g. (0:06), 0:06, or 6s)"
                       />
-                      <span className="text-muted-foreground font-mono text-[10px]">({formatTime(rangeStartSec)})</span>
 
                       <span className="text-muted-foreground font-bold mx-1">→ To:</span>
                       <input
-                        type="number"
-                        min={0}
-                        max={duration}
-                        value={rangeEndSec}
-                        onChange={(e) => setRangeEndSec(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-14 h-6 text-xs px-1.5 rounded border border-border bg-background font-mono text-center font-bold"
+                        type="text"
+                        value={rangeEndInput}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setRangeEndInput(val);
+                          const parsed = parseTimeToSeconds(val);
+                          if (!isNaN(parsed)) {
+                            const clamped = Math.min(duration, Math.max(0, Math.round(parsed)));
+                            setRangeEndSec(clamped);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (rangeEndSec <= rangeStartSec) {
+                            const adjusted = Math.min(duration, rangeStartSec + 3);
+                            setRangeEndSec(adjusted);
+                            setRangeEndInput(`(${formatTime(adjusted)})`);
+                          } else {
+                            setRangeEndInput(`(${formatTime(rangeEndSec)})`);
+                          }
+                        }}
+                        placeholder="(0:10)"
+                        className="w-18 h-6 text-xs px-1.5 rounded border border-border bg-background font-mono text-center font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                        title="End time - editable (e.g. (0:15), 0:15, or 15s)"
                       />
-                      <span className="text-muted-foreground font-mono text-[10px]">({formatTime(rangeEndSec)})</span>
                     </div>
 
                     <div className="flex items-center gap-2">
