@@ -2,6 +2,9 @@ import {
   LayoutDashboard,
   ShieldCheck,
   FileClock,
+  Share2,
+  Scale,
+  Video,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,6 +32,27 @@ export const navigation: NavigationItem[] = [
     navigationCode: "DASHBOARD",
   },
   {
+    label: "Video Screener",
+    path: "/compliance/scanner",
+    icon: Video,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+  },
+  {
+    label: "Compliance Rulebook",
+    path: "/compliance/rules",
+    icon: Scale,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+  },
+  {
+    label: "Social Media",
+    path: "/socials",
+    icon: Share2,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+  },
+  {
     label: "System & Security",
     icon: ShieldCheck,
     section: "ADMINISTRATION",
@@ -39,6 +63,7 @@ export const navigation: NavigationItem[] = [
       { label: "Role Permissions", path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES" },
       { label: "API Permissions", path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS" },
       { label: "MCP Tool Permissions", path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS" },
+      { label: "Integrations & OAuth", path: "/configurations/integrations", navigationCode: "CONFIG_ROLES" },
     ],
   },
   {

@@ -1,7 +1,8 @@
 import { ConnectionStatusLight } from "./ConnectionStatusLight";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Bell, Menu, LogOut, User as UserIcon, BellRing, Settings2, Laptop } from "lucide-react";
+import { Bell, Menu, LogOut, User as UserIcon, BellRing, Settings2, Laptop, Upload } from "lucide-react";
+import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -194,6 +195,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
 
   const { data: unreadCountData } = useUnreadNotificationCount();
   const unreadCount = unreadCountData?.count ?? 0;
+  const { queue, activeUploadCount, activeVideo, openQueueDrawer } = useVideoUploadQueue();
 
   const queryClient = useQueryClient();
 
@@ -292,7 +294,27 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
           </Tooltip>
         </TooltipProvider>
 
-        <div className="hidden sm:flex items-center gap-1.5 border-r pr-2 sm:pr-4 md:pr-5 mr-1">
+        <div className="hidden sm:flex items-center gap-2 border-r pr-2 sm:pr-4 md:pr-5 mr-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openQueueDrawer}
+            className="h-8 text-xs font-semibold gap-1.5 px-2.5 border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 text-blue-700 dark:text-blue-300 transition-all shadow-2xs"
+            title="Open Video Upload & Screening Queue"
+          >
+            <Upload className={`w-3.5 h-3.5 text-blue-500 ${activeUploadCount > 0 ? "animate-bounce" : ""}`} />
+            <span className="hidden xl:inline">Upload Queue</span>
+            {activeUploadCount > 0 ? (
+              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">
+                {activeUploadCount} Active ({activeVideo?.progressPercent || 0}%)
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                {queue.length}
+              </Badge>
+            )}
+          </Button>
+
           <DropdownMenu open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground hover:bg-muted rounded-full h-8.5 w-8.5 outline-none focus-visible:ring-0">

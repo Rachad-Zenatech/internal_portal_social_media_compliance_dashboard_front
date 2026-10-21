@@ -14,6 +14,13 @@ const UserRoleAssignment = lazy(() => import("./pages/Configurations/UserRoleAss
 const RoleGroupPermissions = lazy(() => import("./pages/Configurations/RoleGroupPermissions"));
 const RoleApiPermissions = lazy(() => import("./pages/Configurations/RoleApiPermissions"));
 const RoleMcpToolPermissions = lazy(() => import("./pages/Configurations/RoleMcpToolPermissions"));
+const SocialMediaPage = lazy(() => import("./pages/SocialMedia/SocialMediaPage"));
+const OAuthIntegrations = lazy(() => import("./pages/Configurations/OAuthIntegrations"));
+const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbackPage"));
+const ComplianceRulesPage = lazy(() => import("./pages/Compliance/ComplianceRulesPage"));
+const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
+import { VideoUploadQueueProvider } from "./context/VideoUploadQueueContext";
+import { VideoUploadQueueDrawer } from "./components/video/VideoUploadQueueDrawer";
 
 const AuditLog = lazy(() => import("./pages/Log/AuditLog"));
 const SystemLogsPage = lazy(() => import("./pages/Logs/SystemLogsPage"));
@@ -41,7 +48,9 @@ function NotFoundAlert() {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <VideoUploadQueueProvider>
+        <BrowserRouter>
+          <VideoUploadQueueDrawer />
         <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading...</div>}>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -63,6 +72,94 @@ function App() {
                 element={
                   <ProtectedRoute navigationCode="DASHBOARD">
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+                            {/* Social Media Management */}
+              <Route
+                path="/socials"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <SocialMediaPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/social-media"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <SocialMediaPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Video Compliance Screener */}
+              <Route
+                path="/compliance/scanner"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <VideoComplianceScannerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/video-scanner"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <VideoComplianceScannerPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Compliance Governance & Rules */}
+              <Route
+                path="/compliance/rules"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <ComplianceRulesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/compliance"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <VideoComplianceScannerPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Integrations & OAuth */}
+              <Route
+                path="/configuration/integrations"
+                element={
+                  <ProtectedRoute navigationCode="CONFIG_ROLES">
+                    <OAuthIntegrations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/integrations"
+                element={
+                  <ProtectedRoute navigationCode="CONFIG_ROLES">
+                    <OAuthIntegrations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configurations/oauth-callback"
+                element={
+                  <ProtectedRoute>
+                    <OAuthCallbackPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configuration/oauth-callback"
+                element={
+                  <ProtectedRoute>
+                    <OAuthCallbackPage />
                   </ProtectedRoute>
                 }
               />
@@ -212,6 +309,7 @@ function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
+      </VideoUploadQueueProvider>
     </AuthProvider>
   );
 }
