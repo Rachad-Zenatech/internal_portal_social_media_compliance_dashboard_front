@@ -429,8 +429,10 @@ export function VideoUploadQueueDrawer() {
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                           <span>{formatBytes(item.totalSizeBytes)}</span>
                           <span>•</span>
-                          <span className="font-semibold text-foreground">Score: {item.complianceScore}/100</span>
-                          {item.violationCount > 0 ? (
+                          <span className="font-semibold text-foreground">
+                            {item.scoreStatus === "checked" ? `Score: ${item.complianceScore}/100` : item.scoreStatus === "pending" ? "Checking..." : "Score unavailable"}
+                          </span>
+                          {item.scoreStatus !== "checked" ? null : item.violationCount > 0 ? (
                             <Badge className="bg-red-500/10 text-red-600 border border-red-500/30 text-[9px] px-1.5 py-0">
                               {item.violationCount} Flags
                             </Badge>
@@ -503,7 +505,7 @@ export function VideoUploadQueueDrawer() {
             }}
             className="text-xs font-bold"
           >
-            Open Video Screener
+            Open Content Screener
           </Button>
         </SheetFooter>
       </SheetContent>

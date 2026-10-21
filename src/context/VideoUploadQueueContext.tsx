@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { complianceService, type ComplianceViolation } from '@/services/complianceService';
+import { submissionService } from '@/services/submissionService';
+import { authedFileUrl } from '@/components/submissions/submissionUi';
+import { useAuth } from '@/lib/AuthContext';
+import type { ReviewQueueItem, TranscriptStatus } from '@/types/submission';
 
 export type TargetPlatform = 'TIKTOK' | 'YOUTUBE' | 'YOUTUBE_SHORTS' | 'LINKEDIN';
+export type PosterVariant = 'dusk' | 'desert' | 'night';
+export type ScoreStatus = 'pending' | 'checked' | 'error';
 export type VideoQueueStatus = 'QUEUED' | 'UPLOADING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'PAUSED';
 
 export interface TimestampedSegment {
@@ -9,7 +17,7 @@ export interface TimestampedSegment {
   startSec: number;
   endSec: number;
   text: string;
-  violations?: any[];
+  violations?: ComplianceViolation[];
   risk?: 'RED' | 'YELLOW' | 'GREEN';
 }
 
@@ -33,8 +41,23 @@ export interface VideoQueueItem {
   file?: File | null;
   segments: TimestampedSegment[];
   logs: string[];
+  /** Filled in by the live rulebook check; meaningless until scoreStatus is 'checked'. */
   violationCount: number;
   complianceScore: number;
+  scoreStatus: ScoreStatus;
+  /** Illustrated placeholder for demo items that have no video file. */
+  posterVariant?: PosterVariant;
+  /** Built-in sample video rather than real submitted content. */
+  isDemo?: boolean;
+  /** Set for videos that come from a saved content submission. */
+  submissionId?: string;
+  referenceCode?: string;
+  caption?: string | null;
+  creatorName?: string | null;
+  /** Submitted videos: the stored file and the state of its auto-generated transcript. */
+  videoFileId?: string;
+  transcriptStatus?: TranscriptStatus | null;
+  transcriptError?: string | null;
 }
 
 interface VideoUploadQueueContextType {
@@ -60,6 +83,11 @@ interface VideoUploadQueueContextType {
   activeUploadCount: number;
   totalQueueCount: number;
   simulateAdvanceActive: () => void;
+  recordScanResult: (id: string, result: { score: number; violationCount: number; segments: TimestampedSegment[] }) => void;
+  /** Whether the built-in sample videos are listed alongside real submissions. */
+  showDemo: boolean;
+  setShowDemo: (show: boolean) => void;
+  serverQueueLoading: boolean;
 }
 
 const VideoUploadQueueContext = createContext<VideoUploadQueueContextType | undefined>(undefined);
@@ -114,7 +142,7 @@ const DEMO_SEGMENTS_2: TimestampedSegment[] = [
     id: "s2-2",
     startSec: 16,
     endSec: 30,
-    text: "Defense contract award pending final congressional sign-off. High yield optics detected.",
+    text: "We expect a major defense contract this quarter, and the VTOL platform is ready for deployment along the southern border.",
     risk: "YELLOW",
   },
 ];
@@ -141,8 +169,11 @@ const INITIAL_QUEUE: VideoQueueItem[] = [
       `[${new Date(Date.now() - 25000).toLocaleTimeString()}] Chunk 02 uploaded (28.8 MB). Audio stream demuxed.`,
       `[${new Date(Date.now() - 10000).toLocaleTimeString()}] Gemini speech transcription running on buffered audio track...`,
     ],
-    violationCount: 2,
-    complianceScore: 68,
+    violationCount: 0,
+    complianceScore: 0,
+    scoreStatus: "pending",
+    posterVariant: "dusk",
+    isDemo: true,
   },
   {
     id: "job-queued-002",
@@ -163,8 +194,11 @@ const INITIAL_QUEUE: VideoQueueItem[] = [
     logs: [
       `[${new Date(Date.now() - 20000).toLocaleTimeString()}] Added to upload queue. Waiting for slot.`,
     ],
-    violationCount: 1,
-    complianceScore: 82,
+    violationCount: 0,
+    complianceScore: 0,
+    scoreStatus: "pending",
+    posterVariant: "desert",
+    isDemo: true,
   },
   {
     id: "job-completed-003",
@@ -186,17 +220,137 @@ const INITIAL_QUEUE: VideoQueueItem[] = [
     logs: [
       `[${new Date(Date.now() - 180000).toLocaleTimeString()}] Upload complete (42.0 MB).`,
       `[${new Date(Date.now() - 150000).toLocaleTimeString()}] Audio transcribed. 5 text segments extracted.`,
-      `[${new Date(Date.now() - 120000).toLocaleTimeString()}] Rulebook screening finished. 2 Critical DoD flags detected.`,
+      `[${new Date(Date.now() - 120000).toLocaleTimeString()}] Rulebook screening finished.`,
     ],
-    violationCount: 2,
-    complianceScore: 68,
+    violationCount: 0,
+    complianceScore: 0,
+    scoreStatus: "pending",
+    posterVariant: "night",
+    isDemo: true,
   },
 ];
 
+/** Mark each script segment red/yellow/green from the violations whose terms it contains. */
+export function applySegmentRisk(segments: TimestampedSegment[], violations: ComplianceViolation[]): TimestampedSegment[] {
+  return segments.map((seg) => {
+    const segViolations = violations.filter((v) =>
+      v.flagged_terms.some((term) => seg.text.toLowerCase().includes(term.toLowerCase()))
+    );
+    const risk: TimestampedSegment['risk'] = segViolations.some((v) => v.traffic_light === 'RED')
+      ? 'RED'
+      : segViolations.some((v) => v.traffic_light === 'YELLOW')
+      ? 'YELLOW'
+      : 'GREEN';
+    return { ...seg, violations: segViolations, risk };
+  });
+}
+
+const SCREENER_PLATFORMS: TargetPlatform[] = ['TIKTOK', 'YOUTUBE', 'YOUTUBE_SHORTS', 'LINKEDIN'];
+const SHOW_DEMO_KEY = 'contentScreener.showDemo';
+
+/** Turn a submitted video into a queue item the Content Screener can play and score. */
+function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
+  const platform =
+    (s.platforms.find((p) => SCREENER_PLATFORMS.includes(p as TargetPlatform)) as TargetPlatform | undefined) ??
+    (SCREENER_PLATFORMS.includes(s.account?.platform as TargetPlatform) ? (s.account!.platform as TargetPlatform) : 'YOUTUBE');
+  const check = s.latest_check;
+  // The backend transcribes the video's speech after upload; until it's done the script is empty.
+  const segments = applySegmentRisk(
+    (s.video.transcript_status === 'COMPLETED' ? s.video.transcript ?? [] : []).map((seg, i) => ({
+      id: `${s.video.id}-t${i}`,
+      startSec: seg.start_sec,
+      endSec: seg.end_sec,
+      text: seg.text,
+    })),
+    check?.violations ?? []
+  );
+  return {
+    id: `sub-${s.id}`,
+    submissionId: s.id,
+    referenceCode: s.reference_code,
+    caption: s.caption_text,
+    creatorName: s.creator_name,
+    filename: s.video.original_name,
+    title: s.title,
+    platform,
+    aspectRatio: platform === 'TIKTOK' || platform === 'YOUTUBE_SHORTS' ? '9:16' : '16:9',
+    totalSizeBytes: s.video.size_bytes,
+    uploadedBytes: s.video.size_bytes,
+    uploadSpeedBps: 0,
+    progressPercent: 100,
+    status: 'COMPLETED',
+    currentStageIndex: 4,
+    currentStageLabel: 'Submitted for review',
+    estimatedSecondsRemaining: 0,
+    createdAt: s.submitted_at || s.video.created_at,
+    completedAt: s.submitted_at,
+    videoUrl: authedFileUrl(s.video.url),
+    videoFileId: s.video.id,
+    transcriptStatus: s.video.transcript_status ?? null,
+    transcriptError: s.video.transcript_error ?? null,
+    segments,
+    logs: [],
+    violationCount: check?.violations_count ?? 0,
+    complianceScore: check?.score ?? 0,
+    scoreStatus: check ? 'checked' : 'pending',
+  };
+}
+
 export function VideoUploadQueueProvider({ children }: { children: React.ReactNode }) {
-  const [queue, setQueue] = useState<VideoQueueItem[]>(INITIAL_QUEUE);
-  const [activeVideoId, setActiveVideoId] = useState<string | null>("job-uploading-001");
+  // Sample videos and anything added locally; real submissions come from the API below.
+  const [localQueue, setQueue] = useState<VideoQueueItem[]>(INITIAL_QUEUE);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
+  const [scanOverrides, setScanOverrides] = useState<Record<string, { score: number; violationCount: number; segments: TimestampedSegment[] }>>({});
+  const [showDemoPref, setShowDemoPref] = useState<boolean | null>(() => {
+    try {
+      const v = localStorage.getItem(SHOW_DEMO_KEY);
+      return v === null ? null : v === 'true';
+    } catch {
+      return null;
+    }
+  });
+
+  const { user } = useAuth();
+  const serverQuery = useQuery({
+    queryKey: ['review-queue'],
+    queryFn: submissionService.reviewQueue,
+    enabled: Boolean(user),
+    staleTime: 0,
+    // Check back quickly while a transcript is being generated, otherwise once a minute.
+    refetchInterval: (query) =>
+      query.state.data?.some((s) => s.video.transcript_status === 'PENDING' || s.video.transcript_status === 'PROCESSING')
+        ? 5_000
+        : 60_000,
+  });
+  const serverItems = useMemo(
+    () =>
+      (serverQuery.data ?? []).map((s) => {
+        const item = toQueueItem(s);
+        const override = scanOverrides[item.id];
+        if (!override) return item;
+        // A scan recorded before the transcript arrived mustn't hide the new transcript.
+        const segments = override.segments.length === item.segments.length ? override.segments : item.segments;
+        return { ...item, complianceScore: override.score, violationCount: override.violationCount, segments, scoreStatus: 'checked' as const };
+      }),
+    [serverQuery.data, scanOverrides]
+  );
+
+  // Without a saved preference, samples only show while there's no real content to review.
+  const showDemo = showDemoPref ?? serverItems.length === 0;
+  const setShowDemo = useCallback((show: boolean) => {
+    setShowDemoPref(show);
+    try {
+      localStorage.setItem(SHOW_DEMO_KEY, String(show));
+    } catch {
+      // preference just won't persist
+    }
+  }, []);
+
+  const queue = useMemo(
+    () => [...serverItems, ...localQueue.filter((item) => !item.isDemo || showDemo)],
+    [serverItems, localQueue, showDemo]
+  );
 
   const activeVideo = useMemo(() => {
     return queue.find((item) => item.id === activeVideoId) || queue[0] || null;
@@ -209,6 +363,58 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   const totalQueueCount = useMemo(() => {
     return queue.filter((item) => item.status !== "COMPLETED" && item.status !== "FAILED").length;
   }, [queue]);
+
+  // Score every item with the same live rulebook check the Content Screener uses.
+  const checksInFlight = useRef(new Set<string>());
+  useEffect(() => {
+    localQueue
+      .filter((item) => item.scoreStatus === 'pending' && !checksInFlight.current.has(item.id))
+      .forEach((item) => {
+        checksInFlight.current.add(item.id);
+        complianceService
+          .checkCompliance({
+            text: item.segments.map((s) => s.text).join(' '),
+            video_title: item.title,
+            content_type: `VIDEO_${item.platform}`,
+          })
+          .then((res) => {
+            setQueue((prev) =>
+              prev.map((q) =>
+                q.id === item.id
+                  ? {
+                      ...q,
+                      complianceScore: res.score,
+                      violationCount: res.violations_count,
+                      segments: applySegmentRisk(q.segments, res.violations),
+                      scoreStatus: 'checked',
+                    }
+                  : q
+              )
+            );
+          })
+          .catch(() => {
+            setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, scoreStatus: 'error' } : q)));
+          })
+          .finally(() => checksInFlight.current.delete(item.id));
+      });
+  }, [localQueue]);
+
+  const recordScanResult = useCallback(
+    (id: string, result: { score: number; violationCount: number; segments: TimestampedSegment[] }) => {
+      if (id.startsWith('sub-')) {
+        setScanOverrides((prev) => ({ ...prev, [id]: result }));
+        return;
+      }
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === id
+            ? { ...q, complianceScore: result.score, violationCount: result.violationCount, segments: result.segments, scoreStatus: 'checked' }
+            : q
+        )
+      );
+    },
+    []
+  );
 
   const openQueueDrawer = useCallback(() => setIsQueueDrawerOpen(true), []);
   const closeQueueDrawer = useCallback(() => setIsQueueDrawerOpen(false), []);
@@ -339,8 +545,9 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         logs: [
           `[${new Date().toLocaleTimeString()}] Upload started for ${actualFilename}. Progressive stream buffer active.`,
         ],
-        violationCount: 2,
-        complianceScore: 74,
+        violationCount: 0,
+        complianceScore: 0,
+        scoreStatus: 'pending',
       };
 
       setQueue((prev) => [newItem, ...prev]);
@@ -417,6 +624,10 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         activeUploadCount,
         totalQueueCount,
         simulateAdvanceActive,
+        recordScanResult,
+        showDemo,
+        setShowDemo,
+        serverQueueLoading: serverQuery.isLoading,
       }}
     >
       {children}
