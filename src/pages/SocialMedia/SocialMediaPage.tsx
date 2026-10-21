@@ -235,11 +235,12 @@ export default function SocialMediaPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      let [connsRes, orgsRes, compsRes] = await Promise.all([
+      const [storedConns, orgsRes, compsRes] = await Promise.all([
         oauthService.getConnections(),
         oauthService.getOrganizations(),
         oauthService.getCompanies(),
       ]);
+      let connsRes = storedConns;
       if (!connsRes || connsRes.length === 0) {
         try {
           const syncRes = await oauthService.syncMqtt();
@@ -374,7 +375,7 @@ export default function SocialMediaPage() {
               className="gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-medium"
             >
               <Video className="h-4 w-4 text-amber-500" />
-              Screen Video Asset
+              Content Screener
             </Button>
             <Button
               variant="outline"

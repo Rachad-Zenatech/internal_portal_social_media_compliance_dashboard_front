@@ -123,11 +123,11 @@ export default function Dashboard() {
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-3">
             <Link
-              to="/compliance/scanner"
+              to="/submissions/new"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-zinc-950 font-bold text-xs shadow-md hover:bg-white/90 transition-all hover:scale-102"
             >
               <Video className="w-4 h-4 text-primary" />
-              Upload & Screen Video
+              Upload New Content
             </Link>
             <Link
               to="/compliance/rules"
@@ -342,7 +342,13 @@ export default function Dashboard() {
                         </span>
                       ) : (
                         <span className="text-[10px] text-muted-foreground">
-                          {item.status === "COMPLETED" ? `Score: ${item.complianceScore}/100` : `Waiting in slot #${idx + 1}`}
+                          {item.status !== "COMPLETED"
+                            ? `Waiting in slot #${idx + 1}`
+                            : item.scoreStatus === "checked"
+                            ? `Score: ${item.complianceScore}/100`
+                            : item.scoreStatus === "pending"
+                            ? "Checking..."
+                            : "Score unavailable"}
                         </span>
                       )}
 
@@ -374,15 +380,15 @@ export default function Dashboard() {
                   </Badge>
                 </div>
                 <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors mt-3">
-                  Video Compliance Screener
+                  Content Screener
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-                  Upload MP4/MOV footage, inspect synchronized voiceovers, and detect flagged claims directly on the video timeline.
+                  Review submitted videos and posts, inspect synchronized voiceovers, and see flagged claims directly on the timeline.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-5 pt-0 flex justify-end">
                 <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  Upload & Screen Video <ArrowRight className="h-3 w-3" />
+                  Open Content Screener <ArrowRight className="h-3 w-3" />
                 </span>
               </CardContent>
             </Card>

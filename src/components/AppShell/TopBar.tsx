@@ -300,7 +300,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
             size="sm"
             onClick={openQueueDrawer}
             className="hidden sm:inline-flex h-8 text-xs font-semibold gap-1.5 px-2.5 border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 text-blue-700 dark:text-blue-300 transition-all shadow-2xs"
-            title="Open Video Upload & Screening Queue"
+            title="Open Content Screening Queue"
           >
             <Upload className={`w-3.5 h-3.5 text-blue-500 ${activeUploadCount > 0 ? "animate-bounce" : ""}`} />
             <span className="hidden xl:inline">Upload Queue</span>
