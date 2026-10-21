@@ -265,7 +265,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
   }, [inAppAlerts, windowsNotifications, navigate, queryClient, user]);
 
   return (
-    <header className="h-14 border-b border-border bg-card text-card-foreground flex items-center justify-between px-4 sm:px-6 shrink-0 transition-all duration-300 gap-3 sm:gap-4 relative z-40">
+    <header className="h-14 border-b border-border bg-card text-card-foreground flex items-center justify-between px-3 sm:px-6 shrink-0 transition-all duration-300 gap-3 sm:gap-4 relative z-40">
       <div className="flex-1 flex items-center min-w-0 gap-1.5">
         {onToggleSidebar && (
           <Button
@@ -294,12 +294,12 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
           </Tooltip>
         </TooltipProvider>
 
-        <div className="hidden sm:flex items-center gap-2 border-r pr-2 sm:pr-4 md:pr-5 mr-1">
+        <div className="flex items-center gap-2 sm:border-r sm:pr-4 md:pr-5 sm:mr-1">
           <Button
             variant="outline"
             size="sm"
             onClick={openQueueDrawer}
-            className="h-8 text-xs font-semibold gap-1.5 px-2.5 border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 text-blue-700 dark:text-blue-300 transition-all shadow-2xs"
+            className="hidden sm:inline-flex h-8 text-xs font-semibold gap-1.5 px-2.5 border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 text-blue-700 dark:text-blue-300 transition-all shadow-2xs"
             title="Open Video Upload & Screening Queue"
           >
             <Upload className={`w-3.5 h-3.5 text-blue-500 ${activeUploadCount > 0 ? "animate-bounce" : ""}`} />
@@ -377,31 +377,31 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
 
       <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
         <DialogContent aria-describedby={undefined} className="w-[95vw] sm:max-w-[600px] p-0 overflow-hidden border-border/50 shadow-2xl rounded-2xl flex flex-col">
-          <div className="bg-muted/30 border-b px-8 py-8 flex items-center gap-5">
-            <div className="h-20 w-20 rounded-full border-2 border-border bg-muted overflow-hidden shadow-sm relative group">
+          <div className="bg-muted/30 border-b px-5 py-6 sm:px-8 sm:py-8 flex items-center gap-4 sm:gap-5">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-full border-2 border-border bg-muted overflow-hidden shadow-sm relative group">
               <img
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || user?.email || "User")}&background=eff6ff&color=2563eb&rounded=true&bold=true`}
                 alt="User avatar"
                 className="h-full w-full object-cover"
               />
             </div>
-            <div>
-              <DialogTitle className="text-2xl font-bold">{user?.full_name || "User"}</DialogTitle>
-              <DialogDescription className="text-sm mt-1">
+            <div className="min-w-0">
+              <DialogTitle className="text-xl sm:text-2xl font-bold break-words">{user?.full_name || "User"}</DialogTitle>
+              <DialogDescription className="text-sm mt-1 break-words">
                 {user?.email} • {profileDepartment} • {user?.is_super_admin ? "Super Admin" : roles.length > 0 ? roles.map(r => r.name).join(", ") : "Standard User"}
               </DialogDescription>
             </div>
           </div>
 
           <Tabs defaultValue="general" className="w-full flex-1 flex flex-col">
-            <div className="px-8 pt-6">
+            <div className="px-5 sm:px-8 pt-6">
               <TabsList className="grid w-full grid-cols-2 h-11 bg-muted/50">
                 <TabsTrigger value="general" className="rounded-md font-semibold text-xs uppercase tracking-wider">General</TabsTrigger>
                 <TabsTrigger value="preferences" className="rounded-md font-semibold text-xs uppercase tracking-wider">Preferences</TabsTrigger>
               </TabsList>
             </div>
 
-            <div className="px-8 py-6 flex-1 overflow-y-auto max-h-[60vh]">
+            <div className="px-5 sm:px-8 py-6 flex-1 overflow-y-auto max-h-[60vh]">
               <TabsContent value="general" className="space-y-6 mt-0 border-none outline-none">
                 <div className="space-y-5">
                   <div className="space-y-1.5">
@@ -409,7 +409,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
                     <Input id="fullName" readOnly defaultValue={user?.full_name || ""} className="bg-muted/30 border-border h-11" />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Department</Label>
                       <Input readOnly value={profileDepartment} className="bg-muted/30 border-border text-muted-foreground h-11" />
@@ -439,7 +439,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Settings2 className="h-4 w-4 text-muted-foreground" /> App Settings
                   </h4>
-                  <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-medium">Theme Preference</Label>
                       <p className="text-xs text-muted-foreground">Select your preferred interface theme</p>
@@ -494,7 +494,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/50 text-xs">
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground">Permission:</span>
                         {notificationPermission === "granted" ? (

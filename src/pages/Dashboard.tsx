@@ -158,7 +158,7 @@ export default function Dashboard() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
         <Card className="border-border/60 shadow-xs hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -238,7 +238,7 @@ export default function Dashboard() {
 
       {/* Marketing & Pre-Publication Compliance Hub */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-500" />
@@ -259,7 +259,7 @@ export default function Dashboard() {
                   <Upload className="w-4 h-4 animate-bounce" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <CardTitle className="text-sm font-bold flex flex-wrap items-center gap-2">
                     <span>Live Video Upload & Review Queue</span>
                     <Badge variant="outline" className="text-[10px] font-mono border-blue-500/30 text-blue-600 dark:text-blue-400">
                       {activeUploadCount} Transferring • {queue.length} in Queue

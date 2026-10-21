@@ -1006,14 +1006,14 @@ export default function VideoComplianceScannerPage() {
 
         <CardHeader className="p-4 bg-muted/20 border-b border-border/60">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-start sm:items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Upload className="w-4 h-4 animate-bounce" />
               </div>
-              <div>
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="min-w-0">
+                <CardTitle className="text-sm font-bold flex flex-wrap items-center gap-2">
                   <span>Video Upload & Review Queue</span>
-                  <Badge variant="outline" className="text-[10px] font-mono border-blue-500/30 text-blue-600 dark:text-blue-400">
+                  <Badge variant="outline" className="text-[10px] font-mono whitespace-normal border-blue-500/30 text-blue-600 dark:text-blue-400">
                     {activeUploadCount} Transferring • {queue.filter((q) => q.status === "QUEUED").length} Queued • {queue.filter((q) => q.status === "COMPLETED").length} Screened
                   </Badge>
                 </CardTitle>
@@ -1109,7 +1109,7 @@ export default function VideoComplianceScannerPage() {
           <CardContent className="p-4">
             {queueViewMode === "grid" ? (
               /* Grid View (Cards) */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {/* Dedicated Inline Drag & Drop Zone Tile */}
                 <div
                   onClick={() => queueFileInputRef.current?.click()}
@@ -1151,7 +1151,7 @@ export default function VideoComplianceScannerPage() {
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2.5">
+                        <div className="flex items-start gap-2.5 min-w-0">
                           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
                             {item.platform === "TIKTOK" || item.platform === "YOUTUBE_SHORTS" ? (
                               <Smartphone className="w-4 h-4 text-primary" />
@@ -1159,7 +1159,7 @@ export default function VideoComplianceScannerPage() {
                               <Monitor className="w-4 h-4 text-primary" />
                             )}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <h5 className="font-bold text-xs text-foreground line-clamp-1">
                                 {item.title}
@@ -1170,7 +1170,7 @@ export default function VideoComplianceScannerPage() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 break-all">
                               {item.platform} • {item.aspectRatio} • {item.filename}
                             </p>
                           </div>
@@ -1750,9 +1750,9 @@ export default function VideoComplianceScannerPage() {
       )}
 
       {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
         {/* Left Column: Video Player, Timeline Scrubber & Real-Time Comment Bar */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="xl:col-span-7 space-y-6">
           <Card className="overflow-hidden border-border/80 shadow-xs">
             {/* Video Viewport Container with Dynamic Aspect Ratio */}
             <div
@@ -1764,7 +1764,7 @@ export default function VideoComplianceScannerPage() {
                 isDraggingOverPlayer ? "ring-2 ring-primary border-primary shadow-xl" : ""
               } ${
                 aspectRatio === "9:16"
-                  ? "w-[280px] sm:w-[320px] aspect-[9/16] rounded-2xl my-4 border-4 border-zinc-800 shadow-2xl"
+                  ? "w-full max-w-[280px] sm:max-w-[320px] aspect-[9/16] rounded-2xl my-4 border-4 border-zinc-800 shadow-2xl"
                   : "w-full aspect-video"
               }`}
             >
@@ -2300,7 +2300,7 @@ export default function VideoComplianceScannerPage() {
                 )}
 
                 {/* Input row */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Input
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}
@@ -2311,10 +2311,10 @@ export default function VideoComplianceScannerPage() {
                         ? `Add reviewer note at ${formatTime(currentTime)}... (e.g. adjust disclaimer or cut)`
                         : "Add general reviewer note..."
                     }
-                    className="h-8 text-xs flex-1"
+                    className="h-8 text-xs flex-1 min-w-0"
                   />
 
-                  <Button type="submit" size="sm" className="h-8 text-xs font-semibold px-3 gap-1.5 shrink-0">
+                  <Button type="submit" size="sm" className="h-8 text-xs font-semibold px-3 gap-1.5 shrink-0 self-end sm:self-auto">
                     <Send className="w-3 h-3" />
                     Post {commentTimeMode === "RANGE" ? "Range Note" : "Comment"}
                   </Button>
@@ -2385,7 +2385,7 @@ export default function VideoComplianceScannerPage() {
         </div>
 
         {/* Right Column: Platform Metadata, Reviewer Comments & Violations */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="xl:col-span-5 space-y-6">
           {/* Platform Specific Metadata Screener */}
           <Card className="border-border/80 shadow-xs">
             <CardHeader className="pb-3">
@@ -2465,16 +2465,16 @@ export default function VideoComplianceScannerPage() {
           {/* Tabbed Inspection: Violations, Reviewer Comments & Script */}
           <Tabs defaultValue="comments" className="w-full space-y-4">
             <TabsList className="w-full grid grid-cols-3 bg-muted/60 p-1 border border-border/60">
-              <TabsTrigger value="comments" className="text-xs gap-1.5 font-semibold">
-                <MessageSquare className="w-3.5 h-3.5" />
+              <TabsTrigger value="comments" className="text-[11px] sm:text-xs gap-1.5 font-semibold px-1 sm:px-2">
+                <MessageSquare className="w-3.5 h-3.5 hidden sm:inline" />
                 Comments ({comments.length})
               </TabsTrigger>
-              <TabsTrigger value="violations" className="text-xs gap-1.5 font-semibold">
-                <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
+              <TabsTrigger value="violations" className="text-[11px] sm:text-xs gap-1.5 font-semibold px-1 sm:px-2">
+                <ShieldAlert className="w-3.5 h-3.5 text-red-500 hidden sm:inline" />
                 Flags ({scanResult?.violations_count || 0})
               </TabsTrigger>
-              <TabsTrigger value="script" className="text-xs gap-1.5 font-semibold">
-                <FileText className="w-3.5 h-3.5" />
+              <TabsTrigger value="script" className="text-[11px] sm:text-xs gap-1.5 font-semibold px-1 sm:px-2">
+                <FileText className="w-3.5 h-3.5 hidden sm:inline" />
                 Script ({segments.length})
               </TabsTrigger>
             </TabsList>
@@ -2524,10 +2524,10 @@ export default function VideoComplianceScannerPage() {
                               : "border-border/80 bg-card hover:border-primary/50 hover:bg-muted/30"
                           }`}
                         >
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-1.5 font-semibold text-foreground">
                               <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span>{c.author}</span>
+                              <span className="whitespace-nowrap">{c.author}</span>
                               <Badge
                                 className={`text-[9px] uppercase font-bold py-0 ${
                                   c.category === "LEGAL"

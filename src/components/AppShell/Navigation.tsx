@@ -5,6 +5,8 @@ import {
   Share2,
   Scale,
   Video,
+  FilePlus2,
+  CalendarDays,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,9 +34,23 @@ export const navigation: NavigationItem[] = [
     navigationCode: "DASHBOARD",
   },
   {
+    label: "New Submission",
+    path: "/new-submission",
+    icon: FilePlus2,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+  },
+  {
     label: "Video Screener",
     path: "/compliance/scanner",
     icon: Video,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+  },
+  {
+    label: "Content Calendar",
+    path: "/content-calendar",
+    icon: CalendarDays,
     section: "MAIN",
     navigationCode: "DASHBOARD",
   },

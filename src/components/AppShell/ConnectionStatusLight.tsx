@@ -182,7 +182,7 @@ export function ConnectionStatusLight({ className = "" }: { className?: string }
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-84 p-3 bg-popover/95 backdrop-blur border-border shadow-xl rounded-xl">
+      <DropdownMenuContent align="end" className="w-84 max-w-[calc(100vw-1.5rem)] p-3 bg-popover/95 backdrop-blur border-border shadow-xl rounded-xl">
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <Radio className="h-4 w-4 text-primary animate-pulse" />

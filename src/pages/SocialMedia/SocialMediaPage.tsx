@@ -366,7 +366,7 @@ export default function SocialMediaPage() {
         }
         subtitle="Manage connected organic social profiles, cross-channel reach, engagement metrics, and published feeds across all entities."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -411,15 +411,15 @@ export default function SocialMediaPage() {
       />
 
       {/* KPI Highlight Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Card className="rounded-xl border border-border bg-card shadow-xs">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-3.5 sm:p-5 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Connected Channels
               </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-foreground">
+              <div className="flex flex-wrap items-baseline gap-x-2 mt-1">
+                <span className="text-xl sm:text-2xl font-bold text-foreground">
                   {loading ? "--" : socialConnections.length}
                 </span>
                 <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center">
@@ -431,20 +431,20 @@ export default function SocialMediaPage() {
                 Across {organizations.length + companies.length} business entities
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+            <div className="hidden sm:block shrink-0 p-3 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Share2 className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="rounded-xl border border-border bg-card shadow-xs">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-3.5 sm:p-5 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Audience / Followers
               </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-foreground">
+              <div className="flex flex-wrap items-baseline gap-x-2 mt-1">
+                <span className="text-xl sm:text-2xl font-bold text-foreground">
                   {loading ? "--" : (totalAudience / 1000).toFixed(1) + "K"}
                 </span>
                 <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -455,20 +455,20 @@ export default function SocialMediaPage() {
                 Total combined organic community
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+            <div className="hidden sm:block shrink-0 p-3 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
               <Users className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="rounded-xl border border-border bg-card shadow-xs">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-3.5 sm:p-5 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 30-Day Impressions
               </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-foreground">
+              <div className="flex flex-wrap items-baseline gap-x-2 mt-1">
+                <span className="text-xl sm:text-2xl font-bold text-foreground">
                   {loading ? "--" : "892.5K"}
                 </span>
                 <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -479,20 +479,20 @@ export default function SocialMediaPage() {
                 Organic timeline views & video plays
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+            <div className="hidden sm:block shrink-0 p-3 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <Eye className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="rounded-xl border border-border bg-card shadow-xs">
-          <CardContent className="p-5 flex items-center justify-between">
+          <CardContent className="p-3.5 sm:p-5 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Avg. Engagement Rate
               </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold text-foreground">5.1%</span>
+              <div className="flex flex-wrap items-baseline gap-x-2 mt-1">
+                <span className="text-xl sm:text-2xl font-bold text-foreground">5.1%</span>
                 <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                   High benchmark
                 </span>
@@ -501,7 +501,7 @@ export default function SocialMediaPage() {
                 Industry avg B2B is 1.8% - 3.2%
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+            <div className="hidden sm:block shrink-0 p-3 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
               <TrendingUp className="h-5 w-5" />
             </div>
           </CardContent>
@@ -562,7 +562,7 @@ export default function SocialMediaPage() {
             </Select>
           </div>
 
-          <div className="relative w-48 sm:w-56">
+          <div className="relative w-full sm:w-56">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search handle or page..."
@@ -576,7 +576,7 @@ export default function SocialMediaPage() {
 
       {/* Connected Channels Grid */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
             <span>Connected Social Profiles</span>
             <Badge variant="outline" className="text-xs font-normal">
@@ -756,7 +756,7 @@ export default function SocialMediaPage() {
 
       {/* Cross-Channel Recent Organic Feed */}
       <div className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h2 className="text-base font-semibold text-foreground">

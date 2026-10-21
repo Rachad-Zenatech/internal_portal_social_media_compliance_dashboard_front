@@ -463,8 +463,8 @@ export default function OAuthIntegrations() {
       </div>
 
       {/* Sub-Nav Menu Switcher (matching sidebar sub-navigation) */}
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/configurations/integrations?category=PAID_ADS"
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs transition-all ${isPaidAds
@@ -514,7 +514,7 @@ export default function OAuthIntegrations() {
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex items-center gap-2 min-w-[200px]">
+              <div className="flex flex-wrap items-center gap-2 sm:min-w-[200px]">
                 <Building2 className="w-4 h-4 text-muted-foreground" />
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Organization:
@@ -527,7 +527,7 @@ export default function OAuthIntegrations() {
                   }}
                   disabled={loadingOrgs}
                 >
-                  <SelectTrigger className="h-9 w-[180px]">
+                  <SelectTrigger className="h-9 w-full sm:w-[180px]">
                     <SelectValue placeholder="Select Org" />
                   </SelectTrigger>
                   <SelectContent>
@@ -542,7 +542,7 @@ export default function OAuthIntegrations() {
 
               <div className="h-4 w-px bg-border hidden sm:block" />
 
-              <div className="flex items-center gap-2 min-w-[240px]">
+              <div className="flex flex-wrap items-center gap-2 sm:min-w-[240px]">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Entity Filter:
                 </Label>
@@ -551,7 +551,7 @@ export default function OAuthIntegrations() {
                   onValueChange={setSelectedCompanyId}
                   disabled={loadingConnections}
                 >
-                  <SelectTrigger className="h-9 w-[220px]">
+                  <SelectTrigger className="h-9 w-full sm:w-[220px]">
                     <SelectValue placeholder="Select Entity" />
                   </SelectTrigger>
                   <SelectContent>

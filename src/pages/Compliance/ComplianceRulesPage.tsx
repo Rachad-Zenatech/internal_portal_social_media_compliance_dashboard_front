@@ -335,7 +335,7 @@ export default function ComplianceRulesPage() {
       />
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Card className="shadow-xs border-border/80">
           <CardHeader className="pb-2">
             <CardDescription className="text-xs uppercase tracking-wider font-medium">Total Governed Rules</CardDescription>
@@ -397,14 +397,16 @@ export default function ComplianceRulesPage() {
 
       {/* Main Tab View: Rules Management vs Interactive Scanner */}
       <Tabs defaultValue="rules" className="w-full space-y-6">
-        <TabsList className="bg-muted/60 p-1 border border-border/60">
+        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex bg-muted/60 p-1 border border-border/60">
           <TabsTrigger value="rules" className="gap-2 text-xs font-medium">
             <FileText className="w-3.5 h-3.5" />
-            Manage Compliance Rules ({rules.length})
+            <span className="sm:hidden">Rules ({rules.length})</span>
+            <span className="hidden sm:inline">Manage Compliance Rules ({rules.length})</span>
           </TabsTrigger>
           <TabsTrigger value="scanner" className="gap-2 text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            Interactive Script & Claim Scanner
+            <span className="sm:hidden">Claim Scanner</span>
+            <span className="hidden sm:inline">Interactive Script & Claim Scanner</span>
           </TabsTrigger>
         </TabsList>
 
@@ -638,7 +640,7 @@ export default function ComplianceRulesPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <Button
                   variant="outline"
                   size="sm"

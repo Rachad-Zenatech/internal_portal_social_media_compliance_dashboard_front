@@ -19,6 +19,8 @@ const OAuthIntegrations = lazy(() => import("./pages/Configurations/OAuthIntegra
 const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbackPage"));
 const ComplianceRulesPage = lazy(() => import("./pages/Compliance/ComplianceRulesPage"));
 const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
+const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
+const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
 import { VideoUploadQueueProvider } from "./context/VideoUploadQueueContext";
 import { VideoUploadQueueDrawer } from "./components/video/VideoUploadQueueDrawer";
 
@@ -90,6 +92,26 @@ function App() {
                 element={
                   <ProtectedRoute navigationCode="DASHBOARD">
                     <SocialMediaPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* New Submission */}
+              <Route
+                path="/new-submission"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <NewSubmissionPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Content Calendar */}
+              <Route
+                path="/content-calendar"
+                element={
+                  <ProtectedRoute navigationCode="DASHBOARD">
+                    <ContentCalendarPage />
                   </ProtectedRoute>
                 }
               />

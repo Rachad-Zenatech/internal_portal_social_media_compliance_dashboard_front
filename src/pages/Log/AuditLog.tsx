@@ -274,10 +274,10 @@ export default function AuditLog() {
   });
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col w-full gamax-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out pb-4">
+    <div className="flex-1 min-h-0 flex flex-col w-full gap-4 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out pb-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
             Audit & Security Logs<HelpIcon text="Displays a detailed timeline of administrative actions, config edits, and security events for compliance." />
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Track system activity, configuration changes, and login attempts.</p>
@@ -285,7 +285,7 @@ export default function AuditLog() {
       </div>
 
       <Tabs defaultValue="actions" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-[400px] grid-cols-2 mb-4" variant="line">
+        <TabsList className="grid w-full sm:w-[400px] grid-cols-2 mb-4" variant="line">
           <TabsTrigger value="actions">Actions</TabsTrigger>
           <TabsTrigger value="logins">Login Activities</TabsTrigger>
         </TabsList>
@@ -293,14 +293,14 @@ export default function AuditLog() {
         <TabsContent value="actions" className="flex-1 flex flex-col min-h-0 m-0 data-[state=active]:flex">
           <div className="space-y-4 flex-1 flex flex-col min-h-0">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <Input 
                   type="text" 
                   placeholder="Search actions..." 
                   value={auditGlobalFilter}
                   onChange={(e) => setAuditGlobalFilter(e.target.value)}
-                  className="pl-10 w-[280px] bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 rounded-xl"
+                  className="pl-10 w-full sm:w-[280px] bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 rounded-xl"
                 />
               </div>
               <DropdownMenu>
@@ -386,14 +386,14 @@ export default function AuditLog() {
         <TabsContent value="logins" className="flex-1 flex flex-col min-h-0 m-0 data-[state=active]:flex">
           <div className="space-y-4 flex-1 flex flex-col min-h-0">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <Input 
                   type="text" 
                   placeholder="Search activities..." 
                   value={loginGlobalFilter}
                   onChange={(e) => setLoginGlobalFilter(e.target.value)}
-                  className="pl-10 w-[280px] bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 rounded-xl"
+                  className="pl-10 w-full sm:w-[280px] bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 rounded-xl"
                 />
               </div>
               <DropdownMenu>

@@ -689,7 +689,7 @@ export default function Roles() {
                         <FolderOpen className="w-4 h-4 mr-2 text-slate-400" /> Role Information
                       </h4>
                       <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-5 border border-slate-100 dark:border-zinc-800/50 space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div>
                             <p className="text-xs font-medium text-slate-500 dark:text-zinc-500 uppercase tracking-wider mb-1">Department</p>
                             <p className="text-sm text-slate-900 dark:text-zinc-300">{selectedRole.department || "—"}</p>
