@@ -1,0 +1,161 @@
+import { useVideoThumbnail } from "@/lib/videoThumbnail";
+import {
+  FileArchive,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+  ExternalLink,
+  CheckCircle2,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { SubmissionFile, SubmissionStatus } from "@/types/submission";
+
+export const FILE_KIND_LABELS: Record<string, string> = {
+  MAIN: "Main content",
+  SCRIPT: "Caption / script",
+  IMAGE: "Image",
+  SUPPORTING: "Supporting document",
+};
+
+/** How the submit endpoint's `missing` field names read in messages. */
+export const MISSING_LABELS: Record<string, string> = {
+  title: "title",
+  brand_code: "brand",
+  audience: "target audience",
+  region: "region",
+  platforms: "platform",
+  account_id: "connected publishing account",
+  rule_sets: "rule set",
+  reviewer_route: "reviewer route",
+  main_file: "main content file",
+  content: "content file or caption",
+  publish_at: "a publish date in the future",
+};
+
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function formatDuration(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * URL a <video>/<img> can load directly. The API authenticates with the session token,
+ * which media elements can't send as a header, so it goes in the query string
+ * (the same way the notification stream connects).
+ */
+export function authedFileUrl(url: string) {
+  const token = sessionStorage.getItem("token");
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+}
+
+const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+  DRAFT: { label: "Draft", className: "bg-muted text-foreground border-border" },
+  IN_REVIEW: { label: "In review", className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30" },
+  CHANGES_REQUESTED: { label: "Changes requested", className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30" },
+  APPROVED: { label: "Approved", className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  REJECTED: { label: "Rejected", className: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30" },
+};
+
+export function SubmissionStatusBadge({ status }: { status: SubmissionStatus | string }) {
+  const style = STATUS_STYLES[status] || { label: status, className: "" };
+  return (
+    <Badge variant="outline" className={`text-[11px] font-semibold ${style.className}`}>
+      {style.label}
+    </Badge>
+  );
+}
+
+/** Thumbnail, name and size for a stored file, with optional remove action. */
+export function SubmissionFileRow({
+  file,
+  onRemove,
+  removing,
+}: {
+  file: SubmissionFile;
+  onRemove?: () => void;
+  removing?: boolean;
+}) {
+  const isVideo = file.mime_type.startsWith("video/");
+  const isImage = file.mime_type.startsWith("image/");
+  const src = authedFileUrl(file.url);
+  // Most representative frame rather than the first one, which is often black.
+  const { dataUrl: videoThumb, duration } = useVideoThumbnail(isVideo ? src : null);
+  const DocIcon = /\.(zip|rar|7z)$/i.test(file.original_name)
+    ? FileArchive
+    : /\.(xlsx?|csv)$/i.test(file.original_name)
+    ? FileSpreadsheet
+    : FileText;
+
+  return (
+    <div className={`flex items-center gap-3 rounded-lg border border-border/70 bg-card p-2 ${removing ? "opacity-50" : ""}`}>
+      <a
+        href={src}
+        target="_blank"
+        rel="noreferrer"
+        title="Open preview"
+        className={`${isVideo ? "w-20 h-12" : "w-10 h-10"} rounded-md overflow-hidden bg-muted flex items-center justify-center shrink-0`}
+      >
+        {isVideo ? (
+          videoThumb ? (
+            <img src={videoThumb} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          )
+        ) : isImage ? (
+          <img src={src} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <DocIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        )}
+      </a>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-foreground truncate" title={file.original_name}>
+          {file.original_name}
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {FILE_KIND_LABELS[file.kind]} · {formatBytes(file.size_bytes)}
+          {duration && Number.isFinite(duration) ? ` · ${formatDuration(duration)}` : ""}
+        </p>
+      </div>
+      {removing ? (
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />
+      ) : (
+        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" title="File options">
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild className="text-xs gap-2">
+            <a href={src} target="_blank" rel="noreferrer">
+              <ExternalLink className="w-3.5 h-3.5" /> Open preview
+            </a>
+          </DropdownMenuItem>
+          {onRemove && (
+            <DropdownMenuItem variant="destructive" onClick={onRemove} className="text-xs gap-2">
+              <Trash2 className="w-3.5 h-3.5" /> Remove file
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
