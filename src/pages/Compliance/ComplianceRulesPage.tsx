@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -16,6 +16,7 @@ import {
   Info,
   XCircle,
   Check,
+  Layers,
 } from 'lucide-react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -52,7 +53,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PLATFORM_LABELS, type SocialPlatform } from '@/components/video/PlatformIcon';
 import { useAuth } from '@/lib/AuthContext';
+import { submissionService } from '@/services/submissionService';
 import {
   complianceService,
   type ComplianceRule,
@@ -78,6 +82,69 @@ const CATEGORIES = [
   'Governance & Workflow',
 ];
 
+type ScopeKey = 'rule_sets' | 'brands' | 'audiences' | 'regions' | 'platforms';
+type RuleScope = Record<ScopeKey, string[]>;
+type ScopeOption = { value: string; label: string };
+
+const EMPTY_SCOPE: RuleScope = { rule_sets: [], brands: [], audiences: [], regions: [], platforms: [] };
+
+const TRAFFIC_LIGHT_TONE: Record<TrafficLight, { badge: string; solid: string }> = {
+  RED: { badge: 'border-red-500/40 text-red-600 bg-red-500/10', solid: 'bg-red-600 text-white' },
+  YELLOW: { badge: 'border-amber-500/40 text-amber-600 bg-amber-500/10', solid: 'bg-amber-600 text-white' },
+  GREEN: { badge: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', solid: 'bg-emerald-600 text-white' },
+};
+
+/** Toggle chips for picking several values; nothing picked means "all". */
+function ChipPicker({
+  label,
+  emptyHint,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  emptyHint: string;
+  options: ScopeOption[];
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <Label className="text-xs font-semibold">{label}</Label>
+        <span className="text-[10px] text-muted-foreground">{value.length ? `${value.length} selected` : emptyHint}</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const on = value.includes(o.value);
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
+              className={`rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
+                on ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Next free "Rule N" number across every rule, not just the filtered list. */
+function nextRuleNumber(rules: ComplianceRule[]) {
+  const max = rules.reduce((m, r) => {
+    const n = /^rule\s+(\d+)$/i.exec(r.rule_number.trim());
+    return n ? Math.max(m, Number(n[1])) : m;
+  }, 0);
+  return `Rule ${max + 1}`;
+}
+
 export default function ComplianceRulesPage() {
   const queryClient = useQueryClient();
   const { hasPermission } = useAuth();
@@ -87,12 +154,14 @@ export default function ComplianceRulesPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedTrafficLight, setSelectedTrafficLight] = useState<string>('ALL');
+  const [selectedRuleSet, setSelectedRuleSet] = useState<string>('ALL');
 
   // Modals & Drawers
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ComplianceRule | null>(null);
   const [deletingRule, setDeletingRule] = useState<ComplianceRule | null>(null);
   const [isQuickGuideOpen, setIsQuickGuideOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   // Form State for Create / Edit
   const [formRuleNumber, setFormRuleNumber] = useState('');
@@ -106,23 +175,45 @@ export default function ComplianceRulesPage() {
   const [formAllowedExamples, setFormAllowedExamples] = useState('');
   const [formProhibitedExamples, setFormProhibitedExamples] = useState('');
   const [formRemediation, setFormRemediation] = useState('');
+  const [formScope, setFormScope] = useState<RuleScope>(EMPTY_SCOPE);
+  const [formActive, setFormActive] = useState(true);
 
   // AI Compliance Scanner State
   const [scannerText, setScannerText] = useState('');
   const [scannerTitle, setScannerTitle] = useState('');
   const [checkResult, setCheckResult] = useState<ComplianceCheckResponse | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [scannerRuleSets, setScannerRuleSets] = useState<string[]>([]);
 
   // Queries
   const { data: rules = [], isLoading } = useQuery({
-    queryKey: ['compliance-rules', selectedCategory, selectedTrafficLight, search],
+    queryKey: ['compliance-rules', selectedCategory, selectedTrafficLight, selectedRuleSet, search],
     queryFn: () =>
       complianceService.getRules({
         category: selectedCategory === 'All Categories' ? undefined : selectedCategory,
         traffic_light: selectedTrafficLight === 'ALL' ? undefined : selectedTrafficLight,
+        rule_set: selectedRuleSet === 'ALL' ? undefined : selectedRuleSet,
         search: search.trim() || undefined,
       }),
   });
+
+  // Rule sets, brands, audiences, regions and platforms come from the same list New Submission uses.
+  const { data: options } = useQuery({
+    queryKey: ['submission-options'],
+    queryFn: submissionService.getOptions,
+  });
+  const scopeOptions = useMemo<Record<ScopeKey, ScopeOption[]>>(
+    () => ({
+      rule_sets: (options?.rule_sets ?? []).map((r) => ({ value: r, label: r })),
+      brands: (options?.brands ?? []).map((b) => ({ value: b.code, label: b.name })),
+      audiences: Object.entries(options?.audiences ?? {}).map(([value, label]) => ({ value, label })),
+      // "Global" content is checked against every regional rule, so it isn't a rule scope.
+      regions: (options?.regions ?? []).filter((r) => r !== 'Global').map((r) => ({ value: r, label: r })),
+      platforms: (options?.platforms ?? []).map((p) => ({ value: p, label: PLATFORM_LABELS[p as SocialPlatform] ?? p })),
+    }),
+    [options]
+  );
+  const scopeLabel = (key: ScopeKey, value: string) => scopeOptions[key].find((o) => o.value === value)?.label ?? value;
 
   const { data: stats } = useQuery({
     queryKey: ['compliance-stats'],
@@ -175,16 +266,26 @@ export default function ComplianceRulesPage() {
   const resetDefaultsMutation = useMutation({
     mutationFn: complianceService.resetDefaults,
     onSuccess: () => {
-      toast.success('Successfully re-synced baseline rules from Defense Rulebook!');
+      toast.success('Baseline rules restored from the Defense Rulebook.');
       queryClient.invalidateQueries({ queryKey: ['compliance-rules'] });
       queryClient.invalidateQueries({ queryKey: ['compliance-stats'] });
+      setIsResetConfirmOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error('Failed to re-sync the rulebook: ' + (err?.response?.data?.detail || err.message));
     },
   });
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = async () => {
     resetForm();
-    setFormRuleNumber(`Rule ${(rules.length || 0) + 1}`);
+    // When a rule set is filtered, a new rule most likely belongs to it.
+    if (selectedRuleSet !== 'ALL') setFormScope({ ...EMPTY_SCOPE, rule_sets: [selectedRuleSet] });
     setIsAddOpen(true);
+    try {
+      setFormRuleNumber(nextRuleNumber(await complianceService.getRules()));
+    } catch {
+      setFormRuleNumber('');
+    }
   };
 
   const handleOpenEdit = (rule: ComplianceRule) => {
@@ -200,6 +301,14 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples(rule.allowed_examples || '');
     setFormProhibitedExamples(rule.prohibited_examples || '');
     setFormRemediation(rule.remediation_guidance || '');
+    setFormScope({
+      rule_sets: rule.rule_sets ?? [],
+      brands: rule.brands ?? [],
+      audiences: rule.audiences ?? [],
+      regions: rule.regions ?? [],
+      platforms: rule.platforms ?? [],
+    });
+    setFormActive(rule.is_active);
   };
 
   const resetForm = () => {
@@ -214,6 +323,8 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples('');
     setFormProhibitedExamples('');
     setFormRemediation('');
+    setFormScope(EMPTY_SCOPE);
+    setFormActive(true);
   };
 
   const handleSubmitForm = (e: React.FormEvent) => {
@@ -245,9 +356,12 @@ export default function ComplianceRulesPage() {
           traffic_light: formTrafficLight,
           prohibited_terms: prohibitedArray,
           required_disclaimers: disclaimersArray,
-          allowed_examples: formAllowedExamples.trim() || undefined,
-          prohibited_examples: formProhibitedExamples.trim() || undefined,
-          remediation_guidance: formRemediation.trim() || undefined,
+          // Empty strings (not undefined) so clearing a field actually clears it.
+          allowed_examples: formAllowedExamples.trim(),
+          prohibited_examples: formProhibitedExamples.trim(),
+          remediation_guidance: formRemediation.trim(),
+          ...formScope,
+          is_active: formActive,
         },
       });
     } else {
@@ -263,7 +377,8 @@ export default function ComplianceRulesPage() {
         allowed_examples: formAllowedExamples.trim() || undefined,
         prohibited_examples: formProhibitedExamples.trim() || undefined,
         remediation_guidance: formRemediation.trim() || undefined,
-        is_active: true,
+        ...formScope,
+        is_active: formActive,
       });
     }
   };
@@ -278,10 +393,11 @@ export default function ComplianceRulesPage() {
       const res = await complianceService.checkCompliance({
         text: scannerText,
         video_title: scannerTitle.trim() || undefined,
+        rule_sets: scannerRuleSets,
       });
       setCheckResult(res);
       if (res.is_compliant) {
-        toast.success('Clean! No defense compliance violations detected.');
+        toast.success('Clean! No rule violations detected.');
       } else if (res.traffic_light === 'RED') {
         toast.error(`Stop! ${res.violations_count} critical red-line violation(s) flagged.`);
       } else {
@@ -298,8 +414,8 @@ export default function ComplianceRulesPage() {
     <div className="container max-w-7xl mx-auto px-4 py-8 space-y-8">
       {/* Page Header */}
       <DashboardHeader
-        title="Defense Compliance Rules & Governance"
-        subtitle="ZenaTech & ZenaDrone Defense Thought Leadership & Imagery Rulebook (Oct. 2026)"
+        title="Compliance Rulebook"
+        subtitle="The rules content is screened against, grouped into rule sets. A submission is only checked against the rules that match its rule sets, brand, audience, region and platforms."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -315,10 +431,10 @@ export default function ComplianceRulesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => resetDefaultsMutation.mutate()}
+                onClick={() => setIsResetConfirmOpen(true)}
                 disabled={resetDefaultsMutation.isPending}
                 className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                title="Re-sync default rules from rulebook"
+                title="Restore baseline rules from the Defense Rulebook"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${resetDefaultsMutation.isPending ? 'animate-spin' : ''}`} />
                 Re-sync Rulebook
@@ -338,14 +454,17 @@ export default function ComplianceRulesPage() {
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Card className="shadow-xs border-border/80">
           <CardHeader className="pb-2">
-            <CardDescription className="text-xs uppercase tracking-wider font-medium">Total Governed Rules</CardDescription>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium">Active Rules</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center justify-between">
-              <span>{stats?.total_rules ?? rules.length}</span>
+              <span>{stats?.active_rules ?? rules.length}</span>
               <Scale className="w-5 h-5 text-primary/70" />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">Active in automated video & claim screening</p>
+            <p className="text-xs text-muted-foreground">
+              Used in automated screening
+              {stats && stats.total_rules > stats.active_rules && ` · ${stats.total_rules - stats.active_rules} turned off`}
+            </p>
           </CardContent>
         </Card>
 
@@ -412,6 +531,28 @@ export default function ComplianceRulesPage() {
 
         {/* TAB 1: Rules Management */}
         <TabsContent value="rules" className="space-y-4">
+          {/* Rule set filter */}
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Rule sets">
+            <Layers className="w-3.5 h-3.5 text-muted-foreground mr-0.5" />
+            {['ALL', ...(options?.rule_sets ?? [])].map((rs) => (
+              <button
+                key={rs}
+                type="button"
+                role="tab"
+                aria-selected={selectedRuleSet === rs}
+                onClick={() => setSelectedRuleSet(rs)}
+                className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  selectedRuleSet === rs ? 'bg-foreground text-background border-foreground' : 'border-border text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {rs === 'ALL' ? 'All rule sets' : rs}
+                {rs !== 'ALL' && stats?.rule_sets && (
+                  <span className={`ml-1.5 font-normal ${selectedRuleSet === rs ? 'opacity-70' : ''}`}>{stats.rule_sets[rs] ?? 0}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {/* Filter Bar */}
           <Card className="shadow-xs border-border/80">
             <CardContent className="p-4 flex flex-col md:flex-row items-center gap-3">
@@ -484,13 +625,20 @@ export default function ComplianceRulesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rules.map((rule) => {
-                const isRed = rule.traffic_light === 'RED' || rule.severity === 'CRITICAL';
-                const isYellow = rule.traffic_light === 'YELLOW' || rule.severity === 'HIGH';
+                const tone = TRAFFIC_LIGHT_TONE[rule.traffic_light] ?? TRAFFIC_LIGHT_TONE.YELLOW;
+                const limits: string[] = [
+                  ...rule.brands.map((v) => scopeLabel('brands', v)),
+                  ...rule.audiences.map((v) => scopeLabel('audiences', v)),
+                  ...rule.regions.map((v) => scopeLabel('regions', v)),
+                  ...rule.platforms.map((v) => scopeLabel('platforms', v)),
+                ];
 
                 return (
                   <Card
                     key={rule.id}
-                    className="flex flex-col justify-between shadow-xs border-border/80 hover:border-primary/40 transition-colors"
+                    className={`flex flex-col justify-between shadow-xs border-border/80 hover:border-primary/40 transition-colors ${
+                      rule.is_active ? '' : 'opacity-60'
+                    }`}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
@@ -498,13 +646,7 @@ export default function ComplianceRulesPage() {
                           <div className="flex items-center gap-2">
                             <Badge
                               variant="outline"
-                              className={`text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider font-semibold ${
-                                isRed
-                                  ? 'border-red-500/40 text-red-600 bg-red-500/10'
-                                  : isYellow
-                                  ? 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-                                  : 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                              }`}
+                              className={`text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider font-semibold ${tone.badge}`}
                             >
                               {rule.rule_number}
                             </Badge>
@@ -516,25 +658,36 @@ export default function ComplianceRulesPage() {
                                 Custom
                               </Badge>
                             )}
+                            {!rule.is_active && (
+                              <Badge variant="outline" className="text-[9px] text-muted-foreground">
+                                Turned off
+                              </Badge>
+                            )}
                           </div>
                           <CardTitle className="text-base font-semibold text-foreground pt-1">{rule.title}</CardTitle>
                         </div>
-                        <Badge
-                          className={`text-[10px] font-bold uppercase ${
-                            isRed
-                              ? 'bg-red-600 text-white'
-                              : isYellow
-                              ? 'bg-amber-600 text-white'
-                              : 'bg-emerald-600 text-white'
-                          }`}
-                        >
-                          {rule.traffic_light}
-                        </Badge>
+                        <Badge className={`text-[10px] font-bold uppercase ${tone.solid}`}>{rule.traffic_light}</Badge>
                       </div>
                     </CardHeader>
 
                     <CardContent className="space-y-3 pb-3 text-xs text-muted-foreground">
                       <p className="line-clamp-3 leading-relaxed text-foreground/90">{rule.summary}</p>
+
+                      <div className="flex flex-wrap items-center gap-1">
+                        {rule.rule_sets.length ? (
+                          rule.rule_sets.map((rs) => (
+                            <span key={rs} className="inline-flex items-center gap-1 rounded-sm border border-primary/25 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                              <Layers className="w-3 h-3" />
+                              {rs}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground">All rule sets</span>
+                        )}
+                        {limits.length > 0 && (
+                          <span className="text-[10px] text-muted-foreground">· Only {limits.join(', ')}</span>
+                        )}
+                      </div>
 
                       {rule.prohibited_terms && rule.prohibited_terms.length > 0 && (
                         <div className="space-y-1.5 pt-1">
@@ -605,11 +758,11 @@ export default function ComplianceRulesPage() {
             <CardHeader>
               <div className="flex items-center gap-2 text-primary font-semibold text-sm">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                Live Pre-Publication AI Compliance Scanner
+                Rulebook Claim Scanner
               </div>
               <CardDescription className="text-xs">
-                Test draft video voiceover transcripts, YouTube descriptions, LinkedIn thought leadership copy, or
-                customer claims directly against all active defense compliance rules.
+                Test a script, caption or claim against the trigger phrases of the active rules. Pick rule sets to check
+                only the rules a post would actually be held to.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -639,6 +792,14 @@ export default function ComplianceRulesPage() {
                   className="text-xs font-mono"
                 />
               </div>
+
+              <ChipPicker
+                label="Check against rule sets"
+                emptyHint="All rule sets"
+                options={scopeOptions.rule_sets}
+                value={scannerRuleSets}
+                onChange={setScannerRuleSets}
+              />
 
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <Button
@@ -705,6 +866,7 @@ export default function ComplianceRulesPage() {
                       </CardTitle>
                       <CardDescription className="text-xs">
                         Compliance Health Score: <strong>{checkResult.score} / 100</strong>
+                        {checkResult.rules_checked != null && ` · Checked against ${checkResult.rules_checked} rule${checkResult.rules_checked === 1 ? '' : 's'}`}
                       </CardDescription>
                     </div>
                   </div>
@@ -797,7 +959,7 @@ export default function ComplianceRulesPage() {
                 {editingRule ? `Edit Compliance Rule: ${editingRule.rule_number}` : 'Build New Compliance Rule'}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Define governing standards, trigger terms, and review procedures for defense content.
+                Define the standard, its trigger phrases and review guidance, and which content it applies to.
               </DialogDescription>
             </DialogHeader>
 
@@ -917,7 +1079,7 @@ export default function ComplianceRulesPage() {
                 className="text-xs font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
-                Automated AI scanner will flag content containing any of these exact terms.
+                The scanner flags content containing any of these phrases. Case, hyphens and punctuation are ignored.
               </p>
             </div>
 
@@ -979,6 +1141,63 @@ export default function ComplianceRulesPage() {
               />
             </div>
 
+            <div className="rounded-lg border border-border/80 p-4 space-y-4">
+              <div>
+                <p className="text-xs font-semibold text-foreground">Applies to</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Leave a group empty to apply the rule to everything in it. A submission is checked against this rule only
+                  when it matches every group that has a selection.
+                </p>
+              </div>
+              <ChipPicker
+                label="Rule sets"
+                emptyHint="All rule sets"
+                options={scopeOptions.rule_sets}
+                value={formScope.rule_sets}
+                onChange={(v) => setFormScope((s) => ({ ...s, rule_sets: v }))}
+              />
+              <ChipPicker
+                label="Brands"
+                emptyHint="All brands"
+                options={scopeOptions.brands}
+                value={formScope.brands}
+                onChange={(v) => setFormScope((s) => ({ ...s, brands: v }))}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ChipPicker
+                  label="Audiences"
+                  emptyHint="All audiences"
+                  options={scopeOptions.audiences}
+                  value={formScope.audiences}
+                  onChange={(v) => setFormScope((s) => ({ ...s, audiences: v }))}
+                />
+                <ChipPicker
+                  label="Regions"
+                  emptyHint="All regions"
+                  options={scopeOptions.regions}
+                  value={formScope.regions}
+                  onChange={(v) => setFormScope((s) => ({ ...s, regions: v }))}
+                />
+              </div>
+              <ChipPicker
+                label="Platforms"
+                emptyHint="All platforms"
+                options={scopeOptions.platforms}
+                value={formScope.platforms}
+                onChange={(v) => setFormScope((s) => ({ ...s, platforms: v }))}
+              />
+            </div>
+
+            <label className="flex items-start gap-2.5 rounded-lg border border-border/80 p-3 cursor-pointer">
+              <Checkbox checked={formActive} onCheckedChange={(v) => setFormActive(v === true)} className="mt-0.5" />
+              <span className="space-y-0.5">
+                <span className="block text-xs font-semibold text-foreground">Active</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Turned-off rules stay in the rulebook but aren't used in screening.
+                </span>
+              </span>
+            </label>
+
             <DialogFooter className="pt-2">
               <Button
                 type="button"
@@ -1023,8 +1242,8 @@ export default function ComplianceRulesPage() {
                 Are you sure you want to remove <strong>{deletingRule?.rule_number}: {deletingRule?.title}</strong>?
               </p>
               <p className="text-muted-foreground">
-                This rule will immediately be removed from automated video and claim compliance screening. You can re-sync
-                standard baseline rules at any time using "Re-sync Rulebook".
+                It's removed from screening right away. To keep it but stop using it, edit the rule and turn it off
+                instead. Removed baseline rules come back with "Re-sync Rulebook".
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1036,6 +1255,38 @@ export default function ComplianceRulesPage() {
               className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
             >
               Confirm Removal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* RE-SYNC CONFIRMATION */}
+      <AlertDialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Re-sync baseline rules?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>
+                The baseline rules go back to the Defense Rulebook's wording, rule sets and scope, and any that were
+                removed or turned off are restored.
+              </p>
+              <p className="text-muted-foreground">Edits made to baseline rules will be lost. Custom rules are not changed.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                resetDefaultsMutation.mutate();
+              }}
+              disabled={resetDefaultsMutation.isPending}
+              className="text-xs font-semibold"
+            >
+              {resetDefaultsMutation.isPending ? 'Re-syncing...' : 'Re-sync Rulebook'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

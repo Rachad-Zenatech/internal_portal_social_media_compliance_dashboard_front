@@ -18,6 +18,12 @@ export interface ComplianceRule {
   prohibited_examples?: string | null;
   remediation_guidance?: string | null;
   applies_to: string[];
+  /** Scope: an empty list means the rule applies to every value. */
+  rule_sets: string[];
+  brands: string[];
+  audiences: string[];
+  regions: string[];
+  platforms: string[];
   is_active: boolean;
   is_custom: boolean;
   sort_order: number;
@@ -40,6 +46,11 @@ export interface ComplianceRuleCreate {
   prohibited_examples?: string;
   remediation_guidance?: string;
   applies_to?: string[];
+  rule_sets?: string[];
+  brands?: string[];
+  audiences?: string[];
+  regions?: string[];
+  platforms?: string[];
   is_active?: boolean;
   sort_order?: number;
 }
@@ -57,6 +68,11 @@ export interface ComplianceRuleUpdate {
   prohibited_examples?: string;
   remediation_guidance?: string;
   applies_to?: string[];
+  rule_sets?: string[];
+  brands?: string[];
+  audiences?: string[];
+  regions?: string[];
+  platforms?: string[];
   is_active?: boolean;
   sort_order?: number;
 }
@@ -80,6 +96,20 @@ export interface ComplianceCheckResponse {
   violations_count: number;
   violations: ComplianceViolation[];
   recommendations: string[];
+  /** How many active rules applied to the content's scope (missing on checks saved before scoping). */
+  rules_checked?: number;
+}
+
+/** Who and where the content is for; only rules whose scope matches are run. */
+export interface ComplianceCheckRequest {
+  text: string;
+  video_title?: string;
+  content_type?: string;
+  rule_sets?: string[];
+  brand_code?: string;
+  audience?: string;
+  region?: string;
+  platforms?: string[];
 }
 
 export interface ComplianceStats {
@@ -90,6 +120,8 @@ export interface ComplianceStats {
   green_standard_rules: number;
   categories_count: number;
   categories: Record<string, number>;
+  /** Active rules per rule set (rules with no rule set count toward every set). */
+  rule_sets: Record<string, number>;
 }
 
 export interface VideoJobStage {
@@ -118,13 +150,14 @@ export interface VideoJob {
 }
 
 export const complianceService = {
-  getRules: (params?: { category?: string; severity?: string; traffic_light?: string; is_active?: boolean; search?: string }) => {
+  getRules: (params?: { category?: string; severity?: string; traffic_light?: string; is_active?: boolean; search?: string; rule_set?: string }) => {
     const q = new URLSearchParams();
     if (params?.category) q.append('category', params.category);
     if (params?.severity) q.append('severity', params.severity);
     if (params?.traffic_light) q.append('traffic_light', params.traffic_light);
     if (params?.is_active !== undefined) q.append('is_active', String(params.is_active));
     if (params?.search) q.append('search', params.search);
+    if (params?.rule_set) q.append('rule_set', params.rule_set);
     const qs = q.toString();
     return apiClient.get<ComplianceRule[]>(qs ? '/api/compliance/rules?' + qs : '/api/compliance/rules');
   },
@@ -137,7 +170,7 @@ export const complianceService = {
 
   deleteRule: (id: string) => apiClient.delete<void>('/api/compliance/rules/' + id),
 
-  checkCompliance: (data: { text: string; video_title?: string; content_type?: string }) =>
+  checkCompliance: (data: ComplianceCheckRequest) =>
     apiClient.post<ComplianceCheckResponse>('/api/compliance/check', data),
 
   getStats: () => apiClient.get<ComplianceStats>('/api/compliance/stats'),
@@ -148,7 +181,5 @@ export const complianceService = {
     apiClient.post<VideoJob>('/api/compliance/jobs/video-upload', data),
 
   getVideoJob: (jobId: string) => apiClient.get<VideoJob>('/api/compliance/jobs/' + jobId),
-
-  listVideoJobs: () => apiClient.get<VideoJob[]>('/api/compliance/jobs'),
 };
 
