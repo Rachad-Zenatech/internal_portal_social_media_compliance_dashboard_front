@@ -96,6 +96,38 @@ export interface ReviewerComment {
   createdAt: string;
 }
 
+// Example reviewer notes shown on the built-in demo videos.
+const SAMPLE_COMMENTS: ReviewerComment[] = [
+    {
+      id: "comm-1",
+      author: "Legal Counsel",
+      timestampSec: 9,
+      endTimestampSec: 19,
+      category: "LEGAL",
+      text: "Replace 'partnered with the U.S. Army' with 'field-tested under active evaluation agreements' to satisfy non-endorsement standards.",
+      createdAt: "Today at 2:15 PM",
+    },
+    {
+      id: "comm-2",
+      author: "PR & Comms Lead",
+      timestampSec: 20,
+      endTimestampSec: 32,
+      category: "EDITORIAL",
+      text: "Soften commentary on Pentagon procurement—align with positive defense innovation framing.",
+      createdAt: "Today at 2:20 PM",
+    },
+    {
+      id: "comm-3",
+      author: "Social Media Producer",
+      timestampSec: 47,
+      endTimestampSec: 60,
+      category: "NOTE",
+      text: "Ensure URL text overlay stays within TikTok 9:16 safe area (avoid bottom caption zone).",
+      createdAt: "Today at 2:25 PM",
+    },
+];
+const NO_COMMENTS: ReviewerComment[] = [];
+
 const MANDATORY_DOD_DISCLAIMER =
   "The appearance of U.S. Department of Defense (DoD) visual information does not imply or constitute DoD endorsement.";
 
@@ -185,6 +217,7 @@ export default function VideoComplianceScannerPage() {
     recordScanResult,
     showDemo,
     setShowDemo,
+    serverQueueLoading,
   } = useVideoUploadQueue();
   const queryClient = useQueryClient();
   const [isRetryingTranscript, setIsRetryingTranscript] = useState(false);
@@ -219,36 +252,14 @@ export default function VideoComplianceScannerPage() {
   const [isJobExpanded, setIsJobExpanded] = useState(true);
   const pollingIntervalRef = useRef<any>(null);
 
-  // Reviewer Comments
-  const [comments, setComments] = useState<ReviewerComment[]>([
-    {
-      id: "comm-1",
-      author: "Legal Counsel",
-      timestampSec: 9,
-      endTimestampSec: 19,
-      category: "LEGAL",
-      text: "Replace 'partnered with the U.S. Army' with 'field-tested under active evaluation agreements' to satisfy non-endorsement standards.",
-      createdAt: "Today at 2:15 PM",
-    },
-    {
-      id: "comm-2",
-      author: "PR & Comms Lead",
-      timestampSec: 20,
-      endTimestampSec: 32,
-      category: "EDITORIAL",
-      text: "Soften commentary on Pentagon procurement—align with positive defense innovation framing.",
-      createdAt: "Today at 2:20 PM",
-    },
-    {
-      id: "comm-3",
-      author: "Social Media Producer",
-      timestampSec: 47,
-      endTimestampSec: 60,
-      category: "NOTE",
-      text: "Ensure URL text overlay stays within TikTok 9:16 safe area (avoid bottom caption zone).",
-      createdAt: "Today at 2:25 PM",
-    },
-  ]);
+  // Reviewer notes, kept per video. Sample notes belong to the built-in demo videos only; real
+  // submissions start with none.
+  const [commentsByVideo, setCommentsByVideo] = useState<Record<string, ReviewerComment[]>>({});
+  const commentsKey = activeVideo?.id ?? "demo";
+  const startingNotes = !activeVideo || activeVideo.isDemo ? SAMPLE_COMMENTS : NO_COMMENTS;
+  const comments = commentsByVideo[commentsKey] ?? startingNotes;
+  const setComments = (update: (prev: ReviewerComment[]) => ReviewerComment[]) =>
+    setCommentsByVideo((all) => ({ ...all, [commentsKey]: update(all[commentsKey] ?? startingNotes) }));
 
   const [commentInput, setCommentInput] = useState("");
   const [commentCategory, setCommentCategory] = useState<CommentCategory>("LEGAL");
@@ -257,7 +268,8 @@ export default function VideoComplianceScannerPage() {
   const [rangeEndSec, setRangeEndSec] = useState<number>(10);
   const [rangeStartInput, setRangeStartInput] = useState<string>("(0:00)");
   const [rangeEndInput, setRangeEndInput] = useState<string>("(0:10)");
-  const [activeCommentId, setActiveCommentId] = useState<string | null>("comm-1");
+  // No note is selected until someone clicks one, so the timeline doesn't show a range nobody chose.
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
 
   // Playback state
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -330,6 +342,8 @@ export default function VideoComplianceScannerPage() {
   };
 
   const animationFrameRef = useRef<number | null>(null);
+  // Set while a note's range is playing; playback pauses when it gets there.
+  const rangeEndRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
   const [queueViewMode, setQueueViewMode] = useState<"grid" | "list">("grid");
@@ -338,6 +352,8 @@ export default function VideoComplianceScannerPage() {
   // Scanner state
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ComplianceCheckResponse | null>(null);
+  // Only the newest scan may update the screen; an older, slower response is ignored.
+  const scanSeq = useRef(0);
   const [selectedViolation, setSelectedViolation] = useState<ComplianceViolation | null>(null);
 
   // Effective buffered progress percentage & maximum reviewable timestamp
@@ -541,6 +557,15 @@ export default function VideoComplianceScannerPage() {
           setIsPlaying(false);
           return;
         }
+
+        if (rangeEndRef.current !== null && smoothTime >= rangeEndRef.current) {
+          videoRef.current.pause();
+          videoRef.current.currentTime = rangeEndRef.current;
+          setCurrentTime(rangeEndRef.current);
+          rangeEndRef.current = null;
+          setIsPlaying(false);
+          return;
+        }
       } else {
         // Simulated / Demo video playback (smooth 60fps)
         if (lastTimeRef.current !== null) {
@@ -557,6 +582,12 @@ export default function VideoComplianceScannerPage() {
             if (next >= duration) {
               setIsPlaying(false);
               return duration;
+            }
+            if (rangeEndRef.current !== null && next >= rangeEndRef.current) {
+              const end = rangeEndRef.current;
+              rangeEndRef.current = null;
+              setIsPlaying(false);
+              return end;
             }
             return next;
           });
@@ -591,6 +622,7 @@ export default function VideoComplianceScannerPage() {
   };
 
   const togglePlay = () => {
+    rangeEndRef.current = null;
     if (isPlaying) {
       if (videoRef.current) {
         videoRef.current.pause();
@@ -626,6 +658,19 @@ export default function VideoComplianceScannerPage() {
       videoRef.current.currentTime = clamped;
     }
     setCurrentTime(clamped);
+  };
+
+  // Play just the part of the video a reviewer note covers, then pause.
+  const playRange = (startSec: number, endSec: number) => {
+    seekTo(startSec);
+    rangeEndRef.current = Math.min(endSec, duration);
+    if (videoRef.current && videoUrl) {
+      videoRef.current.playbackRate = playbackRate;
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      lastTimeRef.current = null;
+      setIsPlaying(true);
+    }
   };
 
   // Sub-frame stepper for precision compliance review
@@ -718,12 +763,13 @@ export default function VideoComplianceScannerPage() {
     toast.info("Comment removed.");
   };
 
-  // Run AI Compliance Scan
-  const handleRunScan = async () => {
+  // Run AI Compliance Scan. Automatic re-scans pass announce=false so they don't toast on every change.
+  const handleRunScan = async (announce = true) => {
     if (!fullTranscript.trim()) {
-      toast.error("Please provide or transcribe video audio/narration first.");
+      if (announce) toast.error("Please provide or transcribe video audio/narration first.");
       return;
     }
+    const seq = ++scanSeq.current;
     setIsScanning(true);
     try {
       const additionalContext =
@@ -736,6 +782,7 @@ export default function VideoComplianceScannerPage() {
         video_title: videoTitle.trim() || undefined,
         content_type: `VIDEO_${platform}`,
       });
+      if (seq !== scanSeq.current) return; // a newer scan has started since
       setScanResult(res);
 
       const updatedSegments = applySegmentRisk(segments, res.violations);
@@ -750,7 +797,9 @@ export default function VideoComplianceScannerPage() {
         });
       }
 
-      if (res.is_compliant) {
+      if (!announce) {
+        // automatic re-scan: the panel updates without a toast
+      } else if (res.is_compliant) {
         toast.success(`Cleared for ${platform}! No defense compliance violations detected.`);
       } else if (res.traffic_light === "RED") {
         toast.error(`Stop! ${res.violations_count} critical red-line violation(s) flagged.`);
@@ -758,16 +807,20 @@ export default function VideoComplianceScannerPage() {
         toast.warning(`Review required: ${res.violations_count} claims need clearance.`);
       }
     } catch (err: any) {
-      toast.error("Compliance scan failed: " + (err?.response?.data?.detail || err.message));
+      if (seq === scanSeq.current) toast.error("Compliance scan failed: " + (err?.response?.data?.detail || err.message));
     } finally {
-      setIsScanning(false);
+      if (seq === scanSeq.current) setIsScanning(false);
     }
   };
 
-  // Run sample initial scan on mount
+  // Re-scan whenever what's being checked changes. Waits for the review queue first: scanning the built-in
+  // sample before the real video loaded raced the real scan, so the score could differ between refreshes.
+  // Debounced so typing in the caption doesn't send a check per keystroke.
   useEffect(() => {
-    handleRunScan();
-  }, [platform, fullTranscript]);
+    if (serverQueueLoading || !activeVideo) return;
+    const timer = window.setTimeout(() => handleRunScan(false), 400);
+    return () => window.clearTimeout(timer);
+  }, [serverQueueLoading, activeVideo?.id, platform, fullTranscript, tiktokCaption, youtubeDescription, videoTitle]);
 
   useEffect(() => {
     return () => {
@@ -809,6 +862,11 @@ export default function VideoComplianceScannerPage() {
   const activeSegment = useMemo(() => {
     return segments.find((s) => currentTime >= s.startSec && currentTime <= s.endSec);
   }, [currentTime, segments]);
+
+  useEffect(() => {
+    setActiveCommentId(null);
+    rangeEndRef.current = null;
+  }, [activeVideo?.id]);
 
   // Active reviewer comment
   const activeComment = useMemo(() => {
@@ -894,7 +952,6 @@ export default function VideoComplianceScannerPage() {
     setSegments(SAMPLE_DEMO_SEGMENTS);
     setFullTranscript(SAMPLE_DEMO_SEGMENTS.map((s) => s.text).join(" "));
     setVideoTitle("ZenaDrone Defense Swarm Logistics Field Demonstration");
-    handleRunScan();
   };
 
   const copyClearanceReport = () => {
@@ -1673,22 +1730,6 @@ export default function VideoComplianceScannerPage() {
                     );
                   })}
 
-                  {/* Active note range */}
-                  {activeComment &&
-                    activeComment.timestampSec !== null &&
-                    activeComment.endTimestampSec &&
-                    activeComment.endTimestampSec > activeComment.timestampSec &&
-                    activeComment.timestampSec < duration && (
-                      <div
-                        style={{
-                          left: `${(activeComment.timestampSec / duration) * 100}%`,
-                          width: `${((Math.min(activeComment.endTimestampSec, duration) - activeComment.timestampSec) / duration) * 100}%`,
-                        }}
-                        className="absolute bottom-0 h-2 border-x-2 border-b-2 border-blue-500 rounded-b-sm pointer-events-none"
-                        title={`Selected note: ${formatTime(activeComment.timestampSec)} - ${formatTime(activeComment.endTimestampSec)}`}
-                      />
-                    )}
-
                   <input
                     type="range"
                     min={0}
@@ -1715,6 +1756,38 @@ export default function VideoComplianceScannerPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Selected note's range: click to play just that part */}
+                {activeComment &&
+                  activeComment.timestampSec !== null &&
+                  activeComment.endTimestampSec &&
+                  activeComment.endTimestampSec > activeComment.timestampSec &&
+                  activeComment.timestampSec < duration && (() => {
+                    const start = activeComment.timestampSec;
+                    const end = Math.min(activeComment.endTimestampSec, duration);
+                    const left = (start / duration) * 100;
+                    const label = `${activeComment.author} note · ${formatTime(start)}–${formatTime(activeComment.endTimestampSec)}`;
+                    return (
+                      <div className="relative h-5">
+                        <button
+                          type="button"
+                          onClick={() => playRange(start, end)}
+                          style={{ left: `${left}%`, width: `${((end - start) / duration) * 100}%` }}
+                          className="group absolute top-0 h-2 border-x-2 border-b-2 border-blue-500 rounded-b-sm hover:border-blue-600 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          title={`Play ${label}`}
+                          aria-label={`Play ${label}`}
+                        >
+                          <span
+                            className={`absolute top-2.5 inline-flex max-w-[min(260px,60vw)] items-center gap-1 whitespace-nowrap rounded bg-blue-500/10 px-1.5 py-px text-[10px] font-semibold text-blue-700 group-hover:bg-blue-500/20 dark:text-blue-300 ${
+                              left > 60 ? "right-0" : "left-0"
+                            }`}
+                          >
+                            <Play className="w-2.5 h-2.5 shrink-0 fill-current" /> <span className="truncate">{label}</span>
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })()}
                 <div className="relative h-4 text-[10px] font-mono text-muted-foreground">
                   {timelineSegments
                     .filter((seg) => seg.startSec > 0 && seg.startSec / duration < 0.92)
@@ -1975,18 +2048,18 @@ export default function VideoComplianceScannerPage() {
             </div>
           </div>
 
-          <Tabs defaultValue="violations" className="px-4 pt-2 pb-4 gap-3">
-            <TabsList className="w-full grid grid-cols-4 h-9 bg-muted/60">
+          <Tabs defaultValue="violations" className="@container px-4 pt-2 pb-4 gap-3">
+            <TabsList className="w-full grid grid-cols-2 gap-0.5 group-data-horizontal/tabs:h-auto @[33rem]:flex @[33rem]:gap-0 @[33rem]:group-data-horizontal/tabs:h-9 bg-muted/60">
               {[
                 { value: "comments", icon: MessageSquare, label: `Comments (${comments.length})` },
                 { value: "violations", icon: AlertTriangle, label: `Flags (${scanResult?.violations_count || 0})` },
-                { value: "sentiment", icon: Sparkles, label: "Tone" },
+                { value: "sentiment", icon: Sparkles, label: "Sentiment Analysis" },
                 { value: "script", icon: FileText, label: `Script (${segments.length})` },
               ].map(({ value, icon: Icon, label }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="text-[11px] sm:text-xs font-semibold gap-1.5 px-1 data-active:bg-blue-500/10 data-active:text-blue-700 dark:data-active:text-blue-300 data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300"
+                  className="h-8 @[33rem]:h-auto @[33rem]:flex-auto whitespace-nowrap text-[11px] sm:text-xs font-semibold gap-1.5 px-2.5 data-active:bg-blue-500/10 data-active:text-blue-700 dark:data-active:text-blue-300 data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300"
                 >
                   <Icon className="w-3.5 h-3.5 hidden sm:inline" />
                   {label}

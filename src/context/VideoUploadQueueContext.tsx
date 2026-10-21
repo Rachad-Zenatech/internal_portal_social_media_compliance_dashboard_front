@@ -364,11 +364,14 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
     return queue.filter((item) => item.status !== "COMPLETED" && item.status !== "FAILED").length;
   }, [queue]);
 
-  // Score every item with the same live rulebook check the Content Screener uses.
+  // Score every item with the same live rulebook check the Content Screener uses. Hidden sample videos
+  // aren't scored (they're scored when shown), and nothing runs until the real queue has loaded.
   const checksInFlight = useRef(new Set<string>());
+  const queueLoading = serverQuery.isLoading;
   useEffect(() => {
+    if (queueLoading) return;
     localQueue
-      .filter((item) => item.scoreStatus === 'pending' && !checksInFlight.current.has(item.id))
+      .filter((item) => item.scoreStatus === 'pending' && (!item.isDemo || showDemo) && !checksInFlight.current.has(item.id))
       .forEach((item) => {
         checksInFlight.current.add(item.id);
         complianceService
@@ -397,7 +400,7 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
           })
           .finally(() => checksInFlight.current.delete(item.id));
       });
-  }, [localQueue]);
+  }, [localQueue, showDemo, queueLoading]);
 
   const recordScanResult = useCallback(
     (id: string, result: { score: number; violationCount: number; segments: TimestampedSegment[] }) => {
