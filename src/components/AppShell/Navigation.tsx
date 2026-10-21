@@ -34,14 +34,14 @@ export const navigation: NavigationItem[] = [
     navigationCode: "DASHBOARD",
   },
   {
-    label: "New Submission",
-    path: "/new-submission",
+    label: "Upload Content",
+    path: "/submissions",
     icon: FilePlus2,
     section: "MAIN",
     navigationCode: "DASHBOARD",
   },
   {
-    label: "Video Screener",
+    label: "Content Screener",
     path: "/compliance/scanner",
     icon: Video,
     section: "MAIN",

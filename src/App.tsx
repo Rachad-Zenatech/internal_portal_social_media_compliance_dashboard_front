@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
+import { lazy, Suspense, type ReactNode } from "react";
 import { AuthProvider } from "./lib/AuthContext";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "./components/ui/button";
-
 import ProtectedRoute from "./components/ProtectedRoute";
+import { VideoUploadQueueProvider } from "./context/VideoUploadQueueContext";
+import { VideoUploadQueueDrawer } from "./components/video/VideoUploadQueueDrawer";
 
 const AppShell = lazy(() => import("./components/AppShell/AppShell"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -20,14 +21,52 @@ const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbac
 const ComplianceRulesPage = lazy(() => import("./pages/Compliance/ComplianceRulesPage"));
 const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
 const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
+const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsListPage"));
+const SubmissionDetailPage = lazy(() => import("./pages/Submissions/SubmissionDetailPage"));
+const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
-import { VideoUploadQueueProvider } from "./context/VideoUploadQueueContext";
-import { VideoUploadQueueDrawer } from "./components/video/VideoUploadQueueDrawer";
-
 const AuditLog = lazy(() => import("./pages/Log/AuditLog"));
 const SystemLogsPage = lazy(() => import("./pages/Logs/SystemLogsPage"));
 const Login = lazy(() => import("./pages/Login"));
 const PendingAccess = lazy(() => import("./pages/PendingAccess"));
+
+/** Pages inside the app shell. `navigationCode` is the permission needed to open the page (none = any signed-in user). */
+const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
+  { path: "/dashboard", navigationCode: "DASHBOARD", element: <Dashboard /> },
+  { path: "/socials", navigationCode: "DASHBOARD", element: <SocialMediaPage /> },
+  { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
+  { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
+  { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
+  { path: "/compliance/rules", navigationCode: "DASHBOARD", element: <ComplianceRulesPage /> },
+  { path: "/configurations/integrations", navigationCode: "CONFIG_ROLES", element: <OAuthIntegrations /> },
+  { path: "/configurations/oauth-callback", element: <OAuthCallbackPage /> },
+  { path: "/configurations/users", navigationCode: "CONFIG_USERS", element: <Users /> },
+  { path: "/configurations/roles", navigationCode: "CONFIG_ROLES", element: <Roles /> },
+  { path: "/configurations/user-role-assignment", navigationCode: "CONFIG_USER_ROLE_ASSIGNMENT", element: <UserRoleAssignment /> },
+  { path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES", element: <RoleGroupPermissions /> },
+  { path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS", element: <RoleApiPermissions /> },
+  { path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS", element: <RoleMcpToolPermissions /> },
+  { path: "/log/audit", navigationCode: "AUDIT_LOG", element: <AuditLog /> },
+  { path: "/log/system-logs", navigationCode: "AUDIT_LOG", element: <SystemLogsPage /> },
+];
+
+/**
+ * Old or alternate URLs, kept working because they appear in bookmarks, notifications and the
+ * backend's stored navigation paths (which use /configuration/...). The rest of the path and the
+ * query string are carried over, so e.g. OAuth callback parameters survive.
+ */
+const REDIRECTS: { from: string; to: string }[] = [
+  { from: "/configuration", to: "/configurations" },
+  { from: "/new-submission", to: "/submissions/new" },
+  { from: "/social-media", to: "/socials" },
+  { from: "/video-scanner", to: "/compliance/scanner" },
+  { from: "/log/audit-log", to: "/log/audit" },
+];
+
+function PrefixRedirect({ from, to }: { from: string; to: string }) {
+  const { pathname, search } = useLocation();
+  return <Navigate to={`${to}${pathname.slice(from.length)}${search}`} replace />;
+}
 
 function NotFoundAlert() {
   return (
@@ -53,284 +92,52 @@ function App() {
       <VideoUploadQueueProvider>
         <BrowserRouter>
           <VideoUploadQueueDrawer />
-        <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading...</div>}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/pending-access" element={<PendingAccess />} />
+          <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading...</div>}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/pending-access" element={<PendingAccess />} />
 
-            {/* Main app layout routes */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppShell>
-                    <Outlet />
-                  </AppShell>
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Main app layout routes */}
               <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-                            {/* Social Media Management */}
-              <Route
-                path="/socials"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <SocialMediaPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/social-media"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <SocialMediaPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* New Submission */}
-              <Route
-                path="/new-submission"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <NewSubmissionPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Content Calendar */}
-              <Route
-                path="/content-calendar"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <ContentCalendarPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Video Compliance Screener */}
-              <Route
-                path="/compliance/scanner"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <VideoComplianceScannerPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/video-scanner"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <VideoComplianceScannerPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Compliance Governance & Rules */}
-              <Route
-                path="/compliance/rules"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <ComplianceRulesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/compliance"
-                element={
-                  <ProtectedRoute navigationCode="DASHBOARD">
-                    <VideoComplianceScannerPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Integrations & OAuth */}
-              <Route
-                path="/configuration/integrations"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <OAuthIntegrations />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/integrations"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <OAuthIntegrations />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/oauth-callback"
                 element={
                   <ProtectedRoute>
-                    <OAuthCallbackPage />
+                    <AppShell>
+                      <Outlet />
+                    </AppShell>
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/configuration/oauth-callback"
-                element={
-                  <ProtectedRoute>
-                    <OAuthCallbackPage />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/configurations" element={<Navigate to="/configurations/users" replace />} />
+                <Route path="/compliance" element={<Navigate to="/compliance/scanner" replace />} />
+                <Route path="/log" element={<Navigate to="/log/audit" replace />} />
 
-              {/* Configuration Routes */}
-              <Route path="/configuration" element={<Navigate to="/configurations/users" replace />} />
-              <Route path="/configurations" element={<Navigate to="/configurations/users" replace />} />
+                {/* Submissions: the list and the new-submission form share one tabbed area */}
+                <Route
+                  element={
+                    <ProtectedRoute navigationCode="DASHBOARD">
+                      <SubmissionsLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/submissions" element={<SubmissionsListPage />} />
+                  <Route path="/submissions/new" element={<NewSubmissionPage />} />
+                </Route>
 
-              {/* Users */}
-              <Route
-                path="/configuration/users"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_USERS">
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/users"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_USERS">
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
+                {PAGES.map(({ path, navigationCode, element }) => (
+                  <Route key={path} path={path} element={<ProtectedRoute navigationCode={navigationCode}>{element}</ProtectedRoute>} />
+                ))}
 
-              {/* Roles */}
-              <Route
-                path="/configuration/roles"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <Roles />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/roles"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <Roles />
-                  </ProtectedRoute>
-                }
-              />
+                {REDIRECTS.map(({ from, to }) => (
+                  <Route key={from} path={`${from}/*`} element={<PrefixRedirect from={from} to={to} />} />
+                ))}
 
-              {/* Role Assignments */}
-              <Route
-                path="/configuration/user-role-assignment"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_USER_ROLE_ASSIGNMENT">
-                    <UserRoleAssignment />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/user-role-assignment"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_USER_ROLE_ASSIGNMENT">
-                    <UserRoleAssignment />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Role Group Permissions */}
-              <Route
-                path="/configuration/role-group-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <RoleGroupPermissions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/role-group-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLES">
-                    <RoleGroupPermissions />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Role API Permissions */}
-              <Route
-                path="/configuration/role-api-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLE_API_PERMISSIONS">
-                    <RoleApiPermissions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/role-api-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLE_API_PERMISSIONS">
-                    <RoleApiPermissions />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Role MCP Tool Permissions */}
-              <Route
-                path="/configuration/role-mcp-tool-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLE_MCP_TOOL_PERMISSIONS">
-                    <RoleMcpToolPermissions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/configurations/role-mcp-tool-permissions"
-                element={
-                  <ProtectedRoute navigationCode="CONFIG_ROLE_MCP_TOOL_PERMISSIONS">
-                    <RoleMcpToolPermissions />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Logs & Audit */}
-              <Route path="/log" element={<Navigate to="/log/audit" replace />} />
-              <Route
-                path="/log/audit"
-                element={
-                  <ProtectedRoute navigationCode="AUDIT_LOG">
-                    <AuditLog />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/log/audit-log"
-                element={
-                  <ProtectedRoute navigationCode="AUDIT_LOG">
-                    <AuditLog />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/log/system-logs"
-                element={
-                  <ProtectedRoute navigationCode="AUDIT_LOG">
-                    <SystemLogsPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Catch-All / 404 Route */}
-              <Route path="*" element={<NotFoundAlert />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+                {/* Catch-All / 404 Route */}
+                <Route path="*" element={<NotFoundAlert />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
       </VideoUploadQueueProvider>
     </AuthProvider>
   );
