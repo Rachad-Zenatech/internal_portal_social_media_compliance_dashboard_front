@@ -76,6 +76,11 @@ export interface Submission {
   latest_check?: StoredCheck | null;
   files: SubmissionFile[];
   can_edit: boolean;
+  /** Drafts: the creator, super admins and Content Managers can delete them. */
+  can_delete?: boolean;
+  created_by?: string | null;
+  /** Only filled in when someone other than the creator is viewing. */
+  created_by_name?: string | null;
   submitted_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -104,6 +109,10 @@ export interface SubmissionSummary {
   caption_text?: string | null;
   /** Main video/image, or the first attached image, for the card thumbnail. */
   cover?: SubmissionFile | null;
+  created_by?: string | null;
+  created_by_name?: string | null;
+  /** Drafts: the creator, super admins and Content Managers can delete them. */
+  can_delete?: boolean;
 }
 
 export interface SubmissionUpdate {

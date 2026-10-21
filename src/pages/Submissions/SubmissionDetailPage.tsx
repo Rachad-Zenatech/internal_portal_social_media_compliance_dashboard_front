@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import { SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
@@ -246,15 +247,7 @@ export default function SubmissionDetailPage() {
     onError: (err: Error) => toast.error(`Couldn't withdraw: ${err.message}`),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: () => submissionService.deleteDraft(id),
-    onSuccess: () => {
-      toast.success("Draft deleted.");
-      queryClient.invalidateQueries({ queryKey: ["submissions"] });
-      navigate("/submissions");
-    },
-    onError: (err: Error) => toast.error(`Couldn't delete: ${err.message}`),
-  });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (submissionQuery.isLoading) {
     return (
@@ -268,7 +261,7 @@ export default function SubmissionDetailPage() {
       <div className="py-24 text-center space-y-3">
         <p className="text-sm text-muted-foreground">This submission couldn't be found.</p>
         <Button size="sm" variant="outline" asChild>
-          <Link to="/submissions">Back to My Submissions</Link>
+          <Link to="/submissions">Back to Content Portal</Link>
         </Button>
       </div>
     );
@@ -293,7 +286,7 @@ export default function SubmissionDetailPage() {
           <>
             <Button size="sm" variant="outline" asChild className="text-xs gap-1.5 font-semibold">
               <Link to="/submissions">
-                <ArrowLeft className="w-3.5 h-3.5" /> My Submissions
+                <ArrowLeft className="w-3.5 h-3.5" /> Content Portal
               </Link>
             </Button>
             {s.can_edit && (
@@ -325,31 +318,15 @@ export default function SubmissionDetailPage() {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            {s.status === "DRAFT" && s.current_version === 0 && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={deleteMutation.isPending}
-                    className="text-xs gap-1.5 font-semibold text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete Draft
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete draft {s.reference_code}?</AlertDialogTitle>
-                    <AlertDialogDescription>The draft and its uploaded files are removed. This can't be undone.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-red-600 hover:bg-red-700 text-white">
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            {s.can_delete && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setConfirmDelete(true)}
+                className="text-xs gap-1.5 font-semibold text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete Draft
+              </Button>
             )}
           </>
         }
@@ -475,6 +452,12 @@ export default function SubmissionDetailPage() {
           </Panel>
         </div>
       </div>
+
+      <DeleteDraftDialog
+        target={confirmDelete ? s : null}
+        onClose={() => setConfirmDelete(false)}
+        onDeleted={() => navigate("/submissions")}
+      />
     </div>
   );
 }

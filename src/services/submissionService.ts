@@ -18,8 +18,14 @@ const quiet = { skipGlobalLoading: true };
 export const submissionService = {
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
 
-  list: (status?: string) =>
-    apiClient.get<SubmissionSummary[]>(`/api/submissions${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  /** "all" = everyone's content (super admins and Content Managers only). */
+  list: (status?: string, scope: "mine" | "all" = "mine") => {
+    const q = new URLSearchParams();
+    if (status) q.set("status", status);
+    if (scope === "all") q.set("scope", "all");
+    const qs = q.toString();
+    return apiClient.get<SubmissionSummary[]>(`/api/submissions${qs ? `?${qs}` : ""}`);
+  },
 
   get: (id: string) => apiClient.get<Submission>(`/api/submissions/${id}`),
 

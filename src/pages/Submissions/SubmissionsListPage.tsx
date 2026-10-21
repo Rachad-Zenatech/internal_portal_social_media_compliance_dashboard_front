@@ -18,6 +18,9 @@ import {
   Plus,
   Search,
   Send,
+  Trash2,
+  User as UserIcon,
+  Users,
   X,
   XCircle,
 } from "lucide-react";
@@ -41,6 +44,8 @@ import {
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import PostPreview, { ChannelAvatar, CoverThumb } from "@/components/submissions/PostPreview";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
+import { useAuth } from "@/lib/AuthContext";
 import { SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { submissionService } from "@/services/submissionService";
@@ -81,8 +86,8 @@ const SUBMITTABLE = new Set(["DRAFT", "CHANGES_REQUESTED"]);
 const FINISHED = new Set(["APPROVED", "REJECTED"]);
 
 const PREFS_KEY = "contentPortal.prefs";
-type Prefs = { view: ViewMode; groupBy: GroupBy; sort: SortBy };
-const DEFAULT_PREFS: Prefs = { view: "grid", groupBy: "none", sort: "priority" };
+type Prefs = { view: ViewMode; groupBy: GroupBy; sort: SortBy; scope: "mine" | "all" };
+const DEFAULT_PREFS: Prefs = { view: "grid", groupBy: "none", sort: "priority", scope: "mine" };
 
 function loadPrefs(): Prefs {
   try {
@@ -106,7 +111,12 @@ function channelKey(s: SubmissionSummary) {
   return s.account ? `acc:${s.account.id}` : "none";
 }
 
-/** "Posting to" filter: every channel, Shaun's, company, unassigned, or one account. */
+/** Shaun's accounts are known as the Thought Leadership channels in filters and groupings. */
+function channelLabel(a: NonNullable<SubmissionSummary["account"]>) {
+  return a.is_ceo ? `Thought Leadership (${platformName(a.platform)})` : a.label;
+}
+
+/** "Posting to" filter: every channel, Thought Leadership (Shaun's), company, unassigned, or one account. */
 function matchesChannel(s: SubmissionSummary, channel: string) {
   if (channel === "all") return true;
   if (channel === "ceo") return Boolean(s.account?.is_ceo);
@@ -147,7 +157,7 @@ function groupItems(items: SubmissionSummary[], groupBy: GroupBy): Group[] {
       const a = s.account;
       add(
         channelKey(s),
-        a ? (a.is_ceo ? `${a.account_name} · Shaun's channel` : a.label) : "No channel yet",
+        a ? channelLabel(a) : "No channel yet",
         s,
         a ? <ChannelAvatar account={a} size="sm" /> : undefined
       );
@@ -226,9 +236,38 @@ function PlatformPills({ platforms }: { platforms: string[] }) {
 interface CardActions {
   onPreview: (s: SubmissionSummary) => void;
   onSubmit: (s: SubmissionSummary) => void;
+  onDelete: (s: SubmissionSummary) => void;
+  /** Viewing everyone's content: say whose each item is. */
+  showCreator: boolean;
 }
 
-function PortalCard({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardActions) {
+function CreatorLine({ s }: { s: SubmissionSummary }) {
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-muted-foreground min-w-0">
+      <UserIcon className="w-3 h-3 shrink-0" />
+      <span className="truncate">By {s.created_by_name || "unknown"}</span>
+    </span>
+  );
+}
+
+function DeleteButton({ s, onDelete, compact = false }: { s: SubmissionSummary; onDelete: (s: SubmissionSummary) => void; compact?: boolean }) {
+  if (!s.can_delete) return null;
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className={`h-7 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-500/10 ${compact ? "w-7 p-0" : "px-2"}`}
+      onClick={() => onDelete(s)}
+      title="Delete draft"
+      aria-label={`Delete draft ${s.reference_code}`}
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+      {!compact && "Delete"}
+    </Button>
+  );
+}
+
+function PortalCard({ s, onPreview, onSubmit, onDelete, showCreator }: { s: SubmissionSummary } & CardActions) {
   const navigate = useNavigate();
   return (
     <Card
@@ -272,6 +311,7 @@ function PortalCard({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardA
           </p>
         </div>
         <ChannelLine s={s} />
+        {showCreator && <CreatorLine s={s} />}
         <p className="text-[11px] flex items-center gap-1.5">
           <CalendarClock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <PublishWhen s={s} compact />
@@ -287,6 +327,7 @@ function PortalCard({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardA
             <FilePen className="w-3.5 h-3.5" /> Edit
           </Button>
         )}
+        <DeleteButton s={s} onDelete={onDelete} compact />
         <span className="flex-1" />
         {SUBMITTABLE.has(s.status) ? (
           <Button size="sm" className="h-7 px-2.5 text-xs gap-1" onClick={() => onSubmit(s)}>
@@ -302,7 +343,7 @@ function PortalCard({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardA
   );
 }
 
-function PortalRow({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardActions) {
+function PortalRow({ s, onPreview, onSubmit, onDelete, showCreator }: { s: SubmissionSummary } & CardActions) {
   return (
     <div
       role="button"
@@ -325,6 +366,7 @@ function PortalRow({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardAc
           <span className="text-[11px] text-muted-foreground font-mono shrink-0">{s.reference_code}</span>
         </div>
         <ChannelLine s={s} />
+        {showCreator && <CreatorLine s={s} />}
       </div>
       <div className="hidden md:flex gap-1 w-24">
         {s.platforms.map((p) => (
@@ -341,6 +383,7 @@ function PortalRow({ s, onPreview, onSubmit }: { s: SubmissionSummary } & CardAc
         <SubmissionStatusBadge status={s.status} />
       </div>
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <DeleteButton s={s} onDelete={onDelete} compact />
         {SUBMITTABLE.has(s.status) ? (
           <Button size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => onSubmit(s)} title="Send to the Content Screener">
             <Send className="w-3.5 h-3.5" />
@@ -364,10 +407,12 @@ function PreviewSheet({
   summary,
   onClose,
   onSubmit,
+  onDelete,
 }: {
   summary: SubmissionSummary | null;
   onClose: () => void;
   onSubmit: (s: SubmissionSummary) => void;
+  onDelete: (s: SubmissionSummary) => void;
 }) {
   const navigate = useNavigate();
   const id = summary?.id ?? "";
@@ -512,6 +557,7 @@ function PreviewSheet({
                   <FilePen className="w-3.5 h-3.5" /> Edit draft
                 </Button>
               )}
+              <DeleteButton s={summary} onDelete={onDelete} />
               <span className="flex-1" />
               {SUBMITTABLE.has(summary.status) && (
                 <Button size="sm" className="text-xs gap-1" onClick={() => onSubmit(summary)}>
@@ -538,7 +584,11 @@ export default function SubmissionsListPage() {
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs);
   const [previewing, setPreviewing] = useState<SubmissionSummary | null>(null);
   const [confirming, setConfirming] = useState<SubmissionSummary | null>(null);
+  const [deleting, setDeleting] = useState<SubmissionSummary | null>(null);
   const submit = useSubmitForReview();
+  // Super admins and Content Managers can switch to everyone's content (and delete other people's drafts).
+  const { hasPermission } = useAuth();
+  const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW");
 
   const setPrefs = (patch: Partial<Prefs>) =>
     setPrefsState((p) => {
@@ -547,9 +597,10 @@ export default function SubmissionsListPage() {
       return next;
     });
 
+  const scope = canSeeAll ? prefs.scope : "mine";
   const { data = [], isLoading, isError, error } = useQuery({
-    queryKey: ["submissions"],
-    queryFn: () => submissionService.list(),
+    queryKey: ["submissions", scope],
+    queryFn: () => submissionService.list(undefined, scope),
     // Statuses change from other screens (autosave, submit); always show the latest.
     staleTime: 0,
   });
@@ -583,7 +634,8 @@ export default function SubmissionsListPage() {
           s.title.toLowerCase().includes(q) ||
           s.reference_code.toLowerCase().includes(q) ||
           (s.caption_text ?? "").toLowerCase().includes(q) ||
-          (s.account?.account_name ?? "").toLowerCase().includes(q))
+          (s.account?.account_name ?? "").toLowerCase().includes(q) ||
+          (s.created_by_name ?? "").toLowerCase().includes(q))
     );
     return sortItems(filtered, prefs.sort);
   }, [data, status, platform, channel, search, prefs.sort]);
@@ -597,7 +649,7 @@ export default function SubmissionsListPage() {
     setChannel("all");
   };
 
-  const actions: CardActions = { onPreview: setPreviewing, onSubmit: setConfirming };
+  const actions: CardActions = { onPreview: setPreviewing, onSubmit: setConfirming, onDelete: setDeleting, showCreator: scope === "all" };
 
   return (
     <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300">
@@ -605,11 +657,35 @@ export default function SubmissionsListPage() {
         title="Content Portal"
         subtitle="Everything you're creating, in review or ready to post. Filter by platform and channel, preview posts, and send drafts to the Content Screener."
         actions={
-          <Button size="sm" asChild className="gap-1.5 text-xs font-semibold">
-            <Link to="/submissions/new">
-              <Plus className="w-4 h-4" /> New submission
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {canSeeAll && (
+              <div className="inline-flex rounded-md border border-border p-0.5" role="group" aria-label="Whose content">
+                {(
+                  [
+                    ["mine", UserIcon, "My content"],
+                    ["all", Users, "Everyone's"],
+                  ] as const
+                ).map(([v, Icon, label]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={scope === v}
+                    onClick={() => setPrefs({ scope: v })}
+                    className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      scope === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" /> {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Button size="sm" asChild className="gap-1.5 text-xs font-semibold">
+              <Link to="/submissions/new">
+                <Plus className="w-4 h-4" /> New submission
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -662,7 +738,7 @@ export default function SubmissionsListPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="text-xs">Posting to: all channels</SelectItem>
-                <SelectItem value="ceo" className="text-xs">Shaun's channels</SelectItem>
+                <SelectItem value="ceo" className="text-xs">Thought Leadership</SelectItem>
                 <SelectItem value="company" className="text-xs">Company channels</SelectItem>
                 <SelectItem value="none" className="text-xs">No channel yet</SelectItem>
                 {accounts.length > 0 && (
@@ -670,7 +746,7 @@ export default function SubmissionsListPage() {
                     <SelectLabel className="text-[10px]">Channels</SelectLabel>
                     {accounts.map((a) => (
                       <SelectItem key={a.id} value={`acc:${a.id}`} className="text-xs">
-                        {a.is_ceo ? `★ ${a.label}` : a.label}
+                        {a.is_ceo ? `★ ${channelLabel(a)}` : a.label}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -759,7 +835,11 @@ export default function SubmissionsListPage() {
         <Card className="py-16 text-center space-y-3 border-dashed">
           <Inbox className="w-8 h-8 mx-auto text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {data.length === 0 ? "You haven't created any content yet." : "Nothing matches these filters."}
+            {data.length === 0
+              ? scope === "all"
+                ? "No one has created any content yet."
+                : "You haven't created any content yet."
+              : "Nothing matches these filters."}
           </p>
           <div>
             {data.length === 0 ? (
@@ -802,7 +882,9 @@ export default function SubmissionsListPage() {
         </div>
       )}
 
-      <PreviewSheet summary={previewing} onClose={() => setPreviewing(null)} onSubmit={setConfirming} />
+      <PreviewSheet summary={previewing} onClose={() => setPreviewing(null)} onSubmit={setConfirming} onDelete={setDeleting} />
+
+      <DeleteDraftDialog target={deleting} onClose={() => setDeleting(null)} onDeleted={() => setPreviewing(null)} />
 
       <AlertDialog open={Boolean(confirming)} onOpenChange={(open) => !open && setConfirming(null)}>
         <AlertDialogContent>
