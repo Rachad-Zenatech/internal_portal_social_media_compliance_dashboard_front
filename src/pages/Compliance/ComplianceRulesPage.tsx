@@ -172,6 +172,7 @@ export default function ComplianceRulesPage() {
   const [formTrafficLight, setFormTrafficLight] = useState<TrafficLight>('YELLOW');
   const [formProhibitedTerms, setFormProhibitedTerms] = useState('');
   const [formRequiredDisclaimers, setFormRequiredDisclaimers] = useState('');
+  const [formDisclaimerTriggers, setFormDisclaimerTriggers] = useState('');
   const [formAllowedExamples, setFormAllowedExamples] = useState('');
   const [formProhibitedExamples, setFormProhibitedExamples] = useState('');
   const [formRemediation, setFormRemediation] = useState('');
@@ -298,6 +299,7 @@ export default function ComplianceRulesPage() {
     setFormTrafficLight(rule.traffic_light);
     setFormProhibitedTerms(rule.prohibited_terms.join(', '));
     setFormRequiredDisclaimers(rule.required_disclaimers.join('\n'));
+    setFormDisclaimerTriggers((rule.disclaimer_triggers ?? []).join(', '));
     setFormAllowedExamples(rule.allowed_examples || '');
     setFormProhibitedExamples(rule.prohibited_examples || '');
     setFormRemediation(rule.remediation_guidance || '');
@@ -320,6 +322,7 @@ export default function ComplianceRulesPage() {
     setFormTrafficLight('YELLOW');
     setFormProhibitedTerms('');
     setFormRequiredDisclaimers('');
+    setFormDisclaimerTriggers('');
     setFormAllowedExamples('');
     setFormProhibitedExamples('');
     setFormRemediation('');
@@ -343,6 +346,10 @@ export default function ComplianceRulesPage() {
       .split('\n')
       .map((d) => d.trim())
       .filter(Boolean);
+    const triggersArray = formDisclaimerTriggers
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     if (editingRule) {
       updateMutation.mutate({
@@ -356,6 +363,7 @@ export default function ComplianceRulesPage() {
           traffic_light: formTrafficLight,
           prohibited_terms: prohibitedArray,
           required_disclaimers: disclaimersArray,
+          disclaimer_triggers: triggersArray,
           // Empty strings (not undefined) so clearing a field actually clears it.
           allowed_examples: formAllowedExamples.trim(),
           prohibited_examples: formProhibitedExamples.trim(),
@@ -374,6 +382,7 @@ export default function ComplianceRulesPage() {
         traffic_light: formTrafficLight,
         prohibited_terms: prohibitedArray,
         required_disclaimers: disclaimersArray,
+        disclaimer_triggers: triggersArray,
         allowed_examples: formAllowedExamples.trim() || undefined,
         prohibited_examples: formProhibitedExamples.trim() || undefined,
         remediation_guidance: formRemediation.trim() || undefined,
@@ -715,6 +724,11 @@ export default function ComplianceRulesPage() {
                       {rule.required_disclaimers && rule.required_disclaimers.length > 0 && (
                         <div className="p-2 rounded bg-muted/30 border border-border/60 text-[11px] italic text-muted-foreground">
                           <strong>Required Label:</strong> "{rule.required_disclaimers[0]}"
+                          <span className="not-italic block mt-0.5">
+                            {rule.disclaimer_triggers?.length
+                              ? `Needed when content mentions: ${rule.disclaimer_triggers.slice(0, 6).join(", ")}${rule.disclaimer_triggers.length > 6 ? ", ..." : ""}`
+                              : "Needed on all content this rule covers."}
+                          </span>
                         </div>
                       )}
                     </CardContent>
@@ -1079,7 +1093,7 @@ export default function ComplianceRulesPage() {
                 className="text-xs font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
-                The scanner flags content containing any of these phrases. Case, hyphens and punctuation are ignored.
+                The scanner flags content containing any of these phrases. Case, hyphens and punctuation are ignored. Use * for up to three words in between, e.g. "endorsed by * department of defense".
               </p>
             </div>
 
@@ -1095,7 +1109,26 @@ export default function ComplianceRulesPage() {
                 onChange={(e) => setFormRequiredDisclaimers(e.target.value)}
                 className="text-xs"
               />
+              <p className="text-[11px] text-muted-foreground">Any one of these lines satisfies the rule. Close wording counts.</p>
             </div>
+
+            {formRequiredDisclaimers.trim() && (
+              <div className="space-y-1.5">
+                <Label htmlFor="disclaimer-triggers" className="text-xs font-semibold">
+                  Disclaimer needed when content mentions (comma separated)
+                </Label>
+                <Input
+                  id="disclaimer-triggers"
+                  placeholder="e.g. department of defense, army, dvids"
+                  value={formDisclaimerTriggers}
+                  onChange={(e) => setFormDisclaimerTriggers(e.target.value)}
+                  className="text-xs"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Leave empty to require the disclaimer on everything this rule covers. Use * for up to three words.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">

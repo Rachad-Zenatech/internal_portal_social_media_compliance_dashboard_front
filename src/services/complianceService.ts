@@ -14,6 +14,8 @@ export interface ComplianceRule {
   traffic_light: TrafficLight;
   prohibited_terms: string[];
   required_disclaimers: string[];
+  /** Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers. */
+  disclaimer_triggers: string[];
   allowed_examples?: string | null;
   prohibited_examples?: string | null;
   remediation_guidance?: string | null;
@@ -42,6 +44,7 @@ export interface ComplianceRuleCreate {
   traffic_light: TrafficLight;
   prohibited_terms: string[];
   required_disclaimers: string[];
+  disclaimer_triggers?: string[];
   allowed_examples?: string;
   prohibited_examples?: string;
   remediation_guidance?: string;
@@ -64,6 +67,7 @@ export interface ComplianceRuleUpdate {
   traffic_light?: TrafficLight;
   prohibited_terms?: string[];
   required_disclaimers?: string[];
+  disclaimer_triggers?: string[];
   allowed_examples?: string;
   prohibited_examples?: string;
   remediation_guidance?: string;
@@ -87,6 +91,10 @@ export interface ComplianceViolation {
   flagged_terms: string[];
   explanation: string;
   remediation_guidance?: string | null;
+  /** PROHIBITED_TERM: forbidden wording. MISSING_DISCLAIMER: wording that needs a disclaimer, without it. */
+  kind?: 'PROHIBITED_TERM' | 'MISSING_DISCLAIMER';
+  /** Any one of these satisfies the rule. */
+  missing_disclaimers?: string[];
 }
 
 export interface ComplianceCheckResponse {
