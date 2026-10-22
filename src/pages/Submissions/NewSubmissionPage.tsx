@@ -26,6 +26,7 @@ import {
   List,
   ListOrdered,
   Loader2,
+  Megaphone,
   MessageSquareText,
   Redo2,
   Save,
@@ -53,7 +54,10 @@ import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components
 import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
+import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
+import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
+import { canvaService } from "@/services/canvaService";
 import { submissionService } from "@/services/submissionService";
 import { ApiError } from "@/services/helper";
 import type {
@@ -77,6 +81,7 @@ const CONTENT_TYPES: { value: ContentType; label: string; description: string; i
   { value: "CAROUSEL", label: "Carousel", description: "Multi-image post", icon: GalleryHorizontalEnd },
   { value: "IMAGE", label: "Image", description: "Single image asset", icon: ImageIcon },
   { value: "BLOG", label: "Blog / Article", description: "Long-form content", icon: FileText },
+  { value: "AD", label: "Paid Ad", description: "Sponsored post or ad creative", icon: Megaphone },
 ];
 
 const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
@@ -85,7 +90,12 @@ const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
   CAROUSEL: { main: "your carousel images" },
   IMAGE: { main: "your image" },
   BLOG: { main: "your article" },
+  AD: { main: "your ad creative (image or video)" },
 };
+/** Types whose main file is required: there's nothing to review without it. */
+const MAIN_REQUIRED: ContentType[] = ["VIDEO", "IMAGE", "CAROUSEL", "AD"];
+/** Selected automatically with the Paid Ad type. */
+const ADS_RULE_SET = "Paid Social Ads";
 
 const ACCEPT_ALL = "video/*,image/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.pdf,.doc,.docx,.txt,.md,.xls,.xlsx,.csv,.zip,.ppt,.pptx";
 const VIDEO_RE = /\.(mp4|mov|avi|webm|mkv|m4v)$/i;
@@ -104,15 +114,15 @@ function classifyFile(file: File, type: ContentType, mainTaken: boolean): { kind
   const isMainType =
     (type === "VIDEO" && isVideo) ||
     ((type === "IMAGE" || type === "CAROUSEL") && isImage) ||
-    (type === "SOCIAL_POST" && (isVideo || isImage)) ||
+    ((type === "SOCIAL_POST" || type === "AD") && (isVideo || isImage)) ||
     (type === "BLOG" && ARTICLE_RE.test(name));
 
   if (isMainType && (type === "CAROUSEL" || !mainTaken)) return { kind: "MAIN" };
   if (isVideo) {
     return {
-      error: mainTaken && (type === "VIDEO" || type === "SOCIAL_POST")
+      error: mainTaken && (type === "VIDEO" || type === "SOCIAL_POST" || type === "AD")
         ? "only one video per submission. Remove the current one to replace it."
-        : "videos can only be added to Video or Social Post submissions.",
+        : "videos can only be added to Video, Social Post or Paid Ad submissions.",
     };
   }
   if (isImage) return { kind: "IMAGE" };
@@ -361,6 +371,7 @@ export default function NewSubmissionPage() {
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [replacingMain, setReplacingMain] = useState(false);
+  const [dueAt, setDueAt] = useState<string | null>(null);
   // After changes are requested, only the content, caption and comments are shown until asked for the rest.
   const [showAllDetails, setShowAllDetails] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -369,6 +380,8 @@ export default function NewSubmissionPage() {
   const [showErrors, setShowErrors] = useState(false);
   const [serverMissing, setServerMissing] = useState<string[]>([]);
   const [isDraggingMain, setIsDraggingMain] = useState(false);
+  const [canvaOpen, setCanvaOpen] = useState(false);
+  const [reimporting, setReimporting] = useState(false);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -408,6 +421,7 @@ export default function NewSubmissionPage() {
     idRef.current = s.id;
     setReferenceCode(s.reference_code);
     setStatus(s.status);
+    setDueAt(s.due_kind === "REVISION" ? s.due_at ?? null : null);
     setFiles(s.files);
     setCheck(s.latest_check ?? null);
   }, []);
@@ -672,6 +686,36 @@ export default function NewSubmissionPage() {
     }
   };
 
+  // ----- Canva -----
+  const canvaMain = files.find((f) => f.kind === "MAIN" && f.source === "CANVA");
+  const canvaFits = designFits("IMAGE", contentType) || designFits("VIDEO", contentType);
+
+  const onCanvaImported = (s: Submission) => {
+    applyServer(s);
+    // The server names an untitled draft after the design; keep that rather than autosaving over it.
+    if (!title.trim() && s.title && s.title !== "Untitled submission") setTitle(s.title);
+    setServerMissing([]);
+  };
+
+  /** Bring in the linked design's latest revision; after changes were requested, optionally resubmit too. */
+  const reimportCanva = async (andResubmit: boolean) => {
+    setReimporting(true);
+    try {
+      const id = await save({ force: true });
+      if (!id) return;
+      const s = await canvaService.reimport(id);
+      applyServer(s);
+      const f = s.files.find((x) => x.kind === "MAIN" && x.source === "CANVA");
+      toast.success(`Reimported revision ${f?.canva_revision ?? ""} from Canva.`);
+      if (andResubmit) await submit();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) toast.info((err as Error).message);
+      else toast.error(`Couldn't reimport from Canva: ${(err as Error).message}`);
+    } finally {
+      setReimporting(false);
+    }
+  };
+
   // ----- Initial check and submit (S09) -----
   const runCheck = async () => {
     if (!title.trim() && !caption.trim()) {
@@ -700,8 +744,8 @@ export default function NewSubmissionPage() {
     audience: !audience,
     region: !region,
     platforms: platforms.length === 0,
-    main_file: ["VIDEO", "IMAGE", "CAROUSEL"].includes(contentType) && mainFiles.length === 0,
-    content: !["VIDEO", "IMAGE", "CAROUSEL"].includes(contentType) && mainFiles.length === 0 && !caption.trim(),
+    main_file: MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
+    content: !MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0 && !caption.trim(),
     rule_sets: ruleSets.length === 0,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
@@ -836,6 +880,7 @@ export default function NewSubmissionPage() {
       {resubmitting && submissionId && (
         <RevisionWorkspace
           submissionId={submissionId}
+          dueAt={dueAt}
           mainFile={files.find((f) => f.kind === "MAIN")}
           caption={caption}
           accept={ACCEPT_ALL}
@@ -849,6 +894,9 @@ export default function NewSubmissionPage() {
           onResubmit={submit}
         />
       )}
+      {resubmitting && canvaMain && (
+        <CanvaReimportBar file={canvaMain} resubmitting busy={reimporting || submitting} onReimport={reimportCanva} />
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 sm:gap-5 items-start">
         {/* ---------------- Form ---------------- */}
@@ -856,7 +904,7 @@ export default function NewSubmissionPage() {
           {showDetails && (
           <>
           <Section step={1} title="Content Type" description="Select the type of content you want to submit.">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" role="radiogroup">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" role="radiogroup">
               {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
                 const selected = contentType === value;
                 return (
@@ -871,6 +919,7 @@ export default function NewSubmissionPage() {
                         toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
                       }
                       setContentType(value);
+                      if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
                       markEdited();
                     }}
                     className={`relative text-left rounded-xl border p-3.5 transition-all ${
@@ -1078,6 +1127,8 @@ export default function NewSubmissionPage() {
                 e.target.value = "";
               }}
             />
+            {/* Two ways to add content: upload files, or import a Canva design. */}
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
             <div
               role="button"
               tabIndex={0}
@@ -1115,6 +1166,19 @@ export default function NewSubmissionPage() {
                 Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
               </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setCanvaOpen(true)}
+              disabled={!canvaFits}
+              title={canvaFits ? undefined : "Canva designs can't be the main file of a blog or article"}
+              className="min-h-[190px] rounded-xl border border-[#7d2ae8]/30 bg-[#7d2ae8]/5 hover:bg-[#7d2ae8]/10 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 p-5 text-center transition-colors"
+            >
+              <CanvaMark className="w-11 h-11 text-base" />
+              <span className="text-sm font-semibold text-foreground">Import from Canva</span>
+              <span className="text-xs text-muted-foreground">Pick a design from your Canva account. It's reviewed like any upload.</span>
+              <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
+            </button>
+            </div>
             {isMissing("main_file") && (
               <p className="text-[11px] text-red-600 mt-1.5">
                 Add {mainUpload.main} to submit this {CONTENT_TYPES.find((c) => c.value === contentType)?.label.toLowerCase()}.
@@ -1140,6 +1204,18 @@ export default function NewSubmissionPage() {
                 </div>
               </div>
             )}
+            {canvaMain && !resubmitting && (
+              <div className="mt-3">
+                <CanvaReimportBar file={canvaMain} resubmitting={false} busy={reimporting} onReimport={reimportCanva} />
+              </div>
+            )}
+            <CanvaImportDialog
+              open={canvaOpen}
+              onOpenChange={setCanvaOpen}
+              contentType={contentType}
+              ensureSubmissionId={() => save({ force: true })}
+              onImported={onCanvaImported}
+            />
           </Section>
           </>
           )}

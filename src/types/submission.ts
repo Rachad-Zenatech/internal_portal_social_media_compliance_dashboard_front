@@ -1,6 +1,7 @@
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 
-export type ContentType = "VIDEO" | "SOCIAL_POST" | "CAROUSEL" | "IMAGE" | "BLOG";
+/** AD: paid social ad. Ad-specific fields and rules are still to be defined. */
+export type ContentType = "VIDEO" | "SOCIAL_POST" | "CAROUSEL" | "IMAGE" | "BLOG" | "AD";
 export type SubmissionFileKind = "MAIN" | "SCRIPT" | "IMAGE" | "SUPPORTING";
 export type SubmissionStatus = "DRAFT" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
 
@@ -31,6 +32,9 @@ export interface SubmissionOptions {
   reviewer_routes: string[];
 }
 
+/** Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION). */
+export type DueKind = "REVIEW" | "REVISION";
+
 export type TranscriptStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface TranscriptSegment {
@@ -53,6 +57,11 @@ export interface SubmissionFile {
   transcript_status?: TranscriptStatus | null;
   transcript?: TranscriptSegment[] | null;
   transcript_error?: string | null;
+  /** CANVA files remember the design and revision they came from, for "reimport latest". */
+  source?: "UPLOAD" | "CANVA";
+  canva_design_id?: string | null;
+  canva_design_title?: string | null;
+  canva_revision?: number | null;
 }
 
 /** Which transcript segments contain flagged wording (same matcher as the check). */
@@ -88,6 +97,9 @@ export interface Submission {
   account_ids?: string[];
   accounts?: AccountOption[];
   publish_at?: string | null;
+  /** When the next step is due (see DueKind). */
+  due_at?: string | null;
+  due_kind?: DueKind | null;
   caption_html?: string | null;
   caption_text?: string | null;
   rule_sets: string[];
@@ -101,6 +113,12 @@ export interface Submission {
   can_delete?: boolean;
   /** In review, and the viewer is a reviewer who may decide on it (not their own upload). */
   can_review?: boolean;
+  /** Final approvers named by an approval path; empty means any reviewer on the brand. */
+  approver_names?: string[];
+  /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
+  can_approve?: boolean;
+  /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
+  can_manage_approval?: boolean;
   created_by?: string | null;
   /** Only filled in when someone other than the creator is viewing. */
   created_by_name?: string | null;
@@ -119,6 +137,9 @@ export interface SubmissionSummary {
   status: SubmissionStatus;
   current_version: number;
   publish_at?: string | null;
+  /** When the next step is due (see DueKind). */
+  due_at?: string | null;
+  due_kind?: DueKind | null;
   latest_traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
   latest_score?: number | null;
   file_count: number;
@@ -142,6 +163,12 @@ export interface SubmissionSummary {
   can_delete?: boolean;
   /** In review, and the viewer is a reviewer who may decide on it (not their own upload). */
   can_review?: boolean;
+  /** Final approvers named by an approval path; empty means any reviewer on the brand. */
+  approver_names?: string[];
+  /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
+  can_approve?: boolean;
+  /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
+  can_manage_approval?: boolean;
 }
 
 export interface SubmissionUpdate {
@@ -266,8 +293,43 @@ export interface ReviewQueueItem {
   creator_name?: string | null;
   video: SubmissionFile;
   can_review?: boolean;
+  /** Final approvers named by an approval path; empty means any reviewer on the brand. */
+  approver_names?: string[];
+  /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
+  can_approve?: boolean;
   publish_at?: string | null;
+  /** When the next step is due (see DueKind). */
+  due_at?: string | null;
+  due_kind?: DueKind | null;
+  created_by?: string | null;
+  /** Approved: the viewer is a reviewer who may reschedule or reopen it. */
+  can_manage_approval?: boolean;
+  /** When the latest version was approved or sent back. */
+  decided_at?: string | null;
 }
+
+/** One submitted version as it was: what was sent, its video, its automated check and its decision. */
+export interface VersionView {
+  version_number: number;
+  latest_version: number;
+  snapshot: {
+    title?: string;
+    caption_text?: string | null;
+    platforms?: string[];
+    publish_at?: string | null;
+    [key: string]: unknown;
+  };
+  created_at: string;
+  created_by_name?: string | null;
+  video?: SubmissionFile | null;
+  check?: StoredCheck | null;
+  review_job?: ReviewJob | null;
+}
+
+/** The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days). */
+export type QueueTab = "review" | "sent_back" | "done";
+
+export type ReviewQueueCounts = Record<QueueTab, number>;
 
 export interface SubmitResult {
   submission: Submission;

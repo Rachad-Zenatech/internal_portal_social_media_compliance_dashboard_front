@@ -4,7 +4,7 @@ import { FileText, Loader2, PenLine, RefreshCw, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
-import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
 import { useReviewComments } from "@/hooks/useReview";
 import type { SubmissionFile } from "@/types/submission";
 
@@ -14,6 +14,7 @@ import type { SubmissionFile } from "@/types/submission";
  */
 export default function RevisionWorkspace({
   submissionId,
+  dueAt,
   mainFile,
   caption,
   accept,
@@ -24,6 +25,8 @@ export default function RevisionWorkspace({
   onResubmit,
 }: {
   submissionId: string;
+  /** Resubmit-by date for the requested changes. */
+  dueAt?: string | null;
   mainFile?: SubmissionFile;
   caption: string;
   /** File types the main upload accepts. */
@@ -41,6 +44,7 @@ export default function RevisionWorkspace({
   const [duration, setDuration] = useState(0);
 
   const open = comments.filter((c) => !c.resolved_at).length;
+  const due = dueInfo(dueAt, "REVISION");
   const isVideo = mainFile?.mime_type.startsWith("video/");
   const isImage = mainFile?.mime_type.startsWith("image/");
   const pinned = comments.filter((c) => c.start_sec != null);
@@ -62,6 +66,11 @@ export default function RevisionWorkspace({
             {open > 0 ? `${open} open comment${open === 1 ? "" : "s"}. ` : "All comments resolved. "}
             Click a comment's time to jump to that moment, fix it here, then resubmit. Everything else stays as it was.
           </p>
+          {due && (
+            <p className={`mt-1 text-xs font-semibold ${due.overdue ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-100"}`}>
+              {due.overdue ? `Overdue: this was due ${due.exact}. Resubmit as soon as you can.` : `Resubmit by ${due.exact} (${due.text.toLowerCase()}).`}
+            </p>
+          )}
         </div>
         <Button
           size="sm"

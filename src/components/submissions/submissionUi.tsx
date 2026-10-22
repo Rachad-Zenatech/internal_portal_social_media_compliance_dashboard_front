@@ -1,4 +1,6 @@
+import { format, formatDistanceToNowStrict, isPast } from "date-fns";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
+import type { DueKind } from "@/types/submission";
 import {
   FileArchive,
   FileSpreadsheet,
@@ -8,6 +10,7 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,7 +64,7 @@ function formatDuration(sec: number) {
  */
 export function authedFileUrl(url: string) {
   const token = sessionStorage.getItem("token");
-  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+  return token ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}` : url;
 }
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
@@ -78,6 +81,42 @@ export function SubmissionStatusBadge({ status }: { status: SubmissionStatus | s
     <Badge variant="outline" className={`text-[11px] font-semibold ${style.className}`}>
       {style.label}
     </Badge>
+  );
+}
+
+const hoursUntil = (d: Date) => (d.getTime() - Date.now()) / 3_600_000;
+
+/** "Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is. */
+export function dueInfo(dueAt?: string | null, kind?: DueKind | null) {
+  if (!dueAt || !kind) return null;
+  const due = new Date(dueAt);
+  const what = kind === "REVIEW" ? "Review" : "Changes";
+  const overdue = isPast(due);
+  return {
+    due,
+    overdue,
+    soon: !overdue && hoursUntil(due) <= 4,
+    text: overdue ? `${what} overdue by ${formatDistanceToNowStrict(due)}` : `${what} due in ${formatDistanceToNowStrict(due)}`,
+    exact: format(due, "EEE MMM d, h:mm a"),
+  };
+}
+
+/** Deadline for the next step: red when overdue, amber when it's close. */
+export function DueBadge({ dueAt, kind, className = "" }: { dueAt?: string | null; kind?: DueKind | null; className?: string }) {
+  const info = dueInfo(dueAt, kind);
+  if (!info) return null;
+  const tone = info.overdue
+    ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300"
+    : info.soon
+    ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+    : "border-border bg-muted/50 text-muted-foreground";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${tone} ${className}`}
+      title={`Due ${info.exact}`}
+    >
+      <Clock className="w-3 h-3" /> {info.text}
+    </span>
   );
 }
 

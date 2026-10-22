@@ -1,11 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { complianceService, type ComplianceViolation } from '@/services/complianceService';
 import { submissionService } from '@/services/submissionService';
 import { authedFileUrl } from '@/components/submissions/submissionUi';
 import { useAuth } from '@/lib/AuthContext';
-import type { ReviewQueueItem, StoredCheck, SubmissionStatus, TranscriptStatus } from '@/types/submission';
+import type {
+  QueueTab,
+  ReviewQueueCounts,
+  ReviewQueueItem,
+  StoredCheck,
+  SubmissionStatus,
+  TranscriptStatus,
+  VersionView,
+} from '@/types/submission';
+
+const QUEUE_TABS: QueueTab[] = ['review', 'sent_back', 'done'];
+const tabOf = (status: SubmissionStatus): QueueTab =>
+  status === 'IN_REVIEW' ? 'review' : status === 'CHANGES_REQUESTED' ? 'sent_back' : 'done';
 
 export type TargetPlatform = 'TIKTOK' | 'YOUTUBE' | 'YOUTUBE_SHORTS' | 'LINKEDIN';
 export type PosterVariant = 'dusk' | 'desert' | 'night';
@@ -66,8 +78,18 @@ export interface VideoQueueItem {
   currentVersion?: number;
   platforms?: string[];
   publishAt?: string | null;
+  /** Deadline for the next step (reviewer or creator). */
+  dueAt?: string | null;
+  dueKind?: 'REVIEW' | 'REVISION' | null;
   /** The viewer is a reviewer who may decide on it. */
   canReview?: boolean;
+  /** Which Screener tab it belongs to; demo items count as "review". */
+  queueTab?: QueueTab;
+  canApprove?: boolean;
+  approverNames?: string[];
+  createdBy?: string | null;
+  canManageApproval?: boolean;
+  decidedAt?: string | null;
 }
 
 interface VideoUploadQueueContextType {
@@ -98,6 +120,11 @@ interface VideoUploadQueueContextType {
   showDemo: boolean;
   setShowDemo: (show: boolean) => void;
   serverQueueLoading: boolean;
+  /** How many submitted videos are in each tab (from the server, not limited by what's loaded). */
+  queueCounts: ReviewQueueCounts | null;
+  /** Search for the Done tab (title or reference). */
+  doneSearch: string;
+  setDoneSearch: (search: string) => void;
 }
 
 const VideoUploadQueueContext = createContext<VideoUploadQueueContextType | undefined>(undefined);
@@ -259,6 +286,40 @@ const SCREENER_PLATFORMS: TargetPlatform[] = ['TIKTOK', 'YOUTUBE', 'YOUTUBE_SHOR
 const SHOW_DEMO_KEY = 'contentScreener.showDemo';
 
 /** Turn a submitted video into a queue item the Content Screener can play and score. */
+/** An earlier version of a submitted item, as it was, for the Screener's version picker. Always read-only. */
+export function versionQueueItem(latest: VideoQueueItem, v: VersionView): VideoQueueItem | null {
+  if (!v.video || !latest.submissionId) return null;
+  const jobStatus = v.review_job?.status;
+  const status = (jobStatus === 'AWAITING_REVIEW' ? 'IN_REVIEW' : jobStatus ?? 'IN_REVIEW') as SubmissionStatus;
+  const item = toQueueItem({
+    id: latest.submissionId,
+    reference_code: latest.referenceCode ?? '',
+    title: v.snapshot.title ?? latest.title,
+    status,
+    platforms: v.snapshot.platforms ?? latest.platforms ?? [],
+    account: null,
+    caption_text: v.snapshot.caption_text ?? null,
+    latest_check: v.check ?? null,
+    current_version: v.version_number,
+    submitted_at: v.created_at,
+    creator_name: latest.creatorName ?? null,
+    video: v.video,
+    can_review: false,
+    publish_at: v.snapshot.publish_at ?? null,
+  } as ReviewQueueItem);
+  return {
+    ...item,
+    id: `${latest.id}@v${v.version_number}`,
+    platform: latest.platform,
+    aspectRatio: latest.aspectRatio,
+    queueTab: 'done',
+    canReview: false,
+    canManageApproval: false,
+    dueAt: null,
+    dueKind: null,
+  };
+}
+
 function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
   const platform =
     (s.platforms.find((p) => SCREENER_PLATFORMS.includes(p as TargetPlatform)) as TargetPlatform | undefined) ??
@@ -316,7 +377,15 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     currentVersion: s.current_version,
     platforms: s.platforms,
     publishAt: s.publish_at ?? null,
+    dueAt: s.due_at ?? null,
+    dueKind: s.due_kind ?? null,
     canReview: Boolean(s.can_review),
+    queueTab: tabOf(s.status),
+    canApprove: s.can_approve ?? Boolean(s.can_review),
+    approverNames: s.approver_names ?? [],
+    createdBy: s.created_by ?? null,
+    canManageApproval: Boolean(s.can_manage_approval),
+    decidedAt: s.decided_at ?? null,
   };
 }
 
@@ -335,23 +404,42 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   });
 
   const { user } = useAuth();
-  const serverQuery = useQuery({
-    queryKey: ['review-queue'],
-    queryFn: submissionService.reviewQueue,
+  const [doneSearch, setDoneSearch] = useState('');
+  // Each tab is its own list on the server, so decided content can't crowd out what's waiting.
+  const tabQueries = useQueries({
+    queries: QUEUE_TABS.map((tab) => {
+      const search = tab === 'done' ? doneSearch.trim() : '';
+      return {
+        queryKey: ['review-queue', tab, search],
+        queryFn: () => submissionService.reviewQueue(tab, search || undefined),
+        enabled: Boolean(user),
+        staleTime: 0,
+        placeholderData: (previous: ReviewQueueItem[] | undefined) => previous,
+        // Check back quickly while a transcript is being generated, otherwise once a minute.
+        refetchInterval: (query: { state: { data?: ReviewQueueItem[] } }) =>
+          query.state.data?.some((s) => s.video.transcript_status === 'PENDING' || s.video.transcript_status === 'PROCESSING')
+            ? 5_000
+            : 60_000,
+      };
+    }),
+  });
+  const countsQuery = useQuery({
+    queryKey: ['review-queue', 'counts'],
+    queryFn: submissionService.reviewQueueCounts,
     enabled: Boolean(user),
     staleTime: 0,
-    // Check back quickly while a transcript is being generated, otherwise once a minute.
-    refetchInterval: (query) =>
-      query.state.data?.some((s) => s.video.transcript_status === 'PENDING' || s.video.transcript_status === 'PROCESSING')
-        ? 5_000
-        : 60_000,
+    refetchInterval: 60_000,
   });
-  const serverItems = useMemo(
-    () =>
-      // Submitted items always show the server's check, so every screen agrees on the score.
-      (serverQuery.data ?? []).map(toQueueItem),
-    [serverQuery.data]
-  );
+  const [reviewRows, sentBackRows, doneRows] = tabQueries.map((q) => q.data);
+  const serverItems = useMemo(() => {
+    // Submitted items always show the server's check, so every screen agrees on the score.
+    const seen = new Set<string>();
+    return [reviewRows, sentBackRows, doneRows]
+      .flatMap((rows) => rows ?? [])
+      .filter((s) => !seen.has(s.id) && seen.add(s.id))
+      .map(toQueueItem);
+  }, [reviewRows, sentBackRows, doneRows]);
+  const serverLoading = tabQueries.some((q) => q.isLoading);
 
   // Without a saved preference, samples only show while there's no real content to review.
   const showDemo = showDemoPref ?? serverItems.length === 0;
@@ -384,7 +472,7 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   // Score every item with the same live rulebook check the Content Screener uses. Hidden sample videos
   // aren't scored (they're scored when shown), and nothing runs until the real queue has loaded.
   const checksInFlight = useRef(new Set<string>());
-  const queueLoading = serverQuery.isLoading;
+  const queueLoading = serverLoading;
   useEffect(() => {
     if (queueLoading) return;
     localQueue
@@ -645,7 +733,10 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         recordScanResult,
         showDemo,
         setShowDemo,
-        serverQueueLoading: serverQuery.isLoading,
+        serverQueueLoading: serverLoading,
+        queueCounts: countsQuery.data ?? null,
+        doneSearch,
+        setDoneSearch,
       }}
     >
       {children}

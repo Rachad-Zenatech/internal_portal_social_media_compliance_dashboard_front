@@ -5,6 +5,7 @@ import {
   Film,
   Heart,
   Image as ImageIcon,
+  Megaphone,
   MessageCircle,
   MoreHorizontal,
   Music2,
@@ -56,6 +57,7 @@ const CONTENT_ICONS: Record<string, typeof FileText> = {
   CAROUSEL: ImageIcon,
   SOCIAL_POST: MessageCircle,
   BLOG: FileText,
+  AD: Megaphone,
 };
 
 /** Card/list thumbnail: the picked video frame, the image itself, or a styled placeholder. */

@@ -2,10 +2,13 @@ import { apiClient } from "@/services/apiClient";
 import type { AiUsage, SentimentAnalysis } from "@/types/sentiment";
 import type {
   ContentType,
+  QueueTab,
   ReviewComment,
   ReviewCommentCreate,
   ReviewDecisionRequest,
+  ReviewQueueCounts,
   ReviewQueueItem,
+  VersionView,
   Submission,
   SubmissionFile,
   SubmissionFileKind,
@@ -62,7 +65,15 @@ export const submissionService = {
       actionSubtitle: "Checking required information and running the rulebook check...",
     }),
 
+  /** Back to draft: from review, or after approval for a late fix (the approval then no longer applies). */
   withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
+
+  /** Reviewer takes back an approval and sends it to the creator as changes requested. */
+  reopen: (id: string, notes: string) => apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes }, quiet),
+
+  /** Reviewer moves approved content to a new publish time. */
+  reschedule: (id: string, publishAt: string) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/reschedule`, { publish_at: publishAt }, quiet),
 
   history: (id: string) => apiClient.get<SubmissionHistory>(`/api/submissions/${id}/history`),
 
@@ -82,7 +93,14 @@ export const submissionService = {
     apiClient.delete<null>(`/api/submissions/${id}/comments/${commentId}`, quiet),
 
   /** Latest sentiment analysis, or null if none has run. */
-  getSentiment: (id: string) => apiClient.get<SentimentAnalysis | null>(`/api/submissions/${id}/sentiment`, quiet),
+  getSentiment: (id: string, version?: number) =>
+    apiClient.get<SentimentAnalysis | null>(
+      `/api/submissions/${id}/sentiment${version != null ? `?version=${version}` : ""}`,
+      quiet
+    ),
+
+  /** One submitted version as it was (snapshot, video, automated check, decision). */
+  getVersion: (id: string, version: number) => apiClient.get<VersionView>(`/api/submissions/${id}/versions/${version}`, quiet),
 
   /** Start (or reuse) a sentiment analysis of the current content. */
   requestSentiment: (id: string) => apiClient.post<SentimentAnalysis>(`/api/submissions/${id}/sentiment`, undefined, quiet),
@@ -92,7 +110,12 @@ export const submissionService = {
     apiClient.get<AiUsage>(`/api/submissions/ai-usage${submissionId ? `?submission_id=${submissionId}` : ""}`, quiet),
 
   /** Submitted videos for the Content Screener queue. */
-  reviewQueue: () => apiClient.get<ReviewQueueItem[]>("/api/submissions/review-queue"),
+  reviewQueue: (tab: QueueTab = "review", search?: string) =>
+    apiClient.get<ReviewQueueItem[]>(
+      `/api/submissions/review-queue?tab=${tab}${search ? `&search=${encodeURIComponent(search)}` : ""}`
+    ),
+
+  reviewQueueCounts: () => apiClient.get<ReviewQueueCounts>("/api/submissions/review-queue/counts"),
 
   /** Fetch a stored file as a blob URL (file URLs need the auth header, so <img src> can't load them directly). */
   async fileObjectUrl(url: string): Promise<string> {
