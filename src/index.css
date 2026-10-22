@@ -58,6 +58,22 @@
     --breakpoint-wide: 1400px;
 }
 
+/* Brand blue: Tailwind's blue scale re-tinted to the ZenaTech logo's blue (#0059A0 = blue-600, hue ~251),
+   so every blue-* class (buttons, tints, borders, text) matches the brand instead of Tailwind's violet-leaning blue. */
+@theme {
+    --color-blue-50: #eef6ff;
+    --color-blue-100: #d9ebff;
+    --color-blue-200: #bbdcff;
+    --color-blue-300: #91c5fe;
+    --color-blue-400: #5ba4f1;
+    --color-blue-500: #2d83d6;
+    --color-blue-600: #0059a0;
+    --color-blue-700: #024a86;
+    --color-blue-800: #053b6b;
+    --color-blue-900: #072f54;
+    --color-blue-950: #041c36;
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
@@ -65,8 +81,9 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
+    /* Brand blue (see @theme above): default buttons, selected states and primary highlights. */
+    --primary: var(--color-blue-600);
+    --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
@@ -76,7 +93,7 @@
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --ring: var(--color-blue-400);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -85,8 +102,9 @@
     --radius: 0.625rem;
     --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    /* Active menu item: brand blue, matching the blue buttons and highlights. */
+    --sidebar-primary: var(--color-blue-600);
+    --sidebar-primary-foreground: oklch(1 0 0);
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
@@ -100,7 +118,7 @@
     --card-foreground: oklch(0.98 0.005 260);
     --popover: oklch(0.20 0.015 260);
     --popover-foreground: oklch(0.98 0.005 260);
-    --primary: oklch(0.6 0.18 260);
+    --primary: var(--color-blue-500);
     --primary-foreground: oklch(0.98 0.005 260);
     --secondary: oklch(0.25 0.015 260);
     --secondary-foreground: oklch(0.98 0.005 260);
@@ -111,20 +129,20 @@
     --destructive: oklch(0.6 0.2 25);
     --border: oklch(0.30 0.015 260);
     --input: oklch(0.30 0.015 260);
-    --ring: oklch(0.6 0.18 260);
-    --chart-1: oklch(0.6 0.18 260);
+    --ring: var(--color-blue-500);
+    --chart-1: var(--color-blue-500);
     --chart-2: oklch(0.65 0.18 160);
     --chart-3: oklch(0.7 0.18 40);
     --chart-4: oklch(0.75 0.18 300);
     --chart-5: oklch(0.8 0.18 80);
     --sidebar: oklch(0.18 0.015 260);
     --sidebar-foreground: oklch(0.98 0.005 260);
-    --sidebar-primary: oklch(0.6 0.18 260);
+    --sidebar-primary: var(--color-blue-500);
     --sidebar-primary-foreground: oklch(0.98 0.005 260);
     --sidebar-accent: oklch(0.25 0.015 260);
     --sidebar-accent-foreground: oklch(0.98 0.005 260);
     --sidebar-border: oklch(0.30 0.015 260);
-    --sidebar-ring: oklch(0.6 0.18 260);
+    --sidebar-ring: var(--color-blue-500);
 }
 
 @layer base {

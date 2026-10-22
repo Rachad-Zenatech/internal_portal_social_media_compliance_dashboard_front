@@ -1,541 +1,392 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/lib/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/services/apiClient";
-import type { User, Role, AuditLogItem } from "@/types/auth";
-import {
-  Users,
-  ShieldCheck,
-  Key,
-  Shield,
-  FileClock,
-  ArrowRight,
-  CheckCircle2,
-  Lock,
-  Layers,
-  Sparkles,
-  Zap,
-  Activity,
-  Server,
-  Code2,
-  Fingerprint,
-  Video,
-  Scale,
-  Share2,
-  Upload,
-  Radio,
-  Play,
-} from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { addDays, format, subDays, subHours, subMinutes } from "date-fns";
+import { ChevronRight, ExternalLink, FlaskConical, History, MoreHorizontal, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
+import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import DemoPoster from "@/components/video/DemoPoster";
+import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import type { PosterVariant } from "@/context/VideoUploadQueueContext";
+import { useAuth } from "@/lib/AuthContext";
+
+// ---------------------------------------------------------------------------
+// Sample data. A placeholder until the dashboard reads live metrics from the API.
+// Times are relative to now, so the page always looks current.
+// ---------------------------------------------------------------------------
+
+type Tone = "red" | "blue" | "green" | "violet";
+
+const TILES: { value: number; label: string; hint: string; tone: Tone; to: string }[] = [
+  { value: 7, label: "Needs My Review", hint: "Assigned to you", tone: "red", to: "/compliance/scanner" },
+  { value: 5, label: "In Review", hint: "Waiting for approval", tone: "blue", to: "/submissions" },
+  { value: 12, label: "Approved", hint: "Ready to schedule or post", tone: "green", to: "/submissions" },
+  { value: 6, label: "Upcoming Posts", hint: "Next 7 days", tone: "violet", to: "/content-calendar" },
+];
+
+const TILE_TONES: Record<Tone, { card: string; value: string }> = {
+  red: { card: "bg-red-50/80 border-red-100 dark:bg-red-500/10 dark:border-red-500/20", value: "text-red-600 dark:text-red-400" },
+  blue: { card: "bg-blue-50/80 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20", value: "text-blue-600 dark:text-blue-300" },
+  green: { card: "bg-emerald-50/80 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20", value: "text-emerald-700 dark:text-emerald-300" },
+  violet: { card: "bg-violet-50/80 border-violet-100 dark:bg-violet-500/10 dark:border-violet-500/20", value: "text-violet-700 dark:text-violet-300" },
+};
+
+interface ReviewItem {
+  id: string;
+  title: string;
+  poster: PosterVariant;
+  duration: string;
+  platform: SocialPlatform;
+  brand: string;
+  submittedHoursAgo: number;
+  /** Hours from now until the review is due. */
+  dueInHours: number;
+  score: number;
+}
+
+const NEEDS_REVIEW: ReviewItem[] = [
+  { id: "r1", title: "Behind the Scenes: Field Trials", poster: "dusk", duration: "0:37", platform: "TIKTOK", brand: "ZenaDrone", submittedHoursAgo: 20, dueInHours: 3, score: 100 },
+  { id: "r2", title: "CEO on the Future of Defense Tech", poster: "night", duration: "1:12", platform: "LINKEDIN", brand: "ZenaTech", submittedHoursAgo: 46, dueInHours: 4, score: 85 },
+  { id: "r3", title: "Q4 Product Showcase", poster: "desert", duration: "0:45", platform: "YOUTUBE", brand: "ZenaDrone", submittedHoursAgo: 49, dueInHours: 26, score: 92 },
+  { id: "r4", title: "New Drone Capabilities", poster: "night", duration: "0:28", platform: "TIKTOK", brand: "ZenaDrone", submittedHoursAgo: 70, dueInHours: 50, score: 78 },
+  { id: "r5", title: "Supply Chain & Autonomy", poster: "dusk", duration: "1:05", platform: "LINKEDIN", brand: "ZenaTech", submittedHoursAgo: 72, dueInHours: 52, score: 88 },
+];
+
+type PostStatus = "Scheduled" | "Approved" | "In Review" | "Draft";
+
+const UPCOMING: { id: string; title: string; poster: PosterVariant; platform: SocialPlatform; brand: string; inDays: number; time: string; status: PostStatus }[] = [
+  { id: "u1", title: "Industry Trends Update", poster: "dusk", platform: "LINKEDIN", brand: "ZenaTech", inDays: 0, time: "2:00 PM", status: "Scheduled" },
+  { id: "u2", title: "ZenaDrone Product Video", poster: "desert", platform: "TIKTOK", brand: "ZenaDrone", inDays: 1, time: "10:00 AM", status: "Approved" },
+  { id: "u3", title: "Sustainability in Defense", poster: "night", platform: "LINKEDIN", brand: "ZenaTech", inDays: 3, time: "11:00 AM", status: "In Review" },
+  { id: "u4", title: "Team Spotlight", poster: "dusk", platform: "INSTAGRAM", brand: "ZenaTech", inDays: 4, time: "3:00 PM", status: "Draft" },
+];
+
+const POST_STATUS: Record<PostStatus, string> = {
+  Scheduled: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  Approved: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "In Review": "bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
+  Draft: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+};
+
+const ACTIVITY: { initials: string; avatar: string; who: string; action: string; item: string; minutesAgo: number }[] = [
+  { initials: "KL", avatar: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300", who: "Karen Li", action: "requested changes", item: "Behind the Scenes: Field Trials", minutesAgo: 10 },
+  { initials: "DW", avatar: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300", who: "Daniel Wright", action: "added a comment", item: "CEO on the Future of Defense Tech", minutesAgo: 60 },
+  { initials: "SB", avatar: "bg-blue-700 text-white dark:bg-blue-600", who: "Sarah Bennett", action: "approved the submission", item: "Q4 Product Showcase", minutesAgo: 180 },
+  { initials: "AM", avatar: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300", who: "You", action: "submitted a new version", item: "New Drone Capabilities", minutesAgo: 300 },
+  { initials: "KL", avatar: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300", who: "Karen Li", action: "flagged a compliance issue", item: "Supply Chain & Autonomy", minutesAgo: 1440 },
+];
+
+const INSIGHTS = [
+  { value: "28", label: "Reviews completed" },
+  { value: "6", label: "Required changes" },
+  { value: "2", label: "Escalated reviews" },
+  { value: "96%", label: "Average compliance score", good: true },
+];
+
+const FINDINGS = [
+  { label: "Unsupported product claims", count: 5 },
+  { label: "Missing disclaimers", count: 3 },
+  { label: "Government/defense terminology", count: 3 },
+  { label: "Brand guideline deviations", count: 2 },
+  { label: "Sensitive imagery or locations", count: 2 },
+];
+
+// ---------------------------------------------------------------------------
+// Pieces
+// ---------------------------------------------------------------------------
+
+const scoreTone = (score: number) =>
+  score >= 90
+    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+    : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300";
+
+function timeAgo(minutes: number) {
+  if (minutes < 60) return `${minutes} minutes ago`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)} hour${minutes < 120 ? "" : "s"} ago`;
+  const days = Math.round(minutes / 1440);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function Thumb({ poster, duration, className = "" }: { poster: PosterVariant; duration?: string; className?: string }) {
+  return (
+    <div className={`relative shrink-0 overflow-hidden rounded-md bg-muted ${className}`}>
+      <DemoPoster variant={poster} className="h-full w-full" />
+      {duration && (
+        <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1 text-[10px] font-semibold text-white tabular-nums">{duration}</span>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, subtitle, action, children, className = "" }: { title: string; subtitle?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <Card className={`py-0 gap-0 border-border/70 shadow-xs min-w-0 ${className}`}>
+      <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+const viewAll = (to: string) => (
+  <Link to={to} className="text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
+    View all
+  </Link>
+);
+
+function RowMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground" aria-label="More actions">
+          <MoreHorizontal className="w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem asChild className="text-xs gap-2">
+          <Link to="/submissions">
+            <ExternalLink className="w-3.5 h-3.5" /> Open in Content Portal
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="text-xs gap-2">
+          <Link to="/submissions">
+            <History className="w-3.5 h-3.5" /> Version history
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function Dashboard() {
-  const { user, roles, hasRole } = useAuth();
-  const isSuperAdmin = hasRole("SUPER_ADMIN") || user?.is_super_admin;
+  const { user } = useAuth();
+  const now = useMemo(() => new Date(), []);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const allSelected = selected.size === NEEDS_REVIEW.length;
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => apiClient.get<User[]>("/api/configuration/users").catch(() => []),
-    enabled: !!isSuperAdmin,
-  });
-
-  const { data: allRoles = [], isLoading: isLoadingRoles } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => apiClient.get<Role[]>("/api/configuration/roles").catch(() => []),
-  });
-
-  const { data: recentLogs = [], isLoading: isLoadingLogs } = useQuery({
-    queryKey: ["auditLogs"],
-    queryFn: () => apiClient.get<AuditLogItem[]>("/api/audit-logs").catch(() => []),
-  });
-
-  const activeUsers = useMemo(() => users.filter((u) => u.is_active !== false).length, [users]);
-  const activeRoles = useMemo(() => allRoles.filter((r) => r.is_active !== false).length, [allRoles]);
-  const { queue, activeUploadCount, openQueueDrawer, setActiveVideoId } = useVideoUploadQueue();
-
-  const quickNavCards = [
-    {
-      title: "User Management",
-      description: "Manage system accounts, user status, super admin rights, and identity details.",
-      icon: Users,
-      path: "/configurations/users",
-      color: "from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/40",
-      badge: isSuperAdmin ? `${users.length} Users` : undefined,
-    },
-    {
-      title: "Role Hierarchy & Definitions",
-      description: "Define enterprise roles, assign department tags, and build inheritance structures.",
-      icon: ShieldCheck,
-      path: "/configurations/roles",
-      color: "from-emerald-500/10 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40",
-      badge: `${allRoles.length} Roles`,
-    },
-    {
-      title: "User-Role Assignment",
-      description: "Assign active roles to users and grant workflow authorization matrices.",
-      icon: Key,
-      path: "/configurations/user-role-assignment",
-      color: "from-purple-500/10 to-violet-500/10 text-purple-600 dark:text-purple-400 border-purple-200/50 dark:border-purple-900/40",
-    },
-    {
-      title: "Navigation & Module Permissions",
-      description: "Fine-tune UI screen visibility and module actions per security role.",
-      icon: Layers,
-      path: "/configurations/role-group-permissions",
-      color: "from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/40",
-    },
-    {
-      title: "API Endpoint Permissions",
-      description: "Enforce granular HTTP method and path pattern security policies.",
-      icon: Lock,
-      path: "/configurations/role-api-permissions",
-      color: "from-rose-500/10 to-red-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-900/40",
-    },
-    {
-      title: "Security & Audit Logs",
-      description: "Inspect immutable audit trails, actor activities, and state transitions.",
-      icon: FileClock,
-      path: "/log/audit",
-      color: "from-cyan-500/10 to-sky-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-200/50 dark:border-cyan-900/40",
-      badge: `${recentLogs.length} Events`,
-    },
-  ];
+  const deadline = (dueInHours: number) => {
+    const due = new Date(now.getTime() + dueInHours * 3600_000);
+    const today = format(due, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+    return today ? (
+      <span className="font-semibold text-red-600 dark:text-red-400">
+        Today
+        <br />
+        {format(due, "h:mm a")}
+      </span>
+    ) : (
+      <span className="text-foreground">{format(due, "MMM d")}</span>
+    );
+  };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-3 duration-500">
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/90 via-primary to-indigo-950 text-primary-foreground p-6 sm:p-8 md:p-10 shadow-xl border border-primary/20">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold tracking-wide text-white/90 border border-white/15">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Social Media Compliance • RBAC Enabled</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
-            Welcome back, {user?.full_name || "Administrator"}
-          </h1>
-          <p className="text-sm sm:text-base text-primary-foreground/80 leading-relaxed max-w-2xl">
-            Social Media Compliance portal with role-based access control (RBAC),
-            fine-grained permissions, real-time event streaming, and audit trails.
+    <div className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {user?.full_name ? `Welcome back, ${user.full_name.split(" ")[0]}. ` : ""}Review content, run compliance checks, and manage approvals.
           </p>
-          <div className="flex flex-wrap items-center gap-3 pt-3">
-            <Link
-              to="/submissions/new"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-zinc-950 font-bold text-xs shadow-md hover:bg-white/90 transition-all hover:scale-102"
-            >
-              <Video className="w-4 h-4 text-primary" />
-              Upload New Content
-            </Link>
-            <Link
-              to="/compliance/rules"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-medium text-xs backdrop-blur-md border border-white/20 transition-all"
-            >
-              <Scale className="w-3.5 h-3.5" />
-              Compliance Rulebook
-            </Link>
-            <Link
-              to="/socials"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-xs backdrop-blur-md border border-white/10 transition-all"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              Social Channels
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <Badge variant="secondary" className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1 border-transparent">
-              <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
-              {user?.is_super_admin ? "Super Admin" : roles.length > 0 ? roles.map((r) => r.name).join(", ") : "Standard User"}
-            </Badge>
-            <Badge variant="secondary" className="bg-white/10 text-white/90 text-xs px-3 py-1 border-white/10">
-              <Server className="w-3.5 h-3.5 mr-1.5 text-emerald-300" />
-              System Status: Active
-            </Badge>
-          </div>
         </div>
+        <Button asChild className="h-11 rounded-lg px-5 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+          <Link to="/submissions/new">
+            <Plus className="w-4 h-4" /> New Submission
+          </Link>
+        </Button>
+      </header>
+
+      <p className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-100">
+        <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+        <span>
+          <strong>Placeholder:</strong> everything on this page is sample data until it's connected to live submissions, reviews and the calendar.
+        </span>
+      </p>
+
+      {/* Summary tiles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {TILES.map((t) => (
+          <Link
+            key={t.label}
+            to={t.to}
+            className={`group flex items-center gap-3 rounded-xl border px-5 py-4 transition-shadow hover:shadow-sm ${TILE_TONES[t.tone].card}`}
+          >
+            <div className="min-w-0 flex-1">
+              <p className={`text-3xl font-bold leading-tight ${TILE_TONES[t.tone].value}`}>{t.value}</p>
+              <p className={`text-sm font-semibold ${TILE_TONES[t.tone].value}`}>{t.label}</p>
+              <p className="text-xs text-muted-foreground">{t.hint}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        ))}
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6">
-        <Card className="border-border/60 shadow-xs hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Users
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-              <Users className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {isLoadingUsers ? "..." : users.length || 1}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>{activeUsers || 1} active accounts</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-xs hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Security Roles
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
-              <Shield className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {isLoadingRoles ? "..." : allRoles.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>{activeRoles} active policies</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-xs hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Access Control
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
-              <Key className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">RBAC 2.0</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <span>Navigation + API + MCP</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 shadow-xs hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Audit Stream
-            </CardTitle>
-            <div className="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400">
-              <Activity className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {isLoadingLogs ? "..." : recentLogs.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <span>Logged audit actions</span>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Marketing & Pre-Publication Compliance Hub */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-500" />
-              Marketing & Pre-Publication Screening
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Screen promotional videos, voiceover transcripts, and social campaigns against defense compliance rules.
-            </p>
-          </div>
-        </div>
-
-        {/* Active Video Upload Queue Preview on Dashboard */}
-        <Card className="border-border/80 shadow-xs bg-muted/20 overflow-hidden">
-          <CardHeader className="p-4 bg-muted/30 border-b border-border/60">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Upload className="w-4 h-4 animate-bounce" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold flex flex-wrap items-center gap-2">
-                    <span>Live Video Upload & Review Queue</span>
-                    <Badge variant="outline" className="text-[10px] font-mono border-blue-500/30 text-blue-600 dark:text-blue-400">
-                      {activeUploadCount} Transferring • {queue.length} in Queue
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Track progressive uploads and start reviewing compliance violations on buffered chunks immediately.
-                  </CardDescription>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={openQueueDrawer}
-                  className="text-xs h-7 gap-1 font-semibold"
-                >
-                  <Upload className="w-3 h-3 text-primary" />
-                  View Queue ({queue.length})
-                </Button>
-                <Link
-                  to="/compliance/scanner"
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary text-primary-foreground font-semibold text-xs shadow-2xs hover:bg-primary/90"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                  Open Screener
-                </Link>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {queue.slice(0, 3).map((item, idx) => {
-                const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
-                return (
-                  <div
-                    key={item.id}
-                    className="p-3 rounded-xl border border-border/70 bg-card flex flex-col justify-between space-y-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-bold text-xs text-foreground line-clamp-1">{item.title}</h4>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                          {item.platform} • {item.filename}
-                        </p>
-                      </div>
-                      {isUploading ? (
-                        <Badge className="bg-blue-600 text-white text-[9px] font-bold shrink-0 animate-pulse">
-                          {item.progressPercent}%
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-[9px] font-mono shrink-0">
-                          {item.status}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {isUploading && (
-                      <div className="space-y-1">
-                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 rounded-full"
-                            style={{ width: `${item.progressPercent}%` }}
-                          />
+      <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_440px] gap-4 items-start">
+        {/* Needs your review */}
+        <Section title="Needs Your Review" subtitle="Priority order based on deadlines and risk level" action={viewAll("/compliance/scanner")}>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-sm">
+              <thead>
+                <tr className="border-y border-border/70 text-left text-xs text-muted-foreground">
+                  <th className="w-10 py-2.5 pl-5">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all"
+                      className="h-4 w-4 accent-blue-600"
+                      checked={allSelected}
+                      onChange={() => setSelected(allSelected ? new Set() : new Set(NEEDS_REVIEW.map((r) => r.id)))}
+                    />
+                  </th>
+                  <th className="py-2.5 font-medium">Content</th>
+                  <th className="py-2.5 font-medium">Platform</th>
+                  <th className="py-2.5 font-medium">Brand</th>
+                  <th className="py-2.5 font-medium">Submitted</th>
+                  <th className="py-2.5 font-medium">Deadline</th>
+                  <th className="py-2.5 font-medium">Compliance</th>
+                  <th className="py-2.5 pr-5 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {NEEDS_REVIEW.map((r) => {
+                  const submitted = subHours(now, r.submittedHoursAgo);
+                  return (
+                    <tr key={r.id} className={selected.has(r.id) ? "bg-blue-50/60 dark:bg-blue-500/5" : ""}>
+                      <td className="py-3 pl-5">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${r.title}`}
+                          className="h-4 w-4 accent-blue-600"
+                          checked={selected.has(r.id)}
+                          onChange={() => toggle(r.id)}
+                        />
+                      </td>
+                      <td className="py-3 pr-3">
+                        <div className="flex items-center gap-3">
+                          <Thumb poster={r.poster} duration={r.duration} className="h-12 w-[72px]" />
+                          <span className="max-w-[150px] font-medium leading-snug text-foreground">{r.title}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                          <span className="truncate max-w-[140px]">{item.currentStageLabel}</span>
-                          <span className="font-mono">{item.progressPercent}% buffered</span>
+                      </td>
+                      <td className="py-3 pr-3">
+                        <span className="inline-flex items-center gap-1.5 text-foreground">
+                          <PlatformIcon platform={r.platform} className="w-4 h-4" /> {PLATFORM_LABELS[r.platform] ?? r.platform}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-3 text-foreground">{r.brand}</td>
+                      <td className="py-3 pr-3 text-xs text-muted-foreground">
+                        {format(submitted, "MMM d")}
+                        <br />
+                        {format(submitted, "h:mm a")}
+                      </td>
+                      <td className="py-3 pr-3 text-xs">{deadline(r.dueInHours)}</td>
+                      <td className="py-3 pr-3">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${scoreTone(r.score)}`}>{r.score}/100</span>
+                      </td>
+                      <td className="py-3 pr-5">
+                        <div className="flex items-center gap-1">
+                          <Button asChild size="sm" className="h-8 rounded-md bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700">
+                            <Link to="/compliance/scanner">Review</Link>
+                          </Button>
+                          <RowMenu />
                         </div>
-                      </div>
-                    )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Section>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
-                      {isUploading ? (
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                          <Radio className="w-3 h-3 text-amber-500 animate-pulse" />
-                          Review chunks so far
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground">
-                          {item.status !== "COMPLETED"
-                            ? `Waiting in slot #${idx + 1}`
-                            : item.scoreStatus === "checked"
-                            ? `Score: ${item.complianceScore}/100`
-                            : item.scoreStatus === "pending"
-                            ? "Checking..."
-                            : "Score unavailable"}
-                        </span>
-                      )}
-
-                      <Link
-                        to="/compliance/scanner"
-                        onClick={() => setActiveVideoId(item.id)}
-                        className="text-[10px] font-bold text-primary hover:underline"
-                      >
-                        {isUploading ? "Review Now →" : "Inspect →"}
-                      </Link>
-                    </div>
+        {/* Upcoming content */}
+        <Section title="Upcoming Content" subtitle={`Next 7 days • ${UPCOMING.length} posts`} action={viewAll("/content-calendar")}>
+          <ul className="divide-y divide-border/60 border-t border-border/70">
+            {UPCOMING.map((u) => {
+              const day = addDays(now, u.inDays);
+              return (
+                <li key={u.id} className="flex items-center gap-3 px-5 py-3">
+                  <div className="w-9 shrink-0 text-center">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground">{format(day, "MMM")}</p>
+                    <p className="text-lg font-bold leading-none text-foreground">{format(day, "d")}</p>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/compliance/scanner" className="group block outline-none">
-            <Card className="h-full border-primary/30 hover:border-primary bg-gradient-to-br from-primary/5 via-card to-card hover:bg-muted/30 transition-all duration-200 shadow-xs hover:shadow-md">
-              <CardHeader className="p-5 pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="p-2.5 rounded-xl border bg-gradient-to-br from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/40">
-                    <Video className="h-5 w-5" />
+                  <Thumb poster={u.poster} className="h-14 w-14" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{u.title}</p>
+                    <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <PlatformIcon platform={u.platform} className="w-3 h-3 shrink-0" /> {PLATFORM_LABELS[u.platform] ?? u.platform} • {u.brand}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {u.inDays === 0 ? "Today" : u.inDays === 1 ? "Tomorrow" : format(day, "MMM d")}, {u.time}
+                    </p>
                   </div>
-                  <Badge className="bg-amber-500 text-white text-[10px] font-bold">
-                    Interactive
-                  </Badge>
-                </div>
-                <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors mt-3">
-                  Content Screener
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-                  Review submitted videos and posts, inspect synchronized voiceovers, and see flagged claims directly on the timeline.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 pt-0 flex justify-end">
-                <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  Open Content Screener <ArrowRight className="h-3 w-3" />
-                </span>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/compliance/rules" className="group block outline-none">
-            <Card className="h-full border-border/60 hover:border-primary/40 bg-card hover:bg-muted/30 transition-all duration-200 shadow-2xs hover:shadow-md">
-              <CardHeader className="p-5 pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="p-2.5 rounded-xl border bg-gradient-to-br from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/40">
-                    <Scale className="h-5 w-5" />
-                  </div>
-                  <Badge variant="outline" className="text-[10px] font-semibold">
-                    Rulebook
-                  </Badge>
-                </div>
-                <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors mt-3">
-                  Defense Governance Rules
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-                  Manage active defense thought leadership rules, prohibited claims, disclaimers, and traffic light criteria.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 pt-0 flex justify-end">
-                <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  Manage Rulebook <ArrowRight className="h-3 w-3" />
-                </span>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/socials" className="group block outline-none">
-            <Card className="h-full border-border/60 hover:border-primary/40 bg-card hover:bg-muted/30 transition-all duration-200 shadow-2xs hover:shadow-md">
-              <CardHeader className="p-5 pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="p-2.5 rounded-xl border bg-gradient-to-br from-emerald-500/10 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40">
-                    <Share2 className="h-5 w-5" />
-                  </div>
-                  <Badge variant="outline" className="text-[10px] font-semibold">
-                    Channels
-                  </Badge>
-                </div>
-                <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors mt-3">
-                  Social Media Distribution
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-                  Monitor LinkedIn, X/Twitter, Instagram, YouTube, and Facebook engagement across all subsidiary brands.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 pt-0 flex justify-end">
-                <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  View Channels <ArrowRight className="h-3 w-3" />
-                </span>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${POST_STATUS[u.status]}`}>{u.status}</span>
+                  <RowMenu />
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
       </div>
 
-      {/* Quick Navigation Hub */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-foreground tracking-tight">Security & RBAC Modules</h2>
-            <p className="text-xs text-muted-foreground">Manage roles, permissions, user assignments, and security audit trails.</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+        {/* Recent activity */}
+        <Section title="Recent Activity" subtitle="Latest updates across your content" action={viewAll("/log/audit")}>
+          <ul className="divide-y divide-border/60 border-t border-border/70">
+            {ACTIVITY.map((a, i) => (
+              <li key={i} className="flex items-center gap-3 px-5 py-3">
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold ${a.avatar}`}>{a.initials}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-foreground">
+                    <span className="font-semibold">{a.who}</span> {a.action}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{a.item}</p>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground" title={format(subMinutes(now, a.minutesAgo), "MMM d, h:mm a")}>
+                  {timeAgo(a.minutesAgo)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {quickNavCards.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.path} to={item.path} className="group block outline-none">
-                <Card className="h-full border-border/60 hover:border-primary/40 bg-card hover:bg-muted/30 transition-all duration-200 shadow-2xs hover:shadow-md">
-                  <CardHeader className="p-5 pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className={`p-2.5 rounded-xl border bg-gradient-to-br ${item.color}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      {item.badge && (
-                        <Badge variant="outline" className="text-[10px] font-semibold">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors mt-3">
-                      {item.title}
-                    </CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-                      {item.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-5 pt-0 flex justify-end">
-                    <span className="text-xs font-semibold text-primary flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                      Open Module <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+        {/* Compliance insights */}
+        <Section title="Compliance Insights" action={<span className="text-xs text-muted-foreground">Last 30 days</span>}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 border-y border-border/70">
+            {INSIGHTS.map((s, i) => (
+              <div key={s.label} className={`px-5 py-4 ${i > 0 ? "sm:border-l border-border/70" : ""}`}>
+                <p className={`text-2xl font-bold ${s.good ? "text-emerald-700 dark:text-emerald-300" : "text-foreground"}`}>{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 py-4">
+            <p className="mb-2 text-sm font-semibold text-foreground">Common Findings</p>
+            <ul className="divide-y divide-border/60">
+              {FINDINGS.map((f) => (
+                <li key={f.label} className="flex items-center justify-between py-2 text-sm">
+                  <span className="text-foreground">{f.label}</span>
+                  <span className="font-semibold tabular-nums text-foreground">{f.count}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] text-muted-foreground">Since {format(subDays(now, 30), "MMM d")}</p>
+          </div>
+        </Section>
       </div>
-
-      {/* Starter Template Guide */}
-      <Card className="border-border/60 bg-muted/20">
-        <CardHeader>
-          <div className="flex items-center gap-2 text-primary mb-1">
-            <Code2 className="h-5 w-5" />
-            <CardTitle className="text-lg font-bold">Template Architecture & Cloning Guide</CardTitle>
-          </div>
-          <CardDescription className="text-xs leading-relaxed">
-            Key patterns and conventions for developing applications on top of this template.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 text-xs text-muted-foreground leading-relaxed">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border bg-card space-y-2">
-              <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500" />
-                API Client & Auth
-              </h4>
-              <p>
-                All HTTP requests route through <code className="text-primary font-mono text-[11px]">src/services/apiClient.ts</code> with automatic token injection and reactive error handling.
-              </p>
-            </div>
-            <div className="p-4 rounded-xl border bg-card space-y-2">
-              <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                Role-Based Guarding
-              </h4>
-              <p>
-                Pages and actions are gated by <code className="text-primary font-mono text-[11px]">&lt;ProtectedRoute&gt;</code> and <code className="text-primary font-mono text-[11px]">hasPermission()</code>.
-              </p>
-            </div>
-            <div className="p-4 rounded-xl border bg-card space-y-2">
-              <h4 className="font-bold text-foreground text-sm flex items-center gap-2">
-                <Layers className="h-4 w-4 text-blue-500" />
-                Domain Organization
-              </h4>
-              <p>
-                Organize new pages under <code className="text-primary font-mono text-[11px]">src/pages/&lt;Feature&gt;</code> and declare shared interfaces in <code className="text-primary font-mono text-[11px]">src/types/</code>.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

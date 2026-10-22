@@ -551,7 +551,7 @@ export default function ComplianceRulesPage() {
                 aria-selected={selectedRuleSet === rs}
                 onClick={() => setSelectedRuleSet(rs)}
                 className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                  selectedRuleSet === rs ? 'bg-foreground text-background border-foreground' : 'border-border text-muted-foreground hover:text-foreground'
+                  selectedRuleSet === rs ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {rs === 'ALL' ? 'All rule sets' : rs}

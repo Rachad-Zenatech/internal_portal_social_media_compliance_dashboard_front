@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               The error was reported. Reload the page to continue.
             </p>
             <button
-              className="mt-5 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+              className="mt-5 rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-medium text-white"
               onClick={() => window.location.reload()}
               type="button"
             >

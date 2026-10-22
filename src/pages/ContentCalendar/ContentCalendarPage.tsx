@@ -293,7 +293,7 @@ export default function ContentCalendarPage() {
                   title={p === "all" ? "All platforms" : platformName(p)}
                   onClick={() => setPlatform(p)}
                   className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors ${
-                    platform === p ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                    platform === p ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {p === "all" ? "All" : <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
