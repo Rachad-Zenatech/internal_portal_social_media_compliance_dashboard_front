@@ -52,6 +52,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
 import { ApiError } from "@/services/helper";
@@ -342,7 +343,8 @@ export default function NewSubmissionPage() {
   const [contentType, setContentType] = useState<ContentType>("VIDEO");
   const [title, setTitle] = useState("");
   const [brand, setBrand] = useState("");
-  const [accountId, setAccountId] = useState("");
+  // Publishing accounts, primary first.
+  const [accountIds, setAccountIds] = useState<string[]>([]);
   const [audience, setAudience] = useState("");
   const [region, setRegion] = useState("Global");
   const [platforms, setPlatforms] = useState<string[]>([]);
@@ -358,6 +360,9 @@ export default function NewSubmissionPage() {
   const [check, setCheck] = useState<StoredCheck | null>(null);
   const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [replacingMain, setReplacingMain] = useState(false);
+  // After changes are requested, only the content, caption and comments are shown until asked for the rest.
+  const [showAllDetails, setShowAllDetails] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [editCounter, setEditCounter] = useState(0);
@@ -371,6 +376,7 @@ export default function NewSubmissionPage() {
   // A draft this page just created; the URL update that follows mustn't reload it over the user's typing.
   const createdIdRef = useRef<string | null>(null);
   const pendingCaptionHtml = useRef<string | null>(null);
+  const captionSectionRef = useRef<HTMLDivElement | null>(null);
 
   const markEdited = () => {
     setEditCounter((n) => n + 1);
@@ -379,10 +385,17 @@ export default function NewSubmissionPage() {
   };
 
   const accounts = useMemo(() => options?.accounts ?? [], [options]);
-  const account = accounts.find((a) => a.id === accountId);
+  const selectedAccounts = useMemo(
+    () => accountIds.map((id) => accounts.find((a) => a.id === id)).filter((a): a is AccountOption => Boolean(a)),
+    [accounts, accountIds]
+  );
   const brandAccounts = useMemo(
     () => accounts.filter((a) => !brand || !a.brand_code || a.brand_code === brand),
     [accounts, brand]
+  );
+  // Selected platforms nobody is posting to yet (a YouTube account covers YouTube Shorts too).
+  const platformsWithoutAccount = platforms.filter(
+    (p) => !selectedAccounts.some((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS"))
   );
   const brandName = options?.brands.find((b) => b.code === brand)?.name;
   const audienceLabel = audience ? options?.audiences[audience] : undefined;
@@ -416,7 +429,7 @@ export default function NewSubmissionPage() {
         setContentType(s.content_type);
         setTitle(s.title === "Untitled submission" ? "" : s.title);
         setBrand(s.brand_code || "");
-        setAccountId(s.account_id || "");
+        setAccountIds(s.account_ids?.length ? s.account_ids : s.account_id ? [s.account_id] : []);
         setAudience(s.audience || "");
         setRegion(s.region || "Global");
         setPlatforms(s.platforms);
@@ -453,7 +466,7 @@ export default function NewSubmissionPage() {
   const buildPayload = (): SubmissionUpdate => {
     const clear: SubmissionUpdate["clear_fields"] = [];
     if (!publishDate) clear.push("publish_at");
-    if (!accountId) clear.push("account_id");
+    if (!accountIds.length) clear.push("account_id");
     if (!brand) clear.push("brand_code");
     if (!audience) clear.push("audience");
     return {
@@ -463,7 +476,7 @@ export default function NewSubmissionPage() {
       ...(audience ? { audience } : {}),
       ...(region ? { region } : {}),
       platforms,
-      ...(accountId ? { account_id: accountId } : {}),
+      ...(accountIds.length ? { account_ids: accountIds } : {}),
       ...(publishDate ? { publish_at: publishDate.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
       caption_text: editorRef.current?.innerText.trim() || "",
@@ -476,7 +489,7 @@ export default function NewSubmissionPage() {
   /** Create the draft if needed, then save the current fields. Calls are queued so they never overlap. */
   const save = (opts: { force?: boolean } = {}): Promise<string | null> => {
     const payload = buildPayload();
-    const hasAnything = Boolean(title.trim() || payload.caption_text || brand || platforms.length || accountId);
+    const hasAnything = Boolean(title.trim() || payload.caption_text || brand || platforms.length || accountIds.length);
     saveChain.current = saveChain.current
       .catch(() => null)
       .then(async () => {
@@ -533,7 +546,7 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
-  const suggestRouting = (next: { brand?: string; audience?: string; account?: AccountOption }) => {
+  const suggestRouting = (next: { brand?: string; audience?: string; accounts?: AccountOption[] }) => {
     const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
     if (next.brand === "ZENATECH") rules.add("ZenaTech General");
@@ -542,7 +555,7 @@ export default function NewSubmissionPage() {
       route.add("Legal Review");
     }
     if (next.audience === "INVESTORS") route.add("Investor Relations Review");
-    if (next.account?.is_ceo) {
+    if (next.accounts?.some((a) => a.is_ceo)) {
       rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
       route.add("Executive Review");
@@ -553,31 +566,37 @@ export default function NewSubmissionPage() {
 
   const onBrandChange = (code: string) => {
     setBrand(code);
-    // Drop an account that belongs to a different brand.
-    if (account?.brand_code && account.brand_code !== code) setAccountId("");
-    suggestRouting({ brand: code, audience, account: account?.brand_code && account.brand_code !== code ? undefined : account });
+    // Drop accounts that belong to a different brand.
+    const kept = selectedAccounts.filter((a) => !a.brand_code || a.brand_code === code);
+    if (kept.length !== selectedAccounts.length) setAccountIds(kept.map((a) => a.id));
+    suggestRouting({ brand: code, audience, accounts: kept });
     markEdited();
   };
 
-  const onAccountChange = (id: string) => {
-    const acc = accounts.find((a) => a.id === id);
-    setAccountId(id);
-    if (acc && !platforms.includes(acc.platform)) setPlatforms((prev) => [...prev, acc.platform]);
-    suggestRouting({ brand, audience, account: acc });
+  const onAccountsChange = (ids: string[]) => {
+    const next = ids.map((id) => accounts.find((a) => a.id === id)).filter((a): a is AccountOption => Boolean(a));
+    setAccountIds(ids);
+    // Each new account's platform gets selected too, unless it's already covered (YouTube covers Shorts).
+    const added = next.filter((a) => !accountIds.includes(a.id));
+    const missing = added
+      .map((a) => a.platform)
+      .filter((p, i, all) => all.indexOf(p) === i && !platforms.includes(p) && !(p === "YOUTUBE" && platforms.includes("YOUTUBE_SHORTS")));
+    if (missing.length) setPlatforms((prev) => [...prev, ...missing]);
+    suggestRouting({ brand, audience, accounts: next });
     markEdited();
   };
 
   const onAudienceChange = (value: string) => {
     setAudience(value);
-    suggestRouting({ brand, audience: value, account });
+    suggestRouting({ brand, audience: value, accounts: selectedAccounts });
     markEdited();
   };
 
   // ----- Files (S05, S07) -----
-  const uploadFiles = async (list: File[]) => {
+  const uploadFiles = async (list: File[], opts: { replacingMain?: boolean } = {}) => {
     if (list.length === 0) return;
 
-    let mainTaken = files.some((f) => f.kind === "MAIN");
+    let mainTaken = !opts.replacingMain && files.some((f) => f.kind === "MAIN");
     const batch: { file: File; kind: SubmissionFileKind; key: string }[] = [];
     for (const file of list) {
       const result = classifyFile(file, contentType, mainTaken);
@@ -632,6 +651,27 @@ export default function NewSubmissionPage() {
     }
   };
 
+  /** Swap the main file for a new one (the revision workspace's "Replace video"). */
+  const replaceMain = async (file: File) => {
+    if (!submissionId) return;
+    if ("error" in classifyFile(file, contentType, false)) {
+      toast.error(`${file.name}: this isn't ${MAIN_UPLOAD[contentType].main}.`);
+      return;
+    }
+    const old = files.filter((f) => f.kind === "MAIN");
+    setReplacingMain(true);
+    try {
+      for (const f of old) await submissionService.removeFile(submissionId, f.id);
+      setFiles((prev) => prev.filter((f) => f.kind !== "MAIN"));
+      await uploadFiles([file], { replacingMain: true });
+      toast.success(`Replaced with ${file.name}. The new version is checked when you resubmit.`);
+    } catch (err) {
+      toast.error(`Couldn't replace the file: ${(err as Error).message}`);
+    } finally {
+      setReplacingMain(false);
+    }
+  };
+
   // ----- Initial check and submit (S09) -----
   const runCheck = async () => {
     if (!title.trim() && !caption.trim()) {
@@ -656,20 +696,22 @@ export default function NewSubmissionPage() {
   const clientMissing = {
     title: !title.trim(),
     brand_code: !brand,
-    account_id: !accountId,
+    account_id: accountIds.length === 0,
     audience: !audience,
     region: !region,
     platforms: platforms.length === 0,
     main_file: ["VIDEO", "IMAGE", "CAROUSEL"].includes(contentType) && mainFiles.length === 0,
     content: !["VIDEO", "IMAGE", "CAROUSEL"].includes(contentType) && mainFiles.length === 0 && !caption.trim(),
     rule_sets: ruleSets.length === 0,
-    reviewer_route: reviewers.length === 0,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
   };
   const isMissing = (field: keyof typeof clientMissing) =>
     showErrors && (clientMissing[field] || serverMissing.includes(field));
   const errorFor = (field: keyof typeof clientMissing, text = "Required") => (isMissing(field) ? text : false);
+
+  const resubmitting = status === "CHANGES_REQUESTED";
+  const showDetails = !resubmitting || showAllDetails;
 
   const submit = async () => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -679,6 +721,7 @@ export default function NewSubmissionPage() {
     }
     if (missingNow.length) {
       setShowErrors(true);
+      setShowAllDetails(true);
       toast.error(`Please add: ${missingNow.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
       return;
     }
@@ -696,7 +739,7 @@ export default function NewSubmissionPage() {
       queryClient.removeQueries({ queryKey: ["submission-history", result.submission.id] });
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       toast.success(
-        `${result.submission.reference_code} submitted for review (version ${result.submission.current_version}). Automated check: ${result.review_job.score}/100.`
+        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.score}/100.`
       );
       navigate(`/submissions/${result.submission.id}`);
     } catch (err) {
@@ -704,6 +747,7 @@ export default function NewSubmissionPage() {
         const missing = (err.detail as { missing: string[] }).missing;
         setServerMissing(missing);
         setShowErrors(true);
+        setShowAllDetails(true);
         toast.error(`Please add: ${missing.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
       } else {
         toast.error(`Couldn't submit: ${(err as Error).message}`);
@@ -789,9 +833,28 @@ export default function NewSubmissionPage() {
         }
       />
 
+      {resubmitting && submissionId && (
+        <RevisionWorkspace
+          submissionId={submissionId}
+          mainFile={files.find((f) => f.kind === "MAIN")}
+          caption={caption}
+          accept={ACCEPT_ALL}
+          replacing={replacingMain}
+          submitting={submitting}
+          onReplace={replaceMain}
+          onEditCaption={() => {
+            captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            window.setTimeout(() => editorRef.current?.focus(), 350);
+          }}
+          onResubmit={submit}
+        />
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 sm:gap-5 items-start">
         {/* ---------------- Form ---------------- */}
         <div className="space-y-4 min-w-0">
+          {showDetails && (
+          <>
           <Section step={1} title="Content Type" description="Select the type of content you want to submit.">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" role="radiogroup">
               {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
@@ -866,29 +929,33 @@ export default function NewSubmissionPage() {
               </Field>
 
               <Field
-                label="Publishing Account"
+                label="Publishing Account(s)"
                 required
-                error={errorFor("account_id", "Choose a connected account")}
+                error={errorFor("account_id", "Choose at least one connected account")}
                 className="lg:col-span-2"
               >
-                <Select value={accountId} onValueChange={onAccountChange} disabled={!options || brandAccounts.length === 0}>
-                  <SelectTrigger className={`w-full ${isMissing("account_id") ? "border-red-500" : ""}`}>
-                    <SelectValue
-                      placeholder={
-                        !options ? "Loading accounts..." : brandAccounts.length === 0 ? "No connected accounts" : "Select account"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brandAccounts.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        <PlatformIcon platform={a.platform as SocialPlatform} className="w-4 h-4" />
-                        {a.label}
-                        {a.is_demo && <span className="text-[10px] text-muted-foreground ml-1">demo</span>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {!options || brandAccounts.length === 0 ? (
+                  <div className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${isMissing("account_id") ? "border-red-500" : "border-input"}`}>
+                    {!options ? "Loading accounts..." : "No connected accounts"}
+                  </div>
+                ) : (
+                  <MultiSelect<string>
+                    // Keep accounts that were picked before a brand change filtered them out of the list.
+                    options={[...brandAccounts.map((a) => a.id), ...accountIds.filter((id) => !brandAccounts.some((a) => a.id === id))]}
+                    value={accountIds}
+                    onChange={onAccountsChange}
+                    placeholder="Select accounts"
+                    getLabel={(id) => {
+                      const a = accounts.find((x) => x.id === id);
+                      return a ? `${a.label}${a.is_demo ? " · demo" : ""}` : "Disconnected account";
+                    }}
+                    renderIcon={(id) => {
+                      const a = accounts.find((x) => x.id === id);
+                      return a ? <PlatformIcon platform={a.platform as SocialPlatform} className="w-3.5 h-3.5" /> : null;
+                    }}
+                    invalid={isMissing("account_id")}
+                  />
+                )}
                 {options && brandAccounts.length === 0 && (
                   <p className="text-[11px] text-muted-foreground">
                     No connected accounts{brand ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
@@ -944,6 +1011,11 @@ export default function NewSubmissionPage() {
                   renderIcon={(p) => <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
                   invalid={isMissing("platforms")}
                 />
+                {selectedAccounts.length > 0 && platformsWithoutAccount.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    No publishing account selected for {platformsWithoutAccount.map((p) => PLATFORM_LABELS[p as SocialPlatform] ?? p).join(", ")} yet.
+                  </p>
+                )}
               </Field>
               <Field
                 label="Intended Publish Date"
@@ -1069,7 +1141,24 @@ export default function NewSubmissionPage() {
               </div>
             )}
           </Section>
+          </>
+          )}
 
+          {resubmitting && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5">
+              <p className="text-xs text-muted-foreground">
+                {showAllDetails
+                  ? "All details are open. Anything you change is part of the next version."
+                  : "Type, brand, platforms, files and rule sets stay as they were. Open them only if the reviewer asked."}
+              </p>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAllDetails((v) => !v)}>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllDetails ? "rotate-180" : ""}`} />
+                {showAllDetails ? "Hide details" : "Show all details"}
+              </Button>
+            </div>
+          )}
+
+          <div ref={captionSectionRef} className="scroll-mt-4">
           <Section step={4} title="Caption / Copy" description="Write or paste your caption, script, or copy.">
             <div className={`rounded-lg border ${isMissing("content") ? "border-red-500" : "border-input"} overflow-hidden`}>
               <div className="flex flex-wrap items-center gap-0.5 border-b border-border/70 bg-muted/30 px-2 py-1.5">
@@ -1154,7 +1243,7 @@ export default function NewSubmissionPage() {
                   setCaption(e.currentTarget.innerText);
                   markEdited();
                 }}
-                className="min-h-[96px] max-h-[320px] overflow-y-auto px-3 py-2.5 text-sm leading-relaxed outline-none bg-background empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_a]:text-blue-600 [&_a]:underline"
+                className="min-h-[180px] max-h-[480px] overflow-y-auto px-3 py-2.5 text-sm leading-relaxed outline-none bg-background empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_a]:text-blue-600 [&_a]:underline"
               />
             </div>
             <p className={`text-[11px] text-right mt-1.5 ${caption.trim().length > charLimit ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
@@ -1162,8 +1251,10 @@ export default function NewSubmissionPage() {
               {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
             </p>
           </Section>
+          </div>
 
-          <Section step={5} title="Compliance & Routing" description="Select applicable rule sets and review route.">
+          {showDetails && (
+          <Section step={5} title="Compliance" description="Select the rule sets this content is checked against.">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3.5">
               <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
                 <MultiSelect
@@ -1178,24 +1269,22 @@ export default function NewSubmissionPage() {
                   invalid={isMissing("rule_sets")}
                 />
               </Field>
-              <Field label="Reviewer Route" required error={errorFor("reviewer_route")}>
-                <MultiSelect
-                  options={options?.reviewer_routes ?? []}
-                  value={reviewers}
-                  onChange={(next) => {
-                    setReviewers(next);
-                    markEdited();
-                  }}
-                  placeholder="Select reviewers"
-                  compact
-                  invalid={isMissing("reviewer_route")}
-                />
-              </Field>
             </div>
             <p className="text-[11px] text-muted-foreground mt-2">
-              Suggested automatically from the brand, audience and publishing account. You can add or remove any.
+              Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
+              sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
             </p>
           </Section>
+          )}
+
+          {/* Full width under the content it assesses, so its findings have room to read. */}
+          {submissionId && (
+            <Card className="py-0 gap-0 border-border/80 shadow-xs">
+              <div className="px-4 sm:px-5 py-4">
+                <SentimentPanel submissionId={submissionId} />
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* ---------------- Summary ---------------- */}
@@ -1235,11 +1324,15 @@ export default function NewSubmissionPage() {
               <SummaryRow icon={Building2} label="Brand">
                 {brandName || <span className="text-muted-foreground">—</span>}
               </SummaryRow>
-              <SummaryRow icon={Users} label="Account">
-                {account ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <PlatformIcon platform={account.platform as SocialPlatform} className="w-4 h-4" />
-                    {account.label}
+              <SummaryRow icon={Users} label={selectedAccounts.length > 1 ? "Accounts" : "Account"}>
+                {selectedAccounts.length > 0 ? (
+                  <span className="flex flex-col gap-1">
+                    {selectedAccounts.map((a) => (
+                      <span key={a.id} className="inline-flex items-center gap-1.5">
+                        <PlatformIcon platform={a.platform as SocialPlatform} className="w-4 h-4" />
+                        {a.label}
+                      </span>
+                    ))}
                   </span>
                 ) : (
                   <span className="text-muted-foreground">—</span>
@@ -1302,12 +1395,6 @@ export default function NewSubmissionPage() {
             )}
           </Card>
 
-          {submissionId && (
-            <Card className="py-0 px-4 pt-3 pb-4 gap-0 border-border/80 shadow-xs">
-              <SentimentPanel submissionId={submissionId} />
-            </Card>
-          )}
-
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-2 [&>button:last-child]:col-span-2 sm:[&>button:last-child]:col-span-1 xl:[&>button:last-child]:col-span-2">
             <Button type="button" variant="outline" onClick={saveNow} disabled={saveState === "saving"} className="gap-1.5 text-xs font-semibold">
               {saveState === "saving" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Draft
@@ -1328,7 +1415,7 @@ export default function NewSubmissionPage() {
               disabled={submitting || uploading.length > 0}
               className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Submit for Review
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {resubmitting ? "Resubmit for Review" : "Send for Review"}
             </Button>
           </div>
           {optionsQuery.isError && (

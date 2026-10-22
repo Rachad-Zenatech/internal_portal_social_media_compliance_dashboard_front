@@ -77,6 +77,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { submissionService } from "@/services/submissionService";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
+import { useReviewComments } from "@/hooks/useReview";
+import { formatDistanceToNow } from "date-fns";
 import {
   complianceService,
   type ComplianceCheckResponse,
@@ -94,6 +97,9 @@ export interface ReviewerComment {
   category: CommentCategory;
   text: string;
   createdAt: string;
+  /** Submitted videos: saved comments can only be deleted by their author. */
+  canDelete?: boolean;
+  resolved?: boolean;
 }
 
 // Example reviewer notes shown on the built-in demo videos.
@@ -219,6 +225,9 @@ export default function VideoComplianceScannerPage() {
     setShowDemo,
     serverQueueLoading,
   } = useVideoUploadQueue();
+  // Submitted videos are reviewed for real: comments are saved, the score is the server's check, and
+  // reviewers make their decision here. Demo items keep their local, simulated behaviour.
+  const submissionId = activeVideo?.submissionId ?? null;
   const queryClient = useQueryClient();
   const [isRetryingTranscript, setIsRetryingTranscript] = useState(false);
 
@@ -257,12 +266,25 @@ export default function VideoComplianceScannerPage() {
   const [commentsByVideo, setCommentsByVideo] = useState<Record<string, ReviewerComment[]>>({});
   const commentsKey = activeVideo?.id ?? "demo";
   const startingNotes = !activeVideo || activeVideo.isDemo ? SAMPLE_COMMENTS : NO_COMMENTS;
-  const comments = commentsByVideo[commentsKey] ?? startingNotes;
+  const savedComments = useReviewComments(submissionId);
+  const comments: ReviewerComment[] = submissionId
+    ? savedComments.comments.map((c) => ({
+        id: c.id,
+        author: c.author_name ?? "Someone",
+        timestampSec: c.start_sec ?? null,
+        endTimestampSec: c.end_sec ?? null,
+        category: (c.category === "BRAND" ? "NOTE" : c.category) as CommentCategory,
+        text: c.body,
+        createdAt: `${c.from_reviewer ? "Reviewer" : "Uploader"} · v${c.version_number} · ${formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}${c.resolved_at ? " · resolved" : ""}`,
+        canDelete: c.can_delete,
+        resolved: Boolean(c.resolved_at),
+      }))
+    : commentsByVideo[commentsKey] ?? startingNotes;
   const setComments = (update: (prev: ReviewerComment[]) => ReviewerComment[]) =>
     setCommentsByVideo((all) => ({ ...all, [commentsKey]: update(all[commentsKey] ?? startingNotes) }));
 
   const [commentInput, setCommentInput] = useState("");
-  const [commentCategory, setCommentCategory] = useState<CommentCategory>("LEGAL");
+  const [commentCategory, setCommentCategory] = useState<CommentCategory>("NOTE");
   const [commentTimeMode, setCommentTimeMode] = useState<"POINT" | "RANGE" | "NONE">("POINT");
   const [rangeStartSec, setRangeStartSec] = useState<number>(0);
   const [rangeEndSec, setRangeEndSec] = useState<number>(10);
@@ -285,10 +307,10 @@ export default function VideoComplianceScannerPage() {
     if (activeVideo) {
       setVideoTitle(activeVideo.title);
       setPlatform(activeVideo.platform);
-      // Real submissions bring their own caption into the caption panel.
-      if (activeVideo.caption != null) {
-        setTiktokCaption(activeVideo.caption);
-        setYoutubeDescription(activeVideo.caption);
+      // Real submissions bring their own caption into the caption panel (empty if they have none).
+      if (activeVideo.submissionId || activeVideo.caption != null) {
+        setTiktokCaption(activeVideo.caption ?? "");
+        setYoutubeDescription(activeVideo.caption ?? "");
       }
       setAspectRatio(activeVideo.aspectRatio);
       if (activeVideo.segments && activeVideo.segments.length > 0) {
@@ -315,7 +337,7 @@ export default function VideoComplianceScannerPage() {
   // Submitted videos are transcribed in the background; load the script when it arrives.
   // Until then the caption is screened on its own.
   const transcriptKey = activeVideo?.submissionId
-    ? `${activeVideo.id}:${activeVideo.transcriptStatus}:${activeVideo.segments.length}`
+    ? `${activeVideo.id}:${activeVideo.transcriptStatus}:${activeVideo.segments.length}:${activeVideo.serverCheck?.checked_at ?? ""}`
     : null;
   useEffect(() => {
     if (!activeVideo?.submissionId) return;
@@ -736,6 +758,19 @@ export default function VideoComplianceScannerPage() {
       endSec = Math.max(s, end);
     }
 
+    if (submissionId) {
+      savedComments.add.mutate(
+        { body: commentInput.trim(), category: commentCategory, start_sec: startSec, end_sec: endSec },
+        {
+          onSuccess: () => {
+            setCommentInput("");
+            toast.success("Comment saved. The uploader sees it when you request changes.");
+          },
+        }
+      );
+      return;
+    }
+
     const newComment: ReviewerComment = {
       id: "comm-" + Date.now(),
       author: authorName,
@@ -759,6 +794,10 @@ export default function VideoComplianceScannerPage() {
 
   // Delete a comment
   const handleDeleteComment = (id: string) => {
+    if (submissionId) {
+      savedComments.remove.mutate(id);
+      return;
+    }
     setComments((prev) => prev.filter((c) => c.id !== id));
     toast.info("Comment removed.");
   };
@@ -818,9 +857,17 @@ export default function VideoComplianceScannerPage() {
   // Debounced so typing in the caption doesn't send a check per keystroke.
   useEffect(() => {
     if (serverQueueLoading || !activeVideo) return;
+    if (activeVideo.submissionId) {
+      // The server checks title, caption and transcript with the submission's own rule sets: the same
+      // score the Portal, detail page and reviewer see.
+      scanSeq.current++;
+      setIsScanning(false);
+      setScanResult(activeVideo.serverCheck ?? null);
+      return;
+    }
     const timer = window.setTimeout(() => handleRunScan(false), 400);
     return () => window.clearTimeout(timer);
-  }, [serverQueueLoading, activeVideo?.id, platform, fullTranscript, tiktokCaption, youtubeDescription, videoTitle]);
+  }, [serverQueueLoading, activeVideo?.id, activeVideo?.serverCheck?.checked_at, platform, fullTranscript, tiktokCaption, youtubeDescription, videoTitle]);
 
   useEffect(() => {
     return () => {
@@ -873,13 +920,14 @@ export default function VideoComplianceScannerPage() {
     return comments.find((c) => c.id === activeCommentId) || null;
   }, [comments, activeCommentId]);
 
-  // Check if DoD disclaimer is present
-  const hasDoDDisclaimer = useMemo(() => {
-    return (
-      youtubeDescription.toLowerCase().includes("does not imply or constitute dod endorsement") ||
-      tiktokCaption.toLowerCase().includes("does not imply or constitute dod endorsement")
-    );
-  }, [youtubeDescription, tiktokCaption]);
+  // Required disclaimers come from the rulebook check: a rule asks for one when the content says
+  // something that needs it (e.g. names a defense agency, shows a rendering, makes a forecast).
+  const missingDisclaimers = useMemo(
+    () => (scanResult?.violations ?? []).filter((v) => v.missing_disclaimers?.length),
+    [scanResult]
+  );
+  const hasDoDDisclaimer = missingDisclaimers.length === 0;
+  const disclaimerRules = missingDisclaimers.map((v) => v.rule_number).join(", ");
 
   const playerFrameRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -974,8 +1022,8 @@ export default function VideoComplianceScannerPage() {
 
     const report = `ZenaTech Video Clearance Report\nPlatform: ${platform}\nAsset: ${videoTitle}\nScore: ${
       scanResult.score
-    }/100\nStatus: ${scanResult.traffic_light}\nViolations: ${scanResult.violations_count}\nDoD Disclaimer: ${
-      hasDoDDisclaimer ? "Present" : "Missing"
+    }/100\nStatus: ${scanResult.traffic_light}\nViolations: ${scanResult.violations_count}\nRequired disclaimers: ${
+      hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`
     }\nBuffered Review: ${effectiveUploadPercent}% so far\n\nViolations Flagged:\n${scanResult.violations
       .map((v) => `- [${v.severity}] ${v.rule_number} ${v.title}: ${v.explanation}`)
       .join("\n")}${commentsSection}`;
@@ -1008,6 +1056,7 @@ export default function VideoComplianceScannerPage() {
         title="Content Screener"
         subtitle="Review submitted content against the compliance rulebook, even while a video is still uploading in the background."
         actions={
+          !submissionId && (
           <>
             <Button variant="outline" size="sm" onClick={resetDemo} className="text-xs gap-1.5 font-semibold">
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1027,6 +1076,7 @@ export default function VideoComplianceScannerPage() {
               Simulate Incomplete Upload (50%)
             </Button>
           </>
+          )
         }
       />
 
@@ -1473,9 +1523,9 @@ export default function VideoComplianceScannerPage() {
                 </span>
                 <span className="text-border">|</span>
                 <span>
-                  Defense non-endorsement disclaimer:{" "}
+                  Required disclaimers:{" "}
                   <strong className={hasDoDDisclaimer ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
-                    {hasDoDDisclaimer ? "Verified Attached" : "Missing"}
+                    {hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`}
                   </strong>
                 </span>
                 <span className="text-border">|</span>
@@ -1650,7 +1700,11 @@ export default function VideoComplianceScannerPage() {
               <span className="text-xs font-semibold text-foreground flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                 Flagged Moments
-                <span className="font-normal text-muted-foreground hidden sm:inline">(click the bar or press play to preview)</span>
+                <span className="font-normal text-muted-foreground hidden sm:inline">
+                  {activeVideo?.transcriptStatus === "COMPLETED" && segments.length === 0
+                    ? "(no speech or on-screen text found, so only the title and caption were checked)"
+                    : "(click the bar or press play to preview)"}
+                </span>
                 {effectiveUploadPercent < 100 && (
                   <Badge variant="outline" className="text-[10px] text-amber-600 dark:text-amber-400 border-amber-500/40">
                     Buffered to {formatTime(maxBufferedSec)}
@@ -1972,6 +2026,47 @@ export default function VideoComplianceScannerPage() {
 
         {/* Review panel */}
         <Card className="xl:col-span-5 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+          {activeVideo?.submissionId && (
+            <div className="px-4 pt-4">
+              {activeVideo.canReview ? (
+                <ReviewDecisionPanel
+                  compact
+                  target={{
+                    id: activeVideo.submissionId,
+                    reference_code: activeVideo.referenceCode ?? "",
+                    title: activeVideo.title,
+                    status: activeVideo.submissionStatus ?? "IN_REVIEW",
+                    current_version: activeVideo.currentVersion ?? 1,
+                    platforms: activeVideo.platforms ?? [],
+                    publish_at: activeVideo.publishAt,
+                    can_review: true,
+                    score: activeVideo.serverCheck?.score ?? null,
+                  }}
+                />
+              ) : (
+                <p
+                  className={`rounded-lg border px-3 py-2 text-xs ${
+                    activeVideo.submissionStatus === "APPROVED"
+                      ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-900 dark:text-emerald-100"
+                      : activeVideo.submissionStatus === "CHANGES_REQUESTED"
+                      ? "border-amber-500/40 bg-amber-500/5 text-amber-900 dark:text-amber-100"
+                      : "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100"
+                  }`}
+                >
+                  {activeVideo.submissionStatus === "APPROVED"
+                    ? "Approved. It's on the content calendar."
+                    : activeVideo.submissionStatus === "CHANGES_REQUESTED"
+                    ? "Changes requested. Waiting for the uploader to resubmit."
+                    : "In review. Waiting for a reviewer (reviewers can't approve their own uploads)."}
+                </p>
+              )}
+              {activeVideo.serverCheck?.transcript_pending && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  The transcript is still being made; the score is re-checked with it automatically.
+                </p>
+              )}
+            </div>
+          )}
           <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
             <div className="flex items-start gap-2.5 min-w-0">
               <Hash className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
@@ -1980,9 +2075,9 @@ export default function VideoComplianceScannerPage() {
                   {platform === "YOUTUBE" ? "Description & Disclaimers" : "Caption & Hashtags"}
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  {platform === "YOUTUBE"
-                    ? "Defense visual content on YouTube requires the non-endorsement disclaimer."
-                    : `${platformName} captions and hashtags are screened against prohibited claims and defense tags.`}
+                  {hasDoDDisclaimer
+                    ? `${platformName} ${platform === "YOUTUBE" ? "description" : "caption"} is screened against the rulebook, including required disclaimers.`
+                    : `Needs: "${missingDisclaimers[0].missing_disclaimers![0]}"`}
                 </p>
               </div>
             </div>
@@ -1991,7 +2086,7 @@ export default function VideoComplianceScannerPage() {
                 hasDoDDisclaimer ? "bg-emerald-600 text-white" : "bg-red-600 text-white"
               }`}
             >
-              {hasDoDDisclaimer ? "Disclaimer Verified" : "Disclaimer Missing"}
+              {hasDoDDisclaimer ? "Disclaimers OK" : "Disclaimer Missing"}
             </Badge>
           </div>
 
@@ -2002,21 +2097,22 @@ export default function VideoComplianceScannerPage() {
                   rows={3}
                   value={youtubeDescription}
                   onChange={(e) => setYoutubeDescription(e.target.value)}
+                  readOnly={Boolean(submissionId)}
                   className="text-xs font-mono resize-y"
                   placeholder="Enter YouTube description..."
                 />
-                {!hasDoDDisclaimer && (
+                {!hasDoDDisclaimer && !submissionId && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      setYoutubeDescription((prev) => prev.trim() + "\n\nDisclaimer: " + MANDATORY_DOD_DISCLAIMER);
-                      toast.success("Inserted mandatory DoD non-endorsement disclaimer!");
+                      setYoutubeDescription((prev) => prev.trim() + "\n\n" + missingDisclaimers[0].missing_disclaimers![0]);
+                      toast.success(`Added the disclaimer ${missingDisclaimers[0].rule_number} asks for.`);
                     }}
                     className="text-xs w-full text-amber-600 dark:text-amber-400 border-amber-500/40"
                   >
                     <Zap className="w-3.5 h-3.5 mr-1" />
-                    Insert Mandatory DoD Disclaimer
+                    Insert Required Disclaimer
                   </Button>
                 )}
               </>
@@ -2025,8 +2121,9 @@ export default function VideoComplianceScannerPage() {
                 rows={2}
                 value={tiktokCaption}
                 onChange={(e) => setTiktokCaption(e.target.value)}
+                readOnly={Boolean(submissionId)}
                 className="text-xs font-mono resize-y"
-                placeholder="Enter caption and #hashtags..."
+                placeholder={submissionId ? "No caption was submitted." : "Enter caption and #hashtags..."}
               />
             )}
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -2207,16 +2304,18 @@ export default function VideoComplianceScannerPage() {
                                 {hasRange ? `${formatTime(startSec)} - ${formatTime(endSec!)}` : formatTime(startSec)}
                               </Badge>
                             )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteComment(c.id);
-                              }}
-                              className="text-muted-foreground hover:text-red-500 p-1"
-                              title="Delete note"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                            {(c.canDelete ?? true) && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteComment(c.id);
+                                }}
+                                className="text-muted-foreground hover:text-red-500 p-1"
+                                title="Delete note"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
                         </div>
                         <p className="text-foreground/95 leading-relaxed">{c.text}</p>
@@ -2258,14 +2357,21 @@ export default function VideoComplianceScannerPage() {
                     ) : activeVideo.transcriptStatus === "COMPLETED" ? (
                       <>
                         <FileText className="w-5 h-5" />
-                        <p className="font-semibold text-foreground">No speech detected in this video.</p>
-                        <p>The caption is still screened against the rulebook.</p>
+                        <p className="font-semibold text-foreground">No speech or on-screen text found.</p>
+                        <p>The title and caption are still screened against the rulebook.</p>
+                        <p className="max-w-sm">
+                          Videos read before on-screen text was added only have their speech. Read it again to check the text shown in the video too.
+                        </p>
+                        <Button size="sm" variant="outline" className="text-xs gap-1.5 mt-1" disabled={isRetryingTranscript} onClick={retryTranscript}>
+                          {isRetryingTranscript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                          Read the video again
+                        </Button>
                       </>
                     ) : (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-                        <p className="font-semibold text-foreground">Generating transcript...</p>
-                        <p>The voiceover is being transcribed automatically. This usually takes under a minute.</p>
+                        <p className="font-semibold text-foreground">Reading the video...</p>
+                        <p>Speech and on-screen text are being transcribed automatically. This usually takes under a minute.</p>
                       </>
                     )}
                   </div>
@@ -2290,8 +2396,11 @@ export default function VideoComplianceScannerPage() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-[10px] font-semibold text-muted-foreground">
+                        <span className="font-mono text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5">
                           {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
+                          {seg.onScreen && (
+                            <span className="font-sans rounded bg-muted px-1 py-px text-[9px] uppercase tracking-wide">On screen</span>
+                          )}
                         </span>
                         {!isBuffered ? (
                           <Badge variant="secondary" className="text-[9px] gap-1">

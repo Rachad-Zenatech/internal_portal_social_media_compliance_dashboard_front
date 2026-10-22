@@ -37,6 +37,8 @@ export interface TranscriptSegment {
   start_sec: number;
   end_sec: number;
   text: string;
+  /** Said aloud, or text shown in the video. */
+  source?: "speech" | "on_screen";
 }
 
 export interface SubmissionFile {
@@ -53,7 +55,22 @@ export interface SubmissionFile {
   transcript_error?: string | null;
 }
 
-export type StoredCheck = ComplianceCheckResponse & { checked_at?: string };
+/** Which transcript segments contain flagged wording (same matcher as the check). */
+export interface SegmentFlag {
+  start_sec: number;
+  end_sec: number;
+  traffic_light: "RED" | "YELLOW" | "GREEN";
+  rule_numbers: string[];
+}
+
+/** The server's rulebook check: title, caption and (once ready) the video transcript. */
+export type StoredCheck = ComplianceCheckResponse & {
+  checked_at?: string;
+  includes_transcript?: boolean;
+  /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
+  transcript_pending?: boolean;
+  segment_flags?: SegmentFlag[];
+};
 
 export interface Submission {
   id: string;
@@ -64,8 +81,12 @@ export interface Submission {
   audience?: string | null;
   region?: string | null;
   platforms: string[];
+  /** The primary (first) of account_ids / accounts. */
   account_id?: string | null;
   account?: AccountOption | null;
+  /** Every account it posts through, primary first. */
+  account_ids?: string[];
+  accounts?: AccountOption[];
   publish_at?: string | null;
   caption_html?: string | null;
   caption_text?: string | null;
@@ -78,6 +99,8 @@ export interface Submission {
   can_edit: boolean;
   /** Drafts: the creator, super admins and Content Managers can delete them. */
   can_delete?: boolean;
+  /** In review, and the viewer is a reviewer who may decide on it (not their own upload). */
+  can_review?: boolean;
   created_by?: string | null;
   /** Only filled in when someone other than the creator is viewing. */
   created_by_name?: string | null;
@@ -99,12 +122,16 @@ export interface SubmissionSummary {
   latest_traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
   latest_score?: number | null;
   file_count: number;
+  /** Review comments across all versions. */
+  comment_count?: number;
   submitted_at?: string | null;
   created_at: string;
   updated_at: string;
   audience?: string | null;
-  /** Publishing channel the post goes to (e.g. Shaun's LinkedIn). */
+  /** Primary publishing channel the post goes to (e.g. Shaun's LinkedIn). */
   account?: AccountOption | null;
+  /** Every channel it posts through, primary first. */
+  accounts?: AccountOption[];
   /** First 600 characters of the caption. */
   caption_text?: string | null;
   /** Main video/image, or the first attached image, for the card thumbnail. */
@@ -113,6 +140,8 @@ export interface SubmissionSummary {
   created_by_name?: string | null;
   /** Drafts: the creator, super admins and Content Managers can delete them. */
   can_delete?: boolean;
+  /** In review, and the viewer is a reviewer who may decide on it (not their own upload). */
+  can_review?: boolean;
 }
 
 export interface SubmissionUpdate {
@@ -122,7 +151,7 @@ export interface SubmissionUpdate {
   audience?: string;
   region?: string;
   platforms?: string[];
-  account_id?: string;
+  account_ids?: string[];
   publish_at?: string;
   caption_html?: string;
   caption_text?: string;
@@ -141,6 +170,7 @@ export interface SubmissionVersion {
     region?: string | null;
     platforms: string[];
     account?: AccountOption | null;
+    accounts?: AccountOption[];
     publish_at?: string | null;
     caption_html?: string | null;
     caption_text?: string | null;
@@ -162,6 +192,49 @@ export interface ReviewJob {
   automated_check?: StoredCheck | null;
   created_at: string;
   completed_at?: string | null;
+  decision?: ReviewDecisionType | null;
+  decision_notes?: string | null;
+  decided_by_name?: string | null;
+  decided_at?: string | null;
+}
+
+export type ReviewDecisionType = "APPROVE" | "REQUEST_CHANGES";
+
+export interface ReviewDecisionRequest {
+  decision: ReviewDecisionType;
+  /** Shown to the creator; required for changes unless there are open comments. */
+  notes?: string;
+  /** Approve: schedule for this time (defaults to the planned publish date)... */
+  publish_at?: string;
+  /** ...or approve to publish straight away. */
+  publish_now?: boolean;
+}
+
+export type ReviewCommentCategory = "LEGAL" | "EDITORIAL" | "COMPLIANCE" | "BRAND" | "NOTE";
+
+export interface ReviewComment {
+  id: string;
+  submission_id: string;
+  version_number: number;
+  category: ReviewCommentCategory;
+  body: string;
+  start_sec?: number | null;
+  end_sec?: number | null;
+  author_id?: string | null;
+  author_name?: string | null;
+  /** Written by a reviewer rather than the creator. */
+  from_reviewer: boolean;
+  resolved_at?: string | null;
+  resolved_by_name?: string | null;
+  created_at: string;
+  can_delete: boolean;
+}
+
+export interface ReviewCommentCreate {
+  body: string;
+  category?: ReviewCommentCategory;
+  start_sec?: number | null;
+  end_sec?: number | null;
 }
 
 export interface SubmissionEvent {
@@ -192,6 +265,8 @@ export interface ReviewQueueItem {
   submitted_at?: string | null;
   creator_name?: string | null;
   video: SubmissionFile;
+  can_review?: boolean;
+  publish_at?: string | null;
 }
 
 export interface SubmitResult {

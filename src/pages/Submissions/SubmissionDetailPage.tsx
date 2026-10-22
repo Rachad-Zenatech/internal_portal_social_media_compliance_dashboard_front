@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   AlertTriangle,
   ArrowLeft,
+  CalendarCheck2,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -36,6 +37,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
+import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
+import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submissions/ReviewDecisionPanel";
+import { useReviewComments } from "@/hooks/useReview";
+import { useAuth } from "@/lib/AuthContext";
 import { SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
@@ -144,9 +149,20 @@ function JobCard({ job }: { job: ReviewJob }) {
           </Badge>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground">
-        Sent to {job.reviewer_route.join(", ")} · {format(new Date(job.created_at), "MMM d, h:mm a")}
-      </p>
+      <p className="text-[11px] text-muted-foreground">Submitted {format(new Date(job.created_at), "MMM d, h:mm a")}</p>
+      {job.decided_at && (
+        <div
+          className={`rounded-md px-2 py-1.5 text-[11px] ${
+            job.decision === "APPROVE" ? "bg-emerald-500/10 text-emerald-900 dark:text-emerald-100" : "bg-amber-500/10 text-amber-900 dark:text-amber-100"
+          }`}
+        >
+          <p className="font-semibold">
+            {job.decision === "APPROVE" ? "Approved" : "Changes requested"}
+            {job.decided_by_name && ` by ${job.decided_by_name}`} · {format(new Date(job.decided_at), "MMM d, h:mm a")}
+          </p>
+          {job.decision_notes && <p className="mt-0.5 whitespace-pre-wrap">"{job.decision_notes}"</p>}
+        </div>
+      )}
       {check && check.violations.length > 0 && (
         <ul className="space-y-1">
           {check.violations.map((v) => (
@@ -191,7 +207,9 @@ function VersionRow({ v, isCurrent }: { v: SubmissionVersion; isCurrent: boolean
       {open && (
         <div className="px-3 pb-3 space-y-1 border-t border-border/60 pt-2">
           <DetailRow label="Title">{snap.title}</DetailRow>
-          <DetailRow label="Account">{snap.account?.label}</DetailRow>
+          <DetailRow label={(snap.accounts?.length ?? 0) > 1 ? "Accounts" : "Account"}>
+            {snap.accounts?.length ? snap.accounts.map((a) => a.label).join(", ") : snap.account?.label}
+          </DetailRow>
           <DetailRow label="Platforms">{snap.platforms.map((p) => PLATFORM_LABELS[p as SocialPlatform] ?? p).join(", ")}</DetailRow>
           <DetailRow label="Publish date">{snap.publish_at ? format(new Date(snap.publish_at), "MMM d, yyyy") : null}</DetailRow>
           <DetailRow label="Caption">
@@ -223,6 +241,10 @@ export default function SubmissionDetailPage() {
   const historyQuery = useQuery({ queryKey: ["submission-history", id], queryFn: () => submissionService.history(id), enabled: Boolean(id), staleTime: 0 });
   const s = submissionQuery.data;
   const history = historyQuery.data;
+  const { user, hasPermission } = useAuth();
+  const { comments } = useReviewComments(id);
+  const isCreator = Boolean(s && user && s.created_by === user.id);
+  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
 
   // Show the reference code in the breadcrumb instead of the raw id.
   useEffect(() => {
@@ -296,7 +318,7 @@ export default function SubmissionDetailPage() {
                 </Link>
               </Button>
             )}
-            {s.status === "IN_REVIEW" && (
+            {s.status === "IN_REVIEW" && isCreator && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={withdrawMutation.isPending} className="text-xs gap-1.5 font-semibold">
@@ -338,6 +360,54 @@ export default function SubmissionDetailPage() {
         </div>
       </Card>
 
+      {s.can_review && (
+        <ReviewDecisionPanel
+          target={{
+            id: s.id,
+            reference_code: s.reference_code,
+            title: s.title,
+            status: s.status,
+            current_version: s.current_version,
+            platforms: s.platforms,
+            publish_at: s.publish_at,
+            can_review: s.can_review,
+            score: s.latest_check?.score ?? null,
+          }}
+        />
+      )}
+      {s.status === "IN_REVIEW" && !s.can_review && (
+        <p className="rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-xs text-blue-900 dark:text-blue-100">
+          {isCreator
+            ? "This is with a reviewer. You'll get a notification when they approve it or ask for changes."
+            : "Waiting for a reviewer. Reviewers can't approve their own uploads."}
+        </p>
+      )}
+      {s.status === "CHANGES_REQUESTED" && (
+        <ChangesRequestedBanner
+          submissionId={s.id}
+          job={history?.review_jobs.find((j) => j.decision === "REQUEST_CHANGES") ?? null}
+          openComments={comments.filter((c) => !c.resolved_at).length}
+          canEdit={isCreator && s.can_edit}
+        />
+      )}
+      {s.status === "APPROVED" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-4 py-3">
+          <CalendarCheck2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p className="text-sm text-emerald-900 dark:text-emerald-100 flex-1 min-w-[200px]">
+            <strong>Approved</strong>
+            {s.publish_at ? ` and on the content calendar for ${format(new Date(s.publish_at), "EEE MMM d, h:mm a")}.` : "."}
+          </p>
+          <Button size="sm" variant="outline" asChild className="text-xs">
+            <Link to="/content-calendar">Open calendar</Link>
+          </Button>
+          {s.platforms[0] && (
+            <Button size="sm" asChild className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Link to={`/content-calendar/publish/sub-${s.id}/${s.platforms[0]}`}>Publish</Link>
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-4 sm:gap-5 items-start">
         <div className="space-y-4 min-w-0">
           {(mainVideo || mainImage) && (
@@ -356,10 +426,14 @@ export default function SubmissionDetailPage() {
             <div className="divide-y divide-border/50">
               <DetailRow label="Content type">{TYPE_LABELS[s.content_type]}</DetailRow>
               <DetailRow label="Brand">{optionsQuery.data?.brands.find((b) => b.code === s.brand_code)?.name ?? s.brand_code}</DetailRow>
-              <DetailRow label="Publishing account">
-                {s.account && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <PlatformIcon platform={s.account.platform as SocialPlatform} className="w-4 h-4" /> {s.account.label}
+              <DetailRow label={(s.accounts?.length ?? 0) > 1 ? "Publishing accounts" : "Publishing account"}>
+                {(s.accounts?.length || s.account) && (
+                  <span className="flex flex-col gap-1">
+                    {(s.accounts?.length ? s.accounts : [s.account!]).map((a) => (
+                      <span key={a.id} className="inline-flex items-center gap-1.5">
+                        <PlatformIcon platform={a.platform as SocialPlatform} className="w-4 h-4" /> {a.label}
+                      </span>
+                    ))}
                   </span>
                 )}
               </DetailRow>
@@ -378,7 +452,6 @@ export default function SubmissionDetailPage() {
               <DetailRow label="Region">{s.region}</DetailRow>
               <DetailRow label="Publish date">{s.publish_at ? format(new Date(s.publish_at), "MMM d, yyyy h:mm a") : null}</DetailRow>
               <DetailRow label="Rule sets">{s.rule_sets.join(", ")}</DetailRow>
-              <DetailRow label="Reviewers">{s.reviewer_route.join(", ")}</DetailRow>
               <DetailRow label="Caption / copy">
                 {s.caption_text ? <p className="text-sm leading-relaxed whitespace-pre-wrap">{s.caption_text}</p> : null}
               </DetailRow>
@@ -399,7 +472,20 @@ export default function SubmissionDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <Panel title="Review Jobs" icon={ClipboardCheck}>
+          {s.current_version > 0 && (
+            <Card className="py-0 gap-0 border-border/80 shadow-xs">
+              <div className="p-4">
+                <ReviewCommentsPanel
+                  submissionId={s.id}
+                  canComment={isCreator || isReviewer}
+                  placeholder={isCreator ? "Reply to the reviewer..." : "What should change, and why?"}
+                  emptyText={s.status === "IN_REVIEW" ? "No comments yet. Reviewers' comments show here." : "No comments."}
+                />
+              </div>
+            </Card>
+          )}
+
+          <Panel title="Review History" icon={ClipboardCheck}>
             {historyQuery.isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             ) : history && history.review_jobs.length > 0 ? (

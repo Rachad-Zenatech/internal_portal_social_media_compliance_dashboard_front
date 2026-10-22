@@ -247,4 +247,9 @@
   .dark .app-canvas {
     background-color: var(--background);
   }
+
+  /* Pages marked data-canvas="plain" (the Content Portal) sit on the plain page background instead of the grey. */
+  .app-canvas:has([data-canvas="plain"]) {
+    background-color: var(--background);
+  }
 }

@@ -111,7 +111,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               alt="Logo"
               className={`transition-all duration-300 ease-in-out object-contain cursor-pointer ${
                 isOpen
-                  ? "h-12 sm:h-14 tablet:h-16 w-auto max-w-[185px] tablet:max-w-[215px] scale-110 origin-left hover:scale-115"
+                  ? "h-12 sm:h-14 tablet:h-16 w-auto max-w-[185px] tablet:max-w-[215px] scale-[1.4] origin-left hover:scale-[1.45]"
                   : "w-0 h-0"
               }`}
             />

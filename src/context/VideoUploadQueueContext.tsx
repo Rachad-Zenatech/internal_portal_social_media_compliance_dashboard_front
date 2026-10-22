@@ -5,7 +5,7 @@ import { complianceService, type ComplianceViolation } from '@/services/complian
 import { submissionService } from '@/services/submissionService';
 import { authedFileUrl } from '@/components/submissions/submissionUi';
 import { useAuth } from '@/lib/AuthContext';
-import type { ReviewQueueItem, TranscriptStatus } from '@/types/submission';
+import type { ReviewQueueItem, StoredCheck, SubmissionStatus, TranscriptStatus } from '@/types/submission';
 
 export type TargetPlatform = 'TIKTOK' | 'YOUTUBE' | 'YOUTUBE_SHORTS' | 'LINKEDIN';
 export type PosterVariant = 'dusk' | 'desert' | 'night';
@@ -17,6 +17,8 @@ export interface TimestampedSegment {
   startSec: number;
   endSec: number;
   text: string;
+  /** Text shown in the video rather than spoken. */
+  onScreen?: boolean;
   violations?: ComplianceViolation[];
   risk?: 'RED' | 'YELLOW' | 'GREEN';
 }
@@ -58,6 +60,14 @@ export interface VideoQueueItem {
   videoFileId?: string;
   transcriptStatus?: TranscriptStatus | null;
   transcriptError?: string | null;
+  /** Submitted items: the server's rulebook check, the one score shown everywhere. */
+  serverCheck?: StoredCheck | null;
+  submissionStatus?: SubmissionStatus;
+  currentVersion?: number;
+  platforms?: string[];
+  publishAt?: string | null;
+  /** The viewer is a reviewer who may decide on it. */
+  canReview?: boolean;
 }
 
 interface VideoUploadQueueContextType {
@@ -255,15 +265,23 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     (SCREENER_PLATFORMS.includes(s.account?.platform as TargetPlatform) ? (s.account!.platform as TargetPlatform) : 'YOUTUBE');
   const check = s.latest_check;
   // The backend transcribes the video's speech after upload; until it's done the script is empty.
-  const segments = applySegmentRisk(
-    (s.video.transcript_status === 'COMPLETED' ? s.video.transcript ?? [] : []).map((seg, i) => ({
-      id: `${s.video.id}-t${i}`,
-      startSec: seg.start_sec,
-      endSec: seg.end_sec,
-      text: seg.text,
-    })),
-    check?.violations ?? []
-  );
+  const raw = (s.video.transcript_status === 'COMPLETED' ? s.video.transcript ?? [] : []).map((seg, i) => ({
+    id: `${s.video.id}-t${i}`,
+    startSec: seg.start_sec,
+    endSec: seg.end_sec,
+    text: seg.text,
+    onScreen: seg.source === 'on_screen',
+  }));
+  // Prefer the server's per-segment flags (same matcher as the score); fall back for checks made before them.
+  const flags = check?.segment_flags;
+  const segments =
+    flags && flags.length === raw.length
+      ? raw.map((seg, i) => {
+          const f = flags[i];
+          const violations = (check?.violations ?? []).filter((v) => f.rule_numbers.includes(v.rule_number));
+          return { ...seg, risk: f.traffic_light, violations };
+        })
+      : applySegmentRisk(raw, check?.violations ?? []);
   return {
     id: `sub-${s.id}`,
     submissionId: s.id,
@@ -293,6 +311,12 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     violationCount: check?.violations_count ?? 0,
     complianceScore: check?.score ?? 0,
     scoreStatus: check ? 'checked' : 'pending',
+    serverCheck: check ?? null,
+    submissionStatus: s.status,
+    currentVersion: s.current_version,
+    platforms: s.platforms,
+    publishAt: s.publish_at ?? null,
+    canReview: Boolean(s.can_review),
   };
 }
 
@@ -301,7 +325,6 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   const [localQueue, setQueue] = useState<VideoQueueItem[]>(INITIAL_QUEUE);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isQueueDrawerOpen, setIsQueueDrawerOpen] = useState(false);
-  const [scanOverrides, setScanOverrides] = useState<Record<string, { score: number; violationCount: number; segments: TimestampedSegment[] }>>({});
   const [showDemoPref, setShowDemoPref] = useState<boolean | null>(() => {
     try {
       const v = localStorage.getItem(SHOW_DEMO_KEY);
@@ -325,15 +348,9 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   });
   const serverItems = useMemo(
     () =>
-      (serverQuery.data ?? []).map((s) => {
-        const item = toQueueItem(s);
-        const override = scanOverrides[item.id];
-        if (!override) return item;
-        // A scan recorded before the transcript arrived mustn't hide the new transcript.
-        const segments = override.segments.length === item.segments.length ? override.segments : item.segments;
-        return { ...item, complianceScore: override.score, violationCount: override.violationCount, segments, scoreStatus: 'checked' as const };
-      }),
-    [serverQuery.data, scanOverrides]
+      // Submitted items always show the server's check, so every screen agrees on the score.
+      (serverQuery.data ?? []).map(toQueueItem),
+    [serverQuery.data]
   );
 
   // Without a saved preference, samples only show while there's no real content to review.
@@ -404,10 +421,8 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
 
   const recordScanResult = useCallback(
     (id: string, result: { score: number; violationCount: number; segments: TimestampedSegment[] }) => {
-      if (id.startsWith('sub-')) {
-        setScanOverrides((prev) => ({ ...prev, [id]: result }));
-        return;
-      }
+      // Submitted items are scored by the server; only local demo items take live scan results.
+      if (id.startsWith('sub-')) return;
       setQueue((prev) =>
         prev.map((q) =>
           q.id === id

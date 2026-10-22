@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import DemoPoster from "@/components/video/DemoPoster";
-import { ChannelAvatar, CoverThumb } from "@/components/submissions/PostPreview";
+import { CoverThumb } from "@/components/submissions/PostPreview";
 import { MODE_LABELS, clearPublished, fromSubmission, publishInfo, publishKey, sampleItems, usePublished } from "@/lib/contentCalendar";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -95,10 +95,18 @@ function AgendaItem({
             <span>· {format(new Date(item.publishAt), "h:mm a")}</span>
             {item.score != null && <span>· Check {item.score}/100</span>}
           </p>
-          <p className="mt-1 flex items-center gap-1.5 text-[11px] min-w-0">
-            <ChannelAvatar account={item.account} size="sm" />
-            <span className="truncate font-medium">{item.account?.account_name ?? "No channel"}</span>
-            {item.account?.is_ceo && <Crown className="w-3 h-3 text-amber-600 shrink-0" />}
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] min-w-0">
+            {item.platforms.map((p) => (
+              <span key={p} className="inline-flex items-center gap-1 font-medium">
+                <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5 shrink-0" />
+                {platformName(p)}
+              </span>
+            ))}
+            {item.account?.is_ceo && (
+              <span title="Shaun's channel" aria-label="Shaun's channel">
+                <Crown className="w-3 h-3 text-amber-600 shrink-0" />
+              </span>
+            )}
           </p>
         </div>
       </div>

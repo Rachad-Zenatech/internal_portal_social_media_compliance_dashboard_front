@@ -2,6 +2,9 @@ import { apiClient } from "@/services/apiClient";
 import type { AiUsage, SentimentAnalysis } from "@/types/sentiment";
 import type {
   ContentType,
+  ReviewComment,
+  ReviewCommentCreate,
+  ReviewDecisionRequest,
   ReviewQueueItem,
   Submission,
   SubmissionFile,
@@ -62,6 +65,21 @@ export const submissionService = {
   withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
 
   history: (id: string) => apiClient.get<SubmissionHistory>(`/api/submissions/${id}/history`),
+
+  /** Reviewer decision on the version in review. */
+  review: (id: string, data: ReviewDecisionRequest) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/review`, data, quiet),
+
+  comments: (id: string) => apiClient.get<ReviewComment[]>(`/api/submissions/${id}/comments`, quiet),
+
+  addComment: (id: string, data: ReviewCommentCreate) =>
+    apiClient.post<ReviewComment>(`/api/submissions/${id}/comments`, data, quiet),
+
+  resolveComment: (id: string, commentId: string, resolved: boolean) =>
+    apiClient.patch<ReviewComment>(`/api/submissions/${id}/comments/${commentId}`, { resolved }, quiet),
+
+  deleteComment: (id: string, commentId: string) =>
+    apiClient.delete<null>(`/api/submissions/${id}/comments/${commentId}`, quiet),
 
   /** Latest sentiment analysis, or null if none has run. */
   getSentiment: (id: string) => apiClient.get<SentimentAnalysis | null>(`/api/submissions/${id}/sentiment`, quiet),

@@ -1,0 +1,238 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { format, formatDistanceToNow, isPast } from "date-fns";
+import { AlertTriangle, CalendarPlus, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
+import type { ReviewJob } from "@/types/submission";
+
+/** The submission fields the review controls need (works for a full Submission or a queue item). */
+export interface ReviewTarget {
+  id: string;
+  reference_code: string;
+  title: string;
+  status: string;
+  current_version: number;
+  platforms: string[];
+  publish_at?: string | null;
+  can_review?: boolean;
+  score?: number | null;
+}
+
+type Mode = "schedule" | "now" | "changes" | null;
+
+const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
+
+/** Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow. */
+function defaultPublishTime(planned: Date | null) {
+  return planned && !isPast(planned) ? planned : new Date(Date.now() + 24 * 3600 * 1000);
+}
+
+/**
+ * The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or
+ * send it back with what to change. Only shown to reviewers who may decide on this item.
+ */
+export default function ReviewDecisionPanel({
+  target,
+  compact = false,
+  layout = "panel",
+}: {
+  target: ReviewTarget;
+  compact?: boolean;
+  /** "bar": only the three buttons in a row (the Content Portal side panel), with the same confirm dialog. */
+  layout?: "panel" | "bar";
+}) {
+  const navigate = useNavigate();
+  const decide = useReviewDecision(target.id, target.reference_code);
+  const { comments } = useReviewComments(target.id);
+  const openComments = comments.filter((c) => !c.resolved_at && c.version_number === target.current_version).length;
+  const [mode, setMode] = useState<Mode>(null);
+  const [notes, setNotes] = useState("");
+  const [when, setWhen] = useState("");
+
+  if (!target.can_review) return null;
+
+  const planned = target.publish_at ? new Date(target.publish_at) : null;
+  const start = (m: Mode) => {
+    setNotes("");
+    setWhen(toLocalInput(defaultPublishTime(planned)));
+    setMode(m);
+  };
+  const whenDate = when ? new Date(when) : null;
+  const whenInPast = Boolean(whenDate && isPast(whenDate));
+
+  const confirm = () => {
+    if (mode === "changes") {
+      decide.mutate({ decision: "REQUEST_CHANGES", notes: notes.trim() || undefined }, { onSuccess: () => setMode(null) });
+    } else if (mode === "schedule" && whenDate) {
+      decide.mutate(
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_at: whenDate.toISOString() },
+        { onSuccess: () => setMode(null) }
+      );
+    } else if (mode === "now") {
+      decide.mutate(
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_now: true },
+        {
+          onSuccess: () => {
+            setMode(null);
+            if (target.platforms[0]) navigate(`/content-calendar/publish/sub-${target.id}/${target.platforms[0]}`);
+          },
+        }
+      );
+    }
+  };
+
+  const bar = layout === "bar";
+  const barOutline =
+    "h-11 rounded-lg text-sm font-semibold border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10";
+
+  return (
+    <div className={bar ? "" : `rounded-xl border border-blue-500/30 bg-blue-500/5 ${compact ? "p-3" : "p-4"} space-y-3`}>
+      {!bar && (
+        <div>
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <ShieldCheck className="w-4 h-4 text-blue-600" /> Your review
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Version {target.current_version}
+            {target.score != null && ` · rulebook check ${target.score}/100`}
+            {openComments > 0 && ` · ${openComments} open comment${openComments === 1 ? "" : "s"}`}
+            {planned && ` · planned for ${format(planned, "MMM d, h:mm a")}`}
+          </p>
+        </div>
+      )}
+      {bar ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <Button variant="outline" className={barOutline} onClick={() => start("changes")}>
+            Request changes
+          </Button>
+          <Button variant="outline" className={barOutline} onClick={() => start("schedule")}>
+            Add to calendar
+          </Button>
+          <Button className="h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length}>
+            Approve & publish
+          </Button>
+        </div>
+      ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <Button size="sm" className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => start("schedule")}>
+          <CalendarPlus className="w-3.5 h-3.5" /> Approve & schedule
+        </Button>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length}>
+          <Send className="w-3.5 h-3.5" /> Approve & post now
+        </Button>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5 border-amber-500/40 text-amber-800 hover:bg-amber-500/10 dark:text-amber-200" onClick={() => start("changes")}>
+          <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
+        </Button>
+      </div>
+      )}
+
+      <Dialog open={mode !== null} onOpenChange={(o) => !o && setMode(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {mode === "changes" ? `Send ${target.reference_code} back for changes` : mode === "now" ? `Approve ${target.reference_code} and post now` : `Approve ${target.reference_code} for the calendar`}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {mode === "changes"
+                ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
+                : mode === "now"
+                ? "It's approved and you go straight to the publish page for its platform."
+                : "It's approved and goes on the content calendar for this time. You or the team publish it from there."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {mode === "schedule" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="review-when" className="text-xs font-semibold">Publish on</Label>
+                <Input id="review-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="text-xs" />
+                {planned && <p className="text-[11px] text-muted-foreground">Planned by the creator for {format(planned, "EEE MMM d, h:mm a")}.</p>}
+                {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future, or use "Approve & post now".</p>}
+              </div>
+            )}
+            {mode === "changes" && openComments > 0 && (
+              <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Your {openComments} open comment{openComments === 1 ? " is" : "s are"} sent along with this.
+              </p>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="review-notes" className="text-xs font-semibold">
+                {mode === "changes" ? (openComments ? "Summary (optional)" : "What needs to change") : "Note to the creator (optional)"}
+              </Label>
+              <Textarea
+                id="review-notes"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="text-xs"
+                placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Great post, scheduled for the morning slot."}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => setMode(null)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className={`text-xs gap-1.5 ${mode === "changes" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+              disabled={
+                decide.isPending ||
+                (mode === "changes" && !notes.trim() && openComments === 0) ||
+                (mode === "schedule" && (!whenDate || whenInPast))
+              }
+              onClick={confirm}
+            >
+              {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {mode === "changes" ? "Send back for changes" : mode === "now" ? "Approve & open publish page" : "Approve & schedule"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/**
+ * For the creator: the reviewer sent it back. Shows their note and the open comments count, with the way to
+ * edit and resubmit.
+ */
+export function ChangesRequestedBanner({
+  submissionId,
+  job,
+  openComments,
+  canEdit,
+}: {
+  submissionId: string;
+  job?: ReviewJob | null;
+  openComments: number;
+  canEdit: boolean;
+}) {
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-900 dark:text-amber-100">
+        <MessageSquareWarning className="w-4 h-4" /> Changes requested
+        {job?.decided_by_name && <span className="font-normal text-muted-foreground"> by {job.decided_by_name}</span>}
+        {job?.decided_at && <span className="font-normal text-muted-foreground"> · {formatDistanceToNow(new Date(job.decided_at), { addSuffix: true })}</span>}
+      </p>
+      {job?.decision_notes && <p className="text-sm text-foreground whitespace-pre-wrap">"{job.decision_notes}"</p>}
+      <p className="text-xs text-muted-foreground">
+        {openComments > 0 ? `${openComments} comment${openComments === 1 ? "" : "s"} still open. ` : ""}
+        Make the changes, mark comments resolved as you go, then resubmit. It goes back to the reviewer as the next version.
+      </p>
+      {canEdit && (
+        <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate(`/submissions/new?id=${submissionId}`)}>
+          <FilePen className="w-3.5 h-3.5" /> Make changes & resubmit
+        </Button>
+      )}
+    </div>
+  );
+}

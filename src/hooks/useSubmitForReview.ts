@@ -14,7 +14,7 @@ interface SubmitTarget {
   isVideo: boolean;
 }
 
-/** Quick "send to the Content Screener" for a draft, outside the New Submission form. */
+/** Quick "send for review" for a draft (or resubmit after changes), outside the New Submission form. */
 export function useSubmitForReview() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export function useSubmitForReview() {
       const score = `Automated check: ${result.review_job.score}/100.`;
       if (target.isVideo) {
         setActiveVideoId(`sub-${target.id}`);
-        toast.success(`${target.referenceCode} sent to the Content Screener. ${score}`, {
+        toast.success(`${target.referenceCode} sent for review. Reviewers have been notified. ${score}`, {
           action: { label: "Open screener", onClick: () => navigate("/compliance/scanner") },
         });
       } else {
