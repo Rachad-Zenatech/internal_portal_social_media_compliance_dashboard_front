@@ -44,8 +44,9 @@ import { ChannelAvatar, CoverThumb } from "@/components/submissions/PostPreview"
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
+import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
-import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { DueBadge, authedFileUrl } from "@/components/submissions/submissionUi";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
@@ -207,17 +208,26 @@ function MetaLine({ s, labels, date, className = "" }: { s: SubmissionSummary | 
 
 /** Publish date when it has one (red when it's passed without being approved), otherwise last activity. */
 function WhenText({ s }: { s: SubmissionSummary }) {
+  const due = <DueBadge dueAt={s.due_at} kind={s.due_kind} className="mr-2" />;
   if (s.publish_at) {
     const date = new Date(s.publish_at);
     const pastDue = !FINISHED.has(s.status) && isPast(date);
     return (
-      <span className={pastDue ? "text-red-600 dark:text-red-400 font-semibold" : ""} title={pastDue ? "Planned publish time has passed" : "Planned publish time"}>
-        {format(date, "MMM d, yyyy, h:mm a")}
-        {pastDue && " · Past due"}
+      <span className="inline-flex flex-wrap items-center">
+        {due}
+        <span className={pastDue ? "text-red-600 dark:text-red-400 font-semibold" : ""} title={pastDue ? "Planned publish time has passed" : "Planned publish time"}>
+          {format(date, "MMM d, yyyy, h:mm a")}
+          {pastDue && " · Past due"}
+        </span>
       </span>
     );
   }
-  return <span title="Last updated">{format(new Date(s.updated_at), "MMM d, yyyy, h:mm a")}</span>;
+  return (
+    <span className="inline-flex flex-wrap items-center">
+      {due}
+      <span title="Last updated">{format(new Date(s.updated_at), "MMM d, yyyy, h:mm a")}</span>
+    </span>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -540,7 +550,11 @@ function DetailPanel({
               current_version: sub.current_version,
               platforms: sub.platforms,
               publish_at: sub.publish_at,
+              due_at: sub.due_at,
+              due_kind: sub.due_kind,
               can_review: sub.can_review,
+              can_approve: sub.can_approve,
+              approver_names: sub.approver_names,
               score: sub.latest_check?.score ?? null,
             }}
           />
@@ -552,6 +566,14 @@ function DetailPanel({
             <Button className="h-11 rounded-lg text-sm font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => onSubmit(summary)}>
               <Send className="w-4 h-4" /> {submitLabel(summary)}
             </Button>
+          </div>
+        ) : summary.status === "APPROVED" && (mine || summary.can_manage_approval) ? (
+          <div className="flex flex-wrap gap-2">
+            <ApprovalActions
+              target={sub ?? summary}
+              isCreator={mine}
+              buttonClassName="h-11 flex-1 rounded-lg text-sm font-semibold gap-1.5"
+            />
           </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -713,7 +735,7 @@ export default function SubmissionsListPage() {
                   aria-pressed={scope === v}
                   onClick={() => setPrefs({ scope: v })}
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    scope === v ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-muted-foreground hover:text-foreground"
+                    scope === v ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" /> {label}
@@ -721,7 +743,7 @@ export default function SubmissionsListPage() {
               ))}
             </div>
           )}
-          <Button asChild className="h-11 rounded-lg px-5 gap-2 text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
+          <Button asChild className="h-11 rounded-lg px-5 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/20">
             <Link to="/submissions/new">
               <Plus className="w-4 h-4" /> New Submission
             </Link>

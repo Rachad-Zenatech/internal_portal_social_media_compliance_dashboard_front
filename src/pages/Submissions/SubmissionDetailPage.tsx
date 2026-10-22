@@ -39,9 +39,10 @@ import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submissions/ReviewDecisionPanel";
+import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
-import { SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
+import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import type { ReviewJob, Submission, SubmissionVersion } from "@/types/submission";
@@ -52,6 +53,7 @@ const TYPE_LABELS: Record<string, string> = {
   CAROUSEL: "Carousel",
   IMAGE: "Image",
   BLOG: "Blog / article",
+  AD: "Paid ad",
 };
 
 const JOB_STATUS: Record<string, string> = {
@@ -300,6 +302,7 @@ export default function SubmissionDetailPage() {
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-mono font-semibold text-foreground">{s.reference_code}</span>
             <SubmissionStatusBadge status={s.status} />
+            <DueBadge dueAt={s.due_at} kind={s.due_kind} />
             {s.current_version > 0 && <span>Version {s.current_version}</span>}
             <span>· Updated {formatDistanceToNow(new Date(s.updated_at), { addSuffix: true })}</span>
           </span>
@@ -370,7 +373,11 @@ export default function SubmissionDetailPage() {
             current_version: s.current_version,
             platforms: s.platforms,
             publish_at: s.publish_at,
+            due_at: s.due_at,
+            due_kind: s.due_kind,
             can_review: s.can_review,
+            can_approve: s.can_approve,
+            approver_names: s.approver_names,
             score: s.latest_check?.score ?? null,
           }}
         />
@@ -405,6 +412,7 @@ export default function SubmissionDetailPage() {
               <Link to={`/content-calendar/publish/sub-${s.id}/${s.platforms[0]}`}>Publish</Link>
             </Button>
           )}
+          <ApprovalActions target={s} isCreator={isCreator} />
         </div>
       )}
 
@@ -478,7 +486,7 @@ export default function SubmissionDetailPage() {
                 <ReviewCommentsPanel
                   submissionId={s.id}
                   canComment={isCreator || isReviewer}
-                  placeholder={isCreator ? "Reply to the reviewer..." : "What should change, and why?"}
+                  placeholder={isCreator && !s.can_review ? "Reply to the reviewer..." : "What should change, and why?"}
                   emptyText={s.status === "IN_REVIEW" ? "No comments yet. Reviewers' comments show here." : "No comments."}
                 />
               </div>

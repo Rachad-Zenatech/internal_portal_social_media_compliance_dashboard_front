@@ -56,7 +56,7 @@ function CommentItem({
           </button>
         )}
         <span className="text-[10px] text-muted-foreground ml-auto">
-          v{c.version_number} · {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+          {c.version_number > 0 ? `v${c.version_number}` : "draft"} · {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
         </span>
       </div>
       <p className={`whitespace-pre-wrap break-words text-foreground ${resolved ? "line-through decoration-muted-foreground/50" : ""}`}>{c.body}</p>
@@ -169,7 +169,7 @@ export default function ReviewCommentsPanel({
                 aria-pressed={category === cat.value}
                 onClick={() => setCategory(cat.value)}
                 className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-colors ${
-                  category === cat.value ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground"
+                  category === cat.value ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {cat.label}

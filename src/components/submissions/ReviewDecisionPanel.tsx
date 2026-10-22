@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
-import type { ReviewJob } from "@/types/submission";
+import type { DueKind, ReviewJob } from "@/types/submission";
+import { DueBadge } from "@/components/submissions/submissionUi";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
 export interface ReviewTarget {
@@ -20,7 +21,12 @@ export interface ReviewTarget {
   current_version: number;
   platforms: string[];
   publish_at?: string | null;
+  due_at?: string | null;
+  due_kind?: DueKind | null;
   can_review?: boolean;
+  /** False when final approval is with someone else (see approver_names). Defaults to allowed. */
+  can_approve?: boolean;
+  approver_names?: string[];
   score?: number | null;
 }
 
@@ -47,6 +53,7 @@ export default function ReviewDecisionPanel({
   /** "bar": only the three buttons in a row (the Content Portal side panel), with the same confirm dialog. */
   layout?: "panel" | "bar";
 }) {
+  const mayApprove = target.can_approve !== false;
   const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
   const { comments } = useReviewComments(target.id);
@@ -104,26 +111,34 @@ export default function ReviewDecisionPanel({
             {openComments > 0 && ` · ${openComments} open comment${openComments === 1 ? "" : "s"}`}
             {planned && ` · planned for ${format(planned, "MMM d, h:mm a")}`}
           </p>
+          {target.due_kind === "REVIEW" && <DueBadge dueAt={target.due_at} kind="REVIEW" className="mt-1.5" />}
         </div>
+      )}
+      {target.approver_names && target.approver_names.length > 0 && (
+        <p className={`text-[11px] ${target.can_approve === false ? "rounded-md bg-amber-500/10 px-2 py-1.5 text-amber-900 dark:text-amber-100" : "text-muted-foreground"}`}>
+          {target.can_approve === false
+            ? `Final approval is with ${target.approver_names.join(", ")}. You can still comment or request changes.`
+            : `Final approval: ${target.approver_names.join(", ")}`}
+        </p>
       )}
       {bar ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <Button variant="outline" className={barOutline} onClick={() => start("changes")}>
             Request changes
           </Button>
-          <Button variant="outline" className={barOutline} onClick={() => start("schedule")}>
+          <Button variant="outline" className={barOutline} onClick={() => start("schedule")} disabled={!mayApprove}>
             Add to calendar
           </Button>
-          <Button className="h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length}>
+          <Button className="h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
             Approve & publish
           </Button>
         </div>
       ) : (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <Button size="sm" className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => start("schedule")}>
+        <Button size="sm" className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
           <CalendarPlus className="w-3.5 h-3.5" /> Approve & schedule
         </Button>
-        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length}>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
           <Send className="w-3.5 h-3.5" /> Approve & post now
         </Button>
         <Button size="sm" variant="outline" className="text-xs gap-1.5 border-amber-500/40 text-amber-800 hover:bg-amber-500/10 dark:text-amber-200" onClick={() => start("changes")}>

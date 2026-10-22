@@ -59,3 +59,34 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
     onError: (err) => toast.error(`Couldn't save your decision: ${(err as Error).message}`),
   });
 }
+
+/** Approved content: the creator withdraws it for a late fix; a reviewer reschedules it or reopens it. */
+export function useApprovalActions(submissionId: string, referenceCode: string) {
+  const queryClient = useQueryClient();
+  const onSuccess = () => invalidateSubmission(queryClient, submissionId);
+  const withdraw = useMutation({
+    mutationFn: () => submissionService.withdraw(submissionId),
+    onSuccess: () => {
+      onSuccess();
+      toast.success(`${referenceCode} is back in draft and off the calendar. Fix it and resubmit for review.`);
+    },
+    onError: (err) => toast.error(`Couldn't withdraw it: ${(err as Error).message}`),
+  });
+  const reopen = useMutation({
+    mutationFn: (notes: string) => submissionService.reopen(submissionId, notes),
+    onSuccess: () => {
+      onSuccess();
+      toast.success(`${referenceCode} reopened. The creator has been asked to make changes.`);
+    },
+    onError: (err) => toast.error(`Couldn't reopen it: ${(err as Error).message}`),
+  });
+  const reschedule = useMutation({
+    mutationFn: (publishAt: string) => submissionService.reschedule(submissionId, publishAt),
+    onSuccess: () => {
+      onSuccess();
+      toast.success(`${referenceCode} rescheduled.`);
+    },
+    onError: (err) => toast.error(`Couldn't reschedule it: ${(err as Error).message}`),
+  });
+  return { withdraw, reopen, reschedule };
+}
