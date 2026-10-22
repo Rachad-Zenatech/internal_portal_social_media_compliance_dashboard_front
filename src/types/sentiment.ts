@@ -10,10 +10,11 @@ export interface SentimentFinding {
   title: string;
   quote: string;
   why_it_matters: string;
-  basis: "OBSERVED_WORDING" | "POSSIBLE_INTERPRETATION";
+  /** OBSERVED_VISUAL: about what the video shows; quote then describes the moment instead of quoting words. */
+  basis: "OBSERVED_WORDING" | "POSSIBLE_INTERPRETATION" | "OBSERVED_VISUAL";
   guideline_rule_number?: string | null;
   suggested_revision?: string | null;
-  source?: "title" | "caption" | "transcript" | null;
+  source?: "title" | "caption" | "transcript" | "video" | null;
   start_sec?: number | null;
   end_sec?: number | null;
 }

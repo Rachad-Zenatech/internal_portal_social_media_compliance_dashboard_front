@@ -80,7 +80,11 @@ function Metric({ label, value, sub, tone = "" }: { label: string; value: string
       <p className={`text-sm font-semibold truncate ${tone}`} title={value}>
         {value}
       </p>
-      {sub && <p className="text-[10px] text-muted-foreground truncate">{sub}</p>}
+      {sub && (
+        <p className="text-[10px] text-muted-foreground line-clamp-1 @2xl:line-clamp-3" title={sub}>
+          {sub}
+        </p>
+      )}
     </div>
   );
 }
@@ -122,8 +126,8 @@ function FindingCard({ f, onSeek }: { f: SentimentFinding; onSeek?: (sec: number
         <p className="font-semibold text-foreground leading-snug">{f.title}</p>
         <span className={`shrink-0 rounded border px-1.5 py-px text-[9px] font-bold uppercase ${SEVERITY_BADGE[f.severity]}`}>{f.severity}</span>
       </div>
-      <blockquote className="border-l-2 border-primary/40 pl-2 italic text-foreground/90">
-        "{f.quote}"
+      <blockquote className={`border-l-2 border-primary/40 pl-2 text-foreground/90 ${f.basis === "OBSERVED_VISUAL" ? "" : "italic"}`}>
+        {f.basis === "OBSERVED_VISUAL" ? <>Shown in the video: {f.quote}</> : <>"{f.quote}"</>}
         {f.start_sec != null && (
           <button
             type="button"
@@ -139,13 +143,15 @@ function FindingCard({ f, onSeek }: { f: SentimentFinding; onSeek?: (sec: number
       <p className="text-muted-foreground leading-relaxed">{f.why_it_matters}</p>
       <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
         <span className="rounded bg-muted px-1.5 py-px">{titleCase(f.category)}</span>
-        <span className="rounded bg-muted px-1.5 py-px">{f.basis === "OBSERVED_WORDING" ? "Observed wording" : "Possible interpretation"}</span>
+        <span className="rounded bg-muted px-1.5 py-px">
+          {f.basis === "OBSERVED_WORDING" ? "Observed wording" : f.basis === "OBSERVED_VISUAL" ? "Observed in video" : "Possible interpretation"}
+        </span>
         {f.guideline_rule_number && (
           <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-px text-primary">
             <BookOpen className="w-3 h-3" /> {f.guideline_rule_number}
           </span>
         )}
-        {f.source && f.source !== "transcript" && <span>in {f.source}</span>}
+        {f.source && f.source !== "transcript" && f.source !== "video" && <span>in {f.source}</span>}
       </div>
       {f.suggested_revision && (
         <div className="rounded-md bg-emerald-500/5 border border-emerald-500/25 p-2 space-y-1">
@@ -184,7 +190,7 @@ function ResultView({ r, onSeek }: { r: SentimentResult; onSeek?: (sec: number) 
         <p className="text-xs mt-1 leading-relaxed opacity-90">{r.summary}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 @2xl:grid-cols-4 gap-2">
         <Metric label="Primary tone" value={r.tone.primary} sub={[r.tone.secondary, `${titleCase(r.tone.intensity)} intensity`].filter(Boolean).join(" · ")} />
         <Metric label="Reputational concern" value={titleCase(r.reputational_concern)} tone={LEVEL_TONE[r.reputational_concern]} />
         <Metric label="Brand voice" value={BRAND_LABELS[r.brand_alignment.rating]} sub={r.brand_alignment.explanation} />
@@ -232,12 +238,16 @@ function ResultView({ r, onSeek }: { r: SentimentResult; onSeek?: (sec: number) 
           <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <MessageSquareQuote className="w-3.5 h-3.5" /> Flagged language ({r.findings.length})
           </p>
-          {r.findings.map((f, i) => (
-            <FindingCard key={i} f={f} onSeek={onSeek} />
-          ))}
+          <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
+            {r.findings.map((f, i) => (
+              <FindingCard key={i} f={f} onSeek={onSeek} />
+            ))}
+          </div>
         </div>
       )}
 
+      {/* Audiences and gaps sit side by side when there's room. */}
+      <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-3 items-start">
       {r.audience_interpretations.length > 0 && (
         <div className="space-y-1.5">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
@@ -262,6 +272,7 @@ function ResultView({ r, onSeek }: { r: SentimentResult; onSeek?: (sec: number) 
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -291,7 +302,8 @@ export default function SentimentPanel({
   const result = analysis?.status === "COMPLETED" ? analysis.result : null;
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    // A size container, so the result spreads into more columns wherever the panel is wide.
+    <div className={`@container space-y-3 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
@@ -336,7 +348,7 @@ export default function SentimentPanel({
         </p>
       ) : !analysis ? (
         <p className="text-xs text-muted-foreground">
-          Not analysed yet.{canRun ? " It also runs automatically when the content is submitted for review." : ""}
+          Not analysed yet.{canRun ? " Run it to check the tone, brand fit and how audiences may read it, including what the video shows." : ""}
         </p>
       ) : running ? (
         <p className="text-xs text-muted-foreground flex items-center gap-2 rounded-lg border border-dashed border-border p-3">
