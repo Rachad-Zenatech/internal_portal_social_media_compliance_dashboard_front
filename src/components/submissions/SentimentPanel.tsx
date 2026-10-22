@@ -283,17 +283,21 @@ function ResultView({ r, onSeek }: { r: SentimentResult; onSeek?: (sec: number) 
  */
 export default function SentimentPanel({
   submissionId,
-  canRun = true,
+  version,
+  canRun: canRunProp = true,
   onSeek,
   className = "",
 }: {
   submissionId?: string | null;
+  /** Show the analysis of this earlier version, as it was (it can't be re-run). */
+  version?: number;
   canRun?: boolean;
   /** Jump the video player to a transcript timestamp. */
   onSeek?: (sec: number) => void;
   className?: string;
 }) {
-  const { analysis, isLoading, run, usage } = useSentiment(submissionId);
+  const { analysis, isLoading, run, usage } = useSentiment(submissionId, version);
+  const canRun = canRunProp && version == null;
   const running = isSentimentRunning(analysis) || run.isPending;
   const outOfRuns = usage?.remaining === 0;
   const companyCapped = Boolean(usage?.company_limit && usage.company_used >= usage.company_limit);

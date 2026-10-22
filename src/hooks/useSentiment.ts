@@ -11,13 +11,13 @@ export function isSentimentRunning(a?: SentimentAnalysis | null) {
 }
 
 /** Latest sentiment analysis for a submission, checking back every few seconds while one is running. */
-export function useSentiment(submissionId?: string | null) {
+export function useSentiment(submissionId?: string | null, version?: number) {
   const queryClient = useQueryClient();
-  const key = ["sentiment", submissionId];
+  const key = version != null ? ["sentiment", submissionId, version] : ["sentiment", submissionId];
 
   const query = useQuery({
     queryKey: key,
-    queryFn: () => submissionService.getSentiment(submissionId!),
+    queryFn: () => submissionService.getSentiment(submissionId!, version),
     enabled: Boolean(submissionId),
     staleTime: 0,
     refetchInterval: (q) => (isSentimentRunning(q.state.data) ? 3000 : false),
