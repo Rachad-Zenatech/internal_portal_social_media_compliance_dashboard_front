@@ -73,13 +73,17 @@ import {
   type PosterVariant,
   type TargetPlatform,
   type TimestampedSegment,
+  versionQueueItem,
 } from "@/context/VideoUploadQueueContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { submissionService } from "@/services/submissionService";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
+import { DueBadge } from "@/components/submissions/submissionUi";
+import ApprovalActions from "@/components/submissions/ApprovalActions";
+import type { QueueTab } from "@/types/submission";
 import { useReviewComments } from "@/hooks/useReview";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   complianceService,
   type ComplianceCheckResponse,
@@ -209,12 +213,12 @@ function QueueThumbnail({ item, fallbackDuration }: { item: { videoUrl?: string 
 }
 
 export default function VideoComplianceScannerPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const authorName = user?.full_name || "Marketing Reviewer";
   const navigate = useNavigate();
   const {
     queue,
-    activeVideo,
+    activeVideo: latestVideo,
     activeVideoId,
     setActiveVideoId,
     openQueueDrawer,
@@ -224,7 +228,65 @@ export default function VideoComplianceScannerPage() {
     showDemo,
     setShowDemo,
     serverQueueLoading,
+    doneSearch,
+    setDoneSearch,
   } = useVideoUploadQueue();
+
+  // Version picker: look back at an earlier submitted version of the selected item. Everything below then shows
+  // that version as it was (video, caption, check, sentiment, notes), read-only.
+  const [versionPick, setVersionPick] = useState<{ videoId: string; version: number } | null>(null);
+  const latestVersion = latestVideo?.submissionId ? latestVideo.currentVersion ?? 0 : 0;
+  const viewVersion =
+    versionPick && versionPick.videoId === latestVideo?.id && versionPick.version < latestVersion ? versionPick.version : null;
+  const versionQuery = useQuery({
+    queryKey: ["submission-version", latestVideo?.submissionId, viewVersion],
+    queryFn: () => submissionService.getVersion(latestVideo!.submissionId!, viewVersion!),
+    enabled: Boolean(latestVideo?.submissionId && viewVersion),
+    staleTime: 60_000,
+  });
+  const versionView = viewVersion ? versionQuery.data ?? null : null;
+  const versionItem = useMemo(
+    () => (latestVideo && versionView ? versionQueueItem(latestVideo, versionView) : null),
+    [latestVideo, versionView]
+  );
+  const viewingOld = Boolean(versionItem);
+  const activeVideo = versionItem ?? latestVideo;
+
+  // Queue tabs. Reviewers start on what's waiting for them; creators on what's been sent back to them.
+  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const [pickedTab, setPickedTab] = useState<QueueTab | null>(null);
+  const openedItemTab = queue.find((i) => i.id === activeVideoId)?.queueTab;
+  const queueTab: QueueTab = pickedTab ?? openedItemTab ?? (isReviewer ? "review" : "sent_back");
+  const tabQueue = queue.filter((i) => (i.queueTab ?? "review") === queueTab);
+  const QUEUE_TAB_LABELS: Record<QueueTab, string> = isReviewer
+    ? { review: "Awaiting review", sent_back: "Changes requested", done: "Reviewed (last 30 days)" }
+    : { review: "In review", sent_back: "Needs my changes", done: "Reviewed (last 30 days)" };
+  // Spelled out on hover: what's in each tab and who it's waiting on.
+  const QUEUE_TAB_HINTS: Record<QueueTab, string> = {
+    review: isReviewer ? "Submitted or resubmitted content waiting for a reviewer's decision" : "Your content waiting for a reviewer's decision",
+    sent_back: isReviewer ? "Sent back to the creator; waiting for them to fix and resubmit" : "A reviewer asked for changes; fix and resubmit",
+    done: "Approved or rejected in the last 30 days. Older decisions are in the Content Portal.",
+  };
+  const QUEUE_EMPTY: Record<QueueTab, string> = {
+    review: isReviewer ? "Nothing waiting for review." : "Nothing of yours is waiting for review.",
+    sent_back: isReviewer ? "Nothing is waiting on creators." : "Nothing needs your changes.",
+    done: doneSearch.trim() ? "Nothing decided in the last 30 days matches that search." : "Nothing decided in the last 30 days.",
+  };
+  const pickTab = (tab: QueueTab) => {
+    setPickedTab(tab);
+    const inTab = queue.filter((i) => (i.queueTab ?? "review") === tab);
+    if (inTab.length && !inTab.some((i) => i.id === latestVideo?.id)) setActiveVideoId(inTab[0].id);
+  };
+  // Decided content is read-only here: late concerns go through "Reopen for changes".
+  const isDecided = activeVideo?.queueTab === "done";
+  // The player shows something from the open tab, or nothing: an approved video under an empty "To review" tab
+  // would read as if it were waiting for review.
+  const tabIds = tabQueue.map((i) => i.id).join(",");
+  const selectedInTab = Boolean(latestVideo && tabQueue.some((i) => i.id === latestVideo.id));
+  useEffect(() => {
+    if (!selectedInTab && tabQueue.length) setActiveVideoId(tabQueue[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedInTab, tabIds]);
   // Submitted videos are reviewed for real: comments are saved, the score is the server's check, and
   // reviewers make their decision here. Demo items keep their local, simulated behaviour.
   const submissionId = activeVideo?.submissionId ?? null;
@@ -268,15 +330,15 @@ export default function VideoComplianceScannerPage() {
   const startingNotes = !activeVideo || activeVideo.isDemo ? SAMPLE_COMMENTS : NO_COMMENTS;
   const savedComments = useReviewComments(submissionId);
   const comments: ReviewerComment[] = submissionId
-    ? savedComments.comments.map((c) => ({
+    ? savedComments.comments.filter((c) => !viewVersion || c.version_number === viewVersion).map((c) => ({
         id: c.id,
         author: c.author_name ?? "Someone",
         timestampSec: c.start_sec ?? null,
         endTimestampSec: c.end_sec ?? null,
         category: (c.category === "BRAND" ? "NOTE" : c.category) as CommentCategory,
         text: c.body,
-        createdAt: `${c.from_reviewer ? "Reviewer" : "Uploader"} · v${c.version_number} · ${formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}${c.resolved_at ? " · resolved" : ""}`,
-        canDelete: c.can_delete,
+        createdAt: `${c.from_reviewer ? "Reviewer" : "Uploader"} · ${c.version_number > 0 ? `v${c.version_number}` : "draft"} · ${formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}${c.resolved_at ? " · resolved" : ""}`,
+        canDelete: c.can_delete && activeVideo?.queueTab !== "done" && !viewingOld,
         resolved: Boolean(c.resolved_at),
       }))
     : commentsByVideo[commentsKey] ?? startingNotes;
@@ -1148,6 +1210,45 @@ export default function VideoComplianceScannerPage() {
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 px-4 pt-3" role="tablist" aria-label="Queue">
+          {(["review", "sent_back", "done"] as QueueTab[]).map((tab) => {
+            const active = queueTab === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                title={QUEUE_TAB_HINTS[tab]}
+                onClick={() => pickTab(tab)}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  active ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {QUEUE_TAB_LABELS[tab]}
+              </button>
+            );
+          })}
+          {queueTab === "done" && (
+            <Input
+              value={doneSearch}
+              onChange={(e) => setDoneSearch(e.target.value)}
+              placeholder="Search title or reference..."
+              className="h-8 w-full sm:w-56 sm:ml-auto text-xs"
+              aria-label="Search decided content"
+            />
+          )}
+          {queueTab === "done" && (
+            <p className="basis-full text-[11px] text-muted-foreground">
+              Approved in the last 30 days, newest first. Older content is in the{" "}
+              <button type="button" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline" onClick={() => navigate("/submissions")}>
+                Content Portal
+              </button>
+              .
+            </p>
+          )}
+        </div>
+
         {isQueueCollapsed ? (
           <div className="px-4 py-3 bg-muted/10 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span className="text-foreground font-medium truncate min-w-0">
@@ -1159,16 +1260,10 @@ export default function VideoComplianceScannerPage() {
           </div>
         ) : queueViewMode === "grid" ? (
           <div className="p-4 grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
-            {queue.length === 0 && (
-              <div className="col-span-full py-8 text-center text-xs text-muted-foreground">
-                Nothing to screen yet.{" "}
-                <button type="button" onClick={() => navigate("/submissions/new")} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                  Upload new content
-                </button>{" "}
-                to get started.
-              </div>
+            {tabQueue.length === 0 && (
+              <div className="col-span-full py-8 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>
             )}
-            {queue.map((item, idx) => {
+            {tabQueue.map((item, idx) => {
               const isSelected = item.id === (activeVideoId || activeVideo?.id);
               const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
               const isQueued = item.status === "QUEUED";
@@ -1219,6 +1314,14 @@ export default function VideoComplianceScannerPage() {
                           {item.isDemo ? "Demo · " : ""}
                           {item.filename}
                         </p>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
+                            <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                              v{item.currentVersion} · resubmitted
+                            </span>
+                          )}
+                          <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
+                        </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1278,7 +1381,8 @@ export default function VideoComplianceScannerPage() {
           </div>
         ) : (
           <div className="p-4 space-y-2">
-            {queue.map((item, idx) => {
+            {tabQueue.length === 0 && <div className="py-6 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>}
+            {tabQueue.map((item, idx) => {
               const isSelected = item.id === (activeVideoId || activeVideo?.id);
               const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
               const isQueued = item.status === "QUEUED";
@@ -1303,6 +1407,14 @@ export default function VideoComplianceScannerPage() {
                         {item.referenceCode ? `${item.referenceCode} • ` : ""}
                         {PLATFORM_LABELS[item.platform]} • {item.aspectRatio} • {item.filename}
                       </p>
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
+                          <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                            v{item.currentVersion} · resubmitted
+                          </span>
+                        )}
+                        <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
@@ -1332,6 +1444,17 @@ export default function VideoComplianceScannerPage() {
         )}
       </Card>
 
+      {!selectedInTab ? (
+        <Card className="py-10 px-6 border-dashed border-border/80 shadow-none items-center text-center gap-2">
+          <p className="text-sm font-semibold text-foreground">{QUEUE_EMPTY[queueTab]}</p>
+          <p className="text-xs text-muted-foreground max-w-md">
+            {queueTab === "review"
+              ? `New and resubmitted content shows up here. ${QUEUE_TAB_LABELS.sent_back} and ${QUEUE_TAB_LABELS.done} hold everything else.`
+              : "Pick another tab to open something in the player."}
+          </p>
+        </Card>
+      ) : (
+      <>
       {/* Target Platform & Viewport */}
       <Card className="py-0 border-border/80 shadow-xs">
         <div className="px-4 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
@@ -1347,7 +1470,7 @@ export default function VideoComplianceScannerPage() {
                   variant="outline"
                   onClick={() => handlePlatformChange(p)}
                   className={`text-xs gap-1.5 font-semibold ${
-                    isActive ? "bg-foreground text-background border-foreground hover:bg-foreground/90 hover:text-background" : ""
+                    isActive ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground" : ""
                   }`}
                 >
                   <PlatformIcon platform={p} className="w-3.5 h-3.5" />
@@ -1739,7 +1862,7 @@ export default function VideoComplianceScannerPage() {
                 type="button"
                 size="icon"
                 onClick={togglePlay}
-                className="h-9 w-9 mt-[-2px] rounded-full shrink-0 bg-foreground text-background hover:bg-foreground/90"
+                className="h-9 w-9 mt-[-2px] rounded-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
                 title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
@@ -1863,6 +1986,11 @@ export default function VideoComplianceScannerPage() {
           </div>
 
           {/* Timestamped reviewer comment bar */}
+          {isDecided ? (
+            <p className="border-t border-border/60 px-4 py-3.5 text-xs text-muted-foreground">
+              This was decided, so its notes are read-only. To raise something new, reopen it for changes.
+            </p>
+          ) : (
           <form onSubmit={handleAddComment} className="border-t border-border/60 px-4 py-3.5 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <Select value={commentCategory} onValueChange={(val) => setCommentCategory(val as CommentCategory)}>
@@ -1883,7 +2011,7 @@ export default function VideoComplianceScannerPage() {
                   type="button"
                   onClick={() => setCommentTimeMode("POINT")}
                   className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
-                    commentTimeMode === "POINT" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    commentTimeMode === "POINT" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Clock className="w-3 h-3" /> Point ({formatTime(currentTime)})
@@ -1897,7 +2025,7 @@ export default function VideoComplianceScannerPage() {
                     setRangeEndSec(Math.min(duration, cur + 5));
                   }}
                   className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
-                    commentTimeMode === "RANGE" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    commentTimeMode === "RANGE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Layers className="w-3 h-3" /> Range ({formatTime(rangeStartSec)} - {formatTime(rangeEndSec)})
@@ -1906,7 +2034,7 @@ export default function VideoComplianceScannerPage() {
                   type="button"
                   onClick={() => setCommentTimeMode("NONE")}
                   className={`px-2.5 py-1 rounded-md transition-colors ${
-                    commentTimeMode === "NONE" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    commentTimeMode === "NONE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   No Time
@@ -2015,20 +2143,68 @@ export default function VideoComplianceScannerPage() {
               />
               <Button
                 type="submit"
-                className="h-9 text-xs font-semibold px-4 gap-1.5 shrink-0 self-end sm:self-auto bg-foreground text-background hover:bg-foreground/90"
+                className="h-9 text-xs font-semibold px-4 gap-1.5 shrink-0 self-end sm:self-auto bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Send className="w-3.5 h-3.5" />
                 Post Comment
               </Button>
             </div>
           </form>
+          )}
         </Card>
 
         {/* Review panel */}
         <Card className="xl:col-span-5 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
           {activeVideo?.submissionId && (
             <div className="px-4 pt-4">
-              {activeVideo.canReview ? (
+              {latestVersion > 1 && (
+                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <label htmlFor="version-picker">Viewing</label>
+                  <select
+                    id="version-picker"
+                    value={viewVersion ?? latestVersion}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setVersionPick(n >= latestVersion || !latestVideo ? null : { videoId: latestVideo.id, version: n });
+                    }}
+                    className="h-7 rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground"
+                  >
+                    {Array.from({ length: latestVersion }, (_, i) => latestVersion - i).map((n) => (
+                      <option key={n} value={n}>
+                        v{n}
+                        {n === latestVersion ? " (latest)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <span>of {latestVersion}</span>
+                  {viewVersion && versionQuery.isFetching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {viewVersion && versionQuery.data && !versionQuery.data.video && (
+                    <span className="text-amber-700 dark:text-amber-300">That version had no video.</span>
+                  )}
+                </div>
+              )}
+              {viewingOld && versionView ? (
+                <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 px-3 py-2 text-xs text-violet-950 dark:text-violet-100 space-y-1">
+                  <p className="font-semibold">
+                    Version {versionView.version_number}, as submitted {format(new Date(versionView.created_at), "MMM d, h:mm a")}
+                    {versionView.created_by_name ? ` by ${versionView.created_by_name}` : ""}.
+                  </p>
+                  {versionView.review_job?.decision && (
+                    <p>
+                      {versionView.review_job.decision === "APPROVE" ? "Approved" : "Sent back for changes"}
+                      {versionView.review_job.decided_by_name ? ` by ${versionView.review_job.decided_by_name}` : ""}
+                      {versionView.review_job.decided_at ? ` on ${format(new Date(versionView.review_job.decided_at), "MMM d, h:mm a")}` : ""}
+                      {versionView.review_job.decision_notes ? `: "${versionView.review_job.decision_notes}"` : "."}
+                    </p>
+                  )}
+                  <p className="text-violet-950/80 dark:text-violet-100/80">
+                    Its video, caption, compliance result, sentiment and notes are shown as they were. Nothing can be changed here.
+                  </p>
+                  <button type="button" onClick={() => setVersionPick(null)} className="font-semibold underline underline-offset-2">
+                    Back to the latest version
+                  </button>
+                </div>
+              ) : activeVideo.canReview ? (
                 <ReviewDecisionPanel
                   compact
                   target={{
@@ -2039,7 +2215,11 @@ export default function VideoComplianceScannerPage() {
                     current_version: activeVideo.currentVersion ?? 1,
                     platforms: activeVideo.platforms ?? [],
                     publish_at: activeVideo.publishAt,
+                    due_at: activeVideo.dueAt,
+                    due_kind: activeVideo.dueKind,
                     can_review: true,
+                    can_approve: activeVideo.canApprove,
+                    approver_names: activeVideo.approverNames,
                     score: activeVideo.serverCheck?.score ?? null,
                   }}
                 />
@@ -2060,7 +2240,23 @@ export default function VideoComplianceScannerPage() {
                     : "In review. Waiting for a reviewer (reviewers can't approve their own uploads)."}
                 </p>
               )}
-              {activeVideo.serverCheck?.transcript_pending && (
+              {activeVideo.submissionStatus === "APPROVED" && !viewingOld && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <ApprovalActions
+                    target={{
+                      id: activeVideo.submissionId,
+                      reference_code: activeVideo.referenceCode ?? "",
+                      title: activeVideo.title,
+                      status: "APPROVED",
+                      current_version: activeVideo.currentVersion ?? 1,
+                      publish_at: activeVideo.publishAt,
+                      can_manage_approval: activeVideo.canManageApproval,
+                    }}
+                    isCreator={activeVideo.createdBy === user?.id}
+                  />
+                </div>
+              )}
+              {activeVideo.serverCheck?.transcript_pending && !viewingOld && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   The transcript is still being made; the score is re-checked with it automatically.
                 </p>
@@ -2167,7 +2363,12 @@ export default function VideoComplianceScannerPage() {
             {/* Sentiment (Gemini editorial read; submitted content only) */}
             <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto">
               {activeVideo?.submissionId ? (
-                <SentimentPanel key={activeVideo.submissionId} submissionId={activeVideo.submissionId} onSeek={seekTo} />
+                <SentimentPanel
+                  key={`${activeVideo.submissionId}-${viewVersion ?? "latest"}`}
+                  submissionId={activeVideo.submissionId}
+                  version={viewVersion ?? undefined}
+                  onSeek={seekTo}
+                />
               ) : (
                 <p className="text-xs text-muted-foreground">Sentiment analysis runs on submitted content. Demo videos don't have one.</p>
               )}
@@ -2426,6 +2627,8 @@ export default function VideoComplianceScannerPage() {
 
         </Card>
       </div>
+      </>
+      )}
     </div>
   );
 }
