@@ -19,11 +19,19 @@ function detailMessage(detail: unknown): string {
   return "";
 }
 
+/** Fired on window when the server says the sign-in is no longer valid (e.g. signed out after inactivity). */
+export const SESSION_EXPIRED_EVENT = "auth:session-expired";
+
 export async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     const detail = (err as { detail?: unknown }).detail;
-    throw new ApiError(detailMessage(detail) || "Request failed", res.status, detail);
+    const message = detailMessage(detail) || "Request failed";
+    // 401 means the session ended (403 is only a missing permission). AuthProvider signs out and opens the login page.
+    if (res.status === 401 && !res.url.includes("/auth/logout")) {
+      window.dispatchEvent(new CustomEvent<string>(SESSION_EXPIRED_EVENT, { detail: message }));
+    }
+    throw new ApiError(message, res.status, detail);
   }
   if (res.status === 204) return null as unknown as T;
   return res.json() as Promise<T>;

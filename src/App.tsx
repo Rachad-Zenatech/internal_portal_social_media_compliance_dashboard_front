@@ -12,6 +12,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Users = lazy(() => import("./pages/Configurations/Users"));
 const Roles = lazy(() => import("./pages/Configurations/Roles"));
 const UserRoleAssignment = lazy(() => import("./pages/Configurations/UserRoleAssignment"));
+const ApprovalPaths = lazy(() => import("./pages/Configurations/ApprovalPaths"));
 const RoleGroupPermissions = lazy(() => import("./pages/Configurations/RoleGroupPermissions"));
 const RoleApiPermissions = lazy(() => import("./pages/Configurations/RoleApiPermissions"));
 const RoleMcpToolPermissions = lazy(() => import("./pages/Configurations/RoleMcpToolPermissions"));
@@ -45,6 +46,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/configurations/users", navigationCode: "CONFIG_USERS", element: <Users /> },
   { path: "/configurations/roles", navigationCode: "CONFIG_ROLES", element: <Roles /> },
   { path: "/configurations/user-role-assignment", navigationCode: "CONFIG_USER_ROLE_ASSIGNMENT", element: <UserRoleAssignment /> },
+  { path: "/configurations/approval-paths", navigationCode: "CONFIG_USER_ROLE_ASSIGNMENT", element: <ApprovalPaths /> },
   { path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES", element: <RoleGroupPermissions /> },
   { path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS", element: <RoleApiPermissions /> },
   { path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS", element: <RoleMcpToolPermissions /> },

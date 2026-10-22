@@ -76,6 +76,7 @@ export const navigation: NavigationItem[] = [
       { label: "Users", path: "/configurations/users", navigationCode: "CONFIG_USERS" },
       { label: "Roles", path: "/configurations/roles", navigationCode: "CONFIG_ROLES" },
       { label: "Role Assignments", path: "/configurations/user-role-assignment", navigationCode: "CONFIG_USER_ROLE_ASSIGNMENT" },
+      { label: "Approval Paths", path: "/configurations/approval-paths", navigationCode: "CONFIG_USER_ROLE_ASSIGNMENT" },
       { label: "Role Permissions", path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES" },
       { label: "API Permissions", path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS" },
       { label: "MCP Tool Permissions", path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS" },

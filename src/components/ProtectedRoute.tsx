@@ -11,13 +11,18 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ navigationCode, actionCode = 'VIEW', children }: ProtectedRouteProps) {
-  const { user, roles, isLoading, hasPermission } = useAuth();
+  const { user, roles, isLoading, serverUnreachable, hasPermission } = useAuth();
   const navigate = useNavigate();
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-zinc-950">
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-zinc-950 px-6 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        {serverUnreachable && (
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Can't reach the server. Retrying... You're still signed in.
+          </p>
+        )}
       </div>
     );
   }

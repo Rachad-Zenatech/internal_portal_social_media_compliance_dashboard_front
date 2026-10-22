@@ -1,6 +1,19 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/lib/AuthContext";
+import { SIGNED_OUT_KEY, useAuth } from "@/lib/AuthContext";
+
+/** Why the last session ended mid-use and where the user was, if it did (see AuthProvider). */
+function readSignedOut(): { reason?: string; returnTo?: string } | null {
+  try {
+    return JSON.parse(sessionStorage.getItem(SIGNED_OUT_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+/** Only same-app paths, so a crafted value can't send the user to another site after signing in. */
+const safeReturnTo = (path?: string) =>
+  path && path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/login") ? path : "/dashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Loader2 } from "lucide-react";
@@ -12,6 +25,24 @@ export default function Login() {
   const { refreshPermissions } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const hasProcessedLogin = useRef(false);
+  const hasShownSignedOut = useRef(false);
+
+  // Arrived here because the session ended while in use: say so, rather than leaving the user guessing.
+  useEffect(() => {
+    if (hasShownSignedOut.current || searchParams.get("status") || searchParams.get("error")) return;
+    const signedOut = readSignedOut();
+    if (!signedOut) return;
+    hasShownSignedOut.current = true;
+    const inactivity = /inactivity/i.test(signedOut.reason ?? "");
+    setTimeout(() => {
+      toast.info(
+        inactivity
+          ? "You were signed out after a period of inactivity. Sign in again to pick up where you left off."
+          : "Your session has ended. Sign in again to pick up where you left off.",
+        { duration: 8000 }
+      );
+    }, 100);
+  }, [searchParams]);
 
   useEffect(() => {
     const handleSsoCallback = async () => {
@@ -52,7 +83,10 @@ export default function Login() {
           await refreshPermissions();
           toast.success("Successfully logged in");
           window.history.replaceState({}, document.title, window.location.pathname);
-          navigate("/dashboard");
+          // Signed out mid-use: go back to the page they were on.
+          const returnTo = safeReturnTo(readSignedOut()?.returnTo);
+          sessionStorage.removeItem(SIGNED_OUT_KEY);
+          navigate(returnTo);
         } catch (error) {
           console.error("Failed to process SSO login", error);
           toast.error("Failed to process login");

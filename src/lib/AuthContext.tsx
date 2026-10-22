@@ -1,5 +1,20 @@
 import React, { createContext, useCallback, useContext, useEffect, useState, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/apiClient';
+import { ApiError, SESSION_EXPIRED_EVENT } from '../services/helper';
+
+/** Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login). */
+export const SIGNED_OUT_KEY = 'signedOut';
+
+// While the server can't be reached (restarting, network blip), keep the sign-in and try again.
+const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000];
+
+const clearStoredSession = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('ms_id_token');
+  sessionStorage.clear();
+};
 
 export interface User {
   id: string;
@@ -35,6 +50,8 @@ interface AuthContextType {
   user: User | null;
   roles: Role[];
   isLoading: boolean;
+  /** Permissions couldn't be loaded because the server didn't answer; it's retrying and the sign-in is kept. */
+  serverUnreachable: boolean;
   canAccessNavigationItem: (navigationCode: string, actionCode?: string) => boolean;
   hasPermission: (permissionCode: string) => boolean;
   canUseMcpTool: (toolCode: string) => boolean;
@@ -48,6 +65,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [serverUnreachable, setServerUnreachable] = useState(false);
 
   const fetchRequestId = useRef(0);
 
@@ -55,20 +73,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const requestId = ++fetchRequestId.current;
     setIsLoading(true);
     try {
-      const data = await apiClient.get<PermissionsData>('/api/me/permissions');
-      if (requestId === fetchRequestId.current) {
-        setPermissions(data);
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const data = await apiClient.get<PermissionsData>('/api/me/permissions');
+          if (requestId === fetchRequestId.current) {
+            setPermissions(data);
+            setServerUnreachable(false);
+          }
+          return data;
+        } catch (err) {
+          if (requestId !== fetchRequestId.current) return null;
+          // Only the server saying the sign-in is invalid ends the session. A restart, network error or
+          // server error mustn't sign anyone out.
+          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+            setPermissions(null);
+            setServerUnreachable(false);
+            clearStoredSession();
+            return null;
+          }
+          // Nobody is signed in on this tab, so there's no session to keep: show the login page.
+          if (!sessionStorage.getItem('token')) {
+            setPermissions(null);
+            setServerUnreachable(false);
+            return null;
+          }
+          setServerUnreachable(true);
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]));
+          if (requestId !== fetchRequestId.current) return null;
+        }
       }
-      return data;
-    } catch {
-      if (requestId === fetchRequestId.current) {
-        setPermissions(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('ms_id_token');
-        sessionStorage.clear();
-      }
-      return null;
     } finally {
       if (requestId === fetchRequestId.current) {
         setIsLoading(false);
@@ -76,25 +109,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Only the Logout button logs out; refreshing or closing the tab keeps the session.
   useEffect(() => {
     fetchPermissions();
-
-    const handleBeforeUnload = () => {
-      const token = sessionStorage.getItem('token');
-      if (token) {
-        const data = new FormData();
-        data.append('token', token);
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-        const url = `${baseUrl.replace(/\/$/, '')}/api/auth/logout`;
-        navigator.sendBeacon(url, data);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
   }, [fetchPermissions]);
+
+  // A request was refused because the sign-in ended (e.g. signed out after inactivity): go to the login page
+  // straight away, instead of leaving pages showing load errors until the next refresh.
+  const queryClient = useQueryClient();
+  const signedInRef = useRef(false);
+  useEffect(() => {
+    signedInRef.current = Boolean(permissions);
+  }, [permissions]);
+  useEffect(() => {
+    const onExpired = (e: Event) => {
+      if (!signedInRef.current) return; // not signed in yet (e.g. on the login page), or already handled
+      signedInRef.current = false;
+      fetchRequestId.current++; // drop any permissions load still in flight
+      const returnTo = window.location.pathname + window.location.search;
+      clearStoredSession();
+      sessionStorage.setItem(SIGNED_OUT_KEY, JSON.stringify({ reason: (e as CustomEvent<string>).detail, returnTo }));
+      queryClient.clear(); // nothing from this session stays on screen or in memory
+      setPermissions(null);
+      setIsLoading(false);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [queryClient]);
 
 
 
@@ -181,6 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: permissions?.user || null,
         roles: permissions?.roles || [],
         isLoading,
+        serverUnreachable,
         canAccessNavigationItem,
         hasPermission,
         canUseMcpTool,

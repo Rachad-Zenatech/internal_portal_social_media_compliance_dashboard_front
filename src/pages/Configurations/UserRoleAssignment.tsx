@@ -11,6 +11,12 @@ import { useAuth } from "@/lib/AuthContext";
 import type { User, Role } from "@/lib/AuthContext";
 import { useSearchParams } from "react-router-dom";
 
+/** A user's brand access, with every active brand to choose from. No brand codes means all brands. */
+interface UserBrands {
+  brand_codes: string[];
+  brands: { code: string; name: string }[];
+}
+
 export default function UserRoleAssignment() {
   const { hasPermission } = useAuth();
   const queryClient = useQueryClient();
@@ -44,6 +50,29 @@ export default function UserRoleAssignment() {
       setSelectedRoleId(null);
     }
   }, [userRoles]);
+
+  // Brands the user works on: they only see other people's content for these. None selected means all brands.
+  const { data: userBrands, isLoading: loadingUserBrands } = useQuery({
+    queryKey: ["userBrands", selectedUserId],
+    queryFn: () => apiClient.get<UserBrands>(`/api/configuration/users/${selectedUserId}/brands`),
+    enabled: !!selectedUserId,
+  });
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  useEffect(() => {
+    setSelectedBrands(userBrands?.brand_codes ?? []);
+  }, [userBrands]);
+  const brandsChanged =
+    [...selectedBrands].sort().join(",") !== [...(userBrands?.brand_codes ?? [])].sort().join(",");
+
+  const saveBrandsMutation = useMutation({
+    mutationFn: () => apiClient.put<UserBrands>(`/api/configuration/users/${selectedUserId}/brands`, { brand_codes: selectedBrands }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userBrands", selectedUserId] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success(selectedBrands.length ? "Brand access saved" : "Brand access saved: works on all brands");
+    },
+    onError: (err: Error) => toast.error(`Couldn't save brand access: ${err.message}`),
+  });
 
   const saveMutation = useMutation({
     mutationFn: () => apiClient.put(`/api/configuration/users/${selectedUserId}/roles`, {
@@ -129,6 +158,13 @@ export default function UserRoleAssignment() {
                   {user.full_name || user.email.split('@')[0]}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-zinc-400 truncate mt-0.5">{user.email}</div>
+                {!user.is_super_admin && (
+                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+                    {(user as User & { assigned_brands?: string[] }).assigned_brands?.length
+                      ? `Brands: ${(user as User & { assigned_brands?: string[] }).assigned_brands!.join(", ")}`
+                      : "All brands"}
+                  </div>
+                )}
                 {user.is_super_admin && (
                   <Badge variant="secondary" className="mt-2 text-[9px] h-4 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-1.5 uppercase font-bold tracking-wider">
                     Super Admin
@@ -156,7 +192,68 @@ export default function UserRoleAssignment() {
                 <span className="font-semibold mr-2">Note:</span> This user is a Super Admin and inherently has all permissions. Role assignments are visual only.
               </div>
             )}
-            
+
+            {/* Brand access */}
+            <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Brand Access</label>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                    {isSuperAdmin
+                      ? "Super Admins work on every brand."
+                      : selectedBrands.length
+                      ? "Sees their own content plus the team's content for these brands only."
+                      : "No brands selected: works on all brands."}
+                  </p>
+                </div>
+                {hasPermission("CONFIG_USER_ROLE_ASSIGNMENT_UPDATE") && !isSuperAdmin && (
+                  <div className="flex items-center gap-2">
+                    {selectedBrands.length > 0 && (
+                      <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelectedBrands([])} disabled={saveBrandsMutation.isPending}>
+                        All brands
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => saveBrandsMutation.mutate()}
+                      disabled={!brandsChanged || saveBrandsMutation.isPending || loadingUserBrands}
+                      className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                    >
+                      {saveBrandsMutation.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                      Save Brands
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {loadingUserBrands ? (
+                <div className="flex items-center text-sm text-slate-500">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading brands...
+                </div>
+              ) : (
+                <div className={`flex flex-wrap gap-2 ${isSuperAdmin || !hasPermission("CONFIG_USER_ROLE_ASSIGNMENT_UPDATE") ? "opacity-60 pointer-events-none" : ""}`}>
+                  {userBrands?.brands.map((b) => {
+                    const on = selectedBrands.includes(b.code);
+                    return (
+                      <button
+                        key={b.code}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setSelectedBrands((prev) => (on ? prev.filter((c) => c !== b.code) : [...prev, b.code]))}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                          on
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:border-blue-300"
+                        }`}
+                      >
+                        {on && <Check className="h-3 w-3" />}
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-200 ${loadingUserRoles || saveMutation.isPending || isSuperAdmin ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
               
               {/* Dropdown for role assignment */}

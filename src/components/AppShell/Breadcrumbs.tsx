@@ -43,6 +43,7 @@ export default function Breadcrumbs() {
       users: "Users",
       roles: "Roles",
       "user-role-assignment": "User Role Assignments",
+      "approval-paths": "Approval Paths",
       "role-group-permissions": "Role Group Permissions",
       "role-api-permissions": "Role API Permissions",
       "role-mcp-tool-permissions": "Role MCP Tool Permissions",
