@@ -20,6 +20,7 @@ const SocialMediaPage = lazy(() => import("./pages/SocialMedia/SocialMediaPage")
 const OAuthIntegrations = lazy(() => import("./pages/Configurations/OAuthIntegrations"));
 const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbackPage"));
 const ComplianceRulesPage = lazy(() => import("./pages/Compliance/ComplianceRulesPage"));
+const MessagingContextPage = lazy(() => import("./pages/Compliance/MessagingContextPage"));
 const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
 const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
 const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsListPage"));
@@ -41,6 +42,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
   { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
   { path: "/compliance/rules", navigationCode: "DASHBOARD", element: <ComplianceRulesPage /> },
+  { path: "/compliance/context", navigationCode: "DASHBOARD", element: <MessagingContextPage /> },
   { path: "/configurations/integrations", navigationCode: "CONFIG_ROLES", element: <OAuthIntegrations /> },
   { path: "/configurations/oauth-callback", element: <OAuthCallbackPage /> },
   { path: "/configurations/users", navigationCode: "CONFIG_USERS", element: <Users /> },
