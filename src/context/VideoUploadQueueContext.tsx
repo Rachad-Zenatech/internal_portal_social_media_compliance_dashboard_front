@@ -19,7 +19,16 @@ const QUEUE_TABS: QueueTab[] = ['review', 'sent_back', 'done'];
 const tabOf = (status: SubmissionStatus): QueueTab =>
   status === 'IN_REVIEW' ? 'review' : status === 'CHANGES_REQUESTED' ? 'sent_back' : 'done';
 
-export type TargetPlatform = 'TIKTOK' | 'YOUTUBE' | 'YOUTUBE_SHORTS' | 'LINKEDIN';
+export type TargetPlatform =
+  | 'TIKTOK'
+  | 'YOUTUBE'
+  | 'YOUTUBE_SHORTS'
+  | 'LINKEDIN'
+  | 'INSTAGRAM'
+  | 'FACEBOOK'
+  | 'X'
+  | 'REDDIT'
+  | 'WEBSITE';
 export type PosterVariant = 'dusk' | 'desert' | 'night';
 export type ScoreStatus = 'pending' | 'checked' | 'error';
 export type VideoQueueStatus = 'QUEUED' | 'UPLOADING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'PAUSED';
@@ -87,9 +96,14 @@ export interface VideoQueueItem {
   queueTab?: QueueTab;
   canApprove?: boolean;
   approverNames?: string[];
+  openCriticalFlags?: number;
   createdBy?: string | null;
   canManageApproval?: boolean;
   decidedAt?: string | null;
+  /** Submitted posts: VIDEO, IMAGE, CAROUSEL, SOCIAL_POST, AD or BLOG. */
+  contentType?: string | null;
+  /** A submitted post's images in order (authed URLs); posts without a video are previewed with these. */
+  images?: { id: string; url: string; name: string }[];
 }
 
 interface VideoUploadQueueContextType {
@@ -282,7 +296,10 @@ export function applySegmentRisk(segments: TimestampedSegment[], violations: Com
   });
 }
 
-const SCREENER_PLATFORMS: TargetPlatform[] = ['TIKTOK', 'YOUTUBE', 'YOUTUBE_SHORTS', 'LINKEDIN'];
+/** Every platform a post can target; a submitted post is screened for the ones it was submitted for. */
+export const SCREENER_PLATFORMS: TargetPlatform[] = [
+  'TIKTOK', 'YOUTUBE', 'YOUTUBE_SHORTS', 'LINKEDIN', 'INSTAGRAM', 'FACEBOOK', 'X', 'REDDIT', 'WEBSITE',
+];
 const SHOW_DEMO_KEY = 'contentScreener.showDemo';
 
 /** Turn a submitted video into a queue item the Content Screener can play and score. */
@@ -321,13 +338,16 @@ export function versionQueueItem(latest: VideoQueueItem, v: VersionView): VideoQ
 }
 
 function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
+  // The first platform it was submitted for (or its account's); YouTube only when it has neither.
   const platform =
     (s.platforms.find((p) => SCREENER_PLATFORMS.includes(p as TargetPlatform)) as TargetPlatform | undefined) ??
     (SCREENER_PLATFORMS.includes(s.account?.platform as TargetPlatform) ? (s.account!.platform as TargetPlatform) : 'YOUTUBE');
   const check = s.latest_check;
+  // Image, carousel and text posts have no video: no player, no transcript, previewed from their images.
+  const video = s.video ?? null;
   // The backend transcribes the video's speech after upload; until it's done the script is empty.
-  const raw = (s.video.transcript_status === 'COMPLETED' ? s.video.transcript ?? [] : []).map((seg, i) => ({
-    id: `${s.video.id}-t${i}`,
+  const raw = (video?.transcript_status === 'COMPLETED' ? video.transcript ?? [] : []).map((seg, i) => ({
+    id: `${video!.id}-t${i}`,
     startSec: seg.start_sec,
     endSec: seg.end_sec,
     text: seg.text,
@@ -349,24 +369,26 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     referenceCode: s.reference_code,
     caption: s.caption_text,
     creatorName: s.creator_name,
-    filename: s.video.original_name,
+    filename: video?.original_name ?? s.images?.[0]?.original_name ?? s.title,
     title: s.title,
     platform,
     aspectRatio: platform === 'TIKTOK' || platform === 'YOUTUBE_SHORTS' ? '9:16' : '16:9',
-    totalSizeBytes: s.video.size_bytes,
-    uploadedBytes: s.video.size_bytes,
+    totalSizeBytes: video?.size_bytes ?? 0,
+    uploadedBytes: video?.size_bytes ?? 0,
     uploadSpeedBps: 0,
     progressPercent: 100,
     status: 'COMPLETED',
     currentStageIndex: 4,
     currentStageLabel: 'Submitted for review',
     estimatedSecondsRemaining: 0,
-    createdAt: s.submitted_at || s.video.created_at,
+    createdAt: s.submitted_at || video?.created_at || '',
     completedAt: s.submitted_at,
-    videoUrl: authedFileUrl(s.video.url),
-    videoFileId: s.video.id,
-    transcriptStatus: s.video.transcript_status ?? null,
-    transcriptError: s.video.transcript_error ?? null,
+    videoUrl: video ? authedFileUrl(video.url) : null,
+    videoFileId: video?.id,
+    transcriptStatus: video?.transcript_status ?? null,
+    transcriptError: video?.transcript_error ?? null,
+    contentType: s.content_type ?? null,
+    images: (s.images ?? []).map((f) => ({ id: f.id, url: authedFileUrl(f.url), name: f.original_name })),
     segments,
     logs: [],
     violationCount: check?.violations_count ?? 0,
@@ -383,6 +405,7 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     queueTab: tabOf(s.status),
     canApprove: s.can_approve ?? Boolean(s.can_review),
     approverNames: s.approver_names ?? [],
+    openCriticalFlags: s.open_critical_flags ?? 0,
     createdBy: s.created_by ?? null,
     canManageApproval: Boolean(s.can_manage_approval),
     decidedAt: s.decided_at ?? null,
@@ -417,7 +440,7 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         placeholderData: (previous: ReviewQueueItem[] | undefined) => previous,
         // Check back quickly while a transcript is being generated, otherwise once a minute.
         refetchInterval: (query: { state: { data?: ReviewQueueItem[] } }) =>
-          query.state.data?.some((s) => s.video.transcript_status === 'PENDING' || s.video.transcript_status === 'PROCESSING')
+          query.state.data?.some((s) => s.video?.transcript_status === 'PENDING' || s.video?.transcript_status === 'PROCESSING')
             ? 5_000
             : 60_000,
       };

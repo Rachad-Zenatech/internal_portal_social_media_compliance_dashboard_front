@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import {
   Upload,
   Play,
@@ -27,8 +27,9 @@ import {
   Radio,
   SkipBack,
   SkipForward,
-  LayoutGrid,
-  List,
+  ChevronRight,
+  ChevronLeft,
+  Search,
   MoreHorizontal,
   MoreVertical,
   FilePlus2,
@@ -41,7 +42,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -70,9 +70,10 @@ import { useAuth } from "@/lib/AuthContext";
 import {
   applySegmentRisk,
   useVideoUploadQueue,
-  type PosterVariant,
   type TargetPlatform,
   type TimestampedSegment,
+  type VideoQueueItem,
+  SCREENER_PLATFORMS,
   versionQueueItem,
 } from "@/context/VideoUploadQueueContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,6 +81,8 @@ import { submissionService } from "@/services/submissionService";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import { DueBadge } from "@/components/submissions/submissionUi";
+import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import type { QueueTab } from "@/types/submission";
 import { useReviewComments } from "@/hooks/useReview";
@@ -186,9 +189,43 @@ function formatTime(seconds: number) {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-function QueueThumbnail({ item, fallbackDuration }: { item: { videoUrl?: string | null; posterVariant?: PosterVariant }; fallbackDuration: number }) {
+// Queue paging: posts per page when the queue sits above the player, and the spacing used to fit it beside it.
+const QUEUE_PAGE_SIZE_STACKED = 6;
+const QUEUE_GAP = 12; // gap-3
+const QUEUE_PAGER_HEIGHT = 56; // the page controls plus the gap above them
+
+// Caption length each platform allows (as in the submission form).
+const CAPTION_LIMITS: Partial<Record<TargetPlatform, number>> = {
+  X: 280,
+  TIKTOK: 2200,
+  INSTAGRAM: 2200,
+  LINKEDIN: 3000,
+  YOUTUBE: 5000,
+  YOUTUBE_SHORTS: 5000,
+  FACEBOOK: 63206,
+  REDDIT: 40000,
+};
+
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  VIDEO: "Video",
+  SOCIAL_POST: "Social post",
+  CAROUSEL: "Carousel",
+  IMAGE: "Image",
+  BLOG: "Blog",
+  AD: "Paid ad",
+};
+
+function QueueThumbnail({
+  item,
+  fallbackDuration,
+}: {
+  item: Pick<VideoQueueItem, "videoUrl" | "posterVariant" | "submissionId" | "images" | "caption" | "title" | "contentType">;
+  fallbackDuration: number;
+}) {
   const { dataUrl, duration } = useVideoThumbnail(item.videoUrl);
-  const shownDuration = duration ?? fallbackDuration;
+  const still = Boolean(item.submissionId && !item.videoUrl);
+  const shownDuration = still ? 0 : duration ?? fallbackDuration;
+  const cover = item.images?.[0];
   return (
     <>
       {item.videoUrl ? (
@@ -200,6 +237,14 @@ function QueueThumbnail({ item, fallbackDuration }: { item: { videoUrl?: string 
             <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
           </div>
         )
+      ) : still && cover ? (
+        <img src={cover.url} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover bg-zinc-900" />
+      ) : still ? (
+        // A text post: its caption stands in for a picture.
+        <div className="absolute inset-0 flex flex-col gap-1 bg-gradient-to-br from-slate-800 to-slate-950 p-2.5 text-left">
+          <FileText className="w-3.5 h-3.5 shrink-0 text-white/60" />
+          <p className="line-clamp-4 text-[10px] leading-snug text-white/85">{item.caption?.trim() || item.title}</p>
+        </div>
       ) : (
         <DemoPoster variant={item.posterVariant} className="absolute inset-0 w-full h-full" />
       )}
@@ -209,6 +254,74 @@ function QueueThumbnail({ item, fallbackDuration }: { item: { videoUrl?: string 
         </span>
       )}
     </>
+  );
+}
+
+/** An image, carousel or text post in the review area, in place of the video player. */
+function PostStillPreview({ item }: { item: VideoQueueItem }) {
+  const images = item.images ?? [];
+  const [index, setIndex] = useState(0);
+  const at = Math.min(index, Math.max(0, images.length - 1));
+  const image = images[at];
+  return (
+    <div className="mx-4 rounded-xl bg-muted/50 border border-border/60 p-3 space-y-3">
+      {image ? (
+        <div className="space-y-2">
+          <div className="relative flex items-center justify-center overflow-hidden rounded-lg bg-zinc-950 h-[min(60vh,560px)]">
+            <img src={image.url} alt={image.name} className="max-h-full max-w-full object-contain" />
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIndex((at - 1 + images.length) % images.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIndex((at + 1) % images.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white tabular-nums">
+                  {at + 1} / {images.length}
+                </span>
+              </>
+            )}
+          </div>
+          {images.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {images.map((img, i) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setIndex(i)}
+                  aria-label={`Image ${i + 1}: ${img.name}`}
+                  aria-current={i === at}
+                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 ${
+                    i === at ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
+          <FileText className="w-4 h-4 shrink-0" /> No image or video is attached, so the title and caption below are what's reviewed.
+        </div>
+      )}
+      <div className="rounded-lg bg-background border border-border/70 p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Caption</p>
+        <p className="text-sm text-foreground whitespace-pre-wrap break-words">{item.caption?.trim() || "No caption."}</p>
+      </div>
+    </div>
   );
 }
 
@@ -228,6 +341,7 @@ export default function VideoComplianceScannerPage() {
     showDemo,
     setShowDemo,
     serverQueueLoading,
+    queueCounts,
     doneSearch,
     setDoneSearch,
   } = useVideoUploadQueue();
@@ -287,14 +401,82 @@ export default function VideoComplianceScannerPage() {
     if (!selectedInTab && tabQueue.length) setActiveVideoId(tabQueue[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedInTab, tabIds]);
+
+  // Queue pages: side by side with the player, the queue shows as many posts as fit beside the player card and
+  // pages the rest; stacked above it (narrower screens), a fixed number per page.
+  const queueListRef = useRef<HTMLDivElement | null>(null);
+  const playerCardRef = useRef<HTMLDivElement | null>(null);
+  const [queuePageSize, setQueuePageSize] = useState(QUEUE_PAGE_SIZE_STACKED);
+  const [queuePage, setQueuePage] = useState(0);
+  useEffect(() => {
+    const measure = () => {
+      const list = queueListRef.current;
+      const card = playerCardRef.current;
+      if (!list || !card || !window.matchMedia("(min-width: 1280px)").matches) {
+        setQueuePageSize(QUEUE_PAGE_SIZE_STACKED);
+        return;
+      }
+      const items = Array.from(list.children) as HTMLElement[];
+      // The tallest card shown, so a page never runs past the player even when some cards have extra rows.
+      const itemHeight = Math.max(...items.map((el) => el.getBoundingClientRect().height), 120);
+      const room = card.getBoundingClientRect().bottom - list.getBoundingClientRect().top - QUEUE_PAGER_HEIGHT;
+      setQueuePageSize(Math.max(1, Math.floor((room + QUEUE_GAP) / (itemHeight + QUEUE_GAP))));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    // Only the player card is watched: the list's own size changes with the page size, which would feed back.
+    if (playerCardRef.current) observer.observe(playerCardRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [selectedInTab, tabIds, activeVideo?.id]);
+  // The estimate above can be off when something above the queue or the player shifts after it's measured, so
+  // after every render: if the queue (with its page controls) still ends below the player card, show one fewer.
+  const queueColumnRef = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const column = queueColumnRef.current;
+    const card = playerCardRef.current;
+    if (!column || !card || queuePageSize <= 1 || !window.matchMedia("(min-width: 1280px)").matches) return;
+    if (column.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom + 1) {
+      setQueuePageSize((n) => Math.max(1, n - 1));
+    }
+  }, [queuePageSize, queuePage, queueTab, tabIds, activeVideo?.id, doneSearch]);
+  const queuePages = Math.max(1, Math.ceil(tabQueue.length / queuePageSize));
+  const shownPage = Math.min(queuePage, queuePages - 1);
+  const pagedQueue = tabQueue.slice(shownPage * queuePageSize, (shownPage + 1) * queuePageSize);
+  // Open on the page holding the selected post (after switching tabs, or when the page size changes).
+  useEffect(() => {
+    const at = tabQueue.findIndex((i) => i.id === latestVideo?.id);
+    setQueuePage(at >= 0 ? Math.floor(at / queuePageSize) : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueTab, queuePageSize, tabIds]);
   // Submitted videos are reviewed for real: comments are saved, the score is the server's check, and
   // reviewers make their decision here. Demo items keep their local, simulated behaviour.
   const submissionId = activeVideo?.submissionId ?? null;
+  // Image, carousel and text posts: previewed as a post, with no player, timeline or transcript.
+  const isStillPost = Boolean(submissionId && !activeVideo?.videoUrl);
+  // A submitted post is screened for the platforms it was submitted for; demo videos offer the video platforms.
+  const submittedPlatforms = (activeVideo?.platforms ?? []).filter((p): p is TargetPlatform =>
+    SCREENER_PLATFORMS.includes(p as TargetPlatform)
+  );
+  const platformOptions: TargetPlatform[] = submissionId
+    ? submittedPlatforms.length
+      ? submittedPlatforms
+      : [activeVideo!.platform]
+    : ["TIKTOK", "YOUTUBE", "YOUTUBE_SHORTS", "LINKEDIN"];
   const queryClient = useQueryClient();
   const [isRetryingTranscript, setIsRetryingTranscript] = useState(false);
 
   const [platform, setPlatform] = useState<TargetPlatform>("TIKTOK");
   const [aspectRatio, setAspectRatio] = useState<"16:9" | "9:16">("9:16");
+  // "Original" shows the video in its own proportions (portrait, square or landscape); 9:16 / 16:9 preview how a
+  // platform would crop it. A newly opened video starts in Original.
+  const [nativeAspect, setNativeAspect] = useState<number | null>(null);
+  const [useOriginal, setUseOriginal] = useState(true);
+  const showOriginal = useOriginal && nativeAspect != null;
+  const isPortrait = showOriginal ? nativeAspect! < 0.8 : aspectRatio === "9:16";
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -375,6 +557,8 @@ export default function VideoComplianceScannerPage() {
         setYoutubeDescription(activeVideo.caption ?? "");
       }
       setAspectRatio(activeVideo.aspectRatio);
+      setNativeAspect(null);
+      setUseOriginal(true);
       if (activeVideo.segments && activeVideo.segments.length > 0) {
         setSegments(activeVideo.segments);
         setFullTranscript(activeVideo.segments.map((s) => s.text).join(" "));
@@ -430,8 +614,6 @@ export default function VideoComplianceScannerPage() {
   const rangeEndRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
-  const [queueViewMode, setQueueViewMode] = useState<"grid" | "list">("grid");
-  const [isQueueCollapsed, setIsQueueCollapsed] = useState(false);
 
   // Scanner state
   const [isScanning, setIsScanning] = useState(false);
@@ -456,6 +638,7 @@ export default function VideoComplianceScannerPage() {
   // Update default aspect ratio when platform changes
   const handlePlatformChange = (p: TargetPlatform) => {
     setPlatform(p);
+    setUseOriginal(false);
     if (p === "TIKTOK" || p === "YOUTUBE_SHORTS") {
       setAspectRatio("9:16");
     } else {
@@ -699,9 +882,11 @@ export default function VideoComplianceScannerPage() {
   };
 
   const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration || 60);
-      videoRef.current.playbackRate = playbackRate;
+    const v = videoRef.current;
+    if (v) {
+      setDuration(v.duration || 60);
+      v.playbackRate = playbackRate;
+      if (v.videoWidth && v.videoHeight) setNativeAspect(v.videoWidth / v.videoHeight);
     }
   };
 
@@ -811,7 +996,10 @@ export default function VideoComplianceScannerPage() {
     let startSec: number | null = null;
     let endSec: number | null = null;
 
-    if (commentTimeMode === "POINT") {
+    // Without a video there's no moment to pin a comment to.
+    if (isStillPost) {
+      startSec = null;
+    } else if (commentTimeMode === "POINT") {
       startSec = Math.round(currentTime);
     } else if (commentTimeMode === "RANGE") {
       const s = Math.max(0, Math.min(rangeStartSec, duration));
@@ -1111,87 +1299,114 @@ export default function VideoComplianceScannerPage() {
     NOTE: "General Note",
   };
 
+  // Status pill for a queue card, in the Content Portal's colours.
+  const queuePill = (item: (typeof queue)[number]) => {
+    if (item.status === "UPLOADING" || item.status === "PROCESSING") return { label: `${item.progressPercent}% uploaded`, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" };
+    if (item.status === "QUEUED") return { label: "Queued", tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" };
+    if (item.isDemo || !item.submissionStatus) return { label: "Demo", tone: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" };
+    switch (item.submissionStatus) {
+      case "IN_REVIEW":
+        return { label: "In Review", tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" };
+      case "CHANGES_REQUESTED":
+        return { label: "Changes Requested", tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" };
+      case "APPROVED":
+        return { label: "Approved", tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" };
+      case "REJECTED":
+        return { label: "Rejected", tone: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" };
+      default:
+        return { label: item.submissionStatus, tone: "bg-muted text-muted-foreground" };
+    }
+  };
+  const waitingForMe = isReviewer ? queueCounts?.review ?? 0 : 0;
+
   return (
-    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-4 animate-in fade-in duration-300">
+    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
       {/* Header */}
-      <DashboardHeader
-        title="Content Screener"
-        subtitle="Review submitted content against the compliance rulebook, even while a video is still uploading in the background."
-        actions={
-          !submissionId && (
-          <>
-            <Button variant="outline" size="sm" onClick={resetDemo} className="text-xs gap-1.5 font-semibold">
-              <RotateCcw className="w-3.5 h-3.5" />
-              Reset Demo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setPartialUploadMode(true);
-                setPartialUploadPercent(50);
-                toast.info("Simulating Incomplete Upload: 50% buffered. Reviewing chunks 0:00 - 0:30 so far.");
-              }}
-              className="text-xs gap-1.5 font-semibold border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Screener</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Review submitted videos against the compliance rulebook, frame by frame, with notes pinned to the moment.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {!submissionId && (
+            <>
+              <Button variant="outline" size="sm" onClick={resetDemo} className="h-9 text-xs gap-1.5 font-semibold">
+                <RotateCcw className="w-3.5 h-3.5" /> Reset demo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setPartialUploadMode(true);
+                  setPartialUploadPercent(50);
+                  toast.info("Simulating Incomplete Upload: 50% buffered. Reviewing chunks 0:00 - 0:30 so far.");
+                }}
+                className="h-9 text-xs gap-1.5 font-semibold border-amber-500/40 text-amber-700 dark:text-amber-400"
+              >
+                <Radio className="w-3.5 h-3.5" /> Simulate partial upload
+              </Button>
+            </>
+          )}
+          {waitingForMe > 0 && queueTab !== "review" && (
+            <button
+              type="button"
+              onClick={() => pickTab("review")}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline dark:text-blue-300"
             >
-              <Radio className="w-3.5 h-3.5 text-amber-500" />
-              Simulate Incomplete Upload (50%)
-            </Button>
-          </>
-          )
-        }
-      />
+              <Clock className="w-4 h-4" /> {waitingForMe} waiting for your review
+            </button>
+          )}
+          <Button onClick={() => navigate("/submissions/new")} className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+            <FilePlus2 className="w-4 h-4" /> Upload New Content
+          </Button>
+        </div>
+      </header>
 
-      {/* Upload & Review Queue */}
-      <Card className="relative gap-0 py-0 border-border/80 shadow-xs bg-card overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 border-b border-border/60">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-              <Upload className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-foreground flex flex-wrap items-center gap-2">
-                Upload & Review Queue
-                {activeUploadCount > 0 && (
-                  <Badge className="bg-blue-600 text-white text-[10px] px-1.5 py-0">
-                    {activeUploadCount} uploading ({activeVideo?.progressPercent || 0}%)
-                  </Badge>
-                )}
-              </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Submitted content is processed automatically. Select an item to review it in the player.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              size="sm"
-              onClick={() => navigate("/submissions/new")}
-              className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+      {/* Queue tabs: one bar, like the Content Portal's status counts */}
+      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70" role="tablist" aria-label="Queue">
+        {(["review", "sent_back", "done"] as QueueTab[]).map((tab) => {
+          const active = queueTab === tab;
+          const count = (queueCounts?.[tab] ?? 0) + (tab === "review" ? queue.filter((i) => i.isDemo).length : 0);
+          return (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              title={QUEUE_TAB_HINTS[tab]}
+              onClick={() => pickTab(tab)}
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
+                active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
+              }`}
             >
-              <FilePlus2 className="w-3.5 h-3.5" />
-              Upload New Content
-            </Button>
-            <Button size="sm" variant="outline" onClick={openQueueDrawer} className="text-xs font-semibold">
-              View Full Queue ({queue.length})
-            </Button>
+              <span className={`text-2xl font-semibold tabular-nums ${active ? "" : "text-foreground"}`}>{count}</span>
+              <span className={`text-xs ${active ? "font-semibold" : ""}`}>{QUEUE_TAB_LABELS[tab]}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col items-start gap-5 xl:flex-row">
+        {/* Queue column */}
+        <div ref={queueColumnRef} className="w-full space-y-3 xl:w-[320px] xl:shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              Queue <span className="font-normal text-muted-foreground">{tabQueue.length}</span>
+              {activeUploadCount > 0 && (
+                <Badge className="bg-blue-600 text-white text-[10px] px-1.5 py-0">{activeUploadCount} uploading</Badge>
+              )}
+            </h2>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8" title="More queue options">
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="Queue options">
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setQueueViewMode("grid")} className="text-xs gap-2">
-                  <LayoutGrid className="w-3.5 h-3.5" /> Grid view {queueViewMode === "grid" && <Check className="w-3.5 h-3.5 ml-auto" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setQueueViewMode("list")} className="text-xs gap-2">
-                  <List className="w-3.5 h-3.5" /> List view {queueViewMode === "list" && <Check className="w-3.5 h-3.5 ml-auto" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsQueueCollapsed(!isQueueCollapsed)} className="text-xs gap-2">
-                  {isQueueCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-                  {isQueueCollapsed ? "Expand queue" : "Collapse queue"}
+                <DropdownMenuItem onClick={openQueueDrawer} className="text-xs gap-2">
+                  <Upload className="w-3.5 h-3.5" /> Open upload queue ({queue.length})
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowDemo(!showDemo)} className="text-xs gap-2">
                   <Film className="w-3.5 h-3.5" /> Show demo videos {showDemo && <Check className="w-3.5 h-3.5 ml-auto" />}
@@ -1208,128 +1423,126 @@ export default function VideoComplianceScannerPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2 px-4 pt-3" role="tablist" aria-label="Queue">
-          {(["review", "sent_back", "done"] as QueueTab[]).map((tab) => {
-            const active = queueTab === tab;
-            return (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                title={QUEUE_TAB_HINTS[tab]}
-                onClick={() => pickTab(tab)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  active ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {QUEUE_TAB_LABELS[tab]}
-              </button>
-            );
-          })}
           {queueTab === "done" && (
-            <Input
-              value={doneSearch}
-              onChange={(e) => setDoneSearch(e.target.value)}
-              placeholder="Search title or reference..."
-              className="h-8 w-full sm:w-56 sm:ml-auto text-xs"
-              aria-label="Search decided content"
-            />
+            <div className="space-y-1.5">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={doneSearch}
+                  onChange={(e) => setDoneSearch(e.target.value)}
+                  placeholder="Search title or reference..."
+                  className="h-9 rounded-lg pl-9 text-xs"
+                  aria-label="Search decided content"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Decided in the last 30 days, newest first. Older content is in the{" "}
+                <button type="button" className="font-semibold text-blue-700 dark:text-blue-300 hover:underline" onClick={() => navigate("/submissions")}>
+                  Content Portal
+                </button>
+                .
+              </p>
+            </div>
           )}
-          {queueTab === "done" && (
-            <p className="basis-full text-[11px] text-muted-foreground">
-              Approved in the last 30 days, newest first. Older content is in the{" "}
-              <button type="button" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline" onClick={() => navigate("/submissions")}>
-                Content Portal
-              </button>
-              .
-            </p>
-          )}
-        </div>
 
-        {isQueueCollapsed ? (
-          <div className="px-4 py-3 bg-muted/10 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span className="text-foreground font-medium truncate min-w-0">
-              {queue.length} in queue · Active in player: <strong>{activeVideo?.title || "None"}</strong>
-            </span>
-            <Button size="sm" variant="link" onClick={() => setIsQueueCollapsed(false)} className="text-xs h-auto p-0 gap-1">
-              Expand queue <ChevronDown className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        ) : queueViewMode === "grid" ? (
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
-            {tabQueue.length === 0 && (
-              <div className="col-span-full py-8 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>
-            )}
-            {tabQueue.map((item, idx) => {
-              const isSelected = item.id === (activeVideoId || activeVideo?.id);
-              const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
-              const isQueued = item.status === "QUEUED";
-              const itemDuration = queueItemDuration(item);
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setActiveVideoId(item.id)}
-                  className={`rounded-xl border bg-card overflow-hidden flex flex-col cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-blue-500/80 ring-1 ring-blue-500/40 shadow-xs"
-                      : "border-border/70 hover:border-border hover:shadow-xs"
-                  }`}
-                >
-                  {/* Thumbnail */}
-                  <div className="relative aspect-[16/9] bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-950 overflow-hidden">
-                    <QueueThumbnail item={item} fallbackDuration={itemDuration} />
-                    <span className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-white/95 dark:bg-zinc-900/90 px-2 py-0.5 text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 shadow-xs">
-                      <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
-                      {PLATFORM_LABELS[item.platform]} ({item.aspectRatio})
-                    </span>
-                    <span className="absolute top-2 right-2">
-                      {isUploading ? (
-                        <Badge className="bg-blue-600 text-white text-[10px] font-bold animate-pulse">{item.progressPercent}%</Badge>
-                      ) : isQueued ? (
-                        <Badge className="bg-amber-500 text-white text-[10px] font-bold">Queue #{idx + 1}</Badge>
+          {tabQueue.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border py-10 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>
+          ) : (
+            <>
+            <div ref={queueListRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
+              {pagedQueue.map((item) => {
+                const isSelected = item.id === (activeVideoId || activeVideo?.id);
+                const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
+                const pill = queuePill(item);
+                return (
+                  <div
+                    key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    onClick={() => setActiveVideoId(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveVideoId(item.id);
+                      }
+                    }}
+                    className={`group rounded-xl border bg-card p-3.5 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                      isSelected
+                        ? "border-blue-500 bg-blue-50/40 ring-1 ring-blue-500/30 dark:border-blue-500/70 dark:bg-blue-500/10"
+                        : "border-border/70 hover:border-blue-300 hover:shadow-sm dark:hover:border-blue-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${pill.tone}`}>{pill.label}</span>
+                      {isSelected ? (
+                        <span className="text-[10px] font-semibold tracking-wider text-blue-700 dark:text-blue-300">IN PLAYER</span>
                       ) : (
-                        <Badge className="bg-emerald-600 text-white text-[10px] font-bold">Screened</Badge>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
                       )}
-                    </span>
-                    {isUploading && (
-                      <div className="absolute bottom-0 inset-x-0 h-1 bg-black/40">
-                        <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${item.progressPercent}%` }} />
+                    </div>
+
+                    <div className="mt-3 flex gap-3">
+                      <div className="w-20 shrink-0">
+                        <div className="relative aspect-square overflow-hidden rounded-md bg-zinc-900">
+                          <QueueThumbnail item={item} fallbackDuration={queueItemDuration(item)} />
+                          {isUploading && (
+                            <div className="absolute bottom-0 inset-x-0 h-1 bg-black/40">
+                              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${item.progressPercent}%` }} />
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {item.submissionId && !item.videoUrl
+                            ? `${CONTENT_TYPE_LABELS[item.contentType ?? ""] ?? "Post"}${
+                                (item.images?.length ?? 0) > 1 ? ` · ${item.images!.length} images` : ""
+                              }`
+                            : `Video · ${item.aspectRatio}`}
+                        </p>
+                      </div>
+                      <div className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+                        <p className="text-sm font-semibold leading-snug text-foreground line-clamp-2" title={item.title}>
+                          {item.title}
+                        </p>
+                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
+                          <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
+                          {PLATFORM_LABELS[item.platform]}
+                          {(item.platforms?.length ?? 0) > 1 && ` +${(item.platforms?.length ?? 1) - 1}`}
+                        </p>
+                        <p className="mt-0.5 truncate font-mono" title={item.filename}>
+                          {item.referenceCode || item.filename}
+                        </p>
+                        {item.creatorName && <p className="truncate">By {item.creatorName}</p>}
+                      </div>
+                    </div>
+
+                    {(item.dueAt || (item.queueTab === "review" && (item.currentVersion ?? 0) > 1)) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
+                          <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                            v{item.currentVersion} · resubmitted
+                          </span>
+                        )}
+                        <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
                       </div>
                     )}
-                  </div>
 
-                  {/* Details */}
-                  <div className="p-3 flex flex-col gap-2 flex-1">
-                    <div className="flex items-start justify-between gap-2 min-w-0">
-                      <div className="min-w-0">
-                        <h5 className="font-semibold text-xs text-foreground truncate" title={item.title}>
-                          {item.title}
-                        </h5>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate" title={item.filename}>
-                          {item.referenceCode ? `${item.referenceCode} · ` : ""}
-                          {item.isDemo ? "Demo · " : ""}
-                          {item.filename}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-1 mt-1">
-                          {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
-                            <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                              v{item.currentVersion} · resubmitted
-                            </span>
-                          )}
-                          <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
-                        </div>
-                      </div>
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
+                      {isUploading ? (
+                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                          <Radio className="w-3 h-3 animate-pulse" /> Early review active
+                        </span>
+                      ) : (
+                        renderScore(item)
+                      )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             size="icon"
                             variant="ghost"
                             onClick={(e) => e.stopPropagation()}
-                            className="h-6 w-6 shrink-0 -mr-1 text-muted-foreground"
+                            className="h-6 w-6 shrink-0 text-muted-foreground"
                             title="Video options"
                           >
                             <MoreVertical className="w-3.5 h-3.5" />
@@ -1351,99 +1564,41 @@ export default function VideoComplianceScannerPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                      {isUploading ? (
-                        <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-[11px] font-medium min-w-0 truncate">
-                          <Radio className="w-3 h-3 shrink-0 animate-pulse" /> Early review active
-                        </span>
-                      ) : isQueued ? (
-                        <span className="text-muted-foreground text-[11px]">Waiting for upload slot</span>
-                      ) : (
-                        renderScore(item)
-                      )}
-                      <Button
-                        size="sm"
-                        variant={isSelected ? "secondary" : "outline"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveVideoId(item.id);
-                        }}
-                        className="h-7 text-[11px] font-semibold px-2.5 shrink-0"
-                      >
-                        {isSelected ? "Active in Player" : isUploading ? "Review Chunks" : "Inspect"}
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="p-4 space-y-2">
-            {tabQueue.length === 0 && <div className="py-6 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>}
-            {tabQueue.map((item, idx) => {
-              const isSelected = item.id === (activeVideoId || activeVideo?.id);
-              const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
-              const isQueued = item.status === "QUEUED";
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setActiveVideoId(item.id)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    isSelected
-                      ? "border-blue-500/80 bg-blue-500/5 ring-1 ring-blue-500/40"
-                      : "border-border/70 bg-card hover:bg-muted/20"
-                  }`}
+                );
+              })}
+            </div>
+            {queuePages > 1 && (
+              <nav className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-label="Queue pages">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1 text-xs"
+                  disabled={shownPage === 0}
+                  onClick={() => setQueuePage(shownPage - 1)}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <PlatformIcon platform={item.platform} />
-                    </div>
-                    <div className="min-w-0">
-                      <h5 className="font-semibold text-xs text-foreground truncate">{item.title}</h5>
-                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
-                        {item.referenceCode ? `${item.referenceCode} • ` : ""}
-                        {PLATFORM_LABELS[item.platform]} • {item.aspectRatio} • {item.filename}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1 mt-1">
-                        {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
-                          <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                            v{item.currentVersion} · resubmitted
-                          </span>
-                        )}
-                        <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
-                    {isUploading ? (
-                      <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400">{item.progressPercent}% uploaded</span>
-                    ) : isQueued ? (
-                      <span className="text-[11px] text-muted-foreground">Queue #{idx + 1}</span>
-                    ) : (
-                        renderScore(item)
-                      )}
-                    <Button
-                      size="sm"
-                      variant={isSelected ? "secondary" : "outline"}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveVideoId(item.id);
-                      }}
-                      className="h-7 text-[11px] font-semibold px-2.5"
-                    >
-                      {isSelected ? "Active in Player" : isUploading ? "Review Chunks" : "Inspect"}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+                  <ChevronLeft className="w-3.5 h-3.5" /> Previous
+                </Button>
+                <span className="tabular-nums">
+                  {shownPage * queuePageSize + 1}–{Math.min(tabQueue.length, (shownPage + 1) * queuePageSize)} of {tabQueue.length}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1 text-xs"
+                  disabled={shownPage >= queuePages - 1}
+                  onClick={() => setQueuePage(shownPage + 1)}
+                >
+                  Next <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </nav>
+            )}
+            </>
+          )}
+        </div>
 
+        {/* Player and review: stacked on laptops, side by side when there's room */}
+        <div className="@container/screen w-full min-w-0 flex-1 space-y-4 sm:space-y-5">
       {!selectedInTab ? (
         <Card className="py-10 px-6 border-dashed border-border/80 shadow-none items-center text-center gap-2">
           <p className="text-sm font-semibold text-foreground">{QUEUE_EMPTY[queueTab]}</p>
@@ -1456,13 +1611,16 @@ export default function VideoComplianceScannerPage() {
       ) : (
       <>
       {/* Target Platform & Viewport */}
-      <Card className="py-0 border-border/80 shadow-xs">
+      <Card className="py-0 border-border/70 shadow-xs">
         <div className="px-4 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-foreground mr-1">Target Platform:</span>
-            {(["TIKTOK", "YOUTUBE", "YOUTUBE_SHORTS", "LINKEDIN"] as TargetPlatform[]).map((p) => {
+            <span className="text-xs font-semibold text-foreground mr-1">Target Platform{platformOptions.length > 1 ? "s" : ""}:</span>
+            {platformOptions.map((p) => {
               const isActive = platform === p;
-              const ratio = p === "TIKTOK" || p === "YOUTUBE_SHORTS" ? " (9:16)" : p === "YOUTUBE" ? " (16:9)" : " Video";
+              // Video framing hints only mean something for a video.
+              const ratio = isStillPost
+                ? ""
+                : p === "TIKTOK" || p === "YOUTUBE_SHORTS" ? " (9:16)" : p === "YOUTUBE" ? " (16:9)" : p === "LINKEDIN" ? " Video" : "";
               return (
                 <Button
                   key={p}
@@ -1481,16 +1639,31 @@ export default function VideoComplianceScannerPage() {
             })}
           </div>
 
+          {!isStillPost && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium">Viewport:</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setUseOriginal(true)}
+              className={`text-xs font-semibold ${
+                useOriginal ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15" : ""
+              }`}
+              title="The video's own proportions"
+            >
+              Original
+            </Button>
             {(["9:16", "16:9"] as const).map((r) => (
               <Button
                 key={r}
                 size="sm"
                 variant="outline"
-                onClick={() => setAspectRatio(r)}
+                onClick={() => {
+                  setAspectRatio(r);
+                  setUseOriginal(false);
+                }}
                 className={`text-xs font-semibold ${
-                  aspectRatio === r
+                  !useOriginal && aspectRatio === r
                     ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15"
                     : ""
                 }`}
@@ -1499,6 +1672,7 @@ export default function VideoComplianceScannerPage() {
               </Button>
             ))}
           </div>
+          )}
         </div>
       </Card>
 
@@ -1587,22 +1761,16 @@ export default function VideoComplianceScannerPage() {
       {/* Scan result banner */}
       {scanResult && (
         <div
-          className={`px-4 py-3 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${
-            scanResult.traffic_light === "RED"
-              ? "bg-red-500/10 border-red-500/30"
-              : scanResult.traffic_light === "YELLOW"
-              ? "bg-amber-500/10 border-amber-500/30"
-              : "bg-emerald-500/10 border-emerald-500/30"
-          }`}
+          className="px-4 py-3 rounded-xl border border-border/70 bg-card shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
         >
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shrink-0 bg-background ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                 scanResult.traffic_light === "RED"
-                  ? "border-red-500 text-red-600"
+                  ? "bg-red-50 text-red-600 dark:bg-red-500/10"
                   : scanResult.traffic_light === "YELLOW"
-                  ? "border-amber-500 text-amber-600"
-                  : "border-emerald-500 text-emerald-600"
+                  ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10"
+                  : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"
               }`}
             >
               {scanResult.traffic_light === "RED" ? (
@@ -1629,12 +1797,12 @@ export default function VideoComplianceScannerPage() {
                     : `${scanResult.violations_count} Rule ${scanResult.violations_count === 1 ? "Violation" : "Violations"} Flagged for ${platformName}`}
                 </span>
                 <Badge
-                  className={`text-[10px] uppercase font-bold ${
+                  className={`rounded-full text-[11px] font-semibold ${
                     scanResult.traffic_light === "RED"
-                      ? "bg-red-600 text-white"
+                      ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
                       : scanResult.traffic_light === "YELLOW"
-                      ? "bg-amber-600 text-white"
-                      : "bg-emerald-600 text-white"
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                   }`}
                 >
                   {scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Clear"}
@@ -1643,6 +1811,7 @@ export default function VideoComplianceScannerPage() {
               <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                 <span>
                   Compliance Health Score: <strong className="text-foreground">{scanResult.score} / 100</strong>
+                  {scanResult.blocked && <strong className="ml-1.5 text-red-600 dark:text-red-400">· Blocked (critical rule)</strong>}
                 </span>
                 <span className="text-border">|</span>
                 <span>
@@ -1664,17 +1833,24 @@ export default function VideoComplianceScannerPage() {
       )}
 
       {/* Player + review panel */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-5 items-start">
-        {/* Video Review Player */}
-        <Card className="xl:col-span-7 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+      <div className="grid grid-cols-1 @5xl/screen:grid-cols-12 gap-4 sm:gap-5 items-start @5xl/screen:items-stretch">
+        {/* Video Review Player (the queue pages to fit beside it) */}
+        <Card
+          ref={playerCardRef}
+          className={`${isPortrait ? "@5xl/screen:col-span-5" : "@5xl/screen:col-span-7"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-foreground text-background flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 flex items-center justify-center shrink-0">
                 <PlatformIcon platform={platform} className="w-4.5 h-4.5" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-sm font-bold text-foreground">Video Review Player</h2>
-                <p className="text-xs text-muted-foreground truncate">Preview and review flagged content in context.</p>
+                <h2 className="text-sm font-bold text-foreground">{isStillPost ? "Post Preview" : "Video Review Player"}</h2>
+                <p className="text-xs text-muted-foreground truncate">
+                  {isStillPost
+                    ? `${CONTENT_TYPE_LABELS[activeVideo?.contentType ?? ""] ?? "Post"} · review its images and caption.`
+                    : "Preview and review flagged content in context."}
+                </p>
               </div>
             </div>
             <Button
@@ -1683,6 +1859,10 @@ export default function VideoComplianceScannerPage() {
               onClick={() => {
                 if (videoUrl) {
                   window.open(videoUrl, "_blank", "noopener");
+                } else if (activeVideo?.images?.length) {
+                  window.open(activeVideo.images[0].url, "_blank", "noopener");
+                } else if (isStillPost) {
+                  toast.info("This post has no image or video to open.");
                 } else {
                   toast.info("Upload or select a video file to open it in a new window.");
                 }
@@ -1694,17 +1874,29 @@ export default function VideoComplianceScannerPage() {
             </Button>
           </div>
 
+          {isStillPost && activeVideo ? (
+            <PostStillPreview key={activeVideo.id} item={activeVideo} />
+          ) : (
           <div
-            className="mx-4 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center px-3 py-5"
+            className={`mx-4 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center ${isPortrait ? "px-3 py-4" : "p-3"}`}
           >
             <div
               ref={playerFrameRef}
+              // Original: the video's own proportions, as wide as fits but no taller than about two-thirds of the screen.
+              style={
+                showOriginal && !isFullscreen
+                  ? { aspectRatio: String(nativeAspect), width: `min(100%, calc(64vh * ${nativeAspect!.toFixed(4)}))` }
+                  : undefined
+              }
               className={`relative bg-zinc-950 text-white overflow-hidden group transition-all duration-300 ${
                 isFullscreen
                   ? "w-screen h-screen bg-black"
-                  : aspectRatio === "9:16"
-                  ? "w-full max-w-[240px] aspect-[9/16] rounded-[22px] border-[5px] border-zinc-900 shadow-xl"
-                  : "w-full max-w-3xl aspect-video rounded-xl shadow-xl"
+                  : showOriginal
+                  ? `max-w-full shadow-xl ${isPortrait ? "rounded-[22px] border-[5px] border-zinc-900" : "rounded-xl"}`
+                  : isPortrait
+                  ? // Sized by height so a tall video fills the stage without pushing the page down.
+                    "h-[min(64vh,600px)] max-w-full aspect-[9/16] rounded-[22px] border-[5px] border-zinc-900 shadow-xl"
+                  : "w-full aspect-video rounded-xl shadow-xl"
               }`}
             >
               {videoUrl ? (
@@ -1730,7 +1922,7 @@ export default function VideoComplianceScannerPage() {
                 </div>
               )}
 
-              {aspectRatio === "9:16" && (
+              {isPortrait && (
                 <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-zinc-300 font-mono pointer-events-none">
                   {platformName} safe zone
                 </div>
@@ -1816,8 +2008,12 @@ export default function VideoComplianceScannerPage() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Flagged Moments timeline */}
+          {/* Flagged Moments timeline (videos only: it follows the video's time) */}
+          {isStillPost ? (
+            <div className="pb-4" />
+          ) : (
           <div className="px-4 pt-4 pb-5 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-semibold text-foreground flex items-center gap-2">
@@ -1984,6 +2180,7 @@ export default function VideoComplianceScannerPage() {
               <span className="font-mono text-xs text-muted-foreground min-w-[34px] shrink-0 leading-8">{formatTime(duration)}</span>
             </div>
           </div>
+          )}
 
           {/* Timestamped reviewer comment bar */}
           {isDecided ? (
@@ -2006,6 +2203,7 @@ export default function VideoComplianceScannerPage() {
                 </SelectContent>
               </Select>
 
+              {!isStillPost && (
               <div className="flex flex-wrap items-center rounded-lg border border-border/70 p-0.5 bg-muted/40 text-[11px] font-semibold">
                 <button
                   type="button"
@@ -2040,9 +2238,10 @@ export default function VideoComplianceScannerPage() {
                   No Time
                 </button>
               </div>
+              )}
             </div>
 
-            {commentTimeMode === "RANGE" && (
+            {!isStillPost && commentTimeMode === "RANGE" && (
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 <span className="text-muted-foreground font-semibold">From</span>
                 <input
@@ -2154,7 +2353,7 @@ export default function VideoComplianceScannerPage() {
         </Card>
 
         {/* Review panel */}
-        <Card className="xl:col-span-5 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+        <Card className={`${isPortrait ? "@5xl/screen:col-span-7" : "@5xl/screen:col-span-5"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden @5xl/screen:h-0 @5xl/screen:min-h-full`}>
           {activeVideo?.submissionId && (
             <div className="px-4 pt-4">
               {latestVersion > 1 && (
@@ -2220,6 +2419,7 @@ export default function VideoComplianceScannerPage() {
                     can_review: true,
                     can_approve: activeVideo.canApprove,
                     approver_names: activeVideo.approverNames,
+                    open_critical_flags: activeVideo.openCriticalFlags,
                     score: activeVideo.serverCheck?.score ?? null,
                   }}
                 />
@@ -2279,7 +2479,7 @@ export default function VideoComplianceScannerPage() {
             </div>
             <Badge
               className={`text-[10px] font-semibold shrink-0 ${
-                hasDoDDisclaimer ? "bg-emerald-600 text-white" : "bg-red-600 text-white"
+                hasDoDDisclaimer ? "rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
               }`}
             >
               {hasDoDDisclaimer ? "Disclaimers OK" : "Disclaimer Missing"}
@@ -2325,7 +2525,7 @@ export default function VideoComplianceScannerPage() {
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
               <span>
                 Characters: {(platform === "YOUTUBE" ? youtubeDescription : tiktokCaption).length} /{" "}
-                {platform === "YOUTUBE" ? 5000 : 2200}
+                {(CAPTION_LIMITS[platform] ?? 2200).toLocaleString()}
               </span>
               <Button
                 size="sm"
@@ -2341,8 +2541,8 @@ export default function VideoComplianceScannerPage() {
             </div>
           </div>
 
-          <Tabs defaultValue="violations" className="@container px-4 pt-2 pb-4 gap-3">
-            <TabsList className="w-full grid grid-cols-2 gap-0.5 group-data-horizontal/tabs:h-auto @[33rem]:flex @[33rem]:gap-0 @[33rem]:group-data-horizontal/tabs:h-9 bg-muted/60">
+          <Tabs defaultValue="violations" className="@container px-4 pt-2 pb-4 gap-3 @5xl/screen:min-h-0 @5xl/screen:flex-1">
+            <TabsList variant="line" className="h-auto min-h-10 w-full flex-wrap justify-start border-b border-border/70">
               {[
                 { value: "comments", icon: MessageSquare, label: `Comments (${comments.length})` },
                 { value: "violations", icon: AlertTriangle, label: `Flags (${scanResult?.violations_count || 0})` },
@@ -2352,7 +2552,7 @@ export default function VideoComplianceScannerPage() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-8 @[33rem]:h-auto @[33rem]:flex-auto whitespace-nowrap text-[11px] sm:text-xs font-semibold gap-1.5 px-2.5 data-active:bg-blue-500/10 data-active:text-blue-700 dark:data-active:text-blue-300 data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300"
+                  className="flex-none whitespace-nowrap px-2 text-xs font-semibold gap-1.5 data-active:text-blue-700 dark:data-active:text-blue-300 after:bg-blue-600"
                 >
                   <Icon className="w-3.5 h-3.5 hidden sm:inline" />
                   {label}
@@ -2361,7 +2561,7 @@ export default function VideoComplianceScannerPage() {
             </TabsList>
 
             {/* Sentiment (Gemini editorial read; submitted content only) */}
-            <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto">
+            <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
               {activeVideo?.submissionId ? (
                 <SentimentPanel
                   key={`${activeVideo.submissionId}-${viewVersion ?? "latest"}`}
@@ -2375,14 +2575,15 @@ export default function VideoComplianceScannerPage() {
             </TabsContent>
 
             {/* Flags */}
-            <TabsContent value="violations" className="rounded-lg border border-border/70">
+            <TabsContent value="violations" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
                 <span className="text-xs font-semibold text-foreground">Violations Flagged & Compliant Fixes</span>
                 <span className="text-[11px] text-muted-foreground">
                   {scanResult?.violations_count || 0} {scanResult?.violations_count === 1 ? "finding" : "findings"}
                 </span>
               </div>
-              <div className="p-2.5 space-y-2.5 max-h-[360px] overflow-y-auto">
+              <div className="p-2.5 space-y-2.5 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                {scanResult && <ScoreBreakdown check={scanResult} />}
                 {scanResult && scanResult.violations.length > 0 ? (
                   scanResult.violations.map((v, i) => {
                     const seg = segmentForViolation(v);
@@ -2407,7 +2608,7 @@ export default function VideoComplianceScannerPage() {
                         </div>
                         <div className="min-w-0 flex-1 space-y-1.5">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge className={`text-[10px] font-bold ${isRed ? "bg-red-600 text-white" : "bg-amber-500 text-white"}`}>
+                            <Badge className={`rounded-full text-[10px] font-semibold ${isRed ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"}`}>
                               {isRed ? "Critical" : "Needs review"}
                             </Badge>
                             {seg && (
@@ -2435,6 +2636,15 @@ export default function VideoComplianceScannerPage() {
                               <p className="text-[11px] text-foreground/90">{v.remediation_guidance}</p>
                             </div>
                           )}
+                          {activeVideo?.submissionId && v.rule_id && (
+                            <FlagReviewControl
+                              submissionId={activeVideo.submissionId}
+                              ruleId={v.rule_id}
+                              ruleNumber={v.rule_number}
+                              currentVersion={activeVideo.currentVersion ?? 1}
+                              canDismiss={Boolean(activeVideo.canReview) && !viewingOld}
+                            />
+                          )}
                         </div>
                       </div>
                     );
@@ -2449,12 +2659,12 @@ export default function VideoComplianceScannerPage() {
             </TabsContent>
 
             {/* Comments */}
-            <TabsContent value="comments" className="rounded-lg border border-border/70">
+            <TabsContent value="comments" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
                 <span className="text-xs font-semibold text-foreground">Reviewer Notes & Feedback</span>
                 <span className="text-[11px] text-muted-foreground">{comments.length} notes</span>
               </div>
-              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto">
+              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
                 {comments.length > 0 ? (
                   comments.map((c) => {
                     const isCommentActive = activeCommentId === c.id;
@@ -2487,12 +2697,12 @@ export default function VideoComplianceScannerPage() {
                             <Badge
                               className={`text-[9px] uppercase font-bold py-0 ${
                                 c.category === "LEGAL"
-                                  ? "bg-purple-600 text-white"
+                                  ? "rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
                                   : c.category === "EDITORIAL"
-                                  ? "bg-blue-600 text-white"
+                                  ? "rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
                                   : c.category === "COMPLIANCE"
-                                  ? "bg-amber-600 text-white"
-                                  : "bg-zinc-600 text-white"
+                                  ? "rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                                  : "rounded-full bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300"
                               }`}
                             >
                               {c.category}
@@ -2533,7 +2743,7 @@ export default function VideoComplianceScannerPage() {
             </TabsContent>
 
             {/* Script */}
-            <TabsContent value="script" className="rounded-lg border border-border/70">
+            <TabsContent value="script" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
                 <span className="text-xs font-semibold text-foreground">Voiceover & Script</span>
                 <span className="text-[11px] text-muted-foreground">
@@ -2542,10 +2752,16 @@ export default function VideoComplianceScannerPage() {
                     : `${segments.length} segments`}
                 </span>
               </div>
-              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto">
+              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
                 {segments.length === 0 && activeVideo?.submissionId && (
                   <div className="flex flex-col items-center text-center gap-2 py-8 px-4 text-xs text-muted-foreground">
-                    {activeVideo.transcriptStatus === "FAILED" ? (
+                    {isStillPost ? (
+                      <>
+                        <FileText className="w-5 h-5" />
+                        <p className="font-semibold text-foreground">No video, so there's no script.</p>
+                        <p>This post's title, caption and images are what's screened against the rulebook and sentiment analysis.</p>
+                      </>
+                    ) : activeVideo.transcriptStatus === "FAILED" ? (
                       <>
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
                         <p className="font-semibold text-foreground">The transcript couldn't be generated.</p>
@@ -2608,9 +2824,9 @@ export default function VideoComplianceScannerPage() {
                             <Loader2 className="w-2.5 h-2.5 animate-spin" /> Uploading
                           </Badge>
                         ) : seg.risk === "RED" ? (
-                          <Badge className="bg-red-600 text-white text-[9px] font-bold py-0">Critical</Badge>
+                          <Badge className="rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300 text-[9px] font-semibold py-0">Critical</Badge>
                         ) : seg.risk === "YELLOW" ? (
-                          <Badge className="bg-amber-500 text-white text-[9px] font-bold py-0">Needs review</Badge>
+                          <Badge className="rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 text-[9px] font-semibold py-0">Needs review</Badge>
                         ) : (
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
                             <Check className="w-3 h-3" /> Clear
@@ -2629,6 +2845,8 @@ export default function VideoComplianceScannerPage() {
       </div>
       </>
       )}
+        </div>
+      </div>
     </div>
   );
 }
