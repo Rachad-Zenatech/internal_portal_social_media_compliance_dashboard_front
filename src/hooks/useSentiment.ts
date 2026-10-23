@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { submissionService } from "@/services/submissionService";
-import type { SentimentAnalysis, SentimentStatus } from "@/types/sentiment";
+import type { FindingVerdict, SentimentAnalysis, SentimentStatus } from "@/types/sentiment";
 
 const IN_PROGRESS: SentimentStatus[] = ["WAITING_TRANSCRIPT", "PENDING", "PROCESSING"];
 
@@ -20,7 +20,8 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     queryFn: () => submissionService.getSentiment(submissionId!, version),
     enabled: Boolean(submissionId),
     staleTime: 0,
-    refetchInterval: (q) => (isSentimentRunning(q.state.data) ? 3000 : false),
+    // A run scheduled for after Gemini's limit resets is started by the server; check back now and then.
+    refetchInterval: (q) => (isSentimentRunning(q.state.data) ? 3000 : q.state.data?.status === "SCHEDULED" ? 60_000 : false),
   });
 
   // How many runs are left, so the button can say so instead of failing.
@@ -38,5 +39,44 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["ai-usage"] }),
   });
 
-  return { analysis: query.data ?? null, isLoading: query.isLoading, run, usage: usage.data?.SENTIMENT ?? null };
+  /** After Gemini's daily limit: run it again automatically once the limit resets. */
+  const scheduleAfterReset = useMutation({
+    mutationFn: (analysisId: string) => submissionService.scheduleSentiment(submissionId!, analysisId),
+    onSuccess: (analysis) => {
+      queryClient.setQueryData(key, analysis);
+      toast.success("Scheduled. It runs automatically once Gemini's daily limit resets.");
+    },
+    onError: (err) => toast.error(`Couldn't schedule it: ${(err as Error).message}`),
+  });
+
+  /** A reviewer's vote on a finding; no verdict takes the vote back. */
+  const rate = useMutation({
+    mutationFn: ({ analysisId, findingId, verdict }: { analysisId: string; findingId: string; verdict?: FindingVerdict }) =>
+      verdict
+        ? submissionService.rateFinding(submissionId!, analysisId, findingId, verdict)
+        : submissionService.clearFindingRating(submissionId!, analysisId, findingId),
+    onSuccess: (feedback) => queryClient.setQueryData<SentimentAnalysis | null>(key, (prev) => (prev ? { ...prev, feedback } : prev)),
+    onError: (err) => toast.error(`Couldn't save your rating: ${(err as Error).message}`),
+  });
+
+  const saveTestCase = useMutation({
+    mutationFn: submissionService.saveSentimentTestCase,
+    onSuccess: (c) => {
+      const rated = c.must_flag.length + c.must_not_flag.length;
+      toast.success(
+        `Saved as a test case${rated ? ` with ${rated} rated finding${rated === 1 ? "" : "s"}` : ""}. It's re-checked whenever the prompt or model changes.`
+      );
+    },
+    onError: (err) => toast.error(`Couldn't save the test case: ${(err as Error).message}`),
+  });
+
+  return {
+    analysis: query.data ?? null,
+    isLoading: query.isLoading,
+    run,
+    scheduleAfterReset,
+    rate,
+    saveTestCase,
+    usage: usage.data?.SENTIMENT ?? null,
+  };
 }

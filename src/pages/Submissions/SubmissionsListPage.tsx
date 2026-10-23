@@ -1,34 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import {
   AlertTriangle,
-  Building2,
-  CalendarClock,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
   CheckCircle2,
   ChevronRight,
-  ExternalLink,
+  ClipboardCheck,
+  Clock,
   FilePen,
+  History,
   Inbox,
+  Info,
   Loader2,
-  MessageCircle,
+  MessageSquare,
+  MoreHorizontal,
   Plus,
   ScanEye,
   Search,
   Send,
+  ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   User as UserIcon,
-  Users,
   X,
   XCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,13 +53,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { ChannelAvatar, CoverThumb } from "@/components/submissions/PostPreview";
+import { CoverThumb } from "@/components/submissions/PostPreview";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReadinessSummary from "@/components/submissions/ReadinessSummary";
+import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
-import { DueBadge, authedFileUrl } from "@/components/submissions/submissionUi";
+import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
+import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
@@ -165,76 +182,41 @@ function StagePill({ stage, small = false }: { stage: Stage; small?: boolean }) 
   );
 }
 
-/** Platform | brand | audience, each with its icon, separated by thin rules. */
-function MetaLine({ s, labels, date, className = "" }: { s: SubmissionSummary | Submission; labels: Labels; date?: React.ReactNode; className?: string }) {
-  const parts: React.ReactNode[] = [];
-  if (s.platforms.length) {
-    parts.push(
-      <span key="p" className="inline-flex items-center gap-1.5">
-        <PlatformIcon platform={s.platforms[0] as SocialPlatform} className="w-3.5 h-3.5" />
-        {platformName(s.platforms[0])}
-        {s.platforms.length > 1 && <span className="text-muted-foreground/80">+{s.platforms.length - 1}</span>}
-      </span>
-    );
-  }
-  const brand = labels.brand(s.brand_code);
-  if (brand) {
-    parts.push(
-      <span key="b" className="inline-flex items-center gap-1.5">
-        <Building2 className="w-3.5 h-3.5" /> {brand}
-      </span>
-    );
-  }
-  const audience = labels.audience(s.audience);
-  if (audience) {
-    parts.push(
-      <span key="a" className="inline-flex items-center gap-1.5">
-        <Users className="w-3.5 h-3.5" /> {audience}
-      </span>
-    );
-  }
-  if (date) parts.push(<span key="d" className="inline-flex items-center gap-1.5">{date}</span>);
-  if (!parts.length) return null;
-  return (
-    <p className={`flex flex-wrap items-center gap-y-1 text-xs text-muted-foreground ${className}`}>
-      {parts.map((part, i) => (
-        <span key={i} className={`inline-flex items-center ${i > 0 ? "ml-2.5 border-l border-border pl-2.5" : ""}`}>
-          {part}
-        </span>
-      ))}
-    </p>
-  );
-}
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  VIDEO: "Video",
+  SOCIAL_POST: "Post",
+  CAROUSEL: "Carousel",
+  IMAGE: "Image",
+  BLOG: "Article",
+};
 
-/** Publish date when it has one (red when it's passed without being approved), otherwise last activity. */
-function WhenText({ s }: { s: SubmissionSummary }) {
-  const due = <DueBadge dueAt={s.due_at} kind={s.due_kind} className="mr-2" />;
-  if (s.publish_at) {
-    const date = new Date(s.publish_at);
-    const pastDue = !FINISHED.has(s.status) && isPast(date);
-    return (
-      <span className="inline-flex flex-wrap items-center">
-        {due}
-        <span className={pastDue ? "text-red-600 dark:text-red-400 font-semibold" : ""} title={pastDue ? "Planned publish time has passed" : "Planned publish time"}>
-          {format(date, "MMM d, yyyy, h:mm a")}
-          {pastDue && " · Past due"}
-        </span>
-      </span>
-    );
-  }
+/** Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue. */
+function DueLine({ dueAt, kind, className = "" }: { dueAt?: string | null; kind?: SubmissionSummary["due_kind"]; className?: string }) {
+  const due = dueInfo(dueAt, kind);
+  if (!due) return null;
+  const tone = due.overdue ? "text-red-600 dark:text-red-400" : kind === "REVISION" ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300";
   return (
-    <span className="inline-flex flex-wrap items-center">
-      {due}
-      <span title="Last updated">{format(new Date(s.updated_at), "MMM d, yyyy, h:mm a")}</span>
+    <span className={`inline-flex items-center gap-1.5 ${tone} ${className}`} title={`Due ${due.exact}`}>
+      <Clock className="w-3.5 h-3.5" /> {due.text}
     </span>
   );
 }
 
+/** When it goes out (or was last touched), with "past due" when a planned time passed without approval. */
+function whenText(s: SubmissionSummary) {
+  if (s.publish_at) {
+    const date = new Date(s.publish_at);
+    const pastDue = !FINISHED.has(s.status) && isPast(date);
+    return { text: `${format(date, "MMM d, yyyy, h:mm a")}${pastDue ? " · Past due" : ""}`, pastDue };
+  }
+  return { text: format(new Date(s.updated_at), "MMM d, yyyy, h:mm a"), pastDue: false };
+}
+
 // ---------------------------------------------------------------------------
-// List row
+// Submission card (left column)
 // ---------------------------------------------------------------------------
 
-function ContentRow({
+function SubmissionCard({
   s,
   selected,
   labels,
@@ -248,6 +230,9 @@ function ContentRow({
   onSelect: (s: SubmissionSummary) => void;
 }) {
   const stage = stageOf(s);
+  const when = whenText(s);
+  const brand = labels.brand(s.brand_code);
+  const audience = labels.audience(s.audience);
   return (
     <div
       role="button"
@@ -260,43 +245,58 @@ function ContentRow({
           onSelect(s);
         }
       }}
-      className={`group flex gap-4 rounded-xl border p-3 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+      className={`group rounded-xl border bg-card p-3.5 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
         selected
-          ? "border-blue-400 bg-blue-50/70 ring-1 ring-blue-300 dark:border-blue-500/60 dark:bg-blue-500/10 dark:ring-blue-500/40"
-          : "border-border/70 bg-card hover:border-blue-200 hover:shadow-sm dark:hover:border-blue-500/40"
+          ? "border-blue-500 bg-blue-50/40 ring-1 ring-blue-500/30 dark:border-blue-500/70 dark:bg-blue-500/10"
+          : "border-border/70 hover:border-blue-300 hover:shadow-sm dark:hover:border-blue-500/40"
       }`}
     >
-      <div className="relative w-28 sm:w-36 aspect-[4/3] shrink-0 overflow-hidden rounded-lg bg-muted">
-        <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+      <div className="flex items-center justify-between gap-2">
+        <StagePill stage={stage} small />
+        {selected ? (
+          <span className="text-[10px] font-semibold tracking-wider text-blue-700 dark:text-blue-300">SELECTED</span>
+        ) : (
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+        )}
       </div>
 
-      <div className="min-w-0 flex-1 py-0.5">
-        <p className="font-bold text-sm sm:text-base text-foreground truncate">{s.title}</p>
-        <MetaLine s={s} labels={labels} className="mt-1.5" />
-        <p className="mt-2 text-xs sm:text-sm text-muted-foreground line-clamp-2">{s.caption_text?.trim() || "No caption yet."}</p>
-        {showCreator && (
-          <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-            <UserIcon className="w-3 h-3" /> By {s.created_by_name || "unknown"}
-          </p>
-        )}
-        {/* Phones: status and date sit under the text instead of in their own column. */}
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground md:hidden">
-          <StagePill stage={stage} small />
-          <WhenText s={s} />
+      <div className="mt-3 flex gap-3">
+        <div className="w-16 shrink-0">
+          <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
+            <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+          </div>
+          <p className="mt-1 text-[10px] text-muted-foreground">{CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}</p>
+        </div>
+        <div className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+          <p className="text-sm font-semibold leading-snug text-foreground line-clamp-2">{s.title}</p>
+          {s.platforms.length > 0 && (
+            <p className="mt-1 inline-flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
+              <PlatformIcon platform={s.platforms[0] as SocialPlatform} className="w-3.5 h-3.5" />
+              {platformName(s.platforms[0])}
+              {s.platforms.length > 1 && ` +${s.platforms.length - 1}`}
+            </p>
+          )}
+          {brand && <p className="mt-0.5 truncate">{brand}</p>}
+          {audience && <p className="truncate">{audience}</p>}
         </div>
       </div>
 
-      <div className="hidden md:flex w-48 shrink-0 flex-col items-start justify-between gap-2 py-0.5 text-xs text-muted-foreground">
-        <StagePill stage={stage} small />
-        <WhenText s={s} />
-        <span className="inline-flex items-center gap-1.5" title="Review comments">
-          <MessageCircle className="w-4 h-4" /> {s.comment_count ?? 0}
-        </span>
+      <div className="mt-3 space-y-0.5 text-[11px]">
+        <DueLine dueAt={s.due_at} kind={s.due_kind} />
+        <p className={when.pastDue ? "font-semibold text-red-600 dark:text-red-400" : "text-muted-foreground"}>{when.text}</p>
+        {showCreator && (
+          <p className="flex items-center gap-1 text-muted-foreground">
+            <UserIcon className="w-3 h-3" /> By {s.created_by_name || "unknown"}
+          </p>
+        )}
       </div>
 
-      <ChevronRight
-        className={`hidden sm:block w-4 h-4 shrink-0 self-center transition-transform group-hover:translate-x-0.5 ${selected ? "text-blue-600 dark:text-blue-300" : "text-muted-foreground/60"}`}
-      />
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/60 pt-2.5 text-[11px] text-muted-foreground">
+        <span className="min-w-0 truncate">{s.caption_text?.trim() || "No caption yet."}</span>
+        <span className="inline-flex shrink-0 items-center gap-1" title="Review comments">
+          <MessageSquare className="w-3.5 h-3.5" /> {s.comment_count ?? 0}
+        </span>
+      </div>
     </div>
   );
 }
@@ -325,51 +325,44 @@ function ComplianceView({ sub }: { sub: Submission }) {
         </span>
         <span className="tabular-nums">{check.score}/100</span>
       </div>
-      {check.violations.map((v) => (
-        <div key={v.rule_id} className="text-xs border-t border-border/60 pt-2.5">
-          <p className="font-semibold text-foreground">
-            {v.rule_number} · {v.title}
-          </p>
-          <p className="text-muted-foreground">Flagged: {v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function DetailsView({ sub, labels }: { sub: Submission; labels: Labels }) {
-  const rows: [string, React.ReactNode][] = [
-    ["Reference", <span className="font-mono">{sub.reference_code}</span>],
-    ["Brand", labels.brand(sub.brand_code)],
-    ["Audience", labels.audience(sub.audience)],
-    ["Region", sub.region],
-    ["Platforms", sub.platforms.map(platformName).join(", ")],
-    [
-      "Posting to",
-      accountsOf(sub).length ? (
-        <span className="flex flex-col gap-1">
-          {accountsOf(sub).map((a) => (
-            <span key={a.id} className="inline-flex items-center gap-1.5">
-              <ChannelAvatar account={a} size="sm" /> {a.label}
-            </span>
+      {sub.check_outdated && (
+        <p className="rounded-md bg-muted/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+          {sub.status === "APPROVED" || sub.status === "REJECTED"
+            ? "Decided under an earlier version of the rulebook; rules have changed since."
+            : "The rulebook has changed since this check. It's checked again when it's next sent for review."}
+        </p>
+      )}
+      <ScoreBreakdown check={check} />
+      {/* Reviewers make their call on each flag: a false alarm is dismissed with a reason (the score stays). */}
+      {sub.can_review && check.violations.some((v) => v.rule_id) && (
+        <div className="space-y-2 border-t border-border/60 pt-3">
+          {check.violations.map((v) => (
+            <div key={v.rule_id} className="space-y-1 text-xs">
+              <p className="font-semibold text-foreground">
+                {v.rule_number} · {v.flagged_terms.map((t) => `"${t}"`).join(", ") || "missing disclaimer"}
+              </p>
+              <FlagReviewControl
+                submissionId={sub.id}
+                ruleId={v.rule_id}
+                ruleNumber={v.rule_number}
+                currentVersion={sub.current_version}
+                canDismiss
+              />
+            </div>
           ))}
-        </span>
-      ) : null,
-    ],
-    ["Rule sets", sub.rule_sets.join(", ")],
-    ["Publish date", sub.publish_at ? format(new Date(sub.publish_at), "MMM d, yyyy, h:mm a") : null],
-    ["Created by", sub.created_by_name],
-    ["Version", sub.current_version ? `v${sub.current_version}` : "Not submitted yet"],
-  ];
-  return (
-    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
-      {rows.map(([label, value]) => (
-        <div key={label} className="min-w-0">
-          <dt className="text-muted-foreground">{label}</dt>
-          <dd className="mt-0.5 font-medium text-foreground break-words">{value || "—"}</dd>
         </div>
-      ))}
-    </dl>
+      )}
+      {/* Checks saved before penalties were recorded have no breakdown; list what they flagged. */}
+      {!check.violations.some((v) => v.penalty != null) &&
+        check.violations.map((v) => (
+          <div key={v.rule_id} className="text-xs border-t border-border/60 pt-2.5">
+            <p className="font-semibold text-foreground">
+              {v.rule_number} · {v.title}
+            </p>
+            <p className="text-muted-foreground">Flagged: {v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>
+          </div>
+        ))}
+    </div>
   );
 }
 
@@ -404,10 +397,57 @@ function HistoryView({ id }: { id: string }) {
   );
 }
 
-function DetailPanel({
+/** One of the two analysis cards: what it checks, its result so far, and a way to open or run it. */
+function CheckCard({
+  icon: Icon,
+  title,
+  status,
+  statusTone = "text-muted-foreground",
+  description,
+  action,
+  onAction,
+  busy = false,
+}: {
+  icon: typeof ShieldCheck;
+  title: string;
+  status: string;
+  statusTone?: string;
+  description: string;
+  action?: string | null;
+  onAction?: () => void;
+  busy?: boolean;
+}) {
+  return (
+    <div className="flex flex-col rounded-xl border border-border/70 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Icon className="w-4 h-4 text-blue-700 dark:text-blue-300" /> {title}
+        </p>
+        <span className={`text-[11px] font-semibold ${statusTone}`}>{status}</span>
+      </div>
+      <p className="mt-2 flex-1 text-xs text-muted-foreground">{description}</p>
+      <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
+        <span className="text-muted-foreground">Supports human review</span>
+        {action && (
+          <button
+            type="button"
+            onClick={onAction}
+            disabled={busy}
+            className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300"
+          >
+            {busy && <Loader2 className="w-3 h-3 animate-spin" />} {action} <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReviewCard({
   summary,
   labels,
   userId,
+  userName,
   canComment,
   onSubmit,
   onDelete,
@@ -415,20 +455,35 @@ function DetailPanel({
   summary: SubmissionSummary;
   labels: Labels;
   userId?: string;
+  userName?: string;
   /** Reviewers can comment on anyone's content; creators on their own. */
   canComment: boolean;
   onSubmit: (s: SubmissionSummary) => void;
   onDelete: (s: SubmissionSummary) => void;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { setActiveVideoId } = useVideoUploadQueue();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState<number | undefined>(undefined);
+  const [openCheck, setOpenCheck] = useState<"compliance" | "sentiment" | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const { data: sub, isLoading } = useQuery({
     queryKey: ["submission", summary.id],
     queryFn: () => submissionService.get(summary.id),
     staleTime: 0,
   });
+  const { analysis } = useSentiment(summary.id);
+  const runCheck = useMutation({
+    mutationFn: () => submissionService.runCheck(summary.id),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["submission", summary.id], updated);
+      queryClient.invalidateQueries({ queryKey: ["submissions"] });
+      setOpenCheck("compliance");
+    },
+    onError: (err) => toast.error(`Couldn't run the check: ${(err as Error).message}`),
+  });
+
   const mine = summary.created_by === userId;
   const stage = stageOf(sub ?? summary);
   const media =
@@ -444,161 +499,289 @@ function DetailPanel({
         void v.play().catch(() => undefined);
       }
     : undefined;
-  const commentCount = summary.comment_count ?? 0;
+  const openInScreener = () => {
+    setActiveVideoId(`sub-${summary.id}`);
+    navigate("/compliance/scanner");
+  };
+  const showScreener = isVideo(summary) && summary.status !== "DRAFT";
+  const check = sub?.latest_check;
+  const canRunCheck = Boolean(sub?.can_edit);
+  const sentimentDone = analysis?.status === "COMPLETED";
+  const sentimentRunning = isSentimentRunning(analysis);
+  const facts: [string, React.ReactNode][] = [
+    ["Brand", labels.brand(summary.brand_code)],
+    [
+      "Platforms",
+      summary.platforms.length ? `${platformName(summary.platforms[0])}${summary.platforms.length > 1 ? ` +${summary.platforms.length - 1}` : ""}` : null,
+    ],
+    ["Audience", labels.audience(summary.audience)],
+    ["Submitted", summary.submitted_at ? format(new Date(summary.submitted_at), "MMM d, yyyy, h:mm a") : "Not yet"],
+  ];
+
+  // What the person looking at it can do, and how the footer describes it.
+  let footerTitle = STAGES[stage]?.label ?? "Status";
+  let footerNote = "";
+  let actions: React.ReactNode = null;
+  if (sub?.can_review) {
+    footerTitle = "Human approval";
+    footerNote = "Your decision is recorded in the audit trail.";
+    actions = (
+      <ReviewDecisionPanel
+        layout="inline"
+        target={{
+          id: sub.id,
+          reference_code: sub.reference_code,
+          title: sub.title,
+          status: sub.status,
+          current_version: sub.current_version,
+          platforms: sub.platforms,
+          publish_at: sub.publish_at,
+          due_at: sub.due_at,
+          due_kind: sub.due_kind,
+          can_review: sub.can_review,
+          can_approve: sub.can_approve,
+          approver_names: sub.approver_names,
+          open_critical_flags: sub.open_critical_flags,
+          score: sub.latest_check?.score ?? null,
+        }}
+      />
+    );
+  } else if (SUBMITTABLE.has(summary.status) && mine) {
+    footerTitle = "Your next step";
+    footerNote = summary.status === "CHANGES_REQUESTED" ? "Make the requested changes, then resubmit it." : "Send it for review when it's ready.";
+    actions = (
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(`/submissions/new?id=${summary.id}`)}>
+          <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Edit draft"}
+        </Button>
+        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => onSubmit(summary)}>
+          <Send className="w-3.5 h-3.5" /> {submitLabel(summary)}
+        </Button>
+      </div>
+    );
+  } else if (summary.status === "APPROVED" && (mine || summary.can_manage_approval)) {
+    footerTitle = "Approved";
+    footerNote = "It's on the content calendar. Reschedule it or reopen it if something changes.";
+    actions = (
+      <div className="flex flex-wrap justify-end gap-2">
+        <ApprovalActions target={sub ?? summary} isCreator={mine} buttonClassName="h-9 text-xs font-semibold gap-1.5" />
+      </div>
+    );
+  } else if (summary.status === "IN_REVIEW") {
+    footerTitle = "In review";
+    footerNote = sub?.approver_names?.length
+      ? `Waiting for a reviewer. Final approval: ${sub.approver_names.join(", ")}.`
+      : mine
+      ? "Waiting for a reviewer. You'll be notified when it's decided."
+      : "Waiting for a reviewer.";
+  } else if (summary.status === "CHANGES_REQUESTED") {
+    footerNote = "Waiting for the creator to make changes and resubmit.";
+  }
 
   return (
-    <div className="space-y-4">
-      {/* Media */}
-      <div className="relative aspect-video overflow-hidden rounded-xl bg-neutral-900">
-        {media && mediaIsVideo ? (
-          <video
-            key={media.id}
-            ref={videoRef}
-            src={authedFileUrl(media.url)}
-            controls
-            preload="metadata"
-            className="h-full w-full object-contain"
-            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          />
-        ) : media ? (
-          <img src={authedFileUrl(media.url)} alt="" className="h-full w-full object-contain" />
-        ) : (
-          <CoverThumb cover={summary.cover} contentType={summary.content_type} caption={summary.caption_text} showPlay={false} />
-        )}
-      </div>
-
-      {/* Title */}
-      <div className="space-y-1.5">
-        <div className="flex items-start gap-3">
-          <h2 className="min-w-0 flex-1 text-lg font-bold leading-snug text-foreground">{summary.title}</h2>
+    <div className="@container rounded-xl border border-border/70 bg-card shadow-xs">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 px-5 pt-5">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+            <ClipboardCheck className="w-3.5 h-3.5" /> Content review
+          </p>
+          <h2 className="mt-1.5 text-xl font-semibold leading-snug text-foreground">{summary.title}</h2>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300"
+              onClick={() => navigate(`/submissions/${summary.id}`)}
+            >
+              Full details <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="More actions">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem className="text-xs gap-2" onClick={() => navigate(`/submissions/${summary.id}`)}>
+                  <ArrowUpRight className="w-3.5 h-3.5" /> Open full details
+                </DropdownMenuItem>
+                {showScreener && (
+                  <DropdownMenuItem className="text-xs gap-2" onClick={openInScreener}>
+                    <ScanEye className="w-3.5 h-3.5" /> Open in Content Screener
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem className="text-xs gap-2" onClick={() => setShowHistory(true)}>
+                  <History className="w-3.5 h-3.5" /> View audit trail
+                </DropdownMenuItem>
+                {summary.can_delete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" className="text-xs gap-2" onClick={() => onDelete(summary)}>
+                      <Trash2 className="w-3.5 h-3.5" /> Delete draft
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <StagePill stage={stage} small />
         </div>
-        <MetaLine
-          s={sub ?? summary}
-          labels={labels}
-          date={
-            <>
-              <CalendarClock className="w-3.5 h-3.5" /> <WhenText s={summary} />
-            </>
-          }
-        />
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="feedback" className="gap-3">
-        <div className="overflow-x-auto border-b border-border/70">
-          <TabsList variant="line" className="h-10 w-max">
-            {[
-              ["feedback", `Review Feedback (${commentCount})`],
-              ["compliance", "Compliance Check"],
-              ["sentiment", "Sentiment Analysis"],
-              ["details", "Details"],
-              ["history", "Version History"],
-            ].map(([value, label]) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="flex-none px-2 text-xs sm:text-sm data-active:text-blue-700 dark:data-active:text-blue-300 after:bg-blue-600"
-              >
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      {/* Media and the facts that matter for the review */}
+      <div className="grid gap-5 px-5 pt-4 pb-5 @xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <div className="min-w-0">
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-neutral-900">
+            {media && mediaIsVideo ? (
+              <video
+                key={media.id}
+                ref={videoRef}
+                src={authedFileUrl(media.url)}
+                controls
+                preload="metadata"
+                className="h-full w-full object-contain"
+                onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+              />
+            ) : media ? (
+              <img src={authedFileUrl(media.url)} alt="" className="h-full w-full object-contain" />
+            ) : (
+              <CoverThumb cover={summary.cover} contentType={summary.content_type} caption={summary.caption_text} showPlay={false} />
+            )}
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <span>{media ? (mediaIsVideo ? "Video" : "Image") : CONTENT_TYPE_LABELS[summary.content_type] ?? "Content"}</span>
+            {showScreener && (
+              <button type="button" onClick={openInScreener} className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                <ScanEye className="w-3.5 h-3.5" /> Open in Content Screener
+              </button>
+            )}
+          </div>
         </div>
+        <dl className="grid grid-cols-2 content-start gap-x-6 gap-y-4 text-xs">
+          {facts.map(([label, value]) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="mt-0.5 font-medium text-foreground break-words">{value || "—"}</dd>
+            </div>
+          ))}
+          {summary.due_at && (
+            <div className="col-span-2 rounded-lg bg-blue-50 px-3 py-2 dark:bg-blue-500/10">
+              <DueLine dueAt={summary.due_at} kind={summary.due_kind} className="text-xs" />
+            </div>
+          )}
+          <div className="col-span-2 min-w-0">
+            <dt className="text-muted-foreground">Caption</dt>
+            <dd className="mt-0.5 text-foreground whitespace-pre-wrap break-words line-clamp-5">{summary.caption_text?.trim() || "No caption yet."}</dd>
+          </div>
+        </dl>
+      </div>
 
+      {/* Review checks */}
+      <section className="border-t border-border/70 px-5 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
+          <p className="text-[11px] text-muted-foreground">Analysis does not approve or publish content.</p>
+        </div>
+        <ReadinessSummary check={check} submissionId={summary.id} className="mt-3" />
+        <div className="mt-3 grid gap-3 @xl:grid-cols-2">
+          <CheckCard
+            icon={ShieldCheck}
+            title="Compliance Check"
+            status={
+              check
+                ? `${check.score}/100 · ${check.blocked ? "Blocked" : check.is_compliant ? "No issues" : `${check.violations_count} issue${check.violations_count === 1 ? "" : "s"}`}`
+                : "No results yet"
+            }
+            statusTone={
+              !check ? undefined : check.traffic_light === "RED" ? "text-red-600 dark:text-red-400" : check.traffic_light === "YELLOW" ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"
+            }
+            description="Check regulatory, legal and brand messaging rules, audience, region and product-development stage."
+            action={check ? (openCheck === "compliance" ? "Hide results" : "View results") : canRunCheck ? "Run compliance check" : null}
+            busy={runCheck.isPending}
+            onAction={() => (check ? setOpenCheck((o) => (o === "compliance" ? null : "compliance")) : runCheck.mutate())}
+          />
+          <CheckCard
+            icon={BarChart3}
+            title="Sentiment Analysis"
+            status={sentimentDone ? "Results ready" : sentimentRunning ? "Running..." : "No results yet"}
+            statusTone={sentimentDone ? "text-emerald-700 dark:text-emerald-300" : undefined}
+            description="Assess tone and messaging for the intended audience. Review the analysis before making a decision."
+            action={openCheck === "sentiment" ? "Hide analysis" : sentimentDone ? "View analysis" : "Analyze sentiment"}
+            onAction={() => setOpenCheck((o) => (o === "sentiment" ? null : "sentiment"))}
+          />
+        </div>
+        {!check && !canRunCheck && (
+          <p className="mt-2 text-[11px] text-muted-foreground">The compliance check runs when it's sent for review.</p>
+        )}
+        {openCheck === "compliance" && sub && (
+          <div className="mt-3">
+            <ComplianceView sub={sub} />
+          </div>
+        )}
+        {openCheck === "sentiment" && (
+          <div className="mt-3 rounded-xl border border-border/70 p-4">
+            <SentimentPanel submissionId={summary.id} onSeek={seek} />
+          </div>
+        )}
+      </section>
+
+      {/* Feedback */}
+      <section className="border-t border-border/70 px-5 py-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <MessageSquare className="w-4 h-4" /> Review Feedback <span className="font-normal text-muted-foreground">({summary.comment_count ?? 0})</span>
+          </h3>
+          {(canComment || mine) && userName && <p className="text-[11px] text-muted-foreground">Commenting as {userName}</p>}
+        </div>
         {isLoading || !sub ? (
-          <p className="flex items-center gap-2 py-8 text-xs text-muted-foreground">
+          <p className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
           </p>
         ) : (
-          <>
-            <TabsContent value="feedback">
-              <ReviewCommentsPanel
-                submissionId={sub.id}
-                canComment={canComment || mine}
-                currentTime={mediaIsVideo ? currentTime ?? 0 : undefined}
-                onSeek={seek}
-                emptyText={sub.status === "DRAFT" ? "No feedback yet. Reviewers comment here once it's sent for review." : "No feedback yet."}
-              />
-            </TabsContent>
-            <TabsContent value="compliance">
-              <ComplianceView sub={sub} />
-            </TabsContent>
-            <TabsContent value="sentiment">
-              <SentimentPanel submissionId={sub.id} onSeek={seek} />
-            </TabsContent>
-            <TabsContent value="details">
-              <DetailsView sub={sub} labels={labels} />
-            </TabsContent>
-            <TabsContent value="history">
-              <HistoryView id={sub.id} />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
-
-      {/* Actions for whoever is looking */}
-      <div className="space-y-2 border-t border-border/70 pt-4">
-        {sub?.can_review ? (
-          <ReviewDecisionPanel
-            layout="bar"
-            target={{
-              id: sub.id,
-              reference_code: sub.reference_code,
-              title: sub.title,
-              status: sub.status,
-              current_version: sub.current_version,
-              platforms: sub.platforms,
-              publish_at: sub.publish_at,
-              due_at: sub.due_at,
-              due_kind: sub.due_kind,
-              can_review: sub.can_review,
-              can_approve: sub.can_approve,
-              approver_names: sub.approver_names,
-              score: sub.latest_check?.score ?? null,
-            }}
+          <ReviewCommentsPanel
+            submissionId={sub.id}
+            showHeader={false}
+            canComment={canComment || mine}
+            currentTime={mediaIsVideo ? currentTime ?? 0 : undefined}
+            onSeek={seek}
+            emptyText={
+              sub.status === "DRAFT"
+                ? "No feedback yet. Reviewers comment here once it's sent for review."
+                : "No feedback yet. Start the review with a comment, or pin feedback to a moment in the video."
+            }
           />
-        ) : SUBMITTABLE.has(summary.status) && mine ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="h-11 rounded-lg text-sm font-semibold gap-1.5" onClick={() => navigate(`/submissions/new?id=${summary.id}`)}>
-              <FilePen className="w-4 h-4" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Edit draft"}
-            </Button>
-            <Button className="h-11 rounded-lg text-sm font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => onSubmit(summary)}>
-              <Send className="w-4 h-4" /> {submitLabel(summary)}
-            </Button>
+        )}
+      </section>
+
+      {/* Decision */}
+      <section className="rounded-b-xl border-t border-border/70 bg-muted/30 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{footerTitle}</p>
+            {footerNote && <p className="text-[11px] text-muted-foreground">{footerNote}</p>}
           </div>
-        ) : summary.status === "APPROVED" && (mine || summary.can_manage_approval) ? (
-          <div className="flex flex-wrap gap-2">
-            <ApprovalActions
-              target={sub ?? summary}
-              isCreator={mine}
-              buttonClassName="h-11 flex-1 rounded-lg text-sm font-semibold gap-1.5"
-            />
-          </div>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <button type="button" className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300" onClick={() => navigate(`/submissions/${summary.id}`)}>
-            <ExternalLink className="w-3.5 h-3.5" /> Full details
-          </button>
-          {isVideo(summary) && summary.status !== "DRAFT" && (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300"
-              onClick={() => {
-                setActiveVideoId(`sub-${summary.id}`);
-                navigate("/compliance/scanner");
-              }}
-            >
-              <ScanEye className="w-3.5 h-3.5" /> Open in Content Screener
-            </button>
-          )}
-          {summary.can_delete && (
-            <button type="button" className="ml-auto inline-flex items-center gap-1 font-semibold text-red-600 hover:underline" onClick={() => onDelete(summary)}>
-              <Trash2 className="w-3.5 h-3.5" /> Delete draft
-            </button>
-          )}
+          {actions && <div className="min-w-0">{actions}</div>}
         </div>
-      </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5" /> Approval is not publication. Calendar handoff does not publish content.
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300"
+          >
+            <History className="w-3.5 h-3.5" /> {showHistory ? "Hide audit trail" : "View audit trail"}
+          </button>
+        </div>
+        {showHistory && (
+          <div className="mt-3 rounded-lg border border-border/70 bg-card p-4">
+            <HistoryView id={summary.id} />
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -694,56 +877,40 @@ export default function SubmissionsListPage() {
   const waitingForMe = data.filter((s) => s.can_review).length;
 
   const panel = (s: SubmissionSummary) => (
-    <DetailPanel
+    <ReviewCard
       key={s.id}
       summary={s}
       labels={labels}
       userId={user?.id}
+      userName={user?.full_name}
       canComment={isReviewer}
       onSubmit={setConfirming}
       onDelete={setDeleting}
     />
   );
+  const [showFilters, setShowFilters] = useState(true);
 
   return (
     <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
       {/* Header */}
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Content Portal</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Portal</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {isReviewer ? "Review submitted content, run compliance checks, and manage approvals." : "Create content, send it for review, and follow it through to approval."}
-            {waitingForMe > 0 && (
-              <button type="button" onClick={() => setStage("IN_REVIEW")} className="ml-2 font-semibold text-blue-700 hover:underline dark:text-blue-300">
-                {waitingForMe} waiting for your review
-              </button>
-            )}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {canSeeAll && (
-            <div className="inline-flex rounded-lg border border-border/70 bg-card p-1" role="group" aria-label="Whose content">
-              {(
-                [
-                  ["mine", UserIcon, "My content"],
-                  ["all", Users, "Everyone's"],
-                ] as const
-              ).map(([v, Icon, label]) => (
-                <button
-                  key={v}
-                  type="button"
-                  aria-pressed={scope === v}
-                  onClick={() => setPrefs({ scope: v })}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    scope === v ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" /> {label}
-                </button>
-              ))}
-            </div>
+        <div className="flex flex-wrap items-center gap-4">
+          {waitingForMe > 0 && (
+            <button
+              type="button"
+              onClick={() => setStage("IN_REVIEW")}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline dark:text-blue-300"
+            >
+              <Clock className="w-4 h-4" /> {waitingForMe} waiting for your review
+            </button>
           )}
-          <Button asChild className="h-11 rounded-lg px-5 gap-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/20">
+          <Button asChild className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
             <Link to="/submissions/new">
               <Plus className="w-4 h-4" /> New Submission
             </Link>
@@ -751,8 +918,8 @@ export default function SubmissionsListPage() {
         </div>
       </header>
 
-      {/* Status tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+      {/* Status counts: one bar, each segment a filter */}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 sm:grid-cols-3 xl:grid-cols-6">
         {STAGE_TILES.map((t) => {
           const active = stage === t.value;
           return (
@@ -761,87 +928,126 @@ export default function SubmissionsListPage() {
               type="button"
               aria-pressed={active}
               onClick={() => setStage(active && t.value ? "" : t.value)}
-              className={`rounded-xl border px-4 py-3 text-left transition-all ${
-                active
-                  ? "border-blue-400 bg-blue-50 ring-1 ring-blue-300 dark:border-blue-500/60 dark:bg-blue-500/10 dark:ring-blue-500/40"
-                  : `border-border/60 hover:border-blue-200 hover:shadow-sm dark:hover:border-blue-500/40 ${t.tint}`
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
+                active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
               }`}
             >
-              <span className={`block text-xs font-medium ${active ? "text-blue-700 dark:text-blue-300" : "text-foreground/80"}`}>{t.label}</span>
-              <span className="mt-0.5 block text-2xl font-bold tabular-nums text-foreground">{isLoading ? "–" : stageCounts[t.value] ?? 0}</span>
+              <span className={`text-2xl font-semibold tabular-nums ${active ? "" : "text-foreground"}`}>{isLoading ? "–" : stageCounts[t.value] ?? 0}</span>
+              <span className={`text-xs ${active ? "font-semibold" : ""}`}>{t.label}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-start gap-6">
-        {/* List */}
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-col gap-2 lg:flex-row">
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search title, reference, caption or channel..."
-                aria-label="Search content"
-                className="h-10 rounded-lg pl-10 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:flex">
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="h-10 w-full lg:w-[150px] rounded-lg text-xs" aria-label="Platform">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                  {platformsInList.map((p) => (
-                    <SelectItem key={p} value={p} className="text-xs">
-                      {platformName(p)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="h-10 w-full lg:w-[140px] rounded-lg text-xs" aria-label="Brand">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                  {brandsInList.map((b) => (
-                    <SelectItem key={b} value={b} className="text-xs">
-                      {labels.brand(b)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
-                <SelectTrigger className="h-10 w-full lg:w-[160px] rounded-lg text-xs" aria-label="Status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                  {(Object.keys(STAGES) as Stage[]).map((st) => (
-                    <SelectItem key={st} value={st} className="text-xs">
-                      {STAGES[st].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
-                <SelectTrigger className="h-10 w-full lg:w-[170px] rounded-lg text-xs" aria-label="Sort by">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(SORT_LABELS) as SortBy[]).map((k) => (
-                    <SelectItem key={k} value={k} className="text-xs">
-                      {SORT_LABELS[k]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="flex items-start gap-5">
+        {/* Submissions */}
+        <div className={`${isWide ? "w-[320px] 2xl:w-[340px] shrink-0" : "min-w-0 flex-1"} space-y-3`}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">
+              Submissions <span className="font-normal text-muted-foreground">{visible.length}</span>
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              aria-pressed={showFilters}
+              aria-label={showFilters ? "Hide filters" : "Show filters"}
+              title={showFilters ? "Hide filters" : "Show filters"}
+              className={`rounded-md p-1.5 transition-colors ${showFilters ? "text-foreground" : "text-muted-foreground"} hover:bg-muted`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
+
+          {canSeeAll && (
+            <div className="grid grid-cols-2 rounded-lg bg-muted p-1" role="group" aria-label="Whose content">
+              {(
+                [
+                  ["mine", "My content"],
+                  ["all", "Everyone's"],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={scope === v}
+                  onClick={() => setPrefs({ scope: v })}
+                  className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+                    scope === v ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showFilters && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search content..."
+                  aria-label="Search content"
+                  className="h-9 rounded-lg pl-9 text-xs"
+                />
+              </div>
+              <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
+                <Select value={platform} onValueChange={setPlatform}>
+                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
+                    {platformsInList.map((p) => (
+                      <SelectItem key={p} value={p} className="text-xs">
+                        {platformName(p)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={brand} onValueChange={setBrand}>
+                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Brand">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs">All Brands</SelectItem>
+                    {brandsInList.map((b) => (
+                      <SelectItem key={b} value={b} className="text-xs">
+                        {labels.brand(b)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
+                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
+                    {(Object.keys(STAGES) as Stage[]).map((st) => (
+                      <SelectItem key={st} value={st} className="text-xs">
+                        {STAGES[st].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
+                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Sort by">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(SORT_LABELS) as SortBy[]).map((k) => (
+                      <SelectItem key={k} value={k} className="text-xs">
+                        {SORT_LABELS[k]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
           {filtersActive && (
             <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
               <X className="w-3.5 h-3.5" /> Clear filters
@@ -855,7 +1061,7 @@ export default function SubmissionsListPage() {
           ) : isError ? (
             <div className="py-16 text-center text-sm text-red-600">Couldn't load content: {(error as Error).message}</div>
           ) : visible.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border py-16 text-center space-y-3">
+            <div className="rounded-xl border border-dashed border-border py-12 text-center space-y-3">
               <Inbox className="w-8 h-8 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 {data.length === 0
@@ -875,25 +1081,28 @@ export default function SubmissionsListPage() {
               )}
             </div>
           ) : (
-            <div className="space-y-3">
-              {visible.map((s) => (
-                <ContentRow
-                  key={s.id}
-                  s={s}
-                  selected={selected?.id === s.id}
-                  labels={labels}
-                  showCreator={scope === "all"}
-                  onSelect={(item) => setSelectedId(item.id)}
-                />
-              ))}
-            </div>
+            <>
+              <div className={isWide ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
+                {visible.map((s) => (
+                  <SubmissionCard
+                    key={s.id}
+                    s={s}
+                    selected={selected?.id === s.id}
+                    labels={labels}
+                    showCreator={scope === "all"}
+                    onSelect={(item) => setSelectedId(item.id)}
+                  />
+                ))}
+              </div>
+              <p className="pt-1 text-center text-[11px] text-muted-foreground">
+                {visible.length === data.length ? `Showing all ${data.length} submissions` : `Showing ${visible.length} of ${data.length} submissions`}
+              </p>
+            </>
           )}
         </div>
 
-        {/* Detail panel (wide screens) */}
-        {isWide && selected && (
-          <aside className="sticky top-0 w-[42%] max-w-[620px] shrink-0 border-l border-border/70 pl-6">{panel(selected)}</aside>
-        )}
+        {/* Review card (wide screens) */}
+        {isWide && selected && <div className="min-w-0 flex-1">{panel(selected)}</div>}
       </div>
 
       {/* Detail sheet (narrower screens) */}

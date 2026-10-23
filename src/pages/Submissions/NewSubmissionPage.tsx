@@ -53,6 +53,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReadinessSummary from "@/components/submissions/ReadinessSummary";
+import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
@@ -70,6 +72,8 @@ import type {
   SubmissionStatus,
   SubmissionUpdate,
 } from "@/types/submission";
+import type { SentimentFinding } from "@/types/sentiment";
+import { replaceInEditable, replaceInText } from "@/lib/replaceQuote";
 
 // ---------------------------------------------------------------------------
 // Static presentation config (allowed values themselves come from the API)
@@ -143,8 +147,8 @@ const HASHTAGS: Record<string, string[]> = {
   ZENATECH: ["#ZenaTech", "#DroneTech", "#AI", "#Innovation"],
   ZENADRONE: ["#ZenaDrone", "#DefenseInnovation", "#AutonomousSystems", "#Drones"],
   DAAS: ["#DroneAsAService", "#DaaS", "#ZenaTech"],
-  ZOOOFFICE: ["#ZooOffice", "#FutureOfWork", "#ZenaTech"],
-  ZENASTUDIOS: ["#ZenaStudios", "#CreativeTech"],
+  SOFTWARE: ["#ZooOffice", "#FutureOfWork", "#SaaS", "#ZenaTech"],
+  CEO_THOUGHT_LEADERSHIP: ["#Leadership", "#DefenseTech", "#Autonomy", "#ZenaTech"],
 };
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -303,8 +307,9 @@ function CheckResult({ check }: { check: StoredCheck }) {
           )}
           {check.is_compliant ? "No issues found" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
         </span>
-        <span>Score {check.score}/100</span>
+        <span>{check.blocked ? "Blocked · " : ""}Score {check.score}/100</span>
       </div>
+      <ScoreBreakdown check={check} />
       {check.rules_checked != null && (
         <p className={`text-[11px] ${check.rules_checked === 0 ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
           {check.rules_checked === 0
@@ -563,13 +568,14 @@ export default function NewSubmissionPage() {
   const suggestRouting = (next: { brand?: string; audience?: string; accounts?: AccountOption[] }) => {
     const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
-    if (next.brand === "ZENATECH") rules.add("ZenaTech General");
+    // The software brands are ZenaTech businesses, so ZenaTech's general rules apply to them too.
+    if (next.brand === "ZENATECH" || next.brand === "SOFTWARE") rules.add("ZenaTech General");
     if (next.brand === "ZENADRONE" || next.audience === "DEFENSE") {
       rules.add("ZenaDrone Defense");
       route.add("Legal Review");
     }
     if (next.audience === "INVESTORS") route.add("Investor Relations Review");
-    if (next.accounts?.some((a) => a.is_ceo)) {
+    if (next.brand === "CEO_THOUGHT_LEADERSHIP" || next.accounts?.some((a) => a.is_ceo)) {
       rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
       route.add("Executive Review");
@@ -825,6 +831,23 @@ export default function NewSubmissionPage() {
     document.execCommand("insertText", false, `${text && !text.endsWith(" ") && !text.endsWith("\n") ? " " : ""}${tag} `);
     setCaption(editor.innerText || "");
     markEdited();
+  };
+
+  /** A sentiment finding's suggested revision, put in place of the wording it flagged. */
+  const applyRevision = (f: SentimentFinding) => {
+    if (!f.suggested_revision) return false;
+    if (f.source === "title") {
+      const next = replaceInText(title, f.quote, f.suggested_revision);
+      if (next == null) return false;
+      setTitle(next);
+      markEdited();
+      return true;
+    }
+    const editor = editorRef.current;
+    if (f.source !== "caption" || !editor || !replaceInEditable(editor, f.quote, f.suggested_revision)) return false;
+    setCaption(editor.innerText || "");
+    markEdited();
+    return true;
   };
 
   const charLimit = useMemo(() => {
@@ -1357,7 +1380,7 @@ export default function NewSubmissionPage() {
           {submissionId && (
             <Card className="py-0 gap-0 border-border/80 shadow-xs">
               <div className="px-4 sm:px-5 py-4">
-                <SentimentPanel submissionId={submissionId} />
+                <SentimentPanel submissionId={submissionId} onApplyRevision={applyRevision} />
               </div>
             </Card>
           )}
@@ -1465,7 +1488,10 @@ export default function NewSubmissionPage() {
                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking against the rulebook...
                   </p>
                 ) : check ? (
-                  <CheckResult check={check} />
+                  <div className="space-y-3">
+                    <ReadinessSummary check={check} submissionId={submissionId} />
+                    <CheckResult check={check} />
+                  </div>
                 ) : null}
               </div>
             )}

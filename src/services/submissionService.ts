@@ -1,7 +1,17 @@
 import { apiClient } from "@/services/apiClient";
-import type { AiUsage, SentimentAnalysis } from "@/types/sentiment";
+import type {
+  AiUsage,
+  FindingFeedback,
+  FindingVerdict,
+  SentimentAnalysis,
+  SentimentAssessment,
+  SentimentEvalCase,
+  SentimentLevel,
+} from "@/types/sentiment";
 import type {
   ContentType,
+  FlagDismissReason,
+  FlagReview,
   QueueTab,
   ReviewComment,
   ReviewCommentCreate,
@@ -83,6 +93,12 @@ export const submissionService = {
 
   comments: (id: string) => apiClient.get<ReviewComment[]>(`/api/submissions/${id}/comments`, quiet),
 
+  /** Reviewers' dismissals of automated compliance flags, on every version. */
+  flags: (id: string) => apiClient.get<FlagReview[]>(`/api/submissions/${id}/flags`, quiet),
+  dismissFlag: (id: string, ruleId: string, data: { reason: FlagDismissReason; note: string | null }) =>
+    apiClient.put<FlagReview>(`/api/submissions/${id}/flags/${ruleId}`, data, quiet),
+  restoreFlag: (id: string, ruleId: string) => apiClient.delete<null>(`/api/submissions/${id}/flags/${ruleId}`, quiet),
+
   addComment: (id: string, data: ReviewCommentCreate) =>
     apiClient.post<ReviewComment>(`/api/submissions/${id}/comments`, data, quiet),
 
@@ -104,6 +120,32 @@ export const submissionService = {
 
   /** Start (or reuse) a sentiment analysis of the current content. */
   requestSentiment: (id: string) => apiClient.post<SentimentAnalysis>(`/api/submissions/${id}/sentiment`, undefined, quiet),
+
+  /** Run an analysis stopped by Gemini's daily limit again once the limit resets. */
+  scheduleSentiment: (id: string, analysisId: string) =>
+    apiClient.post<SentimentAnalysis>(`/api/submissions/${id}/sentiment/${analysisId}/schedule`, undefined, quiet),
+
+  /** The analysed video's frame at a moment, for a finding (load it with authedFileUrl). */
+  sentimentFrameUrl: (id: string, analysisId: string, atSec: number) =>
+    `/api/submissions/${id}/sentiment/${analysisId}/frame?t=${Math.max(0, Math.round(atSec * 10) / 10)}`,
+
+  /** One of the images the analysis looked at (1 = the first; load it with authedFileUrl). */
+  sentimentImageUrl: (id: string, analysisId: string, index: number) => `/api/submissions/${id}/sentiment/${analysisId}/images/${index}`,
+
+  /** A reviewer's vote on one finding ("useful" / "not an issue"); returns every finding's tallies. */
+  rateFinding: (id: string, analysisId: string, findingId: string, verdict: FindingVerdict, note?: string) =>
+    apiClient.put<Record<string, FindingFeedback>>(
+      `/api/submissions/${id}/sentiment/${analysisId}/findings/${findingId}/feedback`,
+      { verdict, note: note || null },
+      quiet
+    ),
+
+  clearFindingRating: (id: string, analysisId: string, findingId: string) =>
+    apiClient.delete<Record<string, FindingFeedback>>(`/api/submissions/${id}/sentiment/${analysisId}/findings/${findingId}/feedback`, quiet),
+
+  /** Save an analysed post as a test case with the verdict the reviewer agrees is right. */
+  saveSentimentTestCase: (data: { analysis_id: string; expected_assessment: SentimentAssessment; expected_concern?: SentimentLevel | null; notes?: string }) =>
+    apiClient.post<SentimentEvalCase>("/api/sentiment/eval-cases", data, quiet),
 
   /** AI runs left in the rolling 24-hour window, optionally including one submission's own limit. */
   aiUsage: (submissionId?: string) =>
