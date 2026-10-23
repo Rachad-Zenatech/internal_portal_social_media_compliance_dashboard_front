@@ -82,6 +82,8 @@ export type StoredCheck = ComplianceCheckResponse & {
 };
 
 export interface Submission {
+  /** The saved check was made before the rulebook last changed. */
+  check_outdated?: boolean;
   id: string;
   reference_code: string;
   title: string;
@@ -117,6 +119,8 @@ export interface Submission {
   approver_names?: string[];
   /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
   can_approve?: boolean;
+  /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
+  open_critical_flags?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
   created_by?: string | null;
@@ -167,6 +171,8 @@ export interface SubmissionSummary {
   approver_names?: string[];
   /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
   can_approve?: boolean;
+  /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
+  open_critical_flags?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
 }
@@ -291,12 +297,18 @@ export interface ReviewQueueItem {
   current_version: number;
   submitted_at?: string | null;
   creator_name?: string | null;
-  video: SubmissionFile;
+  content_type?: ContentType | null;
+  /** The post's video, when it has one. */
+  video?: SubmissionFile | null;
+  /** Its images in order (carousel slides first, then extras such as a cover). */
+  images?: SubmissionFile[];
   can_review?: boolean;
   /** Final approvers named by an approval path; empty means any reviewer on the brand. */
   approver_names?: string[];
   /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
   can_approve?: boolean;
+  /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
+  open_critical_flags?: number;
   publish_at?: string | null;
   /** When the next step is due (see DueKind). */
   due_at?: string | null;
@@ -324,6 +336,32 @@ export interface VersionView {
   video?: SubmissionFile | null;
   check?: StoredCheck | null;
   review_job?: ReviewJob | null;
+}
+
+export type FlagDismissReason = "NEGATED" | "DIFFERENT_MEANING" | "ACCEPTABLE_IN_CONTEXT" | "RULE_TOO_BROAD" | "OTHER";
+
+/** A reviewer's dismissal of an automated compliance flag on one version. */
+export interface FlagReview {
+  rule_id: string;
+  rule_number: string;
+  version_number: number;
+  flagged_terms: string[];
+  traffic_light: string;
+  reason: FlagDismissReason;
+  reason_label: string;
+  note?: string | null;
+  decided_by_name?: string | null;
+  decided_at: string;
+}
+
+/** Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed. */
+export interface RuleFlagStats {
+  rule_number: string;
+  flagged: number;
+  dismissed: number;
+  dismissal_rate?: number | null;
+  top_reason?: string | null;
+  top_reason_label?: string | null;
 }
 
 /** The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days). */

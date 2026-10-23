@@ -56,6 +56,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PLATFORM_LABELS, type SocialPlatform } from '@/components/video/PlatformIcon';
 import { useAuth } from '@/lib/AuthContext';
+import ScoreBreakdown from '@/components/submissions/ScoreBreakdown';
+import type { RuleFlagStats } from '@/types/submission';
 import { submissionService } from '@/services/submissionService';
 import {
   complianceService,
@@ -65,6 +67,7 @@ import {
   type ComplianceCheckResponse,
   type TrafficLight,
   type ComplianceSeverity,
+  type RuleSelfTest,
 } from '@/services/complianceService';
 
 const CATEGORIES = [
@@ -145,6 +148,54 @@ function nextRuleNumber(rules: ComplianceRule[]) {
   return `Rule ${max + 1}`;
 }
 
+/** How noisy a rule is in practice: how often it flagged submitted content and how often reviewers dismissed it. */
+function FlagStatsNote({ stats }: { stats?: RuleFlagStats }) {
+  if (!stats || stats.flagged === 0) return null;
+  const rate = stats.dismissal_rate ?? 0;
+  const noisy = stats.dismissed > 0 && rate >= 0.5;
+  return (
+    <p className={`text-[11px] ${noisy ? 'font-medium text-amber-700 dark:text-amber-300' : 'text-muted-foreground'}`}>
+      Flagged {stats.flagged} submission{stats.flagged === 1 ? '' : 's'}
+      {stats.dismissed > 0
+        ? ` · ${stats.dismissed} dismissed as false alarms (${Math.round(rate * 100)}%)${stats.top_reason_label ? `, mostly "${stats.top_reason_label.toLowerCase()}"` : ''}`
+        : ' · none dismissed'}
+      {noisy && '. Its phrases may be too broad: add exceptions or tighten them.'}
+    </p>
+  );
+}
+
+/** What a rule's own examples show: all handled, or which ones it misses or wrongly flags. */
+function SelfTestNote({ test }: { test?: RuleSelfTest }) {
+  if (!test || !test.testable) return null;
+  const misses = test.results.filter((r) => !r.ok);
+  if (!misses.length) {
+    return (
+      <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+        ✓ Handles its {test.results.length} example{test.results.length === 1 ? '' : 's'} correctly
+      </p>
+    );
+  }
+  return (
+    <details className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+      <summary className="cursor-pointer font-semibold">
+        {misses.length} of {test.results.length} example{test.results.length === 1 ? '' : 's'} not handled
+      </summary>
+      <ul className="mt-1.5 space-y-1">
+        {misses.map((r, i) => (
+          <li key={i}>
+            {r.expected === 'FLAG' ? 'Not caught: ' : `Wrongly flagged by ${r.matched_terms.map((t) => `"${t}"`).join(', ')}: `}
+            <span className="italic">"{r.example}"</span>
+            {r.expected === 'FLAG' && !r.quoted && (
+              <span className="block opacity-80">This example may describe imagery rather than wording; if so, reviewers check it, not phrases.</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1.5 opacity-80">Add a phrase that catches it, or an exception, then save to re-test.</p>
+    </details>
+  );
+}
+
 export default function ComplianceRulesPage() {
   const queryClient = useQueryClient();
   const { hasPermission } = useAuth();
@@ -173,6 +224,7 @@ export default function ComplianceRulesPage() {
   const [formProhibitedTerms, setFormProhibitedTerms] = useState('');
   const [formRequiredDisclaimers, setFormRequiredDisclaimers] = useState('');
   const [formDisclaimerTriggers, setFormDisclaimerTriggers] = useState('');
+  const [formExceptions, setFormExceptions] = useState('');
   const [formAllowedExamples, setFormAllowedExamples] = useState('');
   const [formProhibitedExamples, setFormProhibitedExamples] = useState('');
   const [formRemediation, setFormRemediation] = useState('');
@@ -215,6 +267,24 @@ export default function ComplianceRulesPage() {
     [options]
   );
   const scopeLabel = (key: ScopeKey, value: string) => scopeOptions[key].find((o) => o.value === value)?.label ?? value;
+
+  // Each rule run against its own examples; refreshed whenever rules change.
+  const { data: selfTests = [] } = useQuery({
+    queryKey: ['compliance-rules', 'self-test'],
+    queryFn: complianceService.selfTest,
+    staleTime: 0,
+  });
+  const selfTestById = useMemo(() => new Map(selfTests.map((t) => [t.rule_id, t])), [selfTests]);
+  const testable = selfTests.filter((t) => t.testable);
+  const failing = testable.filter((t) => !t.passed);
+
+  // How often each rule flagged submitted content, and how often reviewers dismissed it as a false alarm.
+  const { data: flagStats = [] } = useQuery({
+    queryKey: ['compliance-rules', 'flag-stats'],
+    queryFn: complianceService.flagStats,
+    staleTime: 0,
+  });
+  const flagStatsByNumber = useMemo(() => new Map(flagStats.map((f) => [f.rule_number, f])), [flagStats]);
 
   const { data: stats } = useQuery({
     queryKey: ['compliance-stats'],
@@ -300,6 +370,7 @@ export default function ComplianceRulesPage() {
     setFormProhibitedTerms(rule.prohibited_terms.join(', '));
     setFormRequiredDisclaimers(rule.required_disclaimers.join('\n'));
     setFormDisclaimerTriggers((rule.disclaimer_triggers ?? []).join(', '));
+    setFormExceptions((rule.exception_terms ?? []).join(', '));
     setFormAllowedExamples(rule.allowed_examples || '');
     setFormProhibitedExamples(rule.prohibited_examples || '');
     setFormRemediation(rule.remediation_guidance || '');
@@ -323,6 +394,7 @@ export default function ComplianceRulesPage() {
     setFormProhibitedTerms('');
     setFormRequiredDisclaimers('');
     setFormDisclaimerTriggers('');
+    setFormExceptions('');
     setFormAllowedExamples('');
     setFormProhibitedExamples('');
     setFormRemediation('');
@@ -350,6 +422,10 @@ export default function ComplianceRulesPage() {
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
+    const exceptionsArray = formExceptions
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     if (editingRule) {
       updateMutation.mutate({
@@ -364,6 +440,7 @@ export default function ComplianceRulesPage() {
           prohibited_terms: prohibitedArray,
           required_disclaimers: disclaimersArray,
           disclaimer_triggers: triggersArray,
+          exception_terms: exceptionsArray,
           // Empty strings (not undefined) so clearing a field actually clears it.
           allowed_examples: formAllowedExamples.trim(),
           prohibited_examples: formProhibitedExamples.trim(),
@@ -383,6 +460,7 @@ export default function ComplianceRulesPage() {
         prohibited_terms: prohibitedArray,
         required_disclaimers: disclaimersArray,
         disclaimer_triggers: triggersArray,
+        exception_terms: exceptionsArray,
         allowed_examples: formAllowedExamples.trim() || undefined,
         prohibited_examples: formProhibitedExamples.trim() || undefined,
         remediation_guidance: formRemediation.trim() || undefined,
@@ -458,6 +536,30 @@ export default function ComplianceRulesPage() {
           </div>
         }
       />
+
+      {/* Rule self-test summary */}
+      {testable.length > 0 && (
+        <div
+          className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-4 py-3 text-xs ${
+            failing.length
+              ? 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100'
+          }`}
+        >
+          <span className="font-semibold">
+            Rule self-test: {testable.length - failing.length} of {testable.length} rules handle their own examples correctly.
+          </span>
+          {failing.length > 0 && (
+            <span>
+              Check {failing.map((t) => t.rule_number).join(', ')}: their "not acceptable" examples aren't caught, or "acceptable" ones are flagged.
+              Details are on each rule.
+            </span>
+          )}
+          <span className="text-[11px] opacity-80">
+            {selfTests.length - testable.length} rule{selfTests.length - testable.length === 1 ? '' : 's'} have no phrases or example wording to test (imagery rules are checked by reviewers).
+          </span>
+        </div>
+      )}
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -721,6 +823,9 @@ export default function ComplianceRulesPage() {
                         </div>
                       )}
 
+                      <SelfTestNote test={selfTestById.get(rule.id)} />
+                      <FlagStatsNote stats={flagStatsByNumber.get(rule.rule_number)} />
+
                       {rule.required_disclaimers && rule.required_disclaimers.length > 0 && (
                         <div className="p-2 rounded bg-muted/30 border border-border/60 text-[11px] italic text-muted-foreground">
                           <strong>Required Label:</strong> "{rule.required_disclaimers[0]}"
@@ -899,6 +1004,7 @@ export default function ComplianceRulesPage() {
               </CardHeader>
 
               <CardContent className="space-y-4 pt-2">
+                <ScoreBreakdown check={checkResult} />
                 {checkResult.recommendations.map((rec, i) => (
                   <div
                     key={i}
@@ -1094,6 +1200,22 @@ export default function ComplianceRulesPage() {
               />
               <p className="text-[10px] text-muted-foreground">
                 The scanner flags content containing any of these phrases. Case, hyphens and punctuation are ignored. Use * for up to three words in between, e.g. "endorsed by * department of defense".
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="exception-terms" className="text-xs font-semibold">
+                Exceptions (comma separated, optional)
+              </Label>
+              <Input
+                id="exception-terms"
+                placeholder="e.g. not combat proven, army of volunteers"
+                value={formExceptions}
+                onChange={(e) => setFormExceptions(e.target.value)}
+                className="text-xs font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Wording that contains a flagged phrase but means something else. A match inside one of these isn't flagged; a match anywhere else still is.
               </p>
             </div>
 

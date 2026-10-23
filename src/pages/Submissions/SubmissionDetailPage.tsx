@@ -378,6 +378,7 @@ export default function SubmissionDetailPage() {
             can_review: s.can_review,
             can_approve: s.can_approve,
             approver_names: s.approver_names,
+            open_critical_flags: s.open_critical_flags,
             score: s.latest_check?.score ?? null,
           }}
         />

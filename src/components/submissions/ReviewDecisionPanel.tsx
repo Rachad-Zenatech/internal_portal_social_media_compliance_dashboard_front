@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow, isPast } from "date-fns";
-import { AlertTriangle, CalendarPlus, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ export interface ReviewTarget {
   /** False when final approval is with someone else (see approver_names). Defaults to allowed. */
   can_approve?: boolean;
   approver_names?: string[];
+  /** Critical flags nobody has dismissed: approving waits until they're fixed or dismissed. */
+  open_critical_flags?: number;
   score?: number | null;
 }
 
@@ -50,10 +52,12 @@ export default function ReviewDecisionPanel({
 }: {
   target: ReviewTarget;
   compact?: boolean;
-  /** "bar": only the three buttons in a row (the Content Portal side panel), with the same confirm dialog. */
-  layout?: "panel" | "bar";
+  /** "bar": only the buttons (stacked for a narrow side panel). "inline": only the buttons, in one wrapping row
+   * (the Content Portal's approval footer). Both use the same confirm dialog. */
+  layout?: "panel" | "bar" | "inline";
 }) {
-  const mayApprove = target.can_approve !== false;
+  const openCritical = target.open_critical_flags ?? 0;
+  const mayApprove = target.can_approve !== false && openCritical === 0;
   const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
   const { comments } = useReviewComments(target.id);
@@ -94,12 +98,12 @@ export default function ReviewDecisionPanel({
     }
   };
 
-  const bar = layout === "bar";
+  const bar = layout === "bar" || layout === "inline";
   const barOutline =
     "h-11 rounded-lg text-sm font-semibold border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10";
 
   return (
-    <div className={bar ? "" : `rounded-xl border border-blue-500/30 bg-blue-500/5 ${compact ? "p-3" : "p-4"} space-y-3`}>
+    <div className={bar ? "" : `@container rounded-xl border border-border/70 bg-muted/30 ${compact ? "p-3" : "p-4"} space-y-3`}>
       {!bar && (
         <div>
           <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
@@ -114,6 +118,12 @@ export default function ReviewDecisionPanel({
           {target.due_kind === "REVIEW" && <DueBadge dueAt={target.due_at} kind="REVIEW" className="mt-1.5" />}
         </div>
       )}
+      {openCritical > 0 && (
+        <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          {openCritical} critical flag{openCritical === 1 ? " is" : "s are"} still open. Request changes to fix{" "}
+          {openCritical === 1 ? "it" : "them"}, or dismiss {openCritical === 1 ? "it" : "them"} as a false alarm in the flags list, before approving.
+        </p>
+      )}
       {target.approver_names && target.approver_names.length > 0 && (
         <p className={`text-[11px] ${target.can_approve === false ? "rounded-md bg-amber-500/10 px-2 py-1.5 text-amber-900 dark:text-amber-100" : "text-muted-foreground"}`}>
           {target.can_approve === false
@@ -121,27 +131,46 @@ export default function ReviewDecisionPanel({
             : `Final approval: ${target.approver_names.join(", ")}`}
         </p>
       )}
-      {bar ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      {layout === "inline" ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("changes")}>
+            <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
+          </Button>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("schedule")} disabled={!mayApprove}>
+            <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
+          </Button>
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
+            onClick={() => start("now")}
+            disabled={!target.platforms.length || !mayApprove}
+          >
+            <Check className="w-3.5 h-3.5" /> Approve content
+          </Button>
+        </div>
+      ) : bar ? (
+        // The main action gets its own row so no label is cut off, however narrow the side panel is.
+        <div className="grid grid-cols-2 gap-2">
+          <Button className="col-span-2 h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
+            Approve & publish
+          </Button>
           <Button variant="outline" className={barOutline} onClick={() => start("changes")}>
             Request changes
           </Button>
           <Button variant="outline" className={barOutline} onClick={() => start("schedule")} disabled={!mayApprove}>
             Add to calendar
           </Button>
-          <Button className="h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
-            Approve & publish
-          </Button>
         </div>
       ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <Button size="sm" className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
+      // Three across when the panel is wide enough; otherwise the main action takes its own row.
+      <div className="grid grid-cols-2 @lg:grid-cols-3 gap-2">
+        <Button size="sm" className="col-span-2 @lg:col-span-1 text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
           <CalendarPlus className="w-3.5 h-3.5" /> Approve & schedule
         </Button>
         <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
           <Send className="w-3.5 h-3.5" /> Approve & post now
         </Button>
-        <Button size="sm" variant="outline" className="text-xs gap-1.5 border-amber-500/40 text-amber-800 hover:bg-amber-500/10 dark:text-amber-200" onClick={() => start("changes")}>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("changes")}>
           <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
         </Button>
       </div>
@@ -197,7 +226,7 @@ export default function ReviewDecisionPanel({
             </Button>
             <Button
               size="sm"
-              className={`text-xs gap-1.5 ${mode === "changes" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+              className={`text-xs gap-1.5 ${mode === "changes" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-700 hover:bg-blue-800 text-white"}`}
               disabled={
                 decide.isPending ||
                 (mode === "changes" && !notes.trim() && openComments === 0) ||

@@ -93,8 +93,11 @@ export default function ReviewCommentsPanel({
   onSeek,
   placeholder = "Add a comment...",
   emptyText = "No comments yet.",
+  showHeader = true,
 }: {
   submissionId: string;
+  /** Hide the "Review comments" heading when the page already titles the section. */
+  showHeader?: boolean;
   /** Reviewers and the creator. */
   canComment: boolean;
   /** When set (video playing), a comment can be pinned to this moment. */
@@ -119,7 +122,7 @@ export default function ReviewCommentsPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className={showHeader ? "flex items-center justify-between" : "hidden"}>
         <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           <MessageSquare className="w-3.5 h-3.5" /> Review comments
         </p>

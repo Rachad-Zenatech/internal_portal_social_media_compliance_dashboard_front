@@ -1,4 +1,5 @@
 import { apiClient } from '@/services/apiClient';
+import type { RuleFlagStats } from '@/types/submission';
 
 export type ComplianceSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TrafficLight = 'RED' | 'YELLOW' | 'GREEN';
@@ -16,6 +17,8 @@ export interface ComplianceRule {
   required_disclaimers: string[];
   /** Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers. */
   disclaimer_triggers: string[];
+  /** Phrases that cancel a match inside them, e.g. "not combat proven". */
+  exception_terms?: string[];
   allowed_examples?: string | null;
   prohibited_examples?: string | null;
   remediation_guidance?: string | null;
@@ -45,6 +48,7 @@ export interface ComplianceRuleCreate {
   prohibited_terms: string[];
   required_disclaimers: string[];
   disclaimer_triggers?: string[];
+  exception_terms?: string[];
   allowed_examples?: string;
   prohibited_examples?: string;
   remediation_guidance?: string;
@@ -68,6 +72,7 @@ export interface ComplianceRuleUpdate {
   prohibited_terms?: string[];
   required_disclaimers?: string[];
   disclaimer_triggers?: string[];
+  exception_terms?: string[];
   allowed_examples?: string;
   prohibited_examples?: string;
   remediation_guidance?: string;
@@ -95,17 +100,49 @@ export interface ComplianceViolation {
   kind?: 'PROHIBITED_TERM' | 'MISSING_DISCLAIMER';
   /** Any one of these satisfies the rule. */
   missing_disclaimers?: string[];
+  /** Points this finding took off the score (missing on checks saved before penalties were recorded). */
+  penalty?: number;
+  /** Set when its words were already counted for a stricter rule; it then costs 0. */
+  counted_with?: string | null;
 }
 
 export interface ComplianceCheckResponse {
   is_compliant: boolean;
   traffic_light: TrafficLight;
   score: number;
+  /** A critical finding blocks publication; the score is capped so it can't look like a pass. */
+  blocked?: boolean;
+  score_cap?: number | null;
+  /** 100 minus every penalty, before the cap. */
+  raw_score?: number;
+  /** The rulebook as of this check. */
+  rulebook_version?: string | null;
   violations_count: number;
   violations: ComplianceViolation[];
   recommendations: string[];
   /** How many active rules applied to the content's scope (missing on checks saved before scoping). */
   rules_checked?: number;
+}
+
+/** One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not. */
+export interface RuleExampleResult {
+  example: string;
+  expected: 'FLAG' | 'CLEAR';
+  flagged: boolean;
+  matched_terms: string[];
+  ok: boolean;
+  /** Unquoted example text may describe imagery rather than give wording. */
+  quoted: boolean;
+}
+
+export interface RuleSelfTest {
+  rule_id: string;
+  rule_number: string;
+  title: string;
+  /** False when the rule has no phrases, or no example wording to test. */
+  testable: boolean;
+  passed: boolean;
+  results: RuleExampleResult[];
 }
 
 /** Who and where the content is for; only rules whose scope matches are run. */
@@ -177,6 +214,12 @@ export const complianceService = {
   updateRule: (id: string, data: ComplianceRuleUpdate) => apiClient.put<ComplianceRule>('/api/compliance/rules/' + id, data),
 
   deleteRule: (id: string) => apiClient.delete<void>('/api/compliance/rules/' + id),
+
+  /** Every rule run against its own examples. */
+  selfTest: () => apiClient.get<RuleSelfTest[]>('/api/compliance/rules/self-test'),
+
+  /** Per rule: flags on submitted versions and how many reviewers dismissed. */
+  flagStats: () => apiClient.get<RuleFlagStats[]>('/api/compliance/rules/flag-stats'),
 
   checkCompliance: (data: ComplianceCheckRequest) =>
     apiClient.post<ComplianceCheckResponse>('/api/compliance/check', data),
