@@ -28,7 +28,6 @@ import {
   Send,
 } from "lucide-react";
 
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
@@ -50,9 +49,9 @@ function stateOf(item: CalendarItem, published: Record<string, PublishRecord>): 
 }
 
 const STATE_STYLE: Record<ItemState, { chip: string; label: string; dot: string }> = {
-  READY: { chip: "border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100", label: "Ready to publish", dot: "bg-emerald-500" },
-  PARTIAL: { chip: "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-100", label: "Partly published", dot: "bg-amber-500" },
-  DONE: { chip: "border-blue-500/40 bg-blue-500/10 text-blue-900 dark:text-blue-100", label: "Drafts created", dot: "bg-blue-500" },
+  READY: { chip: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200", label: "Ready to publish", dot: "bg-emerald-500" },
+  PARTIAL: { chip: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200", label: "Partly published", dot: "bg-amber-500" },
+  DONE: { chip: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200", label: "Drafts created", dot: "bg-blue-500" },
 };
 
 function Thumb({ item, className = "" }: { item: CalendarItem; className?: string }) {
@@ -83,7 +82,11 @@ function AgendaItem({
   return (
     <div
       className={`rounded-xl border p-3 space-y-2.5 transition-colors ${
-        highlighted ? "border-primary/60 ring-2 ring-primary/15" : overdue ? "border-red-500/40" : "border-border/80"
+        highlighted
+          ? "border-blue-500 bg-blue-50/40 ring-1 ring-blue-500/30 dark:border-blue-500/70 dark:bg-blue-500/10"
+          : overdue
+          ? "border-red-300 dark:border-red-500/40"
+          : "border-border/70 bg-card"
       }`}
     >
       <div className="flex gap-3">
@@ -112,11 +115,11 @@ function AgendaItem({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-        <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-px font-semibold ${STATE_STYLE[state].chip}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${STATE_STYLE[state].chip}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${STATE_STYLE[state].dot}`} /> {STATE_STYLE[state].label}
         </span>
         {overdue && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-1.5 py-px font-semibold text-red-700 dark:text-red-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300">
             <AlertTriangle className="w-3 h-3" /> Past its publish time
           </span>
         )}
@@ -149,7 +152,7 @@ function AgendaItem({
                   <CheckCircle2 className="w-3.5 h-3.5" /> View
                 </Button>
               ) : (
-                <Button size="sm" className="h-7 px-2.5 text-[11px] gap-1" onClick={() => navigate(`/content-calendar/publish/${item.id}/${p}`)}>
+                <Button size="sm" className="h-7 px-2.5 text-[11px] gap-1 bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/content-calendar/publish/${item.id}/${p}`)}>
                   <Send className="w-3.5 h-3.5" /> Publish
                 </Button>
               )}
@@ -227,50 +230,51 @@ export default function ContentCalendarPage() {
   };
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-12 animate-in fade-in duration-300">
-      <DashboardHeader
-        title="Content Calendar"
-        subtitle="Approved content by publish date. Publish creates a draft on each platform, so the post gets a final look before it goes live."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {hasSamples && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[11px] font-semibold text-violet-700 dark:text-violet-300">
-                <FlaskConical className="w-3.5 h-3.5" /> Sample data · publishing is simulated
-              </span>
-            )}
-            {Object.keys(published).length > 0 && (
-              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={clearPublished} title="Clear simulated publishes">
-                <RotateCcw className="w-3.5 h-3.5" /> Reset demo
-              </Button>
-            )}
-          </div>
-        }
-      />
+    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+      {/* Header */}
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Calendar</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Approved content by publish date. Publish creates a draft on each platform, so the post gets a final look before it goes live.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {hasSamples && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+              <FlaskConical className="w-3.5 h-3.5" /> Sample data · publishing is simulated
+            </span>
+          )}
+          {Object.keys(published).length > 0 && (
+            <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5 font-semibold" onClick={clearPublished} title="Clear simulated publishes">
+              <RotateCcw className="w-3.5 h-3.5" /> Reset demo
+            </Button>
+          )}
+        </div>
+      </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+      {/* Month at a glance: one bar, like the Content Portal's status counts */}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 lg:grid-cols-4">
         {[
-          { label: "Approved this month", value: stats.approved, icon: CalendarDays, tone: "" },
-          { label: "Waiting to publish", value: stats.ready, icon: Send, tone: "" },
-          { label: "Drafts created", value: stats.drafted, icon: CalendarCheck2, tone: "" },
-          {
-            label: "Past publish time",
-            value: stats.overdue,
-            icon: AlertTriangle,
-            tone: stats.overdue ? "border-red-500/40 bg-red-500/5 text-red-700 dark:text-red-300" : "",
-          },
-        ].map(({ label, value, icon: Icon, tone }) => (
-          <Card key={label} className={`py-3 px-3 gap-1 border-border/80 shadow-xs ${tone}`}>
-            <p className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {label} <Icon className="w-4 h-4" />
-            </p>
-            <p className="text-2xl font-bold tabular-nums">{value}</p>
-          </Card>
+          { label: "Approved this month", value: stats.approved, icon: CalendarDays, alert: false },
+          { label: "Waiting to publish", value: stats.ready, icon: Send, alert: false },
+          { label: "Drafts created", value: stats.drafted, icon: CalendarCheck2, alert: false },
+          { label: "Past publish time", value: stats.overdue, icon: AlertTriangle, alert: stats.overdue > 0 },
+        ].map(({ label, value, icon: Icon, alert }) => (
+          <div
+            key={label}
+            className={`flex items-center gap-3 px-4 py-3.5 ${alert ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300" : "bg-card text-muted-foreground"}`}
+          >
+            <span className={`text-2xl font-semibold tabular-nums ${alert ? "" : "text-foreground"}`}>{value}</span>
+            <span className={`text-xs ${alert ? "font-semibold" : ""}`}>{label}</span>
+            <Icon className="ml-auto w-4 h-4 opacity-60" />
+          </div>
         ))}
       </div>
 
       {/* The agenda only sits beside the calendar on wide screens; on laptops it goes underneath so the month keeps its width. */}
       <div className="grid grid-cols-1 wide:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_380px] gap-4 items-start">
-        <Card className="min-w-0 py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+        <Card className="min-w-0 py-0 gap-0 border-border/70 shadow-xs overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 px-3 sm:px-4 py-3">
             <div className="flex items-center gap-1">
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setMonth((m) => subMonths(m, 1))} aria-label="Previous month">
@@ -293,7 +297,7 @@ export default function ContentCalendarPage() {
                   title={p === "all" ? "All platforms" : platformName(p)}
                   onClick={() => setPlatform(p)}
                   className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors ${
-                    platform === p ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground"
+                    platform === p ? "border-blue-700 bg-blue-700 text-white" : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {p === "all" ? "All" : <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
@@ -329,12 +333,12 @@ export default function ContentCalendarPage() {
                     }
                   }}
                   className={`min-w-0 min-h-[64px] sm:min-h-[112px] border-b border-r border-border/50 p-1 sm:p-1.5 text-left cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
-                    isSelected ? "bg-primary/5" : "hover:bg-muted/40"
+                    isSelected ? "bg-blue-50/70 dark:bg-blue-500/10" : "hover:bg-muted/40"
                   } ${isSameMonth(day, month) ? "" : "bg-muted/20 text-muted-foreground/60"}`}
                 >
                   <span
                     className={`inline-grid place-items-center w-6 h-6 rounded-full text-[11px] font-semibold ${
-                      isToday(day) ? "bg-primary text-primary-foreground" : isSelected ? "ring-1 ring-primary text-primary" : ""
+                      isToday(day) ? "bg-blue-700 text-white" : isSelected ? "ring-1 ring-blue-600 text-blue-700 dark:text-blue-300" : ""
                     }`}
                   >
                     {format(day, "d")}
@@ -393,9 +397,12 @@ export default function ContentCalendarPage() {
           </div>
         </Card>
 
-        <Card ref={agendaRef} className="min-w-0 scroll-mt-4 py-0 gap-0 border-border/80 shadow-xs wide:sticky wide:top-4">
+        <Card ref={agendaRef} className="min-w-0 scroll-mt-4 py-0 gap-0 border-border/70 shadow-xs wide:sticky wide:top-4">
           <div className="border-b border-border/70 px-4 py-3">
-            <p className="text-sm font-semibold">{format(selectedDay, "EEEE, MMMM d")}</p>
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+              <CalendarDays className="w-3.5 h-3.5" /> Day agenda
+            </p>
+            <p className="mt-1 text-base font-semibold">{format(selectedDay, "EEEE, MMMM d")}</p>
             <p className="text-[11px] text-muted-foreground">
               {selected.length ? `${selected.length} approved post${selected.length === 1 ? "" : "s"}` : "Nothing scheduled"}
             </p>
@@ -413,7 +420,7 @@ export default function ContentCalendarPage() {
                     key={i.id}
                     type="button"
                     onClick={() => selectDay(new Date(i.publishAt), i.id)}
-                    className="w-full flex items-center gap-2.5 rounded-lg border border-border/70 p-2 text-left hover:border-primary/40"
+                    className="w-full flex items-center gap-2.5 rounded-lg border border-border/70 p-2 text-left hover:border-blue-300 hover:shadow-sm"
                   >
                     <Thumb item={i} className="w-14 aspect-video shrink-0" />
                     <span className="min-w-0">

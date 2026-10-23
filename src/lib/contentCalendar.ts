@@ -154,7 +154,7 @@ const SAMPLES: Sample[] = [
   },
   {
     day: 4, time: [14, 0], title: "DaaS inspection services", contentType: "IMAGE", platforms: ["FACEBOOK"],
-    account: DAAS_FB, brand: "DaaS", score: 100, approvedBy: "Marketing Review", poster: "desert",
+    account: DAAS_FB, brand: "Drone as a Service", score: 100, approvedBy: "Marketing Review", poster: "desert",
     caption: "Roof, solar and infrastructure inspections by drone, without scaffolding or downtime. Book a consultation with our DaaS team.",
   },
   {
