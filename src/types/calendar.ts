@@ -13,6 +13,7 @@ export interface CalendarItem {
   platforms: string[];
   account: AccountOption | null;
   publishAt: string;
+  /** Brand code, from the same brands list as New Submission (e.g. "ZENATECH"). */
   brand: string;
   score: number | null;
   approvedBy?: string | null;

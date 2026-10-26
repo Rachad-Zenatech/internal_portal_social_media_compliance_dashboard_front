@@ -30,6 +30,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import DemoPoster from "@/components/video/DemoPoster";
 import { CoverThumb } from "@/components/submissions/PostPreview";
@@ -71,11 +72,13 @@ function AgendaItem({
   published,
   overdue,
   highlighted,
+  brandName,
 }: {
   item: CalendarItem;
   published: Record<string, PublishRecord>;
   overdue: boolean;
   highlighted: boolean;
+  brandName?: string | null;
 }) {
   const navigate = useNavigate();
   const state = stateOf(item, published);
@@ -96,6 +99,7 @@ function AgendaItem({
           <p className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-1.5">
             <span className="font-mono">{item.referenceCode}</span>
             <span>· {format(new Date(item.publishAt), "h:mm a")}</span>
+            {brandName && <span>· {brandName}</span>}
             {item.score != null && <span>· Check {item.score}/100</span>}
           </p>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] min-w-0">
@@ -169,6 +173,7 @@ export default function ContentCalendarPage() {
   const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [platform, setPlatform] = useState("all");
+  const [brand, setBrand] = useState("all");
   const published = usePublished();
 
   // Approved content is company-wide for people who can see everyone's content; otherwise their own.
@@ -184,7 +189,18 @@ export default function ContentCalendarPage() {
     const real = submissions.map(fromSubmission).filter((i): i is CalendarItem => Boolean(i));
     return [...real, ...sampleItems()].sort((a, b) => a.publishAt.localeCompare(b.publishAt));
   }, [submissions]);
-  const visible = useMemo(() => (platform === "all" ? items : items.filter((i) => i.platforms.includes(platform))), [items, platform]);
+  // Brands come from the same list as New Submission and the Content Portal, in the same order.
+  const { data: options } = useQuery({
+    queryKey: ["submission-options"],
+    queryFn: submissionService.getOptions,
+    staleTime: 5 * 60_000,
+  });
+  const brands = options?.brands ?? [];
+  const brandName = (code: string) => brands.find((b) => b.code === code)?.name ?? (code || null);
+  const visible = useMemo(
+    () => items.filter((i) => (platform === "all" || i.platforms.includes(platform)) && (brand === "all" || i.brand === brand)),
+    [items, platform, brand]
+  );
 
   const days = useMemo(
     () =>
@@ -256,18 +272,28 @@ export default function ContentCalendarPage() {
       {/* Month at a glance: one bar, like the Content Portal's status counts */}
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 lg:grid-cols-4">
         {[
-          { label: "Approved this month", value: stats.approved, icon: CalendarDays, alert: false },
-          { label: "Waiting to publish", value: stats.ready, icon: Send, alert: false },
-          { label: "Drafts created", value: stats.drafted, icon: CalendarCheck2, alert: false },
-          { label: "Past publish time", value: stats.overdue, icon: AlertTriangle, alert: stats.overdue > 0 },
-        ].map(({ label, value, icon: Icon, alert }) => (
+          { label: "Approved this month", value: stats.approved, icon: CalendarDays, tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300", alert: false },
+          { label: "Waiting to publish", value: stats.ready, icon: Send, tone: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300", alert: false },
+          { label: "Drafts created", value: stats.drafted, icon: CalendarCheck2, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300", alert: false },
+          {
+            label: "Past publish time",
+            value: stats.overdue,
+            icon: AlertTriangle,
+            tone: stats.overdue > 0 ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+            alert: stats.overdue > 0,
+          },
+        ].map(({ label, value, icon: Icon, tone, alert }) => (
           <div
             key={label}
             className={`flex items-center gap-3 px-4 py-3.5 ${alert ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300" : "bg-card text-muted-foreground"}`}
           >
-            <span className={`text-2xl font-semibold tabular-nums ${alert ? "" : "text-foreground"}`}>{value}</span>
-            <span className={`text-xs ${alert ? "font-semibold" : ""}`}>{label}</span>
-            <Icon className="ml-auto w-4 h-4 opacity-60" />
+            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tone}`}>
+              <Icon className="w-[18px] h-[18px]" />
+            </span>
+            <span className="min-w-0">
+              <span className={`block text-2xl font-semibold leading-tight tabular-nums ${alert ? "" : "text-foreground"}`}>{value}</span>
+              <span className={`block truncate text-xs ${alert ? "font-semibold" : ""}`}>{label}</span>
+            </span>
           </div>
         ))}
       </div>
@@ -288,7 +314,20 @@ export default function ContentCalendarPage() {
                 Today
               </Button>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap items-center gap-1">
+              <Select value={brand} onValueChange={setBrand}>
+                <SelectTrigger size="sm" className="h-7 w-[170px] rounded-full text-[11px] font-semibold" aria-label="Brand">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Brands</SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b.code} value={b.code} className="text-xs">
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {["all", ...platforms].map((p) => (
                 <button
                   key={p}
@@ -410,7 +449,7 @@ export default function ContentCalendarPage() {
           {/* Under the calendar there's room for two posts side by side; beside it, one column that scrolls. */}
           <div className="p-3 grid gap-3 tablet:grid-cols-2 wide:grid-cols-1 items-start wide:max-h-[calc(100vh-220px)] wide:overflow-y-auto">
             {selected.map((item) => (
-              <AgendaItem key={item.id} item={item} published={published} overdue={isOverdue(item)} highlighted={item.id === highlightId} />
+              <AgendaItem key={item.id} item={item} published={published} overdue={isOverdue(item)} highlighted={item.id === highlightId} brandName={brandName(item.brand)} />
             ))}
             {selected.length === 0 && upcoming.length > 0 && (
               <div className="space-y-2 tablet:col-span-2 wide:col-span-1">

@@ -107,13 +107,13 @@ function account(id: string, name: string, platform: string, handle: string, ext
   };
 }
 
-const SHAUN_LINKEDIN = account("sample-shaun-li", "Shaun – CEO", "LINKEDIN", "shaun-ceo", { is_ceo: true });
-const SHAUN_X = account("sample-shaun-x", "Shaun – CEO", "X", "shaun_zena", { is_ceo: true });
-const ZENATECH_LINKEDIN = account("sample-zt-li", "ZenaTech", "LINKEDIN", "zenatech");
-const ZENADRONE_X = account("sample-zd-x", "ZenaDrone", "X", "zenadrone");
-const ZENATECH_TIKTOK = account("sample-zt-tt", "ZenaTech", "TIKTOK", "zenatech");
-const ZENADRONE_YT = account("sample-zd-yt", "ZenaDrone", "YOUTUBE", "zenadrone");
-const ZENATECH_IG = account("sample-zt-ig", "ZenaTech", "INSTAGRAM", "zenatech");
+const SHAUN_LINKEDIN = account("sample-shaun-li", "Shaun – CEO", "LINKEDIN", "shaun-ceo", { is_ceo: true, brand_code: "CEO_THOUGHT_LEADERSHIP" });
+const SHAUN_X = account("sample-shaun-x", "Shaun – CEO", "X", "shaun_zena", { is_ceo: true, brand_code: "CEO_THOUGHT_LEADERSHIP" });
+const ZENATECH_LINKEDIN = account("sample-zt-li", "ZenaTech", "LINKEDIN", "zenatech", { brand_code: "ZENATECH" });
+const ZENADRONE_X = account("sample-zd-x", "ZenaDrone", "X", "zenadrone", { brand_code: "ZENADRONE" });
+const ZENATECH_TIKTOK = account("sample-zt-tt", "ZenaTech", "TIKTOK", "zenatech", { brand_code: "ZENATECH" });
+const ZENADRONE_YT = account("sample-zd-yt", "ZenaDrone", "YOUTUBE", "zenadrone", { brand_code: "ZENADRONE" });
+const ZENATECH_IG = account("sample-zt-ig", "ZenaTech", "INSTAGRAM", "zenatech", { brand_code: "ZENATECH" });
 const DAAS_FB = account("sample-daas-fb", "DaaS (Drone as a Service)", "FACEBOOK", "dronesasaservice");
 
 // `day`/`time` place a post relative to today; `inHours` places today's posts relative to now, so they're always
@@ -124,62 +124,62 @@ type Sample = Omit<CalendarItem, "id" | "source" | "publishAt" | "referenceCode"
 const SAMPLES: Sample[] = [
   {
     day: -3, time: [9, 0], title: "Counter-UAS economics", contentType: "SOCIAL_POST", platforms: ["LINKEDIN"],
-    account: SHAUN_LINKEDIN, brand: "ZenaDrone", score: 100, approvedBy: "Compliance Review", poster: "dusk",
+    account: SHAUN_LINKEDIN, brand: "CEO_THOUGHT_LEADERSHIP", score: 100, approvedBy: "Compliance Review", poster: "dusk",
     caption: "A cheap threat can impose an expensive response. Winning the engagement while losing the cost exchange isn't a sustainable model.\n\nWe believe lower-cost autonomous interception will be part of the answer. That challenge is informing ZenaDrone's counter-UAS development work.",
   },
   {
     day: 3, time: [11, 30], title: "Field test recap (development test)", contentType: "VIDEO", platforms: ["YOUTUBE", "TIKTOK"],
-    account: ZENADRONE_YT, brand: "ZenaDrone", score: 95, approvedBy: "Compliance Review", poster: "desert",
+    account: ZENADRONE_YT, brand: "ZENADRONE", score: 95, approvedBy: "Compliance Review", poster: "desert",
     caption: "ZenaDrone 1000 during a development test focused on payload handling. Development-stage system; capabilities shown are part of ongoing testing.",
   },
   {
     inHours: 2, title: "Decision speed, not more sensors", contentType: "SOCIAL_POST", platforms: ["LINKEDIN", "X"],
-    account: SHAUN_LINKEDIN, brand: "ZenaTech", score: 100, approvedBy: "Executive Review", poster: "night",
+    account: SHAUN_LINKEDIN, brand: "CEO_THOUGHT_LEADERSHIP", score: 100, approvedBy: "Executive Review", poster: "night",
     caption: "The next ISR advantage may not come from collecting more. It may come from deciding faster.\n\nZenaDrone is developing autonomous capabilities intended to help turn sensor inputs into more timely mission awareness.",
   },
   {
     inHours: 5, title: "Quarterly webinar reminder", contentType: "SOCIAL_POST", platforms: ["LINKEDIN"],
-    account: ZENATECH_LINKEDIN, brand: "ZenaTech", score: 100, approvedBy: "Investor Relations Review", poster: "desert",
+    account: ZENATECH_LINKEDIN, brand: "ZENATECH", score: 100, approvedBy: "Investor Relations Review", poster: "desert",
     caption: "Join ZenaTech's quarterly update webinar this Thursday. Registration link in the comments.",
   },
   {
     day: 1, time: [12, 0], title: "Behind the build: assembly line", contentType: "VIDEO", platforms: ["TIKTOK", "INSTAGRAM"],
-    account: ZENATECH_TIKTOK, brand: "ZenaTech", score: 90, approvedBy: "Marketing Review", poster: "dusk",
+    account: ZENATECH_TIKTOK, brand: "ZENATECH", score: 90, approvedBy: "Marketing Review", poster: "dusk",
     caption: "A look inside the workshop where our development-stage drones come together. #ZenaTech #Engineering #Drones",
   },
   {
     day: 2, time: [9, 30], title: "Contested logistics", contentType: "SOCIAL_POST", platforms: ["X"],
-    account: ZENADRONE_X, brand: "ZenaDrone", score: 100, approvedBy: "Compliance Review", poster: "night",
+    account: ZENADRONE_X, brand: "ZENADRONE", score: 100, approvedBy: "Compliance Review", poster: "night",
     caption: "The most consequential autonomous aircraft may be the one carrying blood, batteries or critical supplies. That's why we're developing unmanned logistics.",
   },
   {
     day: 4, time: [14, 0], title: "DaaS inspection services", contentType: "IMAGE", platforms: ["FACEBOOK"],
-    account: DAAS_FB, brand: "Drone as a Service", score: 100, approvedBy: "Marketing Review", poster: "desert",
+    account: DAAS_FB, brand: "DAAS", score: 100, approvedBy: "Marketing Review", poster: "desert",
     caption: "Roof, solar and infrastructure inspections by drone, without scaffolding or downtime. Book a consultation with our DaaS team.",
   },
   {
     day: 6, time: [10, 0], title: "Swarm coordination", contentType: "SOCIAL_POST", platforms: ["LINKEDIN", "X"],
-    account: SHAUN_X, brand: "ZenaDrone", score: 95, approvedBy: "Executive Review", poster: "night",
+    account: SHAUN_X, brand: "CEO_THOUGHT_LEADERSHIP", score: 95, approvedBy: "Executive Review", poster: "night",
     caption: "Scale without coordination is congestion. The real advantage is resilient autonomy under pressure. Our work explores how autonomous systems could coordinate in degraded environments.",
   },
   {
     day: 8, time: [16, 0], title: "Trusted industrial base", contentType: "SOCIAL_POST", platforms: ["LINKEDIN"],
-    account: SHAUN_LINKEDIN, brand: "ZenaDrone", score: 100, approvedBy: "Executive Review", poster: "dusk",
+    account: SHAUN_LINKEDIN, brand: "CEO_THOUGHT_LEADERSHIP", score: 100, approvedBy: "Executive Review", poster: "dusk",
     caption: "Drone sovereignty isn't only where final assembly happens. It's whether the supply chain can be trusted, secured and scaled.",
   },
   {
     day: 11, time: [11, 0], title: "Conceptual mission visualization", contentType: "VIDEO", platforms: ["YOUTUBE_SHORTS", "INSTAGRAM"],
-    account: ZENATECH_IG, brand: "ZenaDrone", score: 90, approvedBy: "Legal Review", poster: "night",
+    account: ZENATECH_IG, brand: "ZENATECH", score: 90, approvedBy: "Legal Review", poster: "night",
     caption: "Conceptual visualization - depicts a potential future use, not an actual military operation, deployment or endorsement.",
   },
   {
     day: 15, time: [9, 0], title: "Hiring: flight test engineers", contentType: "SOCIAL_POST", platforms: ["LINKEDIN"],
-    account: ZENATECH_LINKEDIN, brand: "ZenaTech", score: 100, approvedBy: "Marketing Review", poster: "desert",
+    account: ZENATECH_LINKEDIN, brand: "ZENATECH", score: 100, approvedBy: "Marketing Review", poster: "desert",
     caption: "We're growing our flight test team. If you like turning prototypes into evidence, we'd like to meet you.",
   },
   {
     day: 20, time: [13, 0], title: "Autonomy and human authority", contentType: "VIDEO", platforms: ["YOUTUBE", "LINKEDIN"],
-    account: ZENADRONE_YT, brand: "ZenaDrone", score: 95, approvedBy: "Compliance Review", poster: "dusk",
+    account: ZENADRONE_YT, brand: "ZENADRONE", score: 95, approvedBy: "Compliance Review", poster: "dusk",
     caption: "Autonomy works best with clear human authority and safeguards. A short explainer on how we think about the operator's role.",
   },
 ];
