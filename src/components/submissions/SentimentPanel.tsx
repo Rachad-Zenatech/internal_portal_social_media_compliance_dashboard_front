@@ -7,6 +7,7 @@ import {
   BookOpen,
   CalendarClock,
   Check,
+  ChevronDown,
   CheckCircle2,
   Copy,
   FlaskConical,
@@ -36,6 +37,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
+import TopicTrend from "@/components/submissions/TopicTrend";
+import { trendSignals } from "@/components/submissions/topicTrendSignals";
+import { usePublicMood } from "@/hooks/usePublicMood";
+import type { PublicMood } from "@/types/publicMood";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -518,18 +523,62 @@ function PrecedentsView({ precedents }: { precedents: SentimentPrecedent[] }) {
   );
 }
 
-function ResultView({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: number) => void; ctx?: FindingContext }) {
+const SEVERITY_RANK: Record<string, number> = { HIGH: 0, MODERATE: 1, LOW: 2 };
+const TOP_FINDINGS = 3;
+
+/** Most serious first; the first TOP_FINDINGS go in the summary, the rest under "More detail". */
+const bySeverity = (findings: SentimentFinding[]) => [...findings].sort((x, y) => SEVERITY_RANK[x.severity] - SEVERITY_RANK[y.severity]);
+
+/**
+ * The short answer: will it be perceived well? The verdict, what the topic numbers say, and the most serious
+ * wording to fix (with the suggested fix one click away).
+ */
+function PerceptionSummary({ r, mood, ctx, onSeek }: { r: SentimentResult; mood?: PublicMood | null; ctx?: FindingContext; onSeek?: (sec: number) => void }) {
   const a = ASSESSMENT[r.overall_assessment];
-  const c = r.controversy;
-  const comparison = ctx?.analysis.comparison;
+  const signals = trendSignals(mood);
+  const top = bySeverity(r.findings).slice(0, TOP_FINDINGS);
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className={`rounded-lg border p-2.5 ${a.tone}`}>
         <p className="flex items-center gap-1.5 text-sm font-semibold">
           <a.Icon className="w-4 h-4" /> {a.label}
         </p>
         <p className="text-xs mt-1 leading-relaxed opacity-90">{r.summary}</p>
       </div>
+      {signals.length > 0 && (
+        <ul className="space-y-1">
+          {signals.map((sig) => (
+            <li
+              key={sig.text}
+              className={`flex items-start gap-1.5 text-[11px] ${sig.tone === "risk" ? "text-amber-800 dark:text-amber-200" : "text-emerald-800 dark:text-emerald-200"}`}
+            >
+              {sig.tone === "risk" ? <TrendingDown className="w-3 h-3 mt-px shrink-0" /> : <TrendingUp className="w-3 h-3 mt-px shrink-0" />}
+              <span>
+                {sig.text}
+                {mood?.is_mock && <span className="text-muted-foreground"> (sample data)</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {top.length > 0 && (
+        <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
+          {top.map((f, i) => (
+            <FindingCard key={f.id ?? i} f={f} onSeek={onSeek} ctx={ctx} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultView({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: number) => void; ctx?: FindingContext }) {
+  // The most serious findings are already in the summary above.
+  const more = bySeverity(r.findings).slice(TOP_FINDINGS);
+  const c = r.controversy;
+  const comparison = ctx?.analysis.comparison;
+  return (
+    <div className="space-y-3">
 
       {comparison && <ComparisonView c={comparison} r={r} />}
 
@@ -580,13 +629,13 @@ function ResultView({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: num
 
       {r.precedents && r.precedents.length > 0 && <PrecedentsView precedents={r.precedents} />}
 
-      {r.findings.length > 0 && (
+      {more.length > 0 && (
         <div className="space-y-2">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <MessageSquareQuote className="w-3.5 h-3.5" /> Flagged language ({r.findings.length})
+            <MessageSquareQuote className="w-3.5 h-3.5" /> More flagged language ({more.length})
           </p>
           <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-2">
-            {r.findings.map((f, i) => (
+            {more.map((f, i) => (
               <FindingCard key={f.id ?? i} f={f} onSeek={onSeek} ctx={ctx} />
             ))}
           </div>
@@ -634,6 +683,7 @@ export default function SentimentPanel({
   canRun: canRunProp = true,
   onSeek,
   onApplyRevision,
+  beforeAnalyse,
   className = "",
 }: {
   submissionId?: string | null;
@@ -644,14 +694,34 @@ export default function SentimentPanel({
   onSeek?: (sec: number) => void;
   /** In the editor: put a finding's suggested revision in place of its wording; false if the wording isn't there. */
   onApplyRevision?: (f: SentimentFinding) => boolean;
+  /** In the editor: saves the draft and runs the rulebook check, so one click runs every check. Resolves false if it
+   * couldn't run, and then nothing else does. */
+  beforeAnalyse?: () => Promise<boolean>;
   className?: string;
 }) {
   const { analysis, isLoading, run, scheduleAfterReset, rate, saveTestCase, usage } = useSentiment(submissionId, version);
   const { hasPermission } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   const [testCaseOpen, setTestCaseOpen] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const canRun = canRunProp && version == null;
-  const running = isSentimentRunning(analysis) || run.isPending;
+  // The topics' current mood only means something for the current content, not an earlier version.
+  const topics = usePublicMood(submissionId, version == null);
+  const running = isSentimentRunning(analysis) || run.isPending || preparing;
+  /** All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis. */
+  const analyseAll = async () => {
+    if (beforeAnalyse) {
+      setPreparing(true);
+      try {
+        if (!(await beforeAnalyse())) return;
+      } finally {
+        setPreparing(false);
+      }
+    }
+    topics.refresh();
+    run.mutate();
+  };
   const ctx: FindingContext | undefined =
     analysis && submissionId
       ? {
@@ -674,9 +744,12 @@ export default function SentimentPanel({
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-violet-500" /> Content sentiment
+            <Sparkles className="w-3.5 h-3.5 text-violet-500" /> Sentiment analysis
           </p>
-          <p className="text-[10px] text-muted-foreground">Advisory · how the wording may read, not a prediction of reaction</p>
+          <p className="text-[10px] text-muted-foreground">
+            Advisory · how its topics are doing online, and how the post is likely to be perceived
+            {beforeAnalyse ? ". Analyse also runs the rulebook check." : ""}
+          </p>
         </div>
         {canRun && submissionId && (
           <div className="flex flex-col items-end gap-0.5 shrink-0">
@@ -685,8 +758,14 @@ export default function SentimentPanel({
               variant="outline"
               className="h-7 px-2 text-[11px] gap-1"
               disabled={running || outOfRuns}
-              onClick={() => run.mutate()}
-              title={outOfRuns ? "Daily AI limit reached" : undefined}
+              onClick={analyseAll}
+              title={
+                outOfRuns
+                  ? "Daily AI limit reached"
+                  : beforeAnalyse
+                  ? "Runs the rulebook check, the topic trend and the perception check together"
+                  : undefined
+              }
             >
               {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
               {analysis ? "Re-run" : "Analyse"}
@@ -704,6 +783,23 @@ export default function SentimentPanel({
           The daily AI limit for sentiment analysis has been reached
           {companyCapped ? " for the whole company" : ""}.
           {resetsIn ? ` More runs free up in ${resetsIn}.` : ""} Unchanged content still shows its last result.
+        </p>
+      )}
+
+      {submissionId && version == null && (
+        <TopicTrend
+          mood={topics.mood}
+          isLoading={topics.isLoading}
+          canEdit={canRunProp}
+          busy={topics.dismissTopic.isPending}
+          onDismiss={(topicId) => topics.dismissTopic.mutate({ topicId })}
+          onRestore={(topicId) => topics.dismissTopic.mutate({ topicId, restore: true })}
+        />
+      )}
+
+      {submissionId && (
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground border-t border-border/60 pt-3">
+          <Users className="w-3.5 h-3.5 text-violet-500" /> How it'll be perceived
         </p>
       )}
 
@@ -768,11 +864,26 @@ export default function SentimentPanel({
               High-stakes post (CEO or investor-facing), so it was analysed with the stronger model.
             </p>
           )}
-          <ResultView r={result} onSeek={onSeek} ctx={ctx} />
-          {analysis.context_used && analysis.context_used.length > 0 && (
-            <p className="text-[11px] text-muted-foreground">
-              <span className="font-semibold text-foreground">Context used:</span> {analysis.context_used.join(", ")}
-            </p>
+          <PerceptionSummary r={result} mood={version == null ? topics.mood : null} ctx={ctx} onSeek={onSeek} />
+          <button
+            type="button"
+            onClick={() => setShowDetail((o) => !o)}
+            aria-expanded={showDetail}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDetail ? "rotate-180" : ""}`} />
+            {showDetail ? "Less detail" : "More detail"}
+            <span className="font-normal">(tone, brand voice, audiences, controversy{result.findings.length > TOP_FINDINGS ? ", more flagged wording" : ""})</span>
+          </button>
+          {showDetail && (
+            <>
+              <ResultView r={result} onSeek={onSeek} ctx={ctx} />
+              {analysis.context_used && analysis.context_used.length > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">Context used:</span> {analysis.context_used.join(", ")}
+                </p>
+              )}
+            </>
           )}
           <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/60 pt-2">
             Editorial assessment, not legal clearance; it doesn't replace the rulebook check or reviewer approval.{" "}
@@ -784,6 +895,9 @@ export default function SentimentPanel({
             {result.unverified_findings_removed > 0 &&
               ` · ${result.unverified_findings_removed} finding${result.unverified_findings_removed === 1 ? "" : "s"} dropped because the quote wasn't in the content`}
           </p>
+          {result.model_note && (
+            <p className="text-[10px] text-amber-700 dark:text-amber-300">{result.model_note}</p>
+          )}
           {isReviewer && (
             <button
               type="button"
@@ -805,6 +919,7 @@ export default function SentimentPanel({
           )}
         </>
       ) : null}
+
     </div>
   );
 }

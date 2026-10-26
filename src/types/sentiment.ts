@@ -74,6 +74,9 @@ export interface SentimentResult {
   precedents?: SentimentPrecedent[];
   guidelines_used: string[];
   unverified_findings_removed: number;
+  /** The model that did the analysis, and why, when it wasn't the first choice (e.g. its daily limit was used up). */
+  model_used?: string | null;
+  model_note?: string | null;
 }
 
 export interface SentimentAnalysis {
@@ -154,4 +157,4 @@ export interface AiFeatureUsage {
   submission_used?: number;
   submission_limit?: number;
 }
-export type AiUsage = Record<"SENTIMENT" | "TRANSCRIPTION", AiFeatureUsage>;
+export type AiUsage = Record<"SENTIMENT" | "TRANSCRIPTION" | "PUBLIC_MOOD" | "CAPTION", AiFeatureUsage>;
