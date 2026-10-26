@@ -7,16 +7,19 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
+  CalendarCheck,
   CheckCircle2,
   ChevronRight,
   ClipboardCheck,
   Clock,
   FilePen,
   History,
-  Inbox,
+  Hourglass,
+  Layers,
   Info,
   Loader2,
   MessageSquare,
+  MessageSquareWarning,
   MoreHorizontal,
   Plus,
   ScanEye,
@@ -24,10 +27,12 @@ import {
   Send,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   User as UserIcon,
   X,
   XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,14 +60,15 @@ import {
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { CoverThumb } from "@/components/submissions/PostPreview";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
-import ReadinessSummary from "@/components/submissions/ReadinessSummary";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
+import { QUICK_CREATE } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
@@ -91,13 +97,14 @@ const STAGES: Record<Stage, { label: string; pill: string }> = {
   REJECTED: { label: "Rejected", pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" },
 };
 
-const STAGE_TILES: { value: "" | Stage; label: string; tint: string }[] = [
-  { value: "", label: "All Content", tint: "bg-card" },
-  { value: "DRAFT", label: "Drafts", tint: "bg-card" },
-  { value: "IN_REVIEW", label: "In Review", tint: "bg-orange-50/80 dark:bg-orange-500/5" },
-  { value: "CHANGES_REQUESTED", label: "Changes Requested", tint: "bg-red-50/80 dark:bg-red-500/5" },
-  { value: "APPROVED", label: "Approved", tint: "bg-emerald-50/80 dark:bg-emerald-500/5" },
-  { value: "SCHEDULED", label: "Scheduled", tint: "bg-violet-50/80 dark:bg-violet-500/5" },
+// Each stage keeps one colour everywhere: the same as the status pills and the dashboard.
+const STAGE_TILES: { value: "" | Stage; label: string; Icon: LucideIcon; tone: string }[] = [
+  { value: "", label: "All Content", Icon: Layers, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+  { value: "DRAFT", label: "Drafts", Icon: FilePen, tone: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" },
+  { value: "IN_REVIEW", label: "In Review", Icon: Hourglass, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+  { value: "CHANGES_REQUESTED", label: "Changes Requested", Icon: MessageSquareWarning, tone: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
+  { value: "APPROVED", label: "Approved", Icon: CheckCircle2, tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
+  { value: "SCHEDULED", label: "Scheduled", Icon: CalendarCheck, tone: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" },
 ];
 
 type SortBy = "priority" | "updated" | "publish" | "score";
@@ -306,6 +313,8 @@ function SubmissionCard({
 // ---------------------------------------------------------------------------
 
 function ComplianceView({ sub }: { sub: Submission }) {
+  const { creatorView } = useAuth();
+  const canReview = Boolean(sub.can_review) && !creatorView;
   const check = sub.latest_check;
   if (!check) {
     return <p className="text-xs text-muted-foreground">Not checked yet. The rulebook check runs when it's sent for review.</p>;
@@ -321,10 +330,11 @@ function ComplianceView({ sub }: { sub: Submission }) {
           ) : (
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           )}
-          {check.is_compliant ? "No issues found" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
+          {check.is_compliant ? "No issues found in the text" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
         </span>
         <span className="tabular-nums">{check.score}/100</span>
       </div>
+      <CheckCoverage check={check} />
       {sub.check_outdated && (
         <p className="rounded-md bg-muted/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
           {sub.status === "APPROVED" || sub.status === "REJECTED"
@@ -334,7 +344,7 @@ function ComplianceView({ sub }: { sub: Submission }) {
       )}
       <ScoreBreakdown check={check} />
       {/* Reviewers make their call on each flag: a false alarm is dismissed with a reason (the score stays). */}
-      {sub.can_review && check.violations.some((v) => v.rule_id) && (
+      {canReview && check.violations.some((v) => v.rule_id) && (
         <div className="space-y-2 border-t border-border/60 pt-3">
           {check.violations.map((v) => (
             <div key={v.rule_id} className="space-y-1 text-xs">
@@ -468,6 +478,7 @@ function ReviewCard({
   const [currentTime, setCurrentTime] = useState<number | undefined>(undefined);
   const [openCheck, setOpenCheck] = useState<"compliance" | "sentiment" | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const { creatorView } = useAuth();
   const { data: sub, isLoading } = useQuery({
     queryKey: ["submission", summary.id],
     queryFn: () => submissionService.get(summary.id),
@@ -522,7 +533,7 @@ function ReviewCard({
   let footerTitle = STAGES[stage]?.label ?? "Status";
   let footerNote = "";
   let actions: React.ReactNode = null;
-  if (sub?.can_review) {
+  if (sub?.can_review && !creatorView) {
     footerTitle = "Human approval";
     footerNote = "Your decision is recorded in the audit trail.";
     actions = (
@@ -543,6 +554,7 @@ function ReviewCard({
           approver_names: sub.approver_names,
           open_critical_flags: sub.open_critical_flags,
           score: sub.latest_check?.score ?? null,
+          manual_rules: sub.latest_check?.manual_review_rules,
         }}
       />
     );
@@ -684,7 +696,6 @@ function ReviewCard({
           <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
           <p className="text-[11px] text-muted-foreground">Analysis does not approve or publish content.</p>
         </div>
-        <ReadinessSummary check={check} submissionId={summary.id} className="mt-3" />
         <div className="mt-3 grid gap-3 @xl:grid-cols-2">
           <CheckCard
             icon={ShieldCheck}
@@ -802,7 +813,7 @@ export default function SubmissionsListPage() {
   const isWide = useIsWide();
   const submit = useSubmitForReview();
   // Super admins, Content Managers and reviewers can switch to everyone's content.
-  const { hasPermission, user } = useAuth();
+  const { hasPermission, user, creatorView } = useAuth();
   const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_APPROVE");
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
 
@@ -842,9 +853,15 @@ export default function SubmissionsListPage() {
     return counts;
   }, [data]);
 
-  // Filter options come from what's actually in the list.
+  // Platform options come from what's actually in the list.
   const platformsInList = useMemo(() => [...new Set(data.flatMap((s) => s.platforms))].sort(), [data]);
-  const brandsInList = useMemo(() => [...new Set(data.map((s) => s.brand_code).filter(Boolean) as string[])].sort(), [data]);
+  // The same brands, in the same order, as the brand picker on New Submission; plus any retired brand still on
+  // older content, so it can be found.
+  const brandsInList = useMemo(() => {
+    const managed = (options?.brands ?? []).map((b) => b.code);
+    const older = [...new Set(data.map((s) => s.brand_code).filter((c): c is string => Boolean(c) && !managed.includes(c!)))].sort();
+    return [...managed, ...older];
+  }, [options, data]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -874,7 +891,7 @@ export default function SubmissionsListPage() {
     setPlatform("all");
     setBrand("all");
   };
-  const waitingForMe = data.filter((s) => s.can_review).length;
+  const waitingForMe = creatorView ? 0 : data.filter((s) => s.can_review).length;
 
   const panel = (s: SubmissionSummary) => (
     <ReviewCard
@@ -932,8 +949,13 @@ export default function SubmissionsListPage() {
                 active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
               }`}
             >
-              <span className={`text-2xl font-semibold tabular-nums ${active ? "" : "text-foreground"}`}>{isLoading ? "–" : stageCounts[t.value] ?? 0}</span>
-              <span className={`text-xs ${active ? "font-semibold" : ""}`}>{t.label}</span>
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${t.tone}`}>
+                <t.Icon className="w-[18px] h-[18px]" />
+              </span>
+              <span className="min-w-0">
+                <span className={`block text-2xl font-semibold leading-tight tabular-nums ${active ? "" : "text-foreground"}`}>{isLoading ? "–" : stageCounts[t.value] ?? 0}</span>
+                <span className={`block truncate text-xs ${active ? "font-semibold" : ""}`}>{t.label}</span>
+              </span>
             </button>
           );
         })}
@@ -1061,23 +1083,36 @@ export default function SubmissionsListPage() {
           ) : isError ? (
             <div className="py-16 text-center text-sm text-red-600">Couldn't load content: {(error as Error).message}</div>
           ) : visible.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border py-12 text-center space-y-3">
-              <Inbox className="w-8 h-8 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                {data.length === 0
-                  ? scope === "all"
-                    ? "No one has created any content yet."
-                    : "You haven't created any content yet."
-                  : "Nothing matches these filters."}
-              </p>
+            <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center">
               {data.length === 0 ? (
-                <Button size="sm" variant="outline" asChild className="text-xs">
-                  <Link to="/submissions/new">Start a submission</Link>
-                </Button>
+                <>
+                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                    <Sparkles className="w-6 h-6" />
+                  </span>
+                  <p className="mt-3 text-sm font-semibold text-foreground">
+                    {scope === "all" ? "No one has created any content yet" : "Your first post starts here"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Pick what you're making. We'll check it against the rulebook as you go.</p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                    {QUICK_CREATE.map(({ type, label, Icon }) => (
+                      <Link
+                        key={type}
+                        to={`/submissions/new?type=${type}`}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-blue-300 hover:text-blue-700 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
+                      >
+                        <Icon className="w-3.5 h-3.5" /> {label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
               ) : (
-                <Button size="sm" variant="outline" className="text-xs" onClick={clearFilters}>
-                  Clear filters
-                </Button>
+                <>
+                  <Search className="w-8 h-8 mx-auto text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">Nothing matches these filters.</p>
+                  <Button size="sm" variant="outline" className="mt-3 text-xs" onClick={clearFilters}>
+                    Clear filters
+                  </Button>
+                </>
               )}
             </div>
           ) : (

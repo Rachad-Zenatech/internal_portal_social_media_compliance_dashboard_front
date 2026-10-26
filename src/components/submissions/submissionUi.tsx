@@ -41,6 +41,7 @@ export const MISSING_LABELS: Record<string, string> = {
   reviewer_route: "reviewer route",
   main_file: "main content file",
   content: "content file or caption",
+  caption: "caption",
   publish_at: "a publish date in the future",
 };
 

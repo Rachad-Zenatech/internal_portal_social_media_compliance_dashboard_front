@@ -5,12 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
-  AlertTriangle,
   Bold,
   Building2,
   CalendarDays,
   Check,
-  CheckCircle2,
   ChevronDown,
   ClipboardList,
   CloudUpload,
@@ -38,7 +36,6 @@ import {
   Users,
   Video,
   X,
-  XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -52,9 +49,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
-import ReadinessSummary from "@/components/submissions/ReadinessSummary";
-import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
@@ -65,15 +60,12 @@ import { ApiError } from "@/services/helper";
 import type {
   AccountOption,
   ContentType,
-  StoredCheck,
   Submission,
   SubmissionFile,
   SubmissionFileKind,
   SubmissionStatus,
   SubmissionUpdate,
 } from "@/types/submission";
-import type { SentimentFinding } from "@/types/sentiment";
-import { replaceInEditable, replaceInText } from "@/lib/replaceQuote";
 
 // ---------------------------------------------------------------------------
 // Static presentation config (allowed values themselves come from the API)
@@ -285,54 +277,6 @@ function SummaryRow({ icon: Icon, label, children }: { icon: LucideIcon; label: 
   );
 }
 
-function CheckResult({ check }: { check: StoredCheck }) {
-  return (
-    <div className="space-y-2">
-      <div
-        className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-semibold ${
-          check.traffic_light === "RED"
-            ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
-            : check.traffic_light === "YELLOW"
-            ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-            : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-        }`}
-      >
-        <span className="flex items-center gap-1.5">
-          {check.traffic_light === "RED" ? (
-            <XCircle className="w-4 h-4" />
-          ) : check.traffic_light === "YELLOW" ? (
-            <AlertTriangle className="w-4 h-4" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4" />
-          )}
-          {check.is_compliant ? "No issues found" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
-        </span>
-        <span>{check.blocked ? "Blocked · " : ""}Score {check.score}/100</span>
-      </div>
-      <ScoreBreakdown check={check} />
-      {check.rules_checked != null && (
-        <p className={`text-[11px] ${check.rules_checked === 0 ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
-          {check.rules_checked === 0
-            ? "No rules apply to the chosen rule sets yet, so nothing was checked."
-            : `Checked against ${check.rules_checked} rule${check.rules_checked === 1 ? "" : "s"} for the chosen rule sets, brand, audience, region and platforms.`}
-        </p>
-      )}
-      {check.violations.map((v) => (
-        <div key={v.rule_id} className="rounded-lg border border-border/70 p-2.5 space-y-1">
-          <p className="text-xs font-semibold text-foreground">
-            {v.rule_number} · {v.title}
-          </p>
-          <p className="text-[11px] text-muted-foreground">Flagged: {v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>
-          {v.remediation_guidance && <p className="text-[11px] text-foreground/80">Fix: {v.remediation_guidance}</p>}
-        </div>
-      ))}
-      {check.checked_at && (
-        <p className="text-[10px] text-muted-foreground">Checked {format(new Date(check.checked_at), "MMM d, h:mm a")}</p>
-      )}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -355,7 +299,11 @@ export default function NewSubmissionPage() {
   const idRef = useRef<string | null>(routeId);
 
   // Form fields
-  const [contentType, setContentType] = useState<ContentType>("VIDEO");
+  // A new post can start on a type picked elsewhere (e.g. the dashboard's quick-create buttons: ?type=CAROUSEL).
+  const [contentType, setContentType] = useState<ContentType>(() => {
+    const picked = searchParams.get("type");
+    return CONTENT_TYPES.find((c) => c.value === picked)?.value ?? "VIDEO";
+  });
   const [title, setTitle] = useState("");
   const [brand, setBrand] = useState("");
   // Publishing accounts, primary first.
@@ -372,8 +320,6 @@ export default function NewSubmissionPage() {
   const [files, setFiles] = useState<SubmissionFile[]>([]);
   const [uploading, setUploading] = useState<{ key: string; name: string; kind: SubmissionFileKind }[]>([]);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [check, setCheck] = useState<StoredCheck | null>(null);
-  const [checking, setChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [replacingMain, setReplacingMain] = useState(false);
   const [dueAt, setDueAt] = useState<string | null>(null);
@@ -386,6 +332,7 @@ export default function NewSubmissionPage() {
   const [serverMissing, setServerMissing] = useState<string[]>([]);
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const [canvaOpen, setCanvaOpen] = useState(false);
+  const [suggesterOpen, setSuggesterOpen] = useState(false);
   const [reimporting, setReimporting] = useState(false);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -428,7 +375,6 @@ export default function NewSubmissionPage() {
     setStatus(s.status);
     setDueAt(s.due_kind === "REVISION" ? s.due_at ?? null : null);
     setFiles(s.files);
-    setCheck(s.latest_check ?? null);
   }, []);
 
   useEffect(() => {
@@ -722,26 +668,6 @@ export default function NewSubmissionPage() {
     }
   };
 
-  // ----- Initial check and submit (S09) -----
-  const runCheck = async () => {
-    if (!title.trim() && !caption.trim()) {
-      toast.error("Add a title or caption before running the initial check.");
-      return;
-    }
-    setChecking(true);
-    try {
-      const id = await save({ force: true });
-      const s = await submissionService.runCheck(id!);
-      setCheck(s.latest_check ?? null);
-      if (s.latest_check?.is_compliant) toast.success("Initial check passed. No rule violations found.");
-      else toast.warning(`${s.latest_check?.violations_count} potential issue(s) found. See the summary panel.`);
-    } catch (err) {
-      toast.error(`Initial check failed: ${(err as Error).message}`);
-    } finally {
-      setChecking(false);
-    }
-  };
-
   const mainFiles = files.filter((f) => f.kind === "MAIN");
   const clientMissing = {
     title: !title.trim(),
@@ -751,7 +677,8 @@ export default function NewSubmissionPage() {
     region: !region,
     platforms: platforms.length === 0,
     main_file: MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
-    content: !MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0 && !caption.trim(),
+    // Every post needs a caption: the score and the sentiment analysis read it first.
+    caption: !caption.trim(),
     rule_sets: ruleSets.length === 0,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
@@ -833,21 +760,20 @@ export default function NewSubmissionPage() {
     markEdited();
   };
 
-  /** A sentiment finding's suggested revision, put in place of the wording it flagged. */
-  const applyRevision = (f: SentimentFinding) => {
-    if (!f.suggested_revision) return false;
-    if (f.source === "title") {
-      const next = replaceInText(title, f.quote, f.suggested_revision);
-      if (next == null) return false;
-      setTitle(next);
-      markEdited();
-      return true;
-    }
+  /** A suggested caption, in place of whatever is in the editor (undo brings the old one back). */
+  const applySuggestedCaption = (text: string) => {
     const editor = editorRef.current;
-    if (f.source !== "caption" || !editor || !replaceInEditable(editor, f.quote, f.suggested_revision)) return false;
+    if (!editor) return;
+    editor.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    document.execCommand("insertText", false, text);
     setCaption(editor.innerText || "");
     markEdited();
-    return true;
+    toast.success("Caption added. Edit it as you like; it's checked with the rest of the post.");
   };
 
   const charLimit = useMemo(() => {
@@ -1170,7 +1096,7 @@ export default function NewSubmissionPage() {
               className={`min-h-[190px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-1.5 p-6 cursor-pointer transition-colors ${
                 isDraggingMain
                   ? "border-blue-500 bg-blue-500/10"
-                  : isMissing("main_file") || isMissing("content")
+                  : isMissing("main_file")
                   ? "border-red-400 bg-red-500/5"
                   : "border-blue-300 dark:border-blue-500/40 bg-muted/20 hover:bg-muted/40"
               }`}
@@ -1207,7 +1133,6 @@ export default function NewSubmissionPage() {
                 Add {mainUpload.main} to submit this {CONTENT_TYPES.find((c) => c.value === contentType)?.label.toLowerCase()}.
               </p>
             )}
-            {isMissing("content") && <p className="text-[11px] text-red-600 mt-1.5">Add a file or write the copy in section 4.</p>}
 
             {(files.length > 0 || uploading.length > 0) && (
               <div className="mt-3 space-y-2">
@@ -1225,6 +1150,25 @@ export default function NewSubmissionPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
+                <p className="text-xs text-foreground">
+                  <span className="font-semibold">Your post is in.</span>{" "}
+                  <span className="text-muted-foreground">It needs a caption: write one in section 4, or have one suggested from it.</span>
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-[11px] gap-1"
+                  onClick={() => {
+                    setSuggesterOpen(true);
+                    captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  <Sparkles className="w-3 h-3 text-violet-500" /> Create a caption
+                </Button>
               </div>
             )}
             {canvaMain && !resubmitting && (
@@ -1258,8 +1202,12 @@ export default function NewSubmissionPage() {
           )}
 
           <div ref={captionSectionRef} className="scroll-mt-4">
-          <Section step={4} title="Caption / Copy" description="Write or paste your caption, script, or copy.">
-            <div className={`rounded-lg border ${isMissing("content") ? "border-red-500" : "border-input"} overflow-hidden`}>
+          <Section
+            step={4}
+            title="Caption / Copy"
+            description="Required. Write or paste your caption, script, or copy, or have one suggested from your post."
+          >
+            <div className={`rounded-lg border ${isMissing("caption") ? "border-red-500" : "border-input"} overflow-hidden`}>
               <div className="flex flex-wrap items-center gap-0.5 border-b border-border/70 bg-muted/30 px-2 py-1.5">
                 <Select defaultValue="p" onValueChange={(v) => exec("formatBlock", v)}>
                   <SelectTrigger size="sm" className="h-7 w-[120px] text-xs border-0 bg-transparent shadow-none">
@@ -1299,6 +1247,16 @@ export default function NewSubmissionPage() {
                   <Link2 className="w-3.5 h-3.5" />
                 </Button>
                 <span className="flex-1" />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs gap-1 text-violet-700 dark:text-violet-300 bg-violet-500/10 hover:bg-violet-500/15 mr-1"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setSuggesterOpen(true)}
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Suggest a caption
+                </Button>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button type="button" size="sm" variant="ghost" className="h-7 text-xs gap-1 text-blue-700 dark:text-blue-300 bg-blue-500/10 hover:bg-blue-500/15">
@@ -1349,6 +1307,22 @@ export default function NewSubmissionPage() {
               {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
               {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
             </p>
+            {isMissing("caption") && (
+              <p className="text-[11px] text-red-600">
+                Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
+                your post.
+              </p>
+            )}
+            {suggesterOpen && (
+              <CaptionSuggester
+                submissionId={submissionId}
+                ensureSubmissionId={() => save({ force: true })}
+                maxChars={charLimit}
+                hasCaption={Boolean(caption.trim())}
+                onUse={applySuggestedCaption}
+                onClose={() => setSuggesterOpen(false)}
+              />
+            )}
           </Section>
           </div>
 
@@ -1374,15 +1348,6 @@ export default function NewSubmissionPage() {
               sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
             </p>
           </Section>
-          )}
-
-          {/* Full width under the content it assesses, so its findings have room to read. */}
-          {submissionId && (
-            <Card className="py-0 gap-0 border-border/80 shadow-xs">
-              <div className="px-4 sm:px-5 py-4">
-                <SentimentPanel submissionId={submissionId} onApplyRevision={applyRevision} />
-              </div>
-            </Card>
           )}
         </div>
 
@@ -1480,36 +1445,11 @@ export default function NewSubmissionPage() {
               )}
             </div>
 
-            {(check || checking) && (
-              <div className="px-4 pt-3 pb-4 border-t border-border/60">
-                <p className="text-xs font-semibold text-foreground mb-2">Initial Check</p>
-                {checking ? (
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking against the rulebook...
-                  </p>
-                ) : check ? (
-                  <div className="space-y-3">
-                    <ReadinessSummary check={check} submissionId={submissionId} />
-                    <CheckResult check={check} />
-                  </div>
-                ) : null}
-              </div>
-            )}
           </Card>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-2 [&>button:last-child]:col-span-2 sm:[&>button:last-child]:col-span-1 xl:[&>button:last-child]:col-span-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" onClick={saveNow} disabled={saveState === "saving"} className="gap-1.5 text-xs font-semibold">
               {saveState === "saving" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Draft
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={runCheck}
-              disabled={checking}
-              className="gap-1.5 text-xs font-semibold border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-300 hover:bg-blue-500/10"
-            >
-              {checking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              Run Initial Check
             </Button>
             <Button
               type="button"
