@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useApprovalActions } from "@/hooks/useReview";
+import { useAuth } from "@/lib/AuthContext";
+import RevisionTimelinePicker, { type RevisionDays } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields these actions need (a full Submission or a Content Portal summary). */
 export interface ApprovalTarget {
@@ -41,8 +43,11 @@ export default function ApprovalActions({
   const [mode, setMode] = useState<Mode>(null);
   const [notes, setNotes] = useState("");
   const [when, setWhen] = useState("");
+  const [revisionDays, setRevisionDays] = useState<RevisionDays>(1);
+  const { creatorView } = useAuth();
 
-  const isReviewer = Boolean(target.can_manage_approval);
+  // A super admin viewing the app as a creator gets the creator's actions only.
+  const isReviewer = Boolean(target.can_manage_approval) && !creatorView;
   if (target.status !== "APPROVED" || (!isCreator && !isReviewer)) return null;
 
   const planned = target.publish_at ? new Date(target.publish_at) : null;
@@ -53,13 +58,14 @@ export default function ApprovalActions({
 
   const start = (m: Mode) => {
     setNotes("");
+    setRevisionDays(1);
     setWhen(toLocalInput(planned && !isPast(planned) ? planned : new Date(Date.now() + 24 * 3600 * 1000)));
     setMode(m);
   };
 
   const confirm = () => {
     if (mode === "withdraw") withdraw.mutate(undefined, { onSuccess: close });
-    else if (mode === "reopen" && notes.trim()) reopen.mutate(notes.trim(), { onSuccess: close });
+    else if (mode === "reopen" && notes.trim()) reopen.mutate({ notes: notes.trim(), revisionDays }, { onSuccess: close });
     else if (mode === "reschedule" && whenDate && !whenInPast) reschedule.mutate(whenDate.toISOString(), { onSuccess: close });
   };
 
@@ -125,6 +131,7 @@ export default function ApprovalActions({
                 className="text-xs"
                 placeholder="e.g. Legal flagged the availability claim; say it's in testing."
               />
+              <RevisionTimelinePicker value={revisionDays} onChange={setRevisionDays} publishAt={target.publish_at} />
             </div>
           )}
 

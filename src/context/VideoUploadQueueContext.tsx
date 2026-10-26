@@ -426,18 +426,23 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
     }
   });
 
-  const { user } = useAuth();
+  const { user, creatorView } = useAuth();
+  // A super admin viewing the app as a creator sees only their own content, as its creator.
+  const queueScope = creatorView ? 'mine' : 'all';
   const [doneSearch, setDoneSearch] = useState('');
   // Each tab is its own list on the server, so decided content can't crowd out what's waiting.
   const tabQueries = useQueries({
     queries: QUEUE_TABS.map((tab) => {
       const search = tab === 'done' ? doneSearch.trim() : '';
       return {
-        queryKey: ['review-queue', tab, search],
-        queryFn: () => submissionService.reviewQueue(tab, search || undefined),
+        queryKey: ['review-queue', tab, search, queueScope],
+        queryFn: () => submissionService.reviewQueue(tab, search || undefined, queueScope),
         enabled: Boolean(user),
         staleTime: 0,
-        placeholderData: (previous: ReviewQueueItem[] | undefined) => previous,
+        // Keep showing the list while a search is typed, but never another view's list (e.g. reviewer items,
+        // with their review actions, after switching to the creator view).
+        placeholderData: (previous: ReviewQueueItem[] | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
+          previousQuery?.queryKey[3] === queueScope ? previous : undefined,
         // Check back quickly while a transcript is being generated, otherwise once a minute.
         refetchInterval: (query: { state: { data?: ReviewQueueItem[] } }) =>
           query.state.data?.some((s) => s.video?.transcript_status === 'PENDING' || s.video?.transcript_status === 'PROCESSING')
@@ -447,8 +452,8 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
     }),
   });
   const countsQuery = useQuery({
-    queryKey: ['review-queue', 'counts'],
-    queryFn: submissionService.reviewQueueCounts,
+    queryKey: ['review-queue', 'counts', queueScope],
+    queryFn: () => submissionService.reviewQueueCounts(queueScope),
     enabled: Boolean(user),
     staleTime: 0,
     refetchInterval: 60_000,
@@ -464,8 +469,9 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   }, [reviewRows, sentBackRows, doneRows]);
   const serverLoading = tabQueries.some((q) => q.isLoading);
 
-  // Without a saved preference, samples only show while there's no real content to review.
-  const showDemo = showDemoPref ?? serverItems.length === 0;
+  // The built-in sample videos are for super admins setting up or demonstrating the app; reviewers and creators
+  // only ever see real content. Without a saved preference, they show while there's no real content to review.
+  const showDemo = Boolean(user?.is_super_admin) && !creatorView && (showDemoPref ?? serverItems.length === 0);
   const setShowDemo = useCallback((show: boolean) => {
     setShowDemoPref(show);
     try {

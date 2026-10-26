@@ -5,6 +5,7 @@ import {
   Share2,
   Scale,
   BookOpenText,
+  ChartColumn,
   Video,
   FilePlus2,
   CalendarDays,
@@ -24,7 +25,12 @@ export interface NavigationItem {
   section?: string;
   navigationCode?: string;
   subItems?: NavigationSubItem[];
+  /** Which side of the app shows this item: reviewers or content creators (super admins switch between them in
+   * the top bar). Unset: shown to both, subject to its permission. */
+  views?: AppView[];
 }
+
+export type AppView = "reviewer" | "creator";
 
 export const navigation: NavigationItem[] = [
   {
@@ -40,6 +46,7 @@ export const navigation: NavigationItem[] = [
     icon: FilePlus2,
     section: "MAIN",
     navigationCode: "DASHBOARD",
+    views: ["creator"],
   },
   {
     label: "Content Screener",
@@ -47,6 +54,7 @@ export const navigation: NavigationItem[] = [
     icon: Video,
     section: "MAIN",
     navigationCode: "DASHBOARD",
+    views: ["reviewer"],
   },
   {
     label: "Content Calendar",
@@ -61,6 +69,7 @@ export const navigation: NavigationItem[] = [
     icon: Scale,
     section: "MAIN",
     navigationCode: "DASHBOARD",
+    views: ["reviewer"],
   },
   {
     label: "Messaging Context",
@@ -68,6 +77,16 @@ export const navigation: NavigationItem[] = [
     icon: BookOpenText,
     section: "MAIN",
     navigationCode: "DASHBOARD",
+    views: ["reviewer"],
+  },
+  {
+    label: "Post Performance",
+    path: "/performance",
+    icon: ChartColumn,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+    // Everyone: reviewers and managers see the team's posts, creators their own.
+    views: ["reviewer", "creator"],
   },
   {
     label: "Social Media",
@@ -101,3 +120,10 @@ export const navigation: NavigationItem[] = [
     ],
   },
 ];
+
+/** Whether a page belongs to a view. Only the main menu pages are tied to one; anything else (a submission's
+ * details, the editor) belongs to both, since either side can be linked there. */
+export function pathInView(pathname: string, view: AppView): boolean {
+  const item = navigation.find((n) => n.path === pathname.replace(/\/+$/, "") && n.views);
+  return !item?.views || item.views.includes(view);
+}

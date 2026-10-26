@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
+import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
+import RevisionTimelinePicker, { type RevisionDays } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
 export interface ReviewTarget {
@@ -30,6 +32,8 @@ export interface ReviewTarget {
   /** Critical flags nobody has dismissed: approving waits until they're fixed or dismissed. */
   open_critical_flags?: number;
   score?: number | null;
+  /** Rules the automated check can't test from text; the reviewer confirms each one when approving. */
+  manual_rules?: { rule_number: string; title: string }[];
 }
 
 type Mode = "schedule" | "now" | "changes" | null;
@@ -60,34 +64,53 @@ export default function ReviewDecisionPanel({
   const mayApprove = target.can_approve !== false && openCritical === 0;
   const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
+  const { creatorView } = useAuth();
   const { comments } = useReviewComments(target.id);
   const openComments = comments.filter((c) => !c.resolved_at && c.version_number === target.current_version).length;
   const [mode, setMode] = useState<Mode>(null);
   const [notes, setNotes] = useState("");
   const [when, setWhen] = useState("");
+  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
+  const [revisionDays, setRevisionDays] = useState<RevisionDays>(1);
 
-  if (!target.can_review) return null;
+  // Not a reviewer here, or a super admin viewing the app as a creator.
+  if (!target.can_review || creatorView) return null;
 
+  const manualRules = target.manual_rules ?? [];
+  const allConfirmed = manualRules.every((r) => confirmed.has(r.rule_number));
   const planned = target.publish_at ? new Date(target.publish_at) : null;
   const start = (m: Mode) => {
     setNotes("");
     setWhen(toLocalInput(defaultPublishTime(planned)));
+    setConfirmed(new Set());
+    setRevisionDays(1);
     setMode(m);
   };
+  const toggleConfirmed = (ruleNumber: string) =>
+    setConfirmed((prev) => {
+      const next = new Set(prev);
+      if (next.has(ruleNumber)) next.delete(ruleNumber);
+      else next.add(ruleNumber);
+      return next;
+    });
   const whenDate = when ? new Date(when) : null;
   const whenInPast = Boolean(whenDate && isPast(whenDate));
+  const confirmedRules = manualRules.map((r) => r.rule_number).filter((n) => confirmed.has(n));
 
   const confirm = () => {
     if (mode === "changes") {
-      decide.mutate({ decision: "REQUEST_CHANGES", notes: notes.trim() || undefined }, { onSuccess: () => setMode(null) });
+      decide.mutate(
+        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: revisionDays },
+        { onSuccess: () => setMode(null) }
+      );
     } else if (mode === "schedule" && whenDate) {
       decide.mutate(
-        { decision: "APPROVE", notes: notes.trim() || undefined, publish_at: whenDate.toISOString() },
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_at: whenDate.toISOString(), confirmed_rules: confirmedRules },
         { onSuccess: () => setMode(null) }
       );
     } else if (mode === "now") {
       decide.mutate(
-        { decision: "APPROVE", notes: notes.trim() || undefined, publish_now: true },
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_now: true, confirmed_rules: confirmedRules },
         {
           onSuccess: () => {
             setMode(null);
@@ -200,6 +223,27 @@ export default function ReviewDecisionPanel({
                 {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future, or use "Approve & post now".</p>}
               </div>
             )}
+            {mode !== "changes" && manualRules.length > 0 && (
+              <fieldset className="space-y-1.5 rounded-md border border-border/70 p-2.5">
+                <legend className="px-1 text-xs font-semibold text-foreground">Checked by you</legend>
+                <p className="text-[11px] text-muted-foreground">
+                  The automated check can't test these from the text. Confirm you've checked each one; it's recorded with your approval.
+                </p>
+                {manualRules.map((r) => (
+                  <label key={r.rule_number} className="flex items-start gap-2 text-xs text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-3.5 w-3.5 accent-blue-600"
+                      checked={confirmed.has(r.rule_number)}
+                      onChange={() => toggleConfirmed(r.rule_number)}
+                    />
+                    <span>
+                      <span className="font-semibold">{r.rule_number}</span> · {r.title}
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
             {mode === "changes" && openComments > 0 && (
               <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Your {openComments} open comment{openComments === 1 ? " is" : "s are"} sent along with this.
@@ -218,6 +262,9 @@ export default function ReviewDecisionPanel({
                 placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Great post, scheduled for the morning slot."}
               />
             </div>
+            {mode === "changes" && (
+              <RevisionTimelinePicker value={revisionDays} onChange={setRevisionDays} publishAt={target.publish_at} />
+            )}
           </div>
 
           <DialogFooter>
@@ -230,7 +277,8 @@ export default function ReviewDecisionPanel({
               disabled={
                 decide.isPending ||
                 (mode === "changes" && !notes.trim() && openComments === 0) ||
-                (mode === "schedule" && (!whenDate || whenInPast))
+                (mode === "schedule" && (!whenDate || whenInPast)) ||
+                (mode !== "changes" && !allConfirmed)
               }
               onClick={confirm}
             >

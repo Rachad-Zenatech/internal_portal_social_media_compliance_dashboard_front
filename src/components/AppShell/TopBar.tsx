@@ -1,7 +1,7 @@
 import { ConnectionStatusLight } from "./ConnectionStatusLight";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Bell, Menu, LogOut, User as UserIcon, BellRing, Settings2, Laptop, Upload } from "lucide-react";
+import { Bell, Menu, LogOut, User as UserIcon, BellRing, Settings2, Laptop, Upload, ShieldCheck, PenLine } from "lucide-react";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,50 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, BASE_URL } from "@/services/apiClient";
 import ThemeSwitch from "./ThemeSwitch";
-import { useAuth, type Role } from "@/lib/AuthContext";
+import { useAuth, type Role, type ViewMode } from "@/lib/AuthContext";
 import { resolveUserDepartment } from "@/lib/userDepartment";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 import { NotificationDropdownContent } from "./NotificationDropdown";
+import { pathInView } from "./Navigation";
+
+const VIEW_MODES: { value: ViewMode; label: string; hint: string; Icon: typeof ShieldCheck }[] = [
+  { value: "reviewer", label: "Reviewer", hint: "Everyone's content, with review and approval", Icon: ShieldCheck },
+  { value: "creator", label: "Creator", hint: "Only your own content, as a content creator sees it", Icon: PenLine },
+];
+
+/** Super admins only: switch between seeing the app as a reviewer and as a content creator. Only the view changes;
+ * a super admin keeps every permission either way. */
+function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (mode: ViewMode) => void }) {
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="hidden text-xs font-medium text-muted-foreground sm:inline">View as</span>
+      <div role="radiogroup" aria-label="View the app as" className="grid grid-cols-2 rounded-lg bg-muted p-0.5">
+        {VIEW_MODES.map(({ value, label, hint, Icon }) => {
+          const active = mode === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              title={hint}
+              onClick={() => onChange(value)}
+              className={`flex items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                active ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function TopBarClock() {
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -180,7 +216,8 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
   };
 
   const navigate = useNavigate();
-  const { user, roles, logout } = useAuth();
+  const location = useLocation();
+  const { user, roles, logout, canSwitchView, viewMode, setViewMode } = useAuth();
 
   const { data: allRoles = [] } = useQuery({
     queryKey: ["roles"],
@@ -203,6 +240,12 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
     // Connect to SSE stream
     const token = sessionStorage.getItem("token") || "";
     const eventSource = new EventSource(`${BASE_URL || ""}/api/notifications/stream?token=${token}`, { withCredentials: true });
+    // The server ends each stream every couple of minutes and the browser reconnects; catch up on anything sent between.
+    let connectedBefore = false;
+    eventSource.onopen = () => {
+      if (connectedBefore) queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      connectedBefore = true;
+    };
 
     eventSource.onmessage = (event) => {
       try {
@@ -277,6 +320,16 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
           >
             <Menu className="h-4 w-4" />
           </Button>
+        )}
+        {canSwitchView && (
+          <ViewModeToggle
+            mode={viewMode}
+            onChange={(mode) => {
+              setViewMode(mode);
+              // Leave a page that belongs to the other side (e.g. the Content Screener when switching to Creator).
+              if (!pathInView(location.pathname, mode)) navigate("/dashboard");
+            }}
+          />
         )}
       </div>
 

@@ -58,7 +58,21 @@ interface AuthContextType {
   hasRole: (roleCode: string) => boolean;
   logout: () => Promise<void>;
   refreshPermissions: () => Promise<PermissionsData | null>;
+  /** Super admins can view the app as a reviewer or as a content creator; everyone else's role decides it. */
+  canSwitchView: boolean;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  /** A super admin viewing the app as a creator: only their own content, and no review actions. */
+  creatorView: boolean;
 }
+
+export type ViewMode = "reviewer" | "creator";
+
+const VIEW_MODE_KEY = "portal.viewMode";
+// What a creator doesn't do: review and approve, see everyone's content, delete other people's drafts. In creator
+// view these read as not granted, so every screen shows the creator's side. It's only a view: the server still
+// allows a super admin everything.
+const REVIEWER_ONLY_PERMISSIONS = new Set(["CONTENT_REVIEW_APPROVE", "CONTENT_SUBMISSIONS_VIEW", "CONTENT_SUBMISSIONS_DELETE"]);
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -66,6 +80,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [serverUnreachable, setServerUnreachable] = useState(false);
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    try {
+      return localStorage.getItem(VIEW_MODE_KEY) === "creator" ? "creator" : "reviewer";
+    } catch {
+      return "reviewer";
+    }
+  });
+  const setViewMode = useCallback((mode: ViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, mode);
+    } catch {
+      // the choice just won't be remembered
+    }
+  }, []);
 
   const fetchRequestId = useRef(0);
 
@@ -150,8 +179,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return pageActions.includes(actionCode);
   };
 
+  const canSwitchView = Boolean(permissions && (permissions.user.is_super_admin || permissions.roles.some((r) => r.code === 'SUPER_ADMIN')));
+  const creatorView = canSwitchView && viewMode === "creator";
+
   const hasPermission = (permissionCode: string) => {
     if (!permissions) return false;
+    if (creatorView && REVIEWER_ONLY_PERMISSIONS.has(permissionCode)) return false;
     if (permissions.user.is_super_admin) return true;
     if (permissions.roles.some((r) => r.code === 'SUPER_ADMIN')) return true;
     
@@ -229,6 +262,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasRole,
         logout,
         refreshPermissions: fetchPermissions,
+        canSwitchView,
+        viewMode: canSwitchView ? viewMode : "reviewer",
+        setViewMode,
+        creatorView,
       }}
     >
       {children}

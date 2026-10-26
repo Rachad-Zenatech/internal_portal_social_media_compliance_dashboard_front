@@ -1,6 +1,6 @@
-import { ChevronDown, ChevronRight, PanelRight } from "lucide-react";
+import { ChevronDown, PanelRight } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { navigation, type NavigationItem } from "./Navigation";
+import { navigation, type AppView, type NavigationItem } from "./Navigation";
 import { useState } from "react";
 import zenatechLogo from "@/assets/zenatech_logo.png";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -44,7 +44,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
+  // Reviewers and content creators each get their side of the app (super admins switch in the top bar).
+  const view: AppView = hasPermission("CONTENT_REVIEW_APPROVE") ? "reviewer" : "creator";
+
   const groupedNavigation = navigation.reduce<Record<string, NavigationItem[]>>((acc, item) => {
+    if (item.views && !item.views.includes(view)) return acc;
     // Pure Role Permission Gating: Check item navigation permission
     if (item.navigationCode) {
       const hasItemAccess =
@@ -78,6 +82,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     acc[section].push({ ...item, subItems: filteredSubItems });
     return acc;
   }, {});
+
+  // Items slide in one after another; the counter gives each its delay.
+  let order = 0;
+  const enter = () => ({ animationDelay: `${Math.min(order++, 14) * 35}ms` });
 
   return (
     <>
@@ -127,11 +135,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </div>
 
         <TooltipProvider delayDuration={0}>
-          <nav className="space-y-3 px-2 mt-2 pb-4 overflow-y-auto scrollbar-hide flex-1 min-h-0">
+          <nav key={view} className="space-y-3 px-2 mt-2 pb-4 overflow-y-auto scrollbar-hide flex-1 min-h-0">
             {Object.entries(groupedNavigation).map(([section, items]) => (
               <div key={section} className="space-y-1">
                 {isOpen ? (
-                  <div className="px-3 mb-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                  <div className="animate-nav-enter px-3 mb-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase" style={enter()}>
                     {section}
                   </div>
                 ) : (
@@ -144,7 +152,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   if (item.subItems) {
                     const isExpanded = expandedItems[item.label];
                     return (
-                      <div key={item.label} className="flex flex-col">
+                      <div key={item.label} className="animate-nav-enter flex flex-col" style={enter()}>
                         <Tooltip delayDuration={0}>
                           <TooltipTrigger asChild>
                             <button
@@ -156,7 +164,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 }
                               }}
                               className={`
-                                flex items-center justify-between h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out hover:bg-sidebar-accent text-sidebar-foreground
+                                group flex items-center justify-between h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out hover:bg-sidebar-accent text-sidebar-foreground
                                 ${isOpen ? "px-3" : "px-0 justify-center"}
                               `}
                             >
@@ -165,13 +173,13 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                   isOpen ? "justify-start" : "justify-center"
                                 }`}
                               >
-                                <div className="flex items-center justify-center flex-shrink-0 relative">
+                                <div className="flex items-center justify-center flex-shrink-0 relative transition-transform duration-200 group-hover:scale-115">
                                   <Icon size={16} />
                                 </div>
                                 <span
                                   className={`text-xs font-medium transition-all duration-300 ease-in-out ${
                                     isOpen
-                                      ? "opacity-100 ml-3 translate-x-0 w-auto"
+                                      ? "opacity-100 ml-3 translate-x-0 w-auto group-hover:translate-x-0.5"
                                       : "opacity-0 ml-0 -translate-x-4 w-0 overflow-hidden"
                                   }`}
                                 >
@@ -180,11 +188,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                               </div>
                               {isOpen && (
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  {isExpanded ? (
-                                    <ChevronDown size={16} />
-                                  ) : (
-                                    <ChevronRight size={16} />
-                                  )}
+                                  <ChevronDown
+                                    size={16}
+                                    className={`transition-transform duration-300 ease-out ${isExpanded ? "" : "-rotate-90"}`}
+                                  />
                                 </div>
                               )}
                             </button>
@@ -212,7 +219,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 key={sub.path}
                                 to={sub.path}
                                 className={`
-                                  flex items-center justify-between h-7.5 px-2.5 rounded-md text-xs font-medium transition-all duration-200
+                                  relative flex items-center justify-between h-7.5 px-2.5 rounded-md text-xs font-medium transition-all duration-200 hover:translate-x-0.5
                                   ${
                                     isSubActive
                                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-2xs font-semibold"
@@ -220,6 +227,12 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                   }
                                 `}
                               >
+                                <span
+                                  className={`absolute -left-[12.5px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-sidebar-primary ring-2 ring-sidebar transition-transform duration-300 ${
+                                    isSubActive ? "scale-100" : "scale-0"
+                                  }`}
+                                  aria-hidden
+                                />
                                 <span className="truncate">{sub.label}</span>
                                 {sub.label === "Role Assignments" &&
                                   isSuperAdmin &&
@@ -245,17 +258,23 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                       <TooltipTrigger asChild>
                         <Link
                           to={item.path!}
+                          style={enter()}
                           className={`
-                            flex items-center h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out
+                            animate-nav-enter group flex items-center h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out
                             ${isOpen ? "px-3 justify-start" : "px-0 justify-center"}
                             ${
                               isMainActive
-                                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm font-semibold"
+                                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/25 font-semibold"
                                 : "hover:bg-sidebar-accent text-sidebar-foreground font-medium"
                             }
                           `}
                         >
-                          <div className="flex items-center justify-center flex-shrink-0 relative">
+                          <div
+                            key={isMainActive ? "active" : "idle"}
+                            className={`flex items-center justify-center flex-shrink-0 relative ${
+                              isMainActive ? "animate-nav-icon-pop" : "transition-transform duration-200 group-hover:scale-115"
+                            }`}
+                          >
                             <Icon size={16} />
                           </div>
                           <div
@@ -266,7 +285,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             <span
                               className={`text-xs font-medium transition-all duration-300 ease-in-out truncate ${
                                 isOpen
-                                  ? "opacity-100 ml-3 translate-x-0 w-auto"
+                                  ? "opacity-100 ml-3 translate-x-0 w-auto group-hover:translate-x-0.5"
                                   : "opacity-0 ml-0 -translate-x-4 w-0 overflow-hidden"
                               }`}
                             >
