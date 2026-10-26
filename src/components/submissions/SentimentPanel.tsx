@@ -56,6 +56,10 @@ import type {
   SentimentResult,
 } from "@/types/sentiment";
 
+// "How its topics are doing online" runs on sample data until Sprout Social is connected, so it's hidden (with its
+// signals in the summary) for now. Set to true to bring it back.
+const SHOW_TOPIC_TRENDS = false;
+
 const ASSESSMENT: Record<SentimentAssessment, { label: string; tone: string; Icon: typeof CheckCircle2 }> = {
   NO_CONCERNS: {
     label: "No concerns",
@@ -707,7 +711,7 @@ export default function SentimentPanel({
   const [preparing, setPreparing] = useState(false);
   const canRun = canRunProp && version == null;
   // The topics' current mood only means something for the current content, not an earlier version.
-  const topics = usePublicMood(submissionId, version == null);
+  const topics = usePublicMood(submissionId, SHOW_TOPIC_TRENDS && version == null);
   const running = isSentimentRunning(analysis) || run.isPending || preparing;
   /** All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis. */
   const analyseAll = async () => {
@@ -719,7 +723,7 @@ export default function SentimentPanel({
         setPreparing(false);
       }
     }
-    topics.refresh();
+    if (SHOW_TOPIC_TRENDS) topics.refresh();
     run.mutate();
   };
   const ctx: FindingContext | undefined =
@@ -747,7 +751,7 @@ export default function SentimentPanel({
             <Sparkles className="w-3.5 h-3.5 text-violet-500" /> Sentiment analysis
           </p>
           <p className="text-[10px] text-muted-foreground">
-            Advisory · how its topics are doing online, and how the post is likely to be perceived
+            Advisory · {SHOW_TOPIC_TRENDS ? "how its topics are doing online, and " : ""}how the post is likely to be perceived
             {beforeAnalyse ? ". Analyse also runs the rulebook check." : ""}
           </p>
         </div>
@@ -786,7 +790,7 @@ export default function SentimentPanel({
         </p>
       )}
 
-      {submissionId && version == null && (
+      {SHOW_TOPIC_TRENDS && submissionId && version == null && (
         <TopicTrend
           mood={topics.mood}
           isLoading={topics.isLoading}
@@ -798,7 +802,7 @@ export default function SentimentPanel({
       )}
 
       {submissionId && (
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground border-t border-border/60 pt-3">
+        <p className={`flex items-center gap-1.5 text-xs font-semibold text-foreground ${SHOW_TOPIC_TRENDS ? "border-t border-border/60 pt-3" : ""}`}>
           <Users className="w-3.5 h-3.5 text-violet-500" /> How it'll be perceived
         </p>
       )}
@@ -864,7 +868,7 @@ export default function SentimentPanel({
               High-stakes post (CEO or investor-facing), so it was analysed with the stronger model.
             </p>
           )}
-          <PerceptionSummary r={result} mood={version == null ? topics.mood : null} ctx={ctx} onSeek={onSeek} />
+          <PerceptionSummary r={result} mood={SHOW_TOPIC_TRENDS && version == null ? topics.mood : null} ctx={ctx} onSeek={onSeek} />
           <button
             type="button"
             onClick={() => setShowDetail((o) => !o)}

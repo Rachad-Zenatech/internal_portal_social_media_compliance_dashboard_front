@@ -5,6 +5,7 @@ import { Check, Clock, Loader2, MessageSquare, RotateCcw, Send, ShieldCheck, Tra
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useReviewComments } from "@/hooks/useReview";
+import { useAuth } from "@/lib/AuthContext";
 import type { ReviewComment, ReviewCommentCategory } from "@/types/submission";
 
 export const COMMENT_CATEGORIES: { value: ReviewCommentCategory; label: string; tone: string }[] = [
@@ -107,6 +108,9 @@ export default function ReviewCommentsPanel({
   emptyText?: string;
 }) {
   const { comments, isLoading, add, resolve, remove } = useReviewComments(submissionId);
+  // Reviewers file feedback under a category (legal, editorial...). Creators just leave the reviewer a note.
+  const { hasPermission } = useAuth();
+  const asReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<ReviewCommentCategory>("NOTE");
   const [pin, setPin] = useState(false);
@@ -115,7 +119,7 @@ export default function ReviewCommentsPanel({
   const submit = () => {
     if (!body.trim()) return;
     add.mutate(
-      { body: body.trim(), category, start_sec: pin && currentTime != null ? Math.round(currentTime * 10) / 10 : null },
+      { body: body.trim(), category: asReviewer ? category : "NOTE", start_sec: pin && currentTime != null ? Math.round(currentTime * 10) / 10 : null },
       { onSuccess: () => setBody("") }
     );
   };
@@ -158,14 +162,14 @@ export default function ReviewCommentsPanel({
             rows={2}
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder={placeholder}
+            placeholder={asReviewer ? placeholder : "Anything the reviewer should know? e.g. the figures are from the Oct 13 press release"}
             className="text-xs"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
             }}
           />
           <div className="flex flex-wrap items-center gap-1.5">
-            {COMMENT_CATEGORIES.map((cat) => (
+            {asReviewer && COMMENT_CATEGORIES.map((cat) => (
               <button
                 key={cat.value}
                 type="button"
@@ -179,14 +183,14 @@ export default function ReviewCommentsPanel({
               </button>
             ))}
             {currentTime != null && (
-              <label className="ml-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer">
+              <label className={`${asReviewer ? "ml-1" : ""} inline-flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer`}>
                 <input type="checkbox" checked={pin} onChange={(e) => setPin(e.target.checked)} className="accent-current" />
                 Pin to {formatSec(currentTime)}
               </label>
             )}
             <span className="flex-1" />
             <Button size="sm" className="h-7 px-2.5 text-xs gap-1" disabled={!body.trim() || add.isPending} onClick={submit}>
-              {add.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Comment
+              {add.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {asReviewer ? "Comment" : "Send note"}
             </Button>
           </div>
         </div>
