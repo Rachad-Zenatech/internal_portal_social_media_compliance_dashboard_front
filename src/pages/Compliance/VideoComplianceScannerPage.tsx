@@ -82,7 +82,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { submissionService } from "@/services/submissionService";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
-import { DueBadge } from "@/components/submissions/submissionUi";
+import { DueBadge, UnderReviewBadge, isAnalysing } from "@/components/submissions/submissionUi";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
@@ -1241,6 +1241,8 @@ export default function VideoComplianceScannerPage() {
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking...
       </span>
+    ) : item.scoreStatus === "analysing" ? (
+      <UnderReviewBadge />
     ) : item.scoreStatus === "error" ? (
       <span className="text-xs text-muted-foreground">Score unavailable</span>
     ) : (
@@ -1329,6 +1331,8 @@ export default function VideoComplianceScannerPage() {
     }
   };
   const waitingForMe = isReviewer ? queueCounts?.review ?? 0 : 0;
+  // Still reading the video or images: no score or verdict until the whole post has been read.
+  const analysing = isAnalysing(activeVideo?.serverCheck);
 
   return (
     <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
@@ -1816,7 +1820,9 @@ export default function VideoComplianceScannerPage() {
                       : "text-emerald-700 dark:text-emerald-300"
                   }`}
                 >
-                  {scanResult.is_compliant
+                  {analysing
+                    ? `Still reading this post for ${platformName}`
+                    : scanResult.is_compliant
                     ? `No issues found in the text for ${platformName}`
                     : `${scanResult.violations_count} Rule ${scanResult.violations_count === 1 ? "Violation" : "Violations"} Flagged for ${platformName}`}
                 </span>
@@ -1829,12 +1835,17 @@ export default function VideoComplianceScannerPage() {
                       : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                   }`}
                 >
-                  {scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Text clear"}
+                  {analysing ? "Under review" : scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Text clear"}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                 <span>
-                  Compliance Health Score: <strong className="text-foreground">{scanResult.score} / 100</strong>
+                  Compliance Health Score:{" "}
+                  {analysing ? (
+                    <strong className="text-blue-700 dark:text-blue-300">under review until the video and images are read</strong>
+                  ) : (
+                    <strong className="text-foreground">{scanResult.score} / 100</strong>
+                  )}
                   {scanResult.blocked && <strong className="ml-1.5 text-red-600 dark:text-red-400">· Blocked (critical rule)</strong>}
                 </span>
                 <span className="text-border">|</span>
@@ -2446,7 +2457,7 @@ export default function VideoComplianceScannerPage() {
                     approver_names: activeVideo.approverNames,
                     open_critical_flags: activeVideo.openCriticalFlags,
                     manual_rules: activeVideo.serverCheck?.manual_review_rules,
-                    score: activeVideo.serverCheck?.score ?? null,
+                    score: isAnalysing(activeVideo.serverCheck) ? null : activeVideo.serverCheck?.score ?? null,
                   }}
                 />
               ) : (

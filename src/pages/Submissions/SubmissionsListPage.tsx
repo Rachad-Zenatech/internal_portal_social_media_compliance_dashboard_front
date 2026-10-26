@@ -67,7 +67,7 @@ import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
-import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
+import { UnderReviewBadge, authedFileUrl, dueInfo, isAnalysing } from "@/components/submissions/submissionUi";
 import { QUICK_CREATE } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
@@ -332,7 +332,7 @@ function ComplianceView({ sub }: { sub: Submission }) {
           )}
           {check.is_compliant ? "No issues found in the text" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
         </span>
-        <span className="tabular-nums">{check.score}/100</span>
+        {isAnalysing(check) ? <UnderReviewBadge /> : <span className="tabular-nums">{check.score}/100</span>}
       </div>
       <CheckCoverage check={check} />
       {sub.check_outdated && (
@@ -553,7 +553,7 @@ function ReviewCard({
           can_approve: sub.can_approve,
           approver_names: sub.approver_names,
           open_critical_flags: sub.open_critical_flags,
-          score: sub.latest_check?.score ?? null,
+          score: isAnalysing(sub.latest_check) ? null : sub.latest_check?.score ?? null,
           manual_rules: sub.latest_check?.manual_review_rules,
         }}
       />
@@ -701,7 +701,9 @@ function ReviewCard({
             icon={ShieldCheck}
             title="Compliance Check"
             status={
-              check
+              check && isAnalysing(check)
+                ? "Under review: still reading the post"
+                : check
                 ? `${check.score}/100 · ${check.blocked ? "Blocked" : check.is_compliant ? "No issues" : `${check.violations_count} issue${check.violations_count === 1 ? "" : "s"}`}`
                 : "No results yet"
             }
@@ -758,7 +760,9 @@ function ReviewCard({
             currentTime={mediaIsVideo ? currentTime ?? 0 : undefined}
             onSeek={seek}
             emptyText={
-              sub.status === "DRAFT"
+              !canComment
+                ? "No feedback yet. The reviewer's comments show here; leave them a note below if there's anything they should know."
+                : sub.status === "DRAFT"
                 ? "No feedback yet. Reviewers comment here once it's sent for review."
                 : "No feedback yet. Start the review with a comment, or pin feedback to a moment in the video."
             }

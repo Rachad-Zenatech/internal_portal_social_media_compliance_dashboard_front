@@ -27,7 +27,8 @@ export function useSubmitForReview() {
       queryClient.invalidateQueries({ queryKey: ["review-queue"] });
       queryClient.removeQueries({ queryKey: ["submission", target.id] });
       queryClient.removeQueries({ queryKey: ["submission-history", target.id] });
-      const score = `Automated check: ${result.review_job.score}/100.`;
+      const score =
+        result.review_job.score == null ? "Automated check: under review." : `Automated check: ${result.review_job.score}/100.`;
       if (target.isVideo) {
         setActiveVideoId(`sub-${target.id}`);
         toast.success(`${target.referenceCode} sent for review. Reviewers have been notified. ${score}`, {

@@ -54,6 +54,7 @@ import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
+import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
 import { canvaService } from "@/services/canvaService";
 import { submissionService } from "@/services/submissionService";
 import { ApiError } from "@/services/helper";
@@ -422,7 +423,8 @@ export default function NewSubmissionPage() {
 
   useEffect(() => {
     if (!loadingExisting && pendingCaptionHtml.current !== null && editorRef.current) {
-      editorRef.current.innerHTML = pendingCaptionHtml.current;
+      // Captions saved before the server sanitized them may hold unsafe HTML; never load it as-is.
+      editorRef.current.innerHTML = sanitizeCaptionHtml(pendingCaptionHtml.current);
       pendingCaptionHtml.current = null;
     }
   }, [loadingExisting]);
@@ -716,7 +718,7 @@ export default function NewSubmissionPage() {
       queryClient.removeQueries({ queryKey: ["submission-history", result.submission.id] });
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       toast.success(
-        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.score}/100.`
+        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
       navigate(`/submissions/${result.submission.id}`);
     } catch (err) {
@@ -1240,8 +1242,9 @@ export default function NewSubmissionPage() {
                   title="Insert link"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
-                    const url = window.prompt("Link URL", "https://");
+                    const url = safeHref(window.prompt("Link URL", "https://"));
                     if (url) exec("createLink", url);
+                    else toast.error("Links must start with https://, http:// or mailto:.");
                   }}
                 >
                   <Link2 className="w-3.5 h-3.5" />
@@ -1297,6 +1300,15 @@ export default function NewSubmissionPage() {
                 aria-label="Caption or copy"
                 data-placeholder="Write your caption, script, or copy here..."
                 onInput={(e) => {
+                  setCaption(e.currentTarget.innerText);
+                  markEdited();
+                }}
+                onPaste={(e) => {
+                  // Pasted rich text (from Word, a web page...) keeps its formatting but nothing unsafe.
+                  e.preventDefault();
+                  const html = e.clipboardData.getData("text/html");
+                  if (html) document.execCommand("insertHTML", false, sanitizeCaptionHtml(html));
+                  else document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
                   setCaption(e.currentTarget.innerText);
                   markEdited();
                 }}

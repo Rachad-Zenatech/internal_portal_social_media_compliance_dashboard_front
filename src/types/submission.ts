@@ -84,6 +84,8 @@ export type StoredCheck = ComplianceCheckResponse & {
   images_read?: number;
   images_pending?: number;
   images_failed?: number;
+  /** Still reading the video transcript or the text in images: no score until the post has been read in full. */
+  analysis_pending?: boolean;
 };
 
 export interface Submission {
@@ -150,7 +152,9 @@ export interface SubmissionSummary {
   due_at?: string | null;
   due_kind?: DueKind | null;
   latest_traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
+  /** Null while the post is still being analysed (analysis_pending). */
   latest_score?: number | null;
+  analysis_pending?: boolean;
   file_count: number;
   /** Review comments across all versions. */
   comment_count?: number;

@@ -42,11 +42,11 @@ import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submis
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
-import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
+import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
-import type { ReviewJob, Submission, SubmissionVersion } from "@/types/submission";
+import type { ReviewJob, StoredCheck, Submission, SubmissionVersion } from "@/types/submission";
 
 const TYPE_LABELS: Record<string, string> = {
   VIDEO: "Video",
@@ -146,7 +146,7 @@ function JobCard({ job }: { job: ReviewJob }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-semibold text-foreground">Version {job.version_number}</span>
         <div className="flex items-center gap-1.5">
-          <LightBadge light={job.traffic_light} score={job.score} />
+          {isAnalysing(job.automated_check as StoredCheck | null) ? <UnderReviewBadge /> : <LightBadge light={job.traffic_light} score={job.score} />}
           <Badge variant="outline" className="text-[11px]">
             {JOB_STATUS[job.status] ?? job.status}
           </Badge>
@@ -389,7 +389,7 @@ export default function SubmissionDetailPage() {
             can_approve: s.can_approve,
             approver_names: s.approver_names,
             open_critical_flags: s.open_critical_flags,
-            score: s.latest_check?.score ?? null,
+            score: isAnalysing(s.latest_check) ? null : s.latest_check?.score ?? null,
             manual_rules: s.latest_check?.manual_review_rules,
           }}
         />

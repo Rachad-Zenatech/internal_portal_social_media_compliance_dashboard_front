@@ -1,4 +1,5 @@
 import { format, formatDistanceToNowStrict, isPast } from "date-fns";
+import { withLinkToken } from "@/lib/linkToken";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import type { DueKind } from "@/types/submission";
 import {
@@ -11,6 +12,7 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
+  Hourglass,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +22,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { SubmissionFile, SubmissionStatus } from "@/types/submission";
+import type { StoredCheck, SubmissionFile, SubmissionStatus } from "@/types/submission";
+
+/** Whether the post is still being read (video transcript, text in images): no score is shown until it has. */
+export const isAnalysing = (check?: StoredCheck | null) =>
+  Boolean(check && (check.analysis_pending ?? (check.transcript_pending || (check.images_pending ?? 0) > 0)));
+
+/** Shown in place of a score while the post is still being analysed. */
+export function UnderReviewBadge({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 ${className}`}
+      title="Still reading the video and images; the score appears once the whole post has been analysed"
+    >
+      <Hourglass className="w-3 h-3" /> Under review
+    </span>
+  );
+}
 
 export const FILE_KIND_LABELS: Record<string, string> = {
   MAIN: "Main content",
@@ -59,13 +77,11 @@ function formatDuration(sec: number) {
 }
 
 /**
- * URL a <video>/<img> can load directly. The API authenticates with the session token,
- * which media elements can't send as a header, so it goes in the query string
- * (the same way the notification stream connects).
+ * URL a <video>/<img> can load directly. Media elements can't send the Authorization header, so the URL carries a
+ * link token: it only opens media, and never the sign-in token itself (see lib/linkToken).
  */
 export function authedFileUrl(url: string) {
-  const token = sessionStorage.getItem("token");
-  return token ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}` : url;
+  return withLinkToken(url);
 }
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {

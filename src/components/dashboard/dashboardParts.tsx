@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CoverThumb } from "@/components/submissions/PostPreview";
+import { UnderReviewBadge } from "@/components/submissions/submissionUi";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import type { SubmissionSummary } from "@/types/submission";
 
@@ -75,7 +76,8 @@ export const initials = (name?: string | null) =>
 export const avatarTone = (key: string) => AVATAR_TONES[[...key].reduce((sum, c) => sum + c.charCodeAt(0), 0) % AVATAR_TONES.length];
 
 /** A compliance score the way the Content Screener shows it. */
-export function Score({ score }: { score?: number | null }) {
+export function Score({ score, pending = false }: { score?: number | null; pending?: boolean }) {
+  if (pending) return <UnderReviewBadge />;
   if (score == null) return <span className="text-xs text-muted-foreground">Not checked</span>;
   const [tone, Icon] =
     score >= 80

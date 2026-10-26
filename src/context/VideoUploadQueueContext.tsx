@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { complianceService, type ComplianceViolation } from '@/services/complianceService';
 import { submissionService } from '@/services/submissionService';
-import { authedFileUrl } from '@/components/submissions/submissionUi';
+import { authedFileUrl, isAnalysing } from '@/components/submissions/submissionUi';
 import { useAuth } from '@/lib/AuthContext';
 import type {
   QueueTab,
@@ -30,7 +30,8 @@ export type TargetPlatform =
   | 'REDDIT'
   | 'WEBSITE';
 export type PosterVariant = 'dusk' | 'desert' | 'night';
-export type ScoreStatus = 'pending' | 'checked' | 'error';
+// 'analysing': checked, but the video or images are still being read, so there's no score yet.
+export type ScoreStatus = 'pending' | 'analysing' | 'checked' | 'error';
 export type VideoQueueStatus = 'QUEUED' | 'UPLOADING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'PAUSED';
 
 export interface TimestampedSegment {
@@ -393,7 +394,7 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     logs: [],
     violationCount: check?.violations_count ?? 0,
     complianceScore: check?.score ?? 0,
-    scoreStatus: check ? 'checked' : 'pending',
+    scoreStatus: !check ? 'pending' : isAnalysing(check) ? 'analysing' : 'checked',
     serverCheck: check ?? null,
     submissionStatus: s.status,
     currentVersion: s.current_version,

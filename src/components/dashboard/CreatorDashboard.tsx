@@ -143,7 +143,7 @@ function NextStepCard({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void 
         </p>
         <p className="mt-0.5 flex items-center gap-2">
           <Platforms platforms={s.platforms} />
-          {s.latest_score != null && <Score score={s.latest_score} />}
+          {(s.latest_score != null || s.analysis_pending) && <Score score={s.latest_score} pending={s.analysis_pending} />}
         </p>
       </div>
       <Button
@@ -354,7 +354,7 @@ export default function CreatorDashboard() {
                           {due && ` · ${due.text.replace("Decision due by", "decision due")}`}
                         </p>
                       </div>
-                      <Score score={r.latest_score} />
+                      <Score score={r.latest_score} pending={r.analysis_pending} />
                     </li>
                   );
                 })}

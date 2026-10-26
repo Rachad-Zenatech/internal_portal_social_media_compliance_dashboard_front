@@ -266,7 +266,7 @@ function ReviewerDashboard() {
                           <Deadline dueAt={r.due_at} />
                         </td>
                         <td className="py-3 pr-3">
-                          <Score score={r.latest_score} />
+                          <Score score={r.latest_score} pending={r.analysis_pending} />
                         </td>
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-1">
