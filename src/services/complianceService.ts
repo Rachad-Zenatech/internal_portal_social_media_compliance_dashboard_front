@@ -122,6 +122,16 @@ export interface ComplianceCheckResponse {
   recommendations: string[];
   /** How many active rules applied to the content's scope (missing on checks saved before scoping). */
   rules_checked?: number;
+  /** Of those, the rules the text check can't test (nothing to look for in text): a reviewer confirms them. */
+  manual_review_rules?: ManualReviewRule[];
+}
+
+/** An applicable rule the automated check can't test from text (e.g. image editing, image rights). */
+export interface ManualReviewRule {
+  rule_id: string;
+  rule_number: string;
+  title: string;
+  severity: string;
 }
 
 /** One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not. */

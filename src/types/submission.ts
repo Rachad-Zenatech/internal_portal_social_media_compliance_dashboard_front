@@ -72,13 +72,18 @@ export interface SegmentFlag {
   rule_numbers: string[];
 }
 
-/** The server's rulebook check: title, caption and (once ready) the video transcript. */
+/** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
   checked_at?: string;
   includes_transcript?: boolean;
   /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
   transcript_pending?: boolean;
   segment_flags?: SegmentFlag[];
+  /** The post's images: how many, whose text was read, still being read (re-checked when done), unreadable. */
+  images_total?: number;
+  images_read?: number;
+  images_pending?: number;
+  images_failed?: number;
 };
 
 export interface Submission {
@@ -229,6 +234,8 @@ export interface ReviewJob {
   decision_notes?: string | null;
   decided_by_name?: string | null;
   decided_at?: string | null;
+  /** Approved: the rules the reviewer confirmed by hand. */
+  manual_checks?: { rule_number: string; title: string }[];
 }
 
 export type ReviewDecisionType = "APPROVE" | "REQUEST_CHANGES";
@@ -241,6 +248,10 @@ export interface ReviewDecisionRequest {
   publish_at?: string;
   /** ...or approve to publish straight away. */
   publish_now?: boolean;
+  /** Approve: the rules (by number) the reviewer confirmed by hand; must cover the check's manual_review_rules. */
+  confirmed_rules?: string[];
+  /** Request changes: working days the creator has to resubmit. */
+  revision_days?: 1 | 2 | 3 | 5;
 }
 
 export type ReviewCommentCategory = "LEGAL" | "EDITORIAL" | "COMPLIANCE" | "BRAND" | "NOTE";
@@ -368,6 +379,29 @@ export interface RuleFlagStats {
 export type QueueTab = "review" | "sent_back" | "done";
 
 export type ReviewQueueCounts = Record<QueueTab, number>;
+
+/** The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard). */
+export interface DashboardSummary {
+  activity: {
+    at: string;
+    actor_id?: string | null;
+    actor_name?: string | null;
+    /** e.g. "approved", "requested changes on", "commented on" */
+    action: string;
+    submission_id: string;
+    reference_code: string;
+    title: string;
+  }[];
+  reviews_completed: number;
+  approved: number;
+  changes_requested: number;
+  /** Waiting on a reviewer past its review deadline, right now. */
+  overdue_reviews: number;
+  /** Average rulebook score of content sent for review in the period; null when nothing was sent. */
+  average_score?: number | null;
+  common_findings: { rule_number: string; title: string; count: number }[];
+  days: number;
+}
 
 export interface SubmitResult {
   submission: Submission;

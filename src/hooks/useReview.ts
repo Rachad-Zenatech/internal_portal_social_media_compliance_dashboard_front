@@ -107,7 +107,8 @@ export function useApprovalActions(submissionId: string, referenceCode: string) 
     onError: (err) => toast.error(`Couldn't withdraw it: ${(err as Error).message}`),
   });
   const reopen = useMutation({
-    mutationFn: (notes: string) => submissionService.reopen(submissionId, notes),
+    mutationFn: ({ notes, revisionDays }: { notes: string; revisionDays?: 1 | 2 | 3 | 5 }) =>
+      submissionService.reopen(submissionId, notes, revisionDays),
     onSuccess: () => {
       onSuccess();
       toast.success(`${referenceCode} reopened. The creator has been asked to make changes.`);

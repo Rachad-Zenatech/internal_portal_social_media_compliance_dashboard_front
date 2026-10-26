@@ -39,6 +39,8 @@ import {
   Minimize,
   Film,
   Layers,
+  Hourglass,
+  MessageSquareWarning,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -82,6 +84,7 @@ import SentimentPanel from "@/components/submissions/SentimentPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import { DueBadge } from "@/components/submissions/submissionUi";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import type { QueueTab } from "@/types/submission";
@@ -326,7 +329,9 @@ function PostStillPreview({ item }: { item: VideoQueueItem }) {
 }
 
 export default function VideoComplianceScannerPage() {
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, creatorView } = useAuth();
+  // Demo tools (sample videos, simulated uploads) are for super admins setting up or demonstrating the app.
+  const canUseDemo = Boolean(user?.is_super_admin) && !creatorView;
   const authorName = user?.full_name || "Marketing Reviewer";
   const navigate = useNavigate();
   const {
@@ -380,6 +385,12 @@ export default function VideoComplianceScannerPage() {
     review: isReviewer ? "Submitted or resubmitted content waiting for a reviewer's decision" : "Your content waiting for a reviewer's decision",
     sent_back: isReviewer ? "Sent back to the creator; waiting for them to fix and resubmit" : "A reviewer asked for changes; fix and resubmit",
     done: "Approved or rejected in the last 30 days. Older decisions are in the Content Portal.",
+  };
+  // Same stage colours as the dashboards and status pills.
+  const QUEUE_TAB_STYLE: Record<QueueTab, { Icon: typeof Clock; tone: string }> = {
+    review: { Icon: Hourglass, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+    sent_back: { Icon: MessageSquareWarning, tone: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
+    done: { Icon: CheckCircle2, tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
   };
   const QUEUE_EMPTY: Record<QueueTab, string> = {
     review: isReviewer ? "Nothing waiting for review." : "Nothing of yours is waiting for review.",
@@ -1089,7 +1100,7 @@ export default function VideoComplianceScannerPage() {
       if (!announce) {
         // automatic re-scan: the panel updates without a toast
       } else if (res.is_compliant) {
-        toast.success(`Cleared for ${platform}! No defense compliance violations detected.`);
+        toast.success(`No rulebook issues found in the text for ${platform}.`);
       } else if (res.traffic_light === "RED") {
         toast.error(`Stop! ${res.violations_count} critical red-line violation(s) flagged.`);
       } else {
@@ -1326,11 +1337,11 @@ export default function VideoComplianceScannerPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Screener</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review submitted videos against the compliance rulebook, frame by frame, with notes pinned to the moment.
+            Review submitted content against the compliance rulebook: videos frame by frame, images and captions in full.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {!submissionId && (
+          {canUseDemo && !submissionId && (
             <>
               <Button variant="outline" size="sm" onClick={resetDemo} className="h-9 text-xs gap-1.5 font-semibold">
                 <RotateCcw className="w-3.5 h-3.5" /> Reset demo
@@ -1358,9 +1369,12 @@ export default function VideoComplianceScannerPage() {
               <Clock className="w-4 h-4" /> {waitingForMe} waiting for your review
             </button>
           )}
-          <Button onClick={() => navigate("/submissions/new")} className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
-            <FilePlus2 className="w-4 h-4" /> Upload New Content
-          </Button>
+          {/* Uploading is the creator's side of the app. */}
+          {!isReviewer && (
+            <Button onClick={() => navigate("/submissions/new")} className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+              <FilePlus2 className="w-4 h-4" /> Upload New Content
+            </Button>
+          )}
         </div>
       </header>
 
@@ -1369,6 +1383,7 @@ export default function VideoComplianceScannerPage() {
         {(["review", "sent_back", "done"] as QueueTab[]).map((tab) => {
           const active = queueTab === tab;
           const count = (queueCounts?.[tab] ?? 0) + (tab === "review" ? queue.filter((i) => i.isDemo).length : 0);
+          const TabIcon = QUEUE_TAB_STYLE[tab].Icon;
           return (
             <button
               key={tab}
@@ -1381,8 +1396,13 @@ export default function VideoComplianceScannerPage() {
                 active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
               }`}
             >
-              <span className={`text-2xl font-semibold tabular-nums ${active ? "" : "text-foreground"}`}>{count}</span>
-              <span className={`text-xs ${active ? "font-semibold" : ""}`}>{QUEUE_TAB_LABELS[tab]}</span>
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${QUEUE_TAB_STYLE[tab].tone}`}>
+                <TabIcon className="w-[18px] h-[18px]" />
+              </span>
+              <span className="min-w-0">
+                <span className={`block text-2xl font-semibold leading-tight tabular-nums ${active ? "" : "text-foreground"}`}>{count}</span>
+                <span className={`block truncate text-xs ${active ? "font-semibold" : ""}`}>{QUEUE_TAB_LABELS[tab]}</span>
+              </span>
             </button>
           );
         })}
@@ -1408,18 +1428,22 @@ export default function VideoComplianceScannerPage() {
                 <DropdownMenuItem onClick={openQueueDrawer} className="text-xs gap-2">
                   <Upload className="w-3.5 h-3.5" /> Open upload queue ({queue.length})
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowDemo(!showDemo)} className="text-xs gap-2">
-                  <Film className="w-3.5 h-3.5" /> Show demo videos {showDemo && <Check className="w-3.5 h-3.5 ml-auto" />}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  disabled={activeJob?.status === "PROCESSING" || isScanning}
-                  onClick={() => startBackgroundJob()}
-                  className="text-xs gap-2"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {activeJob?.status === "PROCESSING" ? "Uploading & screening..." : "Trigger background job (demo)"}
-                </DropdownMenuItem>
+                {canUseDemo && (
+                  <>
+                    <DropdownMenuItem onClick={() => setShowDemo(!showDemo)} className="text-xs gap-2">
+                      <Film className="w-3.5 h-3.5" /> Show demo videos {showDemo && <Check className="w-3.5 h-3.5 ml-auto" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      disabled={activeJob?.status === "PROCESSING" || isScanning}
+                      onClick={() => startBackgroundJob()}
+                      className="text-xs gap-2"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {activeJob?.status === "PROCESSING" ? "Uploading & screening..." : "Trigger background job (demo)"}
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -1793,7 +1817,7 @@ export default function VideoComplianceScannerPage() {
                   }`}
                 >
                   {scanResult.is_compliant
-                    ? `Cleared for ${platformName}`
+                    ? `No issues found in the text for ${platformName}`
                     : `${scanResult.violations_count} Rule ${scanResult.violations_count === 1 ? "Violation" : "Violations"} Flagged for ${platformName}`}
                 </span>
                 <Badge
@@ -1805,7 +1829,7 @@ export default function VideoComplianceScannerPage() {
                       : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                   }`}
                 >
-                  {scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Clear"}
+                  {scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Text clear"}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -1823,6 +1847,7 @@ export default function VideoComplianceScannerPage() {
                 <span className="text-border">|</span>
                 <span>{comments.length} Reviewer Note(s)</span>
               </p>
+              {activeVideo?.serverCheck && <CheckCoverage check={activeVideo.serverCheck} className="mt-1.5" />}
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={copyClearanceReport} className="text-xs gap-1.5 font-semibold bg-background self-end md:self-auto shrink-0">
@@ -2420,6 +2445,7 @@ export default function VideoComplianceScannerPage() {
                     can_approve: activeVideo.canApprove,
                     approver_names: activeVideo.approverNames,
                     open_critical_flags: activeVideo.openCriticalFlags,
+                    manual_rules: activeVideo.serverCheck?.manual_review_rules,
                     score: activeVideo.serverCheck?.score ?? null,
                   }}
                 />

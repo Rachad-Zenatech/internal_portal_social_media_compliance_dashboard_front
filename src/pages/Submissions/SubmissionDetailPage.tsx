@@ -45,6 +45,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, authedFileUrl } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
+import CheckCoverage from "@/components/submissions/CheckCoverage";
 import type { ReviewJob, Submission, SubmissionVersion } from "@/types/submission";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -183,7 +184,14 @@ function JobCard({ job }: { job: ReviewJob }) {
       )}
       {check && check.violations.length === 0 && (
         <p className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Automated check found no issues.
+          <CheckCircle2 className="w-3.5 h-3.5" /> Automated check found no issues in the text.
+        </p>
+      )}
+      {check && <CheckCoverage check={check} />}
+      {job.manual_checks && job.manual_checks.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          <span className="font-semibold text-foreground">Confirmed by the reviewer:</span>{" "}
+          {job.manual_checks.map((m) => `${m.rule_number} (${m.title})`).join(", ")}
         </p>
       )}
     </div>
@@ -243,10 +251,12 @@ export default function SubmissionDetailPage() {
   const historyQuery = useQuery({ queryKey: ["submission-history", id], queryFn: () => submissionService.history(id), enabled: Boolean(id), staleTime: 0 });
   const s = submissionQuery.data;
   const history = historyQuery.data;
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, creatorView } = useAuth();
   const { comments } = useReviewComments(id);
   const isCreator = Boolean(s && user && s.created_by === user.id);
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  // A super admin viewing the app as a creator sees it as the creator would.
+  const canReview = Boolean(s?.can_review) && !creatorView;
 
   // Show the reference code in the breadcrumb instead of the raw id.
   useEffect(() => {
@@ -363,7 +373,7 @@ export default function SubmissionDetailPage() {
         </div>
       </Card>
 
-      {s.can_review && (
+      {canReview && (
         <ReviewDecisionPanel
           target={{
             id: s.id,
@@ -380,10 +390,11 @@ export default function SubmissionDetailPage() {
             approver_names: s.approver_names,
             open_critical_flags: s.open_critical_flags,
             score: s.latest_check?.score ?? null,
+            manual_rules: s.latest_check?.manual_review_rules,
           }}
         />
       )}
-      {s.status === "IN_REVIEW" && !s.can_review && (
+      {s.status === "IN_REVIEW" && !canReview && (
         <p className="rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-xs text-blue-900 dark:text-blue-100">
           {isCreator
             ? "This is with a reviewer. You'll get a notification when they approve it or ask for changes."
@@ -487,7 +498,7 @@ export default function SubmissionDetailPage() {
                 <ReviewCommentsPanel
                   submissionId={s.id}
                   canComment={isCreator || isReviewer}
-                  placeholder={isCreator && !s.can_review ? "Reply to the reviewer..." : "What should change, and why?"}
+                  placeholder={isCreator && !canReview ? "Reply to the reviewer..." : "What should change, and why?"}
                   emptyText={s.status === "IN_REVIEW" ? "No comments yet. Reviewers' comments show here." : "No comments."}
                 />
               </div>

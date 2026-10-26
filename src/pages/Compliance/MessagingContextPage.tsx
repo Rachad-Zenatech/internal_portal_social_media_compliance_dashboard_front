@@ -16,27 +16,36 @@ import { contextService } from "@/services/contextService";
 import { submissionService } from "@/services/submissionService";
 import type { ContextEntry, ContextEntryInput, ContextKind } from "@/types/context";
 
-const KINDS: { value: ContextKind; label: string; icon: typeof Megaphone; help: string }[] = [
+// Each kind keeps its own colour: on its tab, its entries and the help line.
+const KINDS: { value: ContextKind; label: string; icon: typeof Megaphone; tone: string; active: string; help: string }[] = [
   {
     value: "BRAND_VOICE",
+    tone: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+    active: "border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200",
     label: "Brand voice",
     icon: Megaphone,
     help: "How each brand should sound: tone, words it uses and avoids, and examples. Scope it to the brand.",
   },
   {
     value: "FACT",
+    tone: "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
+    active: "border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-200",
     label: "Facts",
     icon: BookOpenText,
     help: "What's true about products, partners and the company (e.g. which products are shipping vs in trials). Add the date and source.",
   },
   {
     value: "PLATFORM_NORM",
+    tone: "bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300",
+    active: "border-teal-300 bg-teal-50 text-teal-800 dark:border-teal-500/40 dark:bg-teal-500/10 dark:text-teal-200",
     label: "Platform norms",
     icon: Smartphone,
     help: "What each platform's audience expects, so tone is judged against where it's posted.",
   },
   {
     value: "AUDIENCE_PROFILE",
+    tone: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+    active: "border-indigo-300 bg-indigo-50 text-indigo-800 dark:border-indigo-500/40 dark:bg-indigo-500/10 dark:text-indigo-200",
     label: "Audience profiles",
     icon: Users,
     help: "What each audience cares about and how they tend to read things.",
@@ -199,20 +208,28 @@ export default function MessagingContextPage() {
               role="tab"
               aria-selected={active}
               onClick={() => setKind(k.value)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                active ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:text-foreground"
+              className={`inline-flex items-center gap-2 rounded-xl border py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-colors ${
+                active ? k.active : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              <k.icon className="w-3.5 h-3.5" /> {k.label} <span className={active ? "opacity-80" : ""}>({counts[k.value] ?? 0})</span>
+              <span className={`grid h-6 w-6 place-items-center rounded-md ${k.tone}`}>
+                <k.icon className="w-3.5 h-3.5" />
+              </span>
+              {k.label} <span className="tabular-nums opacity-70">{counts[k.value] ?? 0}</span>
             </button>
           );
         })}
       </div>
 
       <Card className="py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
-        <p className="px-4 py-3 border-b border-border/60 text-xs text-muted-foreground">
+        <p className="flex items-start gap-2.5 px-4 py-3 border-b border-border/60 bg-muted/20 text-xs text-muted-foreground">
+          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${current.tone}`}>
+            <current.icon className="w-4 h-4" />
+          </span>
+          <span>
           {current.help} The analysis gets only the entries that match the content's brand, audience and platforms, treats
           them as background (not instructions), and shows which ones it used.
+          </span>
         </p>
         {entries.isLoading ? (
           <p className="p-6 text-xs text-muted-foreground flex items-center gap-2">
@@ -220,7 +237,9 @@ export default function MessagingContextPage() {
           </p>
         ) : shown.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted-foreground space-y-1">
-            <ScrollText className="w-5 h-5 mx-auto" />
+            <span className={`mx-auto mb-2 grid h-10 w-10 place-items-center rounded-xl ${current.tone}`}>
+              <ScrollText className="w-5 h-5" />
+            </span>
             <p className="font-semibold text-foreground">No {current.label.toLowerCase()} yet</p>
             <p>
               {kind === "BRAND_VOICE"
@@ -234,7 +253,10 @@ export default function MessagingContextPage() {
           <ul className="divide-y divide-border/60">
             {shown.map((e) => (
               <li key={e.id} className={`px-4 py-3 space-y-1.5 ${e.is_active ? "" : "opacity-60"}`}>
-                <div className="flex flex-wrap items-start gap-2">
+                <div className="flex flex-wrap items-start gap-3">
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${current.tone}`}>
+                    <current.icon className="w-4 h-4" />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground">
                       {e.title}

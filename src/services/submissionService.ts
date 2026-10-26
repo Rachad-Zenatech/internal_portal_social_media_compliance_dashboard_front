@@ -1,4 +1,6 @@
 import { apiClient } from "@/services/apiClient";
+import type { CaptionSuggestions } from "@/types/caption";
+import type { MoodVerdict, PublicMood } from "@/types/publicMood";
 import type {
   AiUsage,
   FindingFeedback,
@@ -10,6 +12,7 @@ import type {
 } from "@/types/sentiment";
 import type {
   ContentType,
+  DashboardSummary,
   FlagDismissReason,
   FlagReview,
   QueueTab,
@@ -79,7 +82,8 @@ export const submissionService = {
   withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
 
   /** Reviewer takes back an approval and sends it to the creator as changes requested. */
-  reopen: (id: string, notes: string) => apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes }, quiet),
+  reopen: (id: string, notes: string, revisionDays?: 1 | 2 | 3 | 5) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes, revision_days: revisionDays }, quiet),
 
   /** Reviewer moves approved content to a new publish time. */
   reschedule: (id: string, publishAt: string) =>
@@ -114,6 +118,28 @@ export const submissionService = {
       `/api/submissions/${id}/sentiment${version != null ? `?version=${version}` : ""}`,
       quiet
     ),
+
+  /** Three captions drafted from the post (images, the video itself, its transcript, title), each already compliance-checked. */
+  suggestCaptions: (id: string, data: { hint?: string; max_chars: number }) =>
+    apiClient.post<CaptionSuggestions>(`/api/submissions/${id}/caption-suggestions`, data, quiet),
+
+  /** How people online feel about the topics this post touches (social listening), with any saved summary. */
+  getPublicMood: (id: string) => apiClient.get<PublicMood>(`/api/submissions/${id}/public-mood`, quiet),
+
+  /** Write (or reuse) the AI reading of how this post may land given the current mood. */
+  summarisePublicMood: (id: string) => apiClient.post<PublicMood>(`/api/submissions/${id}/public-mood/summary`, undefined, quiet),
+
+  /** "This post isn't about that topic" (or put it back). */
+  dismissMoodTopic: (id: string, topicId: string) =>
+    apiClient.put<PublicMood>(`/api/submissions/${id}/public-mood/topics/${topicId}/dismissal`, undefined, quiet),
+  restoreMoodTopic: (id: string, topicId: string) =>
+    apiClient.delete<PublicMood>(`/api/submissions/${id}/public-mood/topics/${topicId}/dismissal`, quiet),
+
+  /** Whether the public mood summary helped; no verdict takes the vote back. */
+  rateMoodSummary: (id: string, summaryId: string, verdict?: MoodVerdict) =>
+    verdict
+      ? apiClient.put<PublicMood>(`/api/submissions/${id}/public-mood/summary/${summaryId}/feedback`, { verdict }, quiet)
+      : apiClient.delete<PublicMood>(`/api/submissions/${id}/public-mood/summary/${summaryId}/feedback`, quiet),
 
   /** One submitted version as it was (snapshot, video, automated check, decision). */
   getVersion: (id: string, version: number) => apiClient.get<VersionView>(`/api/submissions/${id}/versions/${version}`, quiet),
@@ -152,12 +178,17 @@ export const submissionService = {
     apiClient.get<AiUsage>(`/api/submissions/ai-usage${submissionId ? `?submission_id=${submissionId}` : ""}`, quiet),
 
   /** Submitted videos for the Content Screener queue. */
-  reviewQueue: (tab: QueueTab = "review", search?: string) =>
+  /** scope "mine": only the user's own content, as its creator (a super admin viewing the app as a creator). */
+  reviewQueue: (tab: QueueTab = "review", search?: string, scope: "all" | "mine" = "all") =>
     apiClient.get<ReviewQueueItem[]>(
-      `/api/submissions/review-queue?tab=${tab}${search ? `&search=${encodeURIComponent(search)}` : ""}`
+      `/api/submissions/review-queue?tab=${tab}&scope=${scope}${search ? `&search=${encodeURIComponent(search)}` : ""}`
     ),
 
-  reviewQueueCounts: () => apiClient.get<ReviewQueueCounts>("/api/submissions/review-queue/counts"),
+  reviewQueueCounts: (scope: "all" | "mine" = "all") =>
+    apiClient.get<ReviewQueueCounts>(`/api/submissions/review-queue/counts?scope=${scope}`),
+
+  /** Recent activity and last-30-days compliance insights for the dashboard. */
+  dashboard: (scope: "all" | "mine" = "all") => apiClient.get<DashboardSummary>(`/api/submissions/dashboard?scope=${scope}`, quiet),
 
   /** Fetch a stored file as a blob URL (file URLs need the auth header, so <img src> can't load them directly). */
   async fileObjectUrl(url: string): Promise<string> {

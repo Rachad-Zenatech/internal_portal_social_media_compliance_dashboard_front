@@ -546,7 +546,8 @@ export default function ComplianceRulesPage() {
               : 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100'
           }`}
         >
-          <span className="font-semibold">
+          <span className="inline-flex items-center gap-1.5 font-semibold">
+            {failing.length ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
             Rule self-test: {testable.length - failing.length} of {testable.length} rules handle their own examples correctly.
           </span>
           {failing.length > 0 && (
