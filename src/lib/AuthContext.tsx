@@ -2,18 +2,25 @@ import React, { createContext, useCallback, useContext, useEffect, useState, use
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../services/apiClient';
 import { ApiError, SESSION_EXPIRED_EVENT } from '../services/helper';
+import { clearLinkToken, refreshLinkToken } from './linkToken';
 
 /** Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login). */
 export const SIGNED_OUT_KEY = 'signedOut';
 
 // While the server can't be reached (restarting, network blip), keep the sign-in and try again.
 const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000];
+// Link tokens last a few hours; a fresh one every 30 minutes keeps every link on the page valid.
+const LINK_TOKEN_REFRESH_MS = 30 * 60_000;
+// The server signs people out after 30 minutes without activity, and only changes count, so tell it while
+// someone is actually using the page (clicking, typing, scrolling), at most this often.
+const HEARTBEAT_EVERY_MS = 4 * 60_000;
 
 const clearStoredSession = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem('ms_id_token');
   sessionStorage.clear();
+  clearLinkToken();
 };
 
 export interface User {
@@ -105,6 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       for (let attempt = 0; ; attempt++) {
         try {
           const data = await apiClient.get<PermissionsData>('/api/me/permissions');
+          // Before the app renders, so images and videos load with it straight away. Without it they just don't
+          // load; that shouldn't block signing in.
+          await refreshLinkToken().catch(() => undefined);
           if (requestId === fetchRequestId.current) {
             setPermissions(data);
             setServerUnreachable(false);
@@ -142,6 +152,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchPermissions();
   }, [fetchPermissions]);
+
+  const signedIn = Boolean(permissions);
+  useEffect(() => {
+    if (!signedIn) return;
+    const refresh = window.setInterval(() => refreshLinkToken().catch(() => undefined), LINK_TOKEN_REFRESH_MS);
+    let active = false;
+    let lastBeat = Date.now();
+    const onActivity = () => {
+      active = true;
+    };
+    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+    const beat = window.setInterval(() => {
+      if (!active || Date.now() - lastBeat < HEARTBEAT_EVERY_MS) return;
+      active = false;
+      lastBeat = Date.now();
+      apiClient.post('/api/auth/heartbeat', undefined, { skipGlobalLoading: true }).catch(() => undefined);
+    }, 30_000);
+    return () => {
+      window.clearInterval(refresh);
+      window.clearInterval(beat);
+      events.forEach((e) => window.removeEventListener(e, onActivity));
+    };
+  }, [signedIn]);
 
   // A request was refused because the sign-in ended (e.g. signed out after inactivity): go to the login page
   // straight away, instead of leaving pages showing load errors until the next refresh.
@@ -242,6 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('ms_id_token');
     sessionStorage.removeItem('auth_provider');
+    clearLinkToken();
     setPermissions(null);
     
     // Always perform SSO logout redirect

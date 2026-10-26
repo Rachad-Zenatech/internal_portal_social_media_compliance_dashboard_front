@@ -29,6 +29,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, BASE_URL } from "@/services/apiClient";
 import ThemeSwitch from "./ThemeSwitch";
 import { useAuth, type Role, type ViewMode } from "@/lib/AuthContext";
+import { useLinkToken } from "@/lib/linkToken";
 import { resolveUserDepartment } from "@/lib/userDepartment";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 import { NotificationDropdownContent } from "./NotificationDropdown";
@@ -235,11 +236,14 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
   const { queue, activeUploadCount, activeVideo, openQueueDrawer } = useVideoUploadQueue();
 
   const queryClient = useQueryClient();
+  // EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+  const linkToken = useLinkToken();
 
   useEffect(() => {
-    // Connect to SSE stream
-    const token = sessionStorage.getItem("token") || "";
-    const eventSource = new EventSource(`${BASE_URL || ""}/api/notifications/stream?token=${token}`, { withCredentials: true });
+    if (!linkToken) return;
+    const eventSource = new EventSource(`${BASE_URL || ""}/api/notifications/stream?token=${encodeURIComponent(linkToken)}`, {
+      withCredentials: true,
+    });
     // The server ends each stream every couple of minutes and the browser reconnects; catch up on anything sent between.
     let connectedBefore = false;
     eventSource.onopen = () => {
@@ -305,7 +309,7 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
     return () => {
       eventSource.close();
     };
-  }, [inAppAlerts, windowsNotifications, navigate, queryClient, user]);
+  }, [inAppAlerts, windowsNotifications, navigate, queryClient, user, linkToken]);
 
   return (
     <header className="h-14 border-b border-border bg-card text-card-foreground flex items-center justify-between px-3 sm:px-6 shrink-0 transition-all duration-300 gap-3 sm:gap-4 relative z-40">

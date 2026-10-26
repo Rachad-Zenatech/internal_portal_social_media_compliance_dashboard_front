@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SIGNED_OUT_KEY, useAuth } from "@/lib/AuthContext";
+import { apiClient } from "@/services/apiClient";
 
 /** Why the last session ended mid-use and where the user was, if it did (see AuthProvider). */
 function readSignedOut(): { reason?: string; returnTo?: string } | null {
@@ -18,6 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+// A random value made when sign-in starts and kept in this browser: the one-time code Microsoft sign-in returns only
+// works together with it, so a sign-in link made in someone else's browser can't sign you into their account.
+// localStorage, not sessionStorage: signing out of a stale session clears sessionStorage mid-sign-in.
+const LOGIN_NONCE_KEY = "login_nonce";
+
+function newNonce() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -60,6 +72,13 @@ export default function Login() {
         return;
       }
 
+      if (error === "login_expired") {
+        hasProcessedLogin.current = true;
+        setTimeout(() => toast.error("That sign-in took too long or was started elsewhere. Please sign in again."), 100);
+        navigate("/login", { replace: true });
+        return;
+      }
+
       if (error === "account_deactivated") {
         hasProcessedLogin.current = true;
         setTimeout(() => {
@@ -76,10 +95,14 @@ export default function Login() {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("user");
           sessionStorage.removeItem("ms_id_token");
-          const token = searchParams.get("token");
-          if (token) {
-            sessionStorage.setItem("token", token);
-          }
+          // Swap the one-time code for the session token; the token itself never appears in a URL.
+          const code = searchParams.get("code");
+          const nonce = localStorage.getItem(LOGIN_NONCE_KEY);
+          localStorage.removeItem(LOGIN_NONCE_KEY);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          if (!code || !nonce) throw new Error("This sign-in link can't be used here. Please sign in again.");
+          const { token } = await apiClient.post<{ token: string }>("/api/auth/exchange", { code, nonce }, { skipGlobalLoading: true });
+          sessionStorage.setItem("token", token);
           await refreshPermissions();
           toast.success("Successfully logged in");
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -89,7 +112,8 @@ export default function Login() {
           navigate(returnTo);
         } catch (error) {
           console.error("Failed to process SSO login", error);
-          toast.error("Failed to process login");
+          toast.error(error instanceof Error && error.message ? error.message : "Failed to process login");
+          navigate("/login", { replace: true });
         } finally {
           setIsLoading(false);
         }
@@ -104,7 +128,9 @@ export default function Login() {
     // Redirect to backend Microsoft SSO endpoint
     const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
     const baseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
-    window.location.href = `${baseUrl}/api/auth/microsoft/login`;
+    const nonce = newNonce();
+    localStorage.setItem(LOGIN_NONCE_KEY, nonce);
+    window.location.href = `${baseUrl}/api/auth/microsoft/login?nonce=${nonce}`;
   };
 
   return (
