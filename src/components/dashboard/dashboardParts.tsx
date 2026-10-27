@@ -233,43 +233,6 @@ export function SectionIcon({ Icon, tone }: { Icon: LucideIcon; tone: Tone }) {
   );
 }
 
-/** A count card with a coloured icon; highlighted when it needs attention. */
-export function StatCard({
-  to,
-  Icon,
-  tone,
-  value,
-  label,
-  hint,
-  attention = false,
-}: {
-  to: string;
-  Icon: LucideIcon;
-  tone: Tone;
-  value: React.ReactNode;
-  label: string;
-  hint?: string;
-  attention?: boolean;
-}) {
-  const ring = attention
-    ? tone === "red"
-      ? "border-red-200 dark:border-red-500/30"
-      : "border-amber-200 dark:border-amber-500/30"
-    : "border-border/70";
-  const number = attention ? (tone === "red" ? "text-red-600 dark:text-red-400" : "text-amber-700 dark:text-amber-300") : "text-foreground";
-  return (
-    <Link to={to} title={hint} className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3.5 transition-shadow hover:shadow-sm ${ring}`}>
-      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${TONE[tone]}`}>
-        <Icon className="w-5 h-5" />
-      </span>
-      <span className="min-w-0">
-        <span className={`block text-2xl font-semibold leading-tight tabular-nums ${number}`}>{value}</span>
-        <span className="block truncate text-xs text-muted-foreground">{label}</span>
-        {hint && <span className="block truncate text-[11px] text-muted-foreground/80">{hint}</span>}
-      </span>
-    </Link>
-  );
-}
 
 // Each kind of update on a post, with its own icon and colour (same on both dashboards).
 export const ACTIVITY_STYLE: Record<string, { Icon: LucideIcon; tone: string }> = {

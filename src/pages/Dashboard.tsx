@@ -1,40 +1,27 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { addDays, format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
+import { format, isPast } from "date-fns";
 import {
-  AlarmClock,
-  CalendarCheck,
   CalendarDays,
   CheckCircle2,
-  ClipboardCheck,
-  Hourglass,
-  MessageSquareWarning,
-  ScanEye,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
+import NotificationsPanel from "@/components/dashboard/NotificationsPanel";
+import WeekAhead from "@/components/dashboard/WeekAhead";
+import PipelineSection, { type PipelineStage } from "@/components/dashboard/PipelineSection";
 import {
-  ACTIVITY_STYLE,
   Deadline,
-  Empty,
   Loading,
   Platforms,
   RowMenu,
-  STATUS_PILL,
   Score,
-  ScoreRing,
   Section,
-  SectionIcon,
-  StatCard,
-  TONE,
   Thumb,
-  UPCOMING_DAYS,
-  type Tone,
   statusOf,
   viewAll,
 } from "@/components/dashboard/dashboardParts";
@@ -47,6 +34,15 @@ import { submissionService } from "@/services/submissionService";
 // ---------------------------------------------------------------------------
 
 /** Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
+const REVIEW_PAGE_SIZE = 5;
+
+// The stages a reviewer tracks, coloured like their status pills.
+const REVIEW_STAGES: PipelineStage[] = [
+  { key: "IN_REVIEW", label: "In review", bar: "bg-blue-500", to: "/compliance/scanner" },
+  { key: "SCHEDULED", label: "Scheduled", bar: "bg-violet-500", to: "/content-calendar" },
+  { key: "APPROVED", label: "Approved", bar: "bg-emerald-500", to: "/compliance/scanner" },
+];
+
 export default function Dashboard() {
   const { hasPermission } = useAuth();
   return hasPermission("CONTENT_REVIEW_APPROVE") ? <ReviewerDashboard /> : <CreatorDashboard />;
@@ -65,11 +61,6 @@ function ReviewerDashboard() {
     staleTime: 0,
   });
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions });
-  const summary = useQuery({
-    queryKey: ["submissions-dashboard", scope],
-    queryFn: () => submissionService.dashboard(scope),
-    staleTime: 30_000,
-  });
 
   const brandName = (code?: string | null) => (code ? options.data?.brands.find((b) => b.code === code)?.name ?? code : "Not set");
 
@@ -86,101 +77,49 @@ function ReviewerDashboard() {
         ),
     [all]
   );
-  const upcoming = useMemo(() => {
-    const end = addDays(now, UPCOMING_DAYS);
-    return all
-      .filter((s) => s.publish_at && s.status !== "REJECTED" && new Date(s.publish_at) >= now && new Date(s.publish_at) <= end)
-      .sort((a, b) => new Date(a.publish_at!).getTime() - new Date(b.publish_at!).getTime());
-  }, [all, now]);
-  const counts = {
-    needsMyReview: needsMyReview.length,
-    overdue: needsMyReview.filter((s) => s.due_at && isPast(new Date(s.due_at))).length,
-    inReview: all.filter((s) => s.status === "IN_REVIEW").length,
-    approved: all.filter((s) => statusOf(s) === "SCHEDULED" || (s.status === "APPROVED" && !s.publish_at)).length,
-    upcoming: upcoming.filter((s) => statusOf(s) === "SCHEDULED").length,
-  };
-
-  // One card per count, in the same stage colours as the creator's dashboard.
-  const tiles: { value: number; label: string; hint: string; to: string; Icon: typeof ClipboardCheck; tone: Tone; attention?: boolean }[] = [
-    {
-      value: counts.needsMyReview,
-      label: "Needs my review",
-      hint: "Waiting for your decision",
-      to: "/compliance/scanner",
-      Icon: ClipboardCheck,
-      tone: "amber",
-      attention: counts.needsMyReview > 0,
-    },
-    {
-      value: counts.overdue,
-      label: "Overdue",
-      hint: "Past the review deadline",
-      to: "/compliance/scanner",
-      Icon: AlarmClock,
-      tone: "red",
-      attention: counts.overdue > 0,
-    },
-    { value: counts.inReview, label: "In review", hint: "With any reviewer", to: "/compliance/scanner", Icon: Hourglass, tone: "blue" },
-    { value: counts.approved, label: "Approved", hint: "Ready to schedule or post", to: "/compliance/scanner", Icon: CheckCircle2, tone: "emerald" },
-    {
-      value: counts.upcoming,
-      label: "Upcoming posts",
-      hint: `Scheduled, next ${UPCOMING_DAYS} days`,
-      to: "/content-calendar",
-      Icon: CalendarCheck,
-      tone: "violet",
-    },
-  ];
-
   const openInScreener = (id: string) => {
     setActiveVideoId(`sub-${id}`);
     navigate("/compliance/scanner");
   };
 
-  const s = summary.data;
-  const insights: { value: number | string; label: string; Icon: typeof ClipboardCheck; tone: Tone }[] = [
-    { value: s ? s.reviews_completed : "–", label: "Reviews completed", Icon: ClipboardCheck, tone: "blue" },
-    { value: s ? s.approved : "–", label: "Approved", Icon: CheckCircle2, tone: "emerald" },
-    { value: s ? s.changes_requested : "–", label: "Changes requested", Icon: MessageSquareWarning, tone: "amber" },
-    { value: s ? s.overdue_reviews : "–", label: "Overdue now", Icon: AlarmClock, tone: s?.overdue_reviews ? "red" : "slate" },
-  ];
-  const topFlagCount = Math.max(1, ...(s?.common_findings ?? []).map((f) => f.count));
 
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const loading = submissions.isLoading;
+  // The review list shows five at a time; reviewed posts drop out, so keep the page in range.
+  const [rawReviewPage, setReviewPage] = useState(0);
+  const reviewPages = Math.max(1, Math.ceil(needsMyReview.length / REVIEW_PAGE_SIZE));
+  const reviewPage = Math.min(rawReviewPage, reviewPages - 1);
+  const reviewRows = needsMyReview.slice(reviewPage * REVIEW_PAGE_SIZE, (reviewPage + 1) * REVIEW_PAGE_SIZE);
+  const pipeline = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of all) counts[statusOf(s)] = (counts[statusOf(s)] ?? 0) + 1;
+    return counts;
+  }, [all]);
+  const pipelineTotal = REVIEW_STAGES.reduce((sum, st) => sum + (pipeline[st.key] ?? 0), 0);
   // One plain sentence about the queue.
-  const headline = loading
-    ? "Loading your review queue..."
-    : counts.needsMyReview
-    ? `${counts.needsMyReview} post${counts.needsMyReview === 1 ? " is" : "s are"} waiting for your decision${
-        counts.overdue ? `, and ${counts.overdue} ${counts.overdue === 1 ? "is" : "are"} past the deadline` : ""
-      }.`
-    : `Your review queue is clear.${
-        counts.upcoming ? ` ${counts.upcoming} post${counts.upcoming === 1 ? " goes" : "s go"} out in the next ${UPCOMING_DAYS} days.` : ""
-      }`;
 
   return (
-    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+    <div data-canvas="contrast" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
       {/* Welcome: what's waiting, and a quick way into the queue */}
-      <section className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-emerald-50 p-5 sm:p-6 dark:border-blue-500/20 dark:from-blue-500/10 dark:via-card dark:to-emerald-500/10">
+      <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[0_1px_2px_oklch(0_0_0/0.05)] sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-              <ShieldCheck className="w-3.5 h-3.5" /> Review desk
+              Review desk
             </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-[28px]">
               {greeting}
               {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+              !
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               className="h-11 rounded-xl px-5 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
               onClick={() => (needsMyReview[0] ? openInScreener(needsMyReview[0].id) : navigate("/compliance/scanner"))}
             >
-              <ScanEye className="w-4 h-4" /> {needsMyReview.length ? "Start reviewing" : "Open Content Screener"}
+              {needsMyReview.length ? "Start reviewing" : "Open Content Screener"}
             </Button>
             <Button asChild variant="outline" className="h-11 rounded-xl px-4 gap-2 text-sm font-semibold bg-card/80">
               <Link to="/content-calendar">
@@ -191,20 +130,12 @@ function ReviewerDashboard() {
         </div>
       </section>
 
-      {/* Counts: one card each, opening its page */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        {tiles.map((tile) => (
-          <StatCard key={tile.label} {...tile} value={loading ? "–" : tile.value} />
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_440px] gap-5 items-start">
         {/* What's waiting for their decision */}
         <Section
           title="Needs Your Review"
           count={loading ? undefined : needsMyReview.length}
           subtitle="Soonest deadline first"
-          icon={<SectionIcon Icon={ClipboardCheck} tone="amber" />}
           action={viewAll("/compliance/scanner")}
         >
           {loading ? (
@@ -230,7 +161,7 @@ function ReviewerDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {needsMyReview.map((r) => {
+                  {reviewRows.map((r) => {
                     const submitted = r.submitted_at ? new Date(r.submitted_at) : null;
                     const overdue = Boolean(r.due_at && isPast(new Date(r.due_at)));
                     return (
@@ -275,7 +206,7 @@ function ReviewerDashboard() {
                               className="h-8 gap-1.5 rounded-lg bg-blue-700 px-3.5 text-xs font-semibold text-white hover:bg-blue-800"
                               onClick={() => openInScreener(r.id)}
                             >
-                              <ScanEye className="w-3.5 h-3.5" /> Review
+                              Review
                             </Button>
                             <RowMenu id={r.id} />
                           </div>
@@ -287,157 +218,53 @@ function ReviewerDashboard() {
               </table>
             </div>
           )}
-        </Section>
-
-        {/* Upcoming content */}
-        <Section
-          title="Upcoming Content"
-          count={loading ? undefined : upcoming.length}
-          subtitle={`Planned for the next ${UPCOMING_DAYS} days`}
-          icon={<SectionIcon Icon={CalendarDays} tone="violet" />}
-          action={viewAll("/content-calendar")}
-        >
-          {loading ? (
-            <Loading />
-          ) : upcoming.length === 0 ? (
-            <Empty>Nothing is planned for the next {UPCOMING_DAYS} days.</Empty>
-          ) : (
-            <ul className="divide-y divide-border/60 border-t border-border/60">
-              {upcoming.map((u) => {
-                const day = new Date(u.publish_at!);
-                const status = STATUS_PILL[statusOf(u)] ?? { label: u.status, pill: "bg-muted text-muted-foreground" };
-                return (
-                  <li key={u.id} className="flex items-center gap-3 px-4 py-3">
-                    <div
-                      className={`w-11 shrink-0 rounded-lg py-1 text-center ${
-                        isToday(day) ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" : "bg-muted/60 text-foreground"
-                      }`}
-                    >
-                      <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{format(day, "MMM")}</p>
-                      <p className="text-lg font-semibold leading-none tabular-nums">{format(day, "d")}</p>
-                    </div>
-                    <Thumb s={u} className="h-12 w-12" />
-                    <div className="min-w-0 flex-1 text-[11px] text-muted-foreground">
-                      <Link to={`/submissions/${u.id}`} className="block truncate text-sm font-semibold text-foreground hover:underline">
-                        {u.title}
-                      </Link>
-                      <p className="mt-0.5 flex items-center gap-1 truncate">
-                        <Platforms platforms={u.platforms} />
-                        <span>· {brandName(u.brand_code)}</span>
-                      </p>
-                      <p>
-                        {isToday(day) ? "Today" : isTomorrow(day) ? "Tomorrow" : format(day, "EEE MMM d")}, {format(day, "h:mm a")}
-                      </p>
-                    </div>
-                    <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${status.pill}`}>
-                      {status.label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Section>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-        {/* Recent activity, each kind with its own icon and colour */}
-        <Section
-          title="Recent Activity"
-          subtitle="Latest updates across your content"
-          icon={<SectionIcon Icon={TrendingUp} tone="blue" />}
-          action={viewAll("/compliance/scanner")}
-        >
-          {summary.isLoading ? (
-            <Loading />
-          ) : !s?.activity.length ? (
-            <Empty>No activity yet.</Empty>
-          ) : (
-            <ul className="divide-y divide-border/60 border-t border-border/60">
-              {s.activity.map((a, i) => {
-                const you = Boolean(user?.id && a.actor_id === user.id);
-                const name = you ? "You" : a.actor_name || "Someone";
-                const style = ACTIVITY_STYLE[a.action] ?? { Icon: Sparkles, tone: "bg-muted text-muted-foreground" };
-                return (
-                  <li key={`${a.submission_id}-${a.at}-${i}`} className="flex items-center gap-3 px-4 py-3">
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${style.tone}`}>
-                      <style.Icon className="w-4 h-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-foreground">
-                        <span className="font-semibold">{name}</span> {a.action}{" "}
-                        <Link to={`/submissions/${a.submission_id}`} className="font-mono text-xs text-blue-700 hover:underline dark:text-blue-300">
-                          {a.reference_code}
-                        </Link>
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">{a.title}</p>
-                    </div>
-                    <span className="shrink-0 text-[11px] text-muted-foreground" title={format(new Date(a.at), "MMM d, h:mm a")}>
-                      {formatDistanceToNow(new Date(a.at), { addSuffix: true })}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Section>
-
-        {/* Compliance insights */}
-        <Section
-          title="Compliance Insights"
-          subtitle={`Last ${s?.days ?? 30} days`}
-          icon={<SectionIcon Icon={ShieldCheck} tone="emerald" />}
-          action={viewAll("/compliance/rules", "Rulebook")}
-        >
-          <div className="grid gap-4 border-t border-border/60 p-4 sm:grid-cols-[auto_1fr] sm:items-center">
-            <ScoreRing score={s?.average_score} />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">Average compliance score</p>
-              <p className="mb-3 text-xs text-muted-foreground">Across content sent for review in this period.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {insights.map((i) => (
-                  <div key={i.label} className="flex items-center gap-2.5 rounded-lg bg-muted/40 px-2.5 py-2">
-                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${TONE[i.tone]}`}>
-                      <i.Icon className="w-3.5 h-3.5" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-base font-semibold leading-tight tabular-nums text-foreground">{i.value}</span>
-                      <span className="block truncate text-[11px] text-muted-foreground">{i.label}</span>
-                    </span>
-                  </div>
-                ))}
+          {reviewPages > 1 && (
+            <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
+              <span>
+                Page {reviewPage + 1} of {reviewPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setReviewPage(reviewPage - 1)}
+                  disabled={reviewPage === 0}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setReviewPage(reviewPage + 1)}
+                  disabled={reviewPage >= reviewPages - 1}
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
               </div>
             </div>
-          </div>
-          <div className="border-t border-border/60 px-4 py-3.5">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most flagged rules</p>
-            {summary.isLoading ? (
-              <p className="py-2 text-xs text-muted-foreground">Loading...</p>
-            ) : !s?.common_findings.length ? (
-              <p className="flex items-center gap-1.5 py-2 text-xs text-muted-foreground">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> No rulebook flags on content sent for review in this period.
-              </p>
-            ) : (
-              <ul className="space-y-2.5 pt-1">
-                {s.common_findings.map((f) => (
-                  <li key={f.rule_number} className="text-sm" title={`${f.count} flag${f.count === 1 ? "" : "s"}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="min-w-0 truncate text-foreground">
-                        <span className="font-semibold">{f.rule_number}</span> · {f.title}
-                      </span>
-                      <span className="shrink-0 text-[11px] font-semibold tabular-nums text-foreground">{f.count}</span>
-                    </div>
-                    <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-amber-500" style={{ width: `${(f.count / topFlagCount) * 100}%` }} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p className="mt-3 text-[11px] text-muted-foreground">Flags raised by the automated check on content sent for review.</p>
-          </div>
+          )}
         </Section>
+
+        <div className="space-y-5 min-w-0">
+          <NotificationsPanel pageSize={4} />
+
+          {/* Every post on the platform past review, by stage */}
+          <PipelineSection
+            stages={REVIEW_STAGES}
+            counts={pipeline}
+            total={pipelineTotal}
+            loading={loading}
+            subtitle="All posts across the platform, by stage"
+          />
+        </div>
       </div>
+
+      {/* The week ahead */}
+      <WeekAhead posts={all} loading={loading} />
     </div>
   );
 }

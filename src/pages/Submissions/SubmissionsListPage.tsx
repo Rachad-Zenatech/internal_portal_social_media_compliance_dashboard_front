@@ -1,25 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
 import {
   AlertTriangle,
   ArrowRight,
-  ArrowUpRight,
   BarChart3,
-  CalendarCheck,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Clock,
   FilePen,
   History,
-  Hourglass,
-  Layers,
   Info,
   Loader2,
   MessageSquare,
-  MessageSquareWarning,
   MoreHorizontal,
   Plus,
   ScanEye,
@@ -32,7 +28,6 @@ import {
   User as UserIcon,
   X,
   XCircle,
-  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,14 +93,14 @@ const STAGES: Record<Stage, { label: string; pill: string }> = {
   REJECTED: { label: "Rejected", pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" },
 };
 
-// Each stage keeps one colour everywhere: the same as the status pills and the dashboard.
-const STAGE_TILES: { value: "" | Stage; label: string; Icon: LucideIcon; tone: string }[] = [
-  { value: "", label: "All Content", Icon: Layers, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
-  { value: "DRAFT", label: "Drafts", Icon: FilePen, tone: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" },
-  { value: "IN_REVIEW", label: "In Review", Icon: Hourglass, tone: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
-  { value: "CHANGES_REQUESTED", label: "Changes Requested", Icon: MessageSquareWarning, tone: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
-  { value: "APPROVED", label: "Approved", Icon: CheckCircle2, tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
-  { value: "SCHEDULED", label: "Scheduled", Icon: CalendarCheck, tone: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" },
+// The stage pills along the top, each a filter.
+const STAGE_FILTERS: { value: "" | Stage; label: string }[] = [
+  { value: "", label: "All Content" },
+  { value: "DRAFT", label: "Drafts" },
+  { value: "IN_REVIEW", label: "In Review" },
+  { value: "CHANGES_REQUESTED", label: "Changes Requested" },
+  { value: "APPROVED", label: "Approved" },
+  { value: "SCHEDULED", label: "Scheduled" },
 ];
 
 type SortBy = "priority" | "updated" | "publish" | "score";
@@ -305,6 +301,62 @@ function SubmissionCard({
         </span>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Gallery card (creators): picture first, then the few facts they scan for
+// ---------------------------------------------------------------------------
+
+/** "Today", "Tomorrow", a weekday within the week ahead, otherwise the date. */
+function friendlyDate(iso: string) {
+  const d = new Date(iso);
+  if (isToday(d)) return `Today, ${format(d, "h:mm a")}`;
+  if (isTomorrow(d)) return `Tomorrow, ${format(d, "h:mm a")}`;
+  const days = differenceInCalendarDays(d, new Date());
+  if (days > 1 && days < 7) return format(d, "EEEE, h:mm a");
+  return format(d, "MMM d, yyyy");
+}
+
+function GalleryCard({ s, onSelect }: { s: SubmissionSummary; onSelect: (s: SubmissionSummary) => void }) {
+  const stage = stageOf(s);
+  const when = s.publish_at
+    ? { text: friendlyDate(s.publish_at), pastDue: !FINISHED.has(s.status) && isPast(new Date(s.publish_at)) }
+    : { text: `Edited ${formatDistanceToNow(new Date(s.updated_at), { addSuffix: true })}`, pastDue: false };
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(s)}
+      className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card text-left shadow-[0_1px_2px_oklch(0_0_0/0.05)] transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+    >
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+        <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+      </div>
+      <div className="flex flex-1 flex-col gap-2 p-3.5">
+        <p className="truncate text-sm font-semibold text-foreground">{s.title}</p>
+        {s.platforms.length > 0 && (
+          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-foreground/80">
+            {s.platforms.slice(0, 3).map((pl) => (
+              <span key={pl} className="inline-flex items-center gap-1">
+                <PlatformIcon platform={pl as SocialPlatform} className="w-3.5 h-3.5" /> {platformName(pl)}
+              </span>
+            ))}
+            {s.platforms.length > 3 && <span className="text-muted-foreground">+{s.platforms.length - 3}</span>}
+          </p>
+        )}
+        <div>
+          <StagePill stage={stage} small />
+        </div>
+        <p className={`text-xs ${when.pastDue ? "font-semibold text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
+          {when.text}
+          {when.pastDue && " · Past due"}
+        </p>
+        <DueLine dueAt={s.due_at} kind={s.due_kind} className="text-xs" />
+        <span className="mt-auto w-fit rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          {CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -602,13 +654,6 @@ function ReviewCard({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300"
-              onClick={() => navigate(`/submissions/${summary.id}`)}
-            >
-              Full details <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="More actions">
@@ -616,9 +661,6 @@ function ReviewCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem className="text-xs gap-2" onClick={() => navigate(`/submissions/${summary.id}`)}>
-                  <ArrowUpRight className="w-3.5 h-3.5" /> Open full details
-                </DropdownMenuItem>
                 {showScreener && (
                   <DropdownMenuItem className="text-xs gap-2" onClick={openInScreener}>
                     <ScanEye className="w-3.5 h-3.5" /> Open in Content Screener
@@ -641,6 +683,17 @@ function ReviewCard({
           <StagePill stage={stage} small />
         </div>
       </div>
+
+      {/* The next step and its buttons, up top so it's the first thing to act on */}
+      <section className="border-y border-border/70 bg-muted/30 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{footerTitle}</p>
+            {footerNote && <p className="text-[11px] text-muted-foreground">{footerNote}</p>}
+          </div>
+          {actions && <div className="min-w-0">{actions}</div>}
+        </div>
+      </section>
 
       {/* Media and the facts that matter for the review */}
       <div className="grid gap-5 px-5 pt-4 pb-5 @xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
@@ -740,46 +793,39 @@ function ReviewCard({
         )}
       </section>
 
-      {/* Feedback */}
-      <section className="border-t border-border/70 px-5 py-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <MessageSquare className="w-4 h-4" /> Review Feedback <span className="font-normal text-muted-foreground">({summary.comment_count ?? 0})</span>
-          </h3>
-          {(canComment || mine) && userName && <p className="text-[11px] text-muted-foreground">Commenting as {userName}</p>}
-        </div>
-        {isLoading || !sub ? (
-          <p className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
-          </p>
-        ) : (
-          <ReviewCommentsPanel
-            submissionId={sub.id}
-            showHeader={false}
-            canComment={canComment || mine}
-            currentTime={mediaIsVideo ? currentTime ?? 0 : undefined}
-            onSeek={seek}
-            emptyText={
-              !canComment
-                ? "No feedback yet. The reviewer's comments show here; leave them a note below if there's anything they should know."
-                : sub.status === "DRAFT"
-                ? "No feedback yet. Reviewers comment here once it's sent for review."
-                : "No feedback yet. Start the review with a comment, or pin feedback to a moment in the video."
-            }
-          />
-        )}
-      </section>
-
-      {/* Decision */}
-      <section className="rounded-b-xl border-t border-border/70 bg-muted/30 px-5 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">{footerTitle}</p>
-            {footerNote && <p className="text-[11px] text-muted-foreground">{footerNote}</p>}
+      {/* Feedback: nothing to show on a draft until it's been sent for review (kept if a withdrawn draft has comments) */}
+      {(summary.status !== "DRAFT" || (summary.comment_count ?? 0) > 0) && (
+        <section className="border-t border-border/70 px-5 py-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <MessageSquare className="w-4 h-4" /> Review Feedback <span className="font-normal text-muted-foreground">({summary.comment_count ?? 0})</span>
+            </h3>
+            {(canComment || mine) && userName && <p className="text-[11px] text-muted-foreground">Commenting as {userName}</p>}
           </div>
-          {actions && <div className="min-w-0">{actions}</div>}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+          {isLoading || !sub ? (
+            <p className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
+            </p>
+          ) : (
+            <ReviewCommentsPanel
+              submissionId={sub.id}
+              showHeader={false}
+              canComment={canComment || mine}
+              currentTime={mediaIsVideo ? currentTime ?? 0 : undefined}
+              onSeek={seek}
+              emptyText={
+                !canComment
+                  ? "No feedback yet. The reviewer's comments show here; leave them a note below if there's anything they should know."
+                  : "No feedback yet. Start the review with a comment, or pin feedback to a moment in the video."
+              }
+            />
+          )}
+        </section>
+      )}
+
+      {/* Approval note and audit trail */}
+      <section className="rounded-b-xl border-t border-border/70 bg-muted/30 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5" /> Approval is not publication. Calendar handoff does not publish content.
           </span>
@@ -820,6 +866,8 @@ export default function SubmissionsListPage() {
   const { hasPermission, user, creatorView } = useAuth();
   const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_APPROVE");
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  // Creators browse a gallery and open details in a side sheet; reviewers keep the list beside the review panel.
+  const gallery = !isReviewer;
 
   const setPrefs = (patch: Partial<Prefs>) =>
     setPrefsState((p) => {
@@ -848,14 +896,22 @@ export default function SubmissionsListPage() {
     [options]
   );
 
+  // Creators see one month at a time, by when each post was first created.
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const onCurrentMonth = isSameMonth(month, new Date());
+  const inView = useMemo(
+    () => (gallery ? data.filter((s) => isSameMonth(new Date(s.created_at), month)) : data),
+    [data, gallery, month]
+  );
+
   const stageCounts = useMemo(() => {
-    const counts: Record<string, number> = { "": data.length };
-    for (const s of data) {
+    const counts: Record<string, number> = { "": inView.length };
+    for (const s of inView) {
       const st = stageOf(s);
       counts[st] = (counts[st] ?? 0) + 1;
     }
     return counts;
-  }, [data]);
+  }, [inView]);
 
   // Platform options come from what's actually in the list.
   const platformsInList = useMemo(() => [...new Set(data.flatMap((s) => s.platforms))].sort(), [data]);
@@ -869,7 +925,7 @@ export default function SubmissionsListPage() {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const filtered = data.filter(
+    const filtered = inView.filter(
       (s) =>
         (!stage || stageOf(s) === stage) &&
         (platform === "all" || s.platforms.includes(platform)) &&
@@ -882,11 +938,11 @@ export default function SubmissionsListPage() {
           (s.created_by_name ?? "").toLowerCase().includes(q))
     );
     return sortItems(filtered, prefs.sort);
-  }, [data, stage, platform, brand, search, prefs.sort]);
+  }, [inView, stage, platform, brand, search, prefs.sort]);
 
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
-  const selected = picked ?? (isWide ? visible[0] ?? null : null);
+  const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
 
   const filtersActive = Boolean(stage || search || platform !== "all" || brand !== "all");
   const clearFilters = () => {
@@ -912,14 +968,12 @@ export default function SubmissionsListPage() {
   const [showFilters, setShowFilters] = useState(true);
 
   return (
-    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+    <div data-canvas={gallery ? "contrast" : "plain"} className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Portal</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isReviewer ? "Review submitted content, run compliance checks, and manage approvals." : "Create content, send it for review, and follow it through to approval."}
-          </p>
+          {isReviewer && <p className="mt-1 text-sm text-muted-foreground">Review submitted content, run compliance checks, and manage approvals.</p>}
         </div>
         <div className="flex flex-wrap items-center gap-4">
           {waitingForMe > 0 && (
@@ -939,146 +993,150 @@ export default function SubmissionsListPage() {
         </div>
       </header>
 
-      {/* Status counts: one bar, each segment a filter */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 sm:grid-cols-3 xl:grid-cols-6">
-        {STAGE_TILES.map((t) => {
-          const active = stage === t.value;
+      {/* Status pills, each a filter */}
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+        {STAGE_FILTERS.map((f) => {
+          const active = stage === f.value;
           return (
             <button
-              key={t.value || "all"}
+              key={f.value || "all"}
               type="button"
               aria-pressed={active}
-              onClick={() => setStage(active && t.value ? "" : t.value)}
-              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
+              onClick={() => setStage(active && f.value ? "" : f.value)}
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                active
+                  ? "border-blue-700 bg-blue-700 text-white"
+                  : "border-border/70 bg-card text-foreground hover:border-blue-300 hover:text-blue-700 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
               }`}
             >
-              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${t.tone}`}>
-                <t.Icon className="w-[18px] h-[18px]" />
-              </span>
-              <span className="min-w-0">
-                <span className={`block text-2xl font-semibold leading-tight tabular-nums ${active ? "" : "text-foreground"}`}>{isLoading ? "–" : stageCounts[t.value] ?? 0}</span>
-                <span className={`block truncate text-xs ${active ? "font-semibold" : ""}`}>{t.label}</span>
-              </span>
+              {f.label}
+              <span className={`tabular-nums ${active ? "text-white/80" : "text-muted-foreground"}`}>{isLoading ? "–" : stageCounts[f.value] ?? 0}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-start gap-5">
-        {/* Submissions */}
-        <div className={`${isWide ? "w-[320px] 2xl:w-[340px] shrink-0" : "min-w-0 flex-1"} space-y-3`}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">
-              Submissions <span className="font-normal text-muted-foreground">{visible.length}</span>
-            </h2>
-            <button
-              type="button"
-              onClick={() => setShowFilters((v) => !v)}
-              aria-pressed={showFilters}
-              aria-label={showFilters ? "Hide filters" : "Show filters"}
-              title={showFilters ? "Hide filters" : "Show filters"}
-              className={`rounded-md p-1.5 transition-colors ${showFilters ? "text-foreground" : "text-muted-foreground"} hover:bg-muted`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
-          </div>
-
-          {canSeeAll && (
-            <div className="grid grid-cols-2 rounded-lg bg-muted p-1" role="group" aria-label="Whose content">
-              {(
-                [
-                  ["mine", "My content"],
-                  ["all", "Everyone's"],
-                ] as const
-              ).map(([v, label]) => (
-                <button
-                  key={v}
-                  type="button"
-                  aria-pressed={scope === v}
-                  onClick={() => setPrefs({ scope: v })}
-                  className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                    scope === v ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
-                  }`}
+      {gallery ? (
+        <>
+          {/* Filters, top right under the pills */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1" role="group" aria-label="Month">
+                <Button variant="outline" size="icon" className="h-8 w-8 bg-card" onClick={() => setMonth(addMonths(month, -1))} aria-label="Previous month">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="min-w-[120px] text-center text-sm font-semibold text-foreground" aria-live="polite">
+                  {format(month, "MMMM yyyy")}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 bg-card"
+                  onClick={() => setMonth(addMonths(month, 1))}
+                  disabled={onCurrentMonth}
+                  aria-label="Next month"
                 >
-                  {label}
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                {!onCurrentMonth && (
+                  <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} className="ml-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                    This month
+                  </button>
+                )}
+              </div>
+              <span>{isLoading ? "Loading..." : `${visible.length} ${visible.length === 1 ? "post" : "posts"}`}</span>
+              {filtersActive && (
+                <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" /> Clear filters
                 </button>
-              ))}
+              )}
             </div>
-          )}
-
-          {showFilters && (
-            <>
-              <div className="relative">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {canSeeAll && (
+                <div className="flex rounded-lg bg-muted p-1" role="group" aria-label="Whose content">
+                  {(
+                    [
+                      ["mine", "My content"],
+                      ["all", "Everyone's"],
+                    ] as const
+                  ).map(([v, label]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      aria-pressed={scope === v}
+                      onClick={() => setPrefs({ scope: v })}
+                      className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                        scope === v ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="relative w-full sm:w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search content..."
                   aria-label="Search content"
-                  className="h-9 rounded-lg pl-9 text-xs"
+                  className="h-9 rounded-lg bg-card pl-9 text-xs"
                 />
               </div>
-              <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
-                <Select value={platform} onValueChange={setPlatform}>
-                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                    {platformsInList.map((p) => (
-                      <SelectItem key={p} value={p} className="text-xs">
-                        {platformName(p)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={brand} onValueChange={setBrand}>
-                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Brand">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                    {brandsInList.map((b) => (
-                      <SelectItem key={b} value={b} className="text-xs">
-                        {labels.brand(b)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
-                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                    {(Object.keys(STAGES) as Stage[]).map((st) => (
-                      <SelectItem key={st} value={st} className="text-xs">
-                        {STAGES[st].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
-                  <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Sort by">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(SORT_LABELS) as SortBy[]).map((k) => (
-                      <SelectItem key={k} value={k} className="text-xs">
-                        {SORT_LABELS[k]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-          {filtersActive && (
-            <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <X className="w-3.5 h-3.5" /> Clear filters
-            </button>
-          )}
+              <Select value={platform} onValueChange={setPlatform}>
+                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Platform">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
+                  {platformsInList.map((p) => (
+                    <SelectItem key={p} value={p} className="text-xs">
+                      {platformName(p)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={brand} onValueChange={setBrand}>
+                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Brand">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Brands</SelectItem>
+                  {brandsInList.map((b) => (
+                    <SelectItem key={b} value={b} className="text-xs">
+                      {labels.brand(b)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
+                <SelectTrigger className="h-9 w-[150px] rounded-lg bg-card text-xs" aria-label="Status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
+                  {(Object.keys(STAGES) as Stage[]).map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">
+                      {STAGES[st].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
+                <SelectTrigger className="h-9 w-[160px] rounded-lg bg-card text-xs" aria-label="Sort by">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(SORT_LABELS) as SortBy[]).map((k) => (
+                    <SelectItem key={k} value={k} className="text-xs">
+                      {SORT_LABELS[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
@@ -1109,6 +1167,8 @@ export default function SubmissionsListPage() {
                     ))}
                   </div>
                 </>
+              ) : inView.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nothing was created in {format(month, "MMMM yyyy")}.</p>
               ) : (
                 <>
                   <Search className="w-8 h-8 mx-auto text-muted-foreground" />
@@ -1121,31 +1181,212 @@ export default function SubmissionsListPage() {
             </div>
           ) : (
             <>
-              <div className={isWide ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {visible.map((s) => (
-                  <SubmissionCard
-                    key={s.id}
-                    s={s}
-                    selected={selected?.id === s.id}
-                    labels={labels}
-                    showCreator={scope === "all"}
-                    onSelect={(item) => setSelectedId(item.id)}
-                  />
+                  <GalleryCard key={s.id} s={s} onSelect={(item) => setSelectedId(item.id)} />
                 ))}
               </div>
-              <p className="pt-1 text-center text-[11px] text-muted-foreground">
-                {visible.length === data.length ? `Showing all ${data.length} submissions` : `Showing ${visible.length} of ${data.length} submissions`}
-              </p>
             </>
           )}
+        </>
+      ) : (
+        <div className="flex items-start gap-5">
+          {/* Submissions */}
+          <div className={`${isWide ? "w-[320px] 2xl:w-[340px] shrink-0" : "min-w-0 flex-1"} space-y-3`}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">
+                Submissions <span className="font-normal text-muted-foreground">{visible.length}</span>
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-pressed={showFilters}
+                aria-label={showFilters ? "Hide filters" : "Show filters"}
+                title={showFilters ? "Hide filters" : "Show filters"}
+                className={`rounded-md p-1.5 transition-colors ${showFilters ? "text-foreground" : "text-muted-foreground"} hover:bg-muted`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+
+            {canSeeAll && (
+              <div className="grid grid-cols-2 rounded-lg bg-muted p-1" role="group" aria-label="Whose content">
+                {(
+                  [
+                    ["mine", "My content"],
+                    ["all", "Everyone's"],
+                  ] as const
+                ).map(([v, label]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={scope === v}
+                    onClick={() => setPrefs({ scope: v })}
+                    className={`rounded-md py-1.5 text-xs font-semibold transition-colors ${
+                      scope === v ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showFilters && (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search content..."
+                    aria-label="Search content"
+                    className="h-9 rounded-lg pl-9 text-xs"
+                  />
+                </div>
+                <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
+                  <Select value={platform} onValueChange={setPlatform}>
+                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
+                      {platformsInList.map((p) => (
+                        <SelectItem key={p} value={p} className="text-xs">
+                          {platformName(p)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={brand} onValueChange={setBrand}>
+                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Brand">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-xs">All Brands</SelectItem>
+                      {brandsInList.map((b) => (
+                        <SelectItem key={b} value={b} className="text-xs">
+                          {labels.brand(b)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
+                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
+                      {(Object.keys(STAGES) as Stage[]).map((st) => (
+                        <SelectItem key={st} value={st} className="text-xs">
+                          {STAGES[st].label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
+                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Sort by">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(SORT_LABELS) as SortBy[]).map((k) => (
+                        <SelectItem key={k} value={k} className="text-xs">
+                          {SORT_LABELS[k]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+            {filtersActive && (
+              <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" /> Clear filters
+              </button>
+            )}
+
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading content...
+              </div>
+            ) : isError ? (
+              <div className="py-16 text-center text-sm text-red-600">Couldn't load content: {(error as Error).message}</div>
+            ) : visible.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center">
+                {data.length === 0 ? (
+                  <>
+                    <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                      <Sparkles className="w-6 h-6" />
+                    </span>
+                    <p className="mt-3 text-sm font-semibold text-foreground">
+                      {scope === "all" ? "No one has created any content yet" : "Your first post starts here"}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Pick what you're making. We'll check it against the rulebook as you go.</p>
+                    <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                      {QUICK_CREATE.map(({ type, label, Icon }) => (
+                        <Link
+                          key={type}
+                          to={`/submissions/new?type=${type}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-blue-300 hover:text-blue-700 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
+                        >
+                          <Icon className="w-3.5 h-3.5" /> {label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-8 h-8 mx-auto text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">Nothing matches these filters.</p>
+                    <Button size="sm" variant="outline" className="mt-3 text-xs" onClick={clearFilters}>
+                      Clear filters
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className={isWide ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
+                  {visible.map((s) => (
+                    <SubmissionCard
+                      key={s.id}
+                      s={s}
+                      selected={selected?.id === s.id}
+                      labels={labels}
+                      showCreator={scope === "all"}
+                      onSelect={(item) => setSelectedId(item.id)}
+                    />
+                  ))}
+                </div>
+                <p className="pt-1 text-center text-[11px] text-muted-foreground">
+                  {visible.length === data.length ? `Showing all ${data.length} submissions` : `Showing ${visible.length} of ${data.length} submissions`}
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Review card (wide screens) */}
+          {isWide && selected && <div className="min-w-0 flex-1">{panel(selected)}</div>}
         </div>
+      )}
 
-        {/* Review card (wide screens) */}
-        {isWide && selected && <div className="min-w-0 flex-1">{panel(selected)}</div>}
-      </div>
+      {/* Creators: the post opens as a pop-up in the middle of the screen */}
+      <Dialog open={gallery && Boolean(picked)} onOpenChange={(open) => !open && setSelectedId(null)}>
+        <DialogContent showCloseButton={false} className="max-h-[90vh] gap-0 overflow-visible bg-transparent p-0 ring-0 sm:max-w-4xl">
+          <DialogTitle className="sr-only">{picked?.title ?? "Content"}</DialogTitle>
+          <DialogDescription className="sr-only">Details, review feedback and compliance check</DialogDescription>
+          <DialogClose
+            className="absolute -top-11 right-0 grid h-9 w-9 place-items-center rounded-full bg-card text-foreground shadow-md transition-colors hover:bg-muted"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </DialogClose>
+          <div className="max-h-[90vh] overflow-y-auto rounded-xl">{picked && panel(picked)}</div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Detail sheet (narrower screens) */}
-      <Sheet open={!isWide && Boolean(picked)} onOpenChange={(open) => !open && setSelectedId(null)}>
+      {/* Reviewers on narrower screens: the post opens as a side sheet */}
+      <Sheet open={!gallery && !isWide && Boolean(picked)} onOpenChange={(open) => !open && setSelectedId(null)}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto p-4">
           <SheetHeader className="sr-only">
             <SheetTitle>{picked?.title ?? "Content"}</SheetTitle>
