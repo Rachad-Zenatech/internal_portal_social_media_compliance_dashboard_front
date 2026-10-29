@@ -41,7 +41,7 @@ export const navigation: NavigationItem[] = [
     navigationCode: "DASHBOARD",
   },
   {
-    label: "Upload Content",
+    label: "My posts",
     path: "/submissions",
     icon: FilePlus2,
     section: "MAIN",
@@ -49,7 +49,7 @@ export const navigation: NavigationItem[] = [
     views: ["creator"],
   },
   {
-    label: "Content Screener",
+    label: "Content screener",
     path: "/compliance/scanner",
     icon: Video,
     section: "MAIN",
@@ -57,14 +57,14 @@ export const navigation: NavigationItem[] = [
     views: ["reviewer"],
   },
   {
-    label: "Content Calendar",
+    label: "Content calendar",
     path: "/content-calendar",
     icon: CalendarDays,
     section: "MAIN",
     navigationCode: "DASHBOARD",
   },
   {
-    label: "Compliance Rulebook",
+    label: "Compliance rulebook",
     path: "/compliance/rules",
     icon: Scale,
     section: "MAIN",
@@ -72,7 +72,7 @@ export const navigation: NavigationItem[] = [
     views: ["reviewer"],
   },
   {
-    label: "Messaging Context",
+    label: "Messaging context",
     path: "/compliance/context",
     icon: BookOpenText,
     section: "MAIN",
@@ -80,7 +80,7 @@ export const navigation: NavigationItem[] = [
     views: ["reviewer"],
   },
   {
-    label: "Post Performance",
+    label: "Post performance",
     path: "/performance",
     icon: ChartColumn,
     section: "MAIN",
@@ -89,7 +89,7 @@ export const navigation: NavigationItem[] = [
     views: ["reviewer", "creator"],
   },
   {
-    label: "Social Media",
+    label: "Social accounts",
     path: "/socials",
     icon: Share2,
     section: "MAIN",

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import {
   AlertTriangle,
+  Bell,
   CalendarClock,
   CheckCircle2,
   ExternalLink,
@@ -29,9 +30,80 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { CoverThumb } from "@/components/submissions/PostPreview";
 import { UnderReviewBadge } from "@/components/submissions/submissionUi";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import type { SubmissionSummary } from "@/types/submission";
+import type { DashboardSummary, SubmissionSummary } from "@/types/submission";
 
 export const UPCOMING_DAYS = 7;
+
+export function greeting(now: Date) {
+  const hour = now.getHours();
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+
+export const issuesText = (n?: number | null) => (n ? `${n} issue${n === 1 ? "" : "s"} to fix` : null);
+
+/** One number at the top of a dashboard, with a short note under it. */
+export function StatCard({
+  label,
+  value,
+  note,
+  noteTone = "muted",
+}: {
+  label: string;
+  value: React.ReactNode;
+  note?: string | null;
+  noteTone?: "muted" | "amber" | "red" | "green";
+}) {
+  const tone = {
+    muted: "text-muted-foreground",
+    amber: "text-amber-700 dark:text-amber-400",
+    red: "text-red-600 dark:text-red-400",
+    green: "text-emerald-700 dark:text-emerald-400",
+  }[noteTone];
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border/70 bg-card p-4 sm:p-5">
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-3xl font-semibold leading-none tracking-tight tabular-nums text-foreground">{value}</span>
+      {note && <span className={`text-xs font-medium ${tone}`}>{note}</span>}
+    </div>
+  );
+}
+
+/** Who did what to which post, newest first (from GET /api/submissions/dashboard). */
+export function ActivityList({
+  items,
+  loading,
+  empty,
+}: {
+  items: DashboardSummary["activity"];
+  loading: boolean;
+  empty: string;
+}) {
+  if (loading) return <Loading />;
+  if (!items.length) return <Empty>{empty}</Empty>;
+  return (
+    <ul className="divide-y divide-border/60 border-t border-border/60">
+      {items.map((a, i) => {
+        const style = ACTIVITY_STYLE[a.action] ?? { Icon: Bell, tone: "bg-muted text-muted-foreground" };
+        return (
+          <li key={`${a.submission_id}-${a.at}-${i}`}>
+            <Link to={`/submissions/${a.submission_id}`} className="flex gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${style.tone}`}>
+                <style.Icon className="w-4 h-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm text-foreground">
+                  <span className="font-semibold">{a.actor_name ?? "Someone"}</span> {a.action}{" "}
+                  <span className="font-medium">{a.title}</span>
+                </span>
+                <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(a.at), { addSuffix: true })}</span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 // Shortcuts that open the upload form with a content type already picked.
 export const QUICK_CREATE: { type: string; label: string; Icon: LucideIcon }[] = [

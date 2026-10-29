@@ -100,7 +100,7 @@
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.625rem;
-    --sidebar: oklch(1 0 0);
+    --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     /* Active menu item: brand blue, matching the blue buttons and highlights. */
     --sidebar-primary: var(--color-blue-600);
@@ -298,9 +298,9 @@
     }
   }
 
-  /* Page canvas behind the content: a neutral light grey, so white cards and the top bar stand out from it. */
+  /* Page canvas behind the content: plain white, shadcn-style. Cards stand out by their borders, not a grey canvas. */
   .app-canvas {
-    background-color: oklch(0.975 0 0);
+    background-color: var(--background);
   }
   .dark .app-canvas {
     background-color: var(--background);
@@ -311,9 +311,9 @@
     background-color: var(--background);
   }
 
-  /* Pages marked data-canvas="contrast" (the dashboards) sit on a cool grey so their white cards stand out. */
+  /* Pages marked data-canvas="contrast" (the dashboards): the same white canvas; their cards keep a hairline shadow. */
   .app-canvas:has([data-canvas="contrast"]) {
-    background-color: oklch(0.94 0.008 255);
+    background-color: var(--background);
   }
   .dark .app-canvas:has([data-canvas="contrast"]) {
     background-color: oklch(0.12 0.015 260);

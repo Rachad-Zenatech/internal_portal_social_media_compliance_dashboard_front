@@ -154,6 +154,8 @@ export interface SubmissionSummary {
   latest_traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
   /** Null while the post is still being analysed (analysis_pending). */
   latest_score?: number | null;
+  /** How many rulebook issues the latest check found; null while it's still being analysed. */
+  issue_count?: number | null;
   analysis_pending?: boolean;
   file_count: number;
   /** Review comments across all versions. */

@@ -1,137 +1,131 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Plus,
-  Sparkles,
-} from "lucide-react";
+import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CoverThumb } from "@/components/submissions/PostPreview";
-import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
+import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import {
+  ActivityList,
   Empty,
   Loading,
-  QUICK_CREATE,
   STATUS_PILL,
   Score,
   Section,
+  StatCard,
   Thumb,
-  UPCOMING_DAYS,
+  greeting,
+  issuesText,
   statusOf,
 } from "@/components/dashboard/dashboardParts";
-import NotificationsPanel from "@/components/dashboard/NotificationsPanel";
-import WeekAhead from "@/components/dashboard/WeekAhead";
-import PipelineSection, { type PipelineStage } from "@/components/dashboard/PipelineSection";
+import DayAgenda from "@/components/dashboard/DayAgenda";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import type { SubmissionSummary } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
-// What the creator's dashboard shows, in their own words and colours
+// Helpers
 // ---------------------------------------------------------------------------
 
-// Stage colours match the Content Portal's status pills: one fixed colour per stage everywhere.
-const STAGES: PipelineStage[] = [
-  { key: "CHANGES_REQUESTED", label: "Needs your changes", bar: "bg-amber-500", to: "/submissions" },
-  { key: "DRAFT", label: "Drafts", bar: "bg-slate-400", to: "/submissions" },
-  { key: "IN_REVIEW", label: "In review", bar: "bg-blue-500", to: "/submissions" },
-  { key: "SCHEDULED", label: "Scheduled", bar: "bg-violet-500", to: "/content-calendar" },
-  { key: "APPROVED", label: "Approved", bar: "bg-emerald-500", to: "/submissions" },
-];
-
-function greeting(now: Date) {
-  const hour = now.getHours();
-  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-}
-
-function dueLabel(dueAt?: string | null, verb = "Resubmit") {
+/** "Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent. */
+function dueLabel(dueAt?: string | null) {
   if (!dueAt) return null;
   const due = new Date(dueAt);
-  if (isPast(due)) return { text: `${verb} overdue by ${formatDistanceToNow(due)}`, urgent: true };
-  if (isToday(due)) return { text: `${verb} by ${format(due, "h:mm a")} today`, urgent: true };
-  if (isTomorrow(due)) return { text: `${verb} by tomorrow, ${format(due, "h:mm a")}`, urgent: false };
-  return { text: `${verb} by ${format(due, "EEE MMM d")}`, urgent: false };
+  if (isPast(due)) return { text: `Overdue by ${formatDistanceToNow(due)}`, urgent: true };
+  if (isToday(due)) return { text: `Due today, ${format(due, "h:mm a")}`, urgent: true };
+  if (isTomorrow(due)) return { text: `Due tomorrow, ${format(due, "h:mm a")}`, urgent: false };
+  return { text: `Due ${format(due, "EEE, MMM d")}`, urgent: false };
 }
+
+const NEXT_STEP_LIMIT = 3;
+const RECENT_LIMIT = 5;
+const ACTIVITY_LIMIT = 5;
+
+type PostFilter = "all" | "IN_REVIEW" | "APPROVED";
+const FILTERS: { v: PostFilter; label: string }[] = [
+  { v: "all", label: "All" },
+  { v: "IN_REVIEW", label: "In review" },
+  { v: "APPROVED", label: "Approved" },
+];
 
 // ---------------------------------------------------------------------------
 // Pieces
 // ---------------------------------------------------------------------------
 
-/** One thing to do next, said plainly: what the post is, what to do with it, and one button. */
-function NextStepCard({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
+/** One thing waiting on the creator: what it is, what's wrong, when it's due, and one button. */
+function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
   const changes = s.status === "CHANGES_REQUESTED";
+  const status = STATUS_PILL[s.status] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
   const due = changes ? dueLabel(s.due_kind === "REVISION" ? s.due_at : null) : null;
+  const details = changes
+    ? [issuesText(s.issue_count) ?? "A reviewer asked for changes"]
+    : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`];
   return (
-    <div className="flex items-center gap-4 border-t border-border/60 px-4 py-4">
-      <Thumb s={s} className="h-14 w-14 rounded-lg" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold text-foreground">{s.title}</p>
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border/60 px-4 py-3.5">
+      <Thumb s={s} className="h-11 w-16 rounded-lg" />
+      <div className="min-w-[200px] flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-foreground">{s.title}</span>
+          <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${status.pill}`}>{status.label}</span>
+        </div>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {changes ? "A reviewer asked for changes." : "Finish your draft and send it for review."}
-          {due && <span className={due.urgent ? " font-semibold text-red-600 dark:text-red-400" : ""}> {due.text}.</span>}
+          {details.filter(Boolean).join(" · ")}
+          {due && (
+            <span className={due.urgent ? "font-semibold text-red-600 dark:text-red-400" : "font-medium text-foreground"}> · {due.text}</span>
+          )}
         </p>
       </div>
       <Button
         onClick={onOpen}
-        className={`h-9 shrink-0 gap-1.5 rounded-lg px-4 text-sm font-semibold text-white ${
-          changes ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-700 hover:bg-blue-800"
-        }`}
+        variant={changes ? "default" : "outline"}
+        className={`h-9 shrink-0 rounded-lg px-4 text-sm font-medium ${changes ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
       >
-        {changes ? "Make changes" : "Continue"} <ArrowRight className="w-4 h-4" />
+        {changes ? "Fix issues" : "Continue draft"}
       </Button>
-    </div>
+    </li>
   );
 }
 
-const RECENT_LIMIT = 3;
-
-type SortKey = "newest" | "oldest" | "score-high" | "score-low";
-const SORTS: { v: SortKey; label: string }[] = [
-  { v: "newest", label: "Newest first" },
-  { v: "oldest", label: "Oldest first" },
-  { v: "score-high", label: "Highest score" },
-  { v: "score-low", label: "Lowest score" },
-];
-
-/** One post they've sent for review: where it goes, what it says, what it shows, and how it scored. */
-function RecentPostCard({ s, rank, brand }: { s: SubmissionSummary; rank: number; brand: string | null }) {
-  const platform = s.platforms[0] as SocialPlatform | undefined;
+function PostRow({ s }: { s: SubmissionSummary }) {
   const status = STATUS_PILL[statusOf(s)] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
-  const who = s.account?.handle ? `@${s.account.handle.replace(/^@/, "")}` : s.account?.label ?? brand ?? "No account set";
+  const platform = s.platforms[0] as SocialPlatform | undefined;
+  const where = [
+    platform ? PLATFORM_LABELS[platform] ?? platform : null,
+    s.account?.handle ? `@${s.account.handle.replace(/^@/, "")}` : s.account?.label,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const issues = s.analysis_pending ? null : s.issue_count ? issuesText(s.issue_count) : s.latest_score != null ? "No issues" : null;
   return (
-    <li className="relative -mb-px -mr-px flex min-w-0 flex-col border-b border-r border-border/60 px-4 pb-3 pt-5">
-      <span className="absolute left-1/2 top-0 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-border bg-card text-[10px] font-semibold tabular-nums text-muted-foreground">
-        {rank}
-      </span>
-      <div className="flex items-center gap-2.5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/70 bg-muted/40 text-foreground">
-          {platform ? <PlatformIcon platform={platform} className="w-4 h-4" /> : <Sparkles className="w-4 h-4 text-muted-foreground" />}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-xs font-semibold text-foreground">{who}</p>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {format(new Date(s.submitted_at!), "EEE MMM d, h:mm a")}
-            {brand && ` · ${brand}`}
-          </p>
+    <tr className="border-t border-border/60 hover:bg-muted/30">
+      <td className="py-3 pl-4 pr-3">
+        <div className="flex items-center gap-3">
+          <Thumb s={s} className="h-9 w-12" />
+          <div className="min-w-0">
+            <Link to={`/submissions/${s.id}`} className="block max-w-[280px] truncate font-medium text-foreground hover:underline">
+              {s.title}
+            </Link>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {platform && <PlatformIcon platform={platform} className="w-3 h-3" />}
+              {where || "No account set"}
+            </span>
+          </div>
         </div>
-      </div>
-      <Link to={`/submissions/${s.id}`} className="mt-2 block truncate text-sm font-semibold text-foreground hover:underline">
-        {s.title}
-      </Link>
-      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{s.caption_text || "No caption"}</p>
-      <Link to={`/submissions/${s.id}`} className="mt-2 block h-36 overflow-hidden rounded-lg bg-muted">
-        <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
-      </Link>
-      <div className="mt-2.5 flex items-center justify-between gap-2">
-        <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.pill}`}>{status.label}</span>
-        <Score score={s.latest_score} pending={s.analysis_pending} />
-      </div>
-    </li>
+      </td>
+      <td className="px-3 py-3">
+        <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${status.pill}`}>{status.label}</span>
+      </td>
+      <td className="px-3 py-3">
+        <div className="flex flex-col gap-0.5">
+          <Score score={s.latest_score} pending={s.analysis_pending} />
+          {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
+        </div>
+      </td>
+      <td className="py-3 pl-3 pr-4 text-right text-sm text-muted-foreground whitespace-nowrap">
+        {s.submitted_at ? format(new Date(s.submitted_at), "MMM d") : "–"}
+      </td>
+    </tr>
   );
 }
 
@@ -139,7 +133,7 @@ function RecentPostCard({ s, rank, brand }: { s: SubmissionSummary; rank: number
 // Page
 // ---------------------------------------------------------------------------
 
-/** The content creator's dashboard: what needs them, where their posts are, and how they're doing. */
+/** The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did. */
 export default function CreatorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -150,13 +144,15 @@ export default function CreatorDashboard() {
     queryFn: () => submissionService.list(undefined, "mine"),
     staleTime: 0,
   });
+  const summary = useQuery({
+    queryKey: ["dashboard-summary", "mine"],
+    queryFn: () => submissionService.dashboard("mine"),
+    staleTime: 60_000,
+  });
 
   const mine = useMemo(() => (submissions.data ?? []).filter((s) => s.created_by === user?.id), [submissions.data, user?.id]);
-  const byStage = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const s of mine) counts[statusOf(s)] = (counts[statusOf(s)] ?? 0) + 1;
-    return counts;
-  }, [mine]);
+
+  // Changes to make (soonest due first), then drafts (latest first).
   const nextSteps = useMemo(() => {
     const due = (s: SubmissionSummary) => (s.due_at ? new Date(s.due_at).getTime() : Infinity);
     return [
@@ -164,144 +160,194 @@ export default function CreatorDashboard() {
       ...mine.filter((s) => s.status === "DRAFT").sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     ];
   }, [mine]);
-  const [sortBy, setSortBy] = useState<SortKey>("newest");
-  const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
-  const brandName = useCallback(
-    (code?: string | null) => (code ? options.data?.brands.find((b) => b.code === code)?.name ?? code : null),
-    [options.data]
+
+  const changes = mine.filter((s) => s.status === "CHANGES_REQUESTED");
+  const inReview = mine.filter((s) => s.status === "IN_REVIEW");
+  const scheduled = mine.filter((s) => statusOf(s) === "SCHEDULED").length;
+  const oldestInReview = inReview.reduce<Date | null>((oldest, s) => {
+    const at = s.submitted_at ? new Date(s.submitted_at) : null;
+    return at && (!oldest || at < oldest) ? at : oldest;
+  }, null);
+  const soonestDue = dueLabel(changes[0]?.due_kind === "REVISION" ? changes[0]?.due_at : null);
+
+  const [filter, setFilter] = useState<PostFilter>("all");
+  const sent = useMemo(
+    () =>
+      mine
+        .filter((s) => s.status !== "DRAFT" && s.submitted_at)
+        .filter((s) => filter === "all" || s.status === filter)
+        .sort((a, b) => new Date(b.submitted_at!).getTime() - new Date(a.submitted_at!).getTime()),
+    [mine, filter]
   );
-  const sent = useMemo(() => mine.filter((s) => s.status !== "DRAFT" && s.submitted_at), [mine]);
-  const sortedSent = useMemo(() => {
-    const at = (s: SubmissionSummary) => new Date(s.submitted_at!).getTime();
-    const list = [...sent];
-    if (sortBy === "newest") list.sort((a, b) => at(b) - at(a));
-    else if (sortBy === "oldest") list.sort((a, b) => at(a) - at(b));
-    else {
-      // Posts still being analysed have no score yet, so they go last either way.
-      const dir = sortBy === "score-high" ? -1 : 1;
-      list.sort((a, b) => {
-        const na = a.latest_score == null ? 1 : 0;
-        const nb = b.latest_score == null ? 1 : 0;
-        if (na || nb) return na - nb || at(b) - at(a);
-        return dir * (a.latest_score! - b.latest_score!) || at(b) - at(a);
-      });
-    }
-    return list;
-  }, [sent, sortBy]);
+
+  // What reviewers did on their posts; their own actions (sending for review) aren't news to them.
+  const activity = (summary.data?.activity ?? []).filter((a) => a.actor_id !== user?.id).slice(0, ACTIVITY_LIMIT);
 
   const loading = submissions.isLoading;
-
+  const waiting = nextSteps.length;
+  const headline = loading
+    ? ""
+    : waiting === 0
+    ? "Nothing is waiting on you right now."
+    : `You have ${waiting} thing${waiting === 1 ? "" : "s"} waiting on you.${
+        !soonestDue ? "" : soonestDue.text.startsWith("Overdue") ? " One is overdue." : ` One is ${soonestDue.text.replace(/^Due/, "due")}.`
+      }`;
 
   return (
-    <div data-canvas="contrast" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
-      {/* Welcome: what needs them, and a quick way to start */}
-      <section className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[0_1px_2px_oklch(0_0_0/0.05)] sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-              Your content
-            </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-[28px]">
-              {greeting(now)}
-              {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
-              !
-            </h1>
-          </div>
-          <div className="flex flex-col gap-2.5 lg:items-end">
-            <Button asChild className="h-11 w-fit rounded-xl px-5 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white shadow-sm">
-              <Link to="/submissions/new">
-                <Plus className="w-4 h-4" /> Create a post
-              </Link>
-            </Button>
-            <div className="flex flex-wrap gap-1.5" aria-label="Start a new post of this type">
-              {QUICK_CREATE.map(({ type, label, Icon }) => (
-                <Link
-                  key={type}
-                  to={`/submissions/new?type=${type}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-2.5 py-1 text-[11px] font-semibold text-foreground transition-colors hover:border-blue-300 hover:text-blue-700 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
-                >
-                  <Icon className="w-3.5 h-3.5" /> {label}
-                </Link>
-              ))}
-            </div>
-          </div>
+    <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300">
+      {/* Heading */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">
+            {greeting(now)}
+            {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}!
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
+            <Link to="/content-calendar">
+              <CalendarDays className="w-4 h-4" /> Calendar
+            </Link>
+          </Button>
+          <Button asChild className="h-10 gap-2 rounded-lg bg-blue-700 px-4 font-medium text-white hover:bg-blue-800">
+            <Link to="/submissions/new">
+              <Plus className="w-4 h-4" /> New post
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* At a glance */}
+      <section aria-label="Your posts at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <StatCard
+          label="Needs your changes"
+          value={loading ? "–" : changes.length}
+          note={soonestDue?.text ?? (changes.length ? null : "All clear")}
+          noteTone={soonestDue?.urgent ? "red" : soonestDue ? "amber" : "muted"}
+        />
+        <StatCard
+          label="In review"
+          value={loading ? "–" : inReview.length}
+          note={oldestInReview ? `Oldest waiting ${formatDistanceToNow(oldestInReview)}` : "Nothing waiting"}
+        />
+        <StatCard
+          label="Approved"
+          value={summary.data ? summary.data.approved : "–"}
+          note={`Last 30 days${scheduled ? ` · ${scheduled} scheduled` : ""}`}
+        />
+        <StatCard
+          label="Average compliance score"
+          value={
+            summary.data?.average_score != null ? (
+              <>
+                {summary.data.average_score}
+                <span className="text-base font-medium text-muted-foreground"> / 100</span>
+              </>
+            ) : (
+              "–"
+            )
+          }
+          note="Last 30 days"
+        />
       </section>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-5 items-start">
-        <div className="flex min-w-0 flex-col gap-5">
-          {/* What to do next */}
-          <Section title="Your Next Step">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        {/* Left: what needs them, and what they've sent */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Section
+            title="Needs you"
+            count={loading || !waiting ? undefined : waiting}
+            subtitle="Most urgent first"
+            action={
+              waiting > NEXT_STEP_LIMIT ? (
+                <Link to="/submissions" className="shrink-0 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                  View all {waiting}
+                </Link>
+              ) : null
+            }
+          >
             {loading ? (
               <Loading />
-            ) : nextSteps.length === 0 ? (
+            ) : waiting === 0 ? (
               <div className="border-t border-border/60 px-4 py-8 text-center">
                 <CheckCircle2 className="mx-auto w-8 h-8 text-emerald-500" />
                 <p className="mt-2 text-sm font-semibold text-foreground">Nothing waiting on you</p>
                 <p className="text-xs text-muted-foreground">No changes requested and no drafts. Create a post when you're ready.</p>
               </div>
             ) : (
-              // Only the most urgent step: changes due soonest, then the latest draft.
-              <NextStepCard s={nextSteps[0]} onOpen={() => navigate(`/submissions/new?id=${nextSteps[0].id}`)} />
+              <ul>
+                {nextSteps.slice(0, NEXT_STEP_LIMIT).map((s) => (
+                  <NextStepRow key={s.id} s={s} onOpen={() => navigate(`/submissions/new?id=${s.id}`)} />
+                ))}
+              </ul>
             )}
           </Section>
 
-          {/* What they've sent for review, as cards */}
           <Section
-            title="Your Recent Posts"
-            subtitle="Posts you've sent for review"
+            title="Recent posts"
+            subtitle="What you've sent for review"
             action={
-              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                Sort by
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
-                  <SelectTrigger size="sm" className="h-8 w-[150px] bg-card text-xs" aria-label="Sort posts">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORTS.map((o) => (
-                      <SelectItem key={o.v} value={o.v} className="text-xs">
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
+              <div role="tablist" aria-label="Filter posts" className="flex shrink-0 rounded-lg bg-muted p-0.5">
+                {FILTERS.map((f) => (
+                  <button
+                    key={f.v}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === f.v}
+                    onClick={() => setFilter(f.v)}
+                    className={`h-7 rounded-md px-2.5 text-xs font-medium transition-colors ${
+                      filter === f.v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             }
           >
             {loading ? (
               <Loading />
             ) : sent.length === 0 ? (
-              <Empty>Posts you send for review will show here.</Empty>
+              <Empty>{filter === "all" ? "Posts you send for review will show here." : "No posts here yet."}</Empty>
             ) : (
               <>
-                <ul className="grid grid-cols-1 border-t border-border/60 sm:grid-cols-3">
-                  {sortedSent.slice(0, RECENT_LIMIT).map((p, i) => (
-                    <RecentPostCard key={p.id} s={p} rank={i + 1} brand={brandName(p.brand_code)} />
-                  ))}
-                </ul>
-                <div className="flex items-center justify-end border-t border-border/60 bg-muted/20 px-4 py-2.5">
-                  <Button asChild variant="outline" size="sm" className="h-7 rounded-md px-2.5 text-xs font-semibold">
-                    <Link to="/submissions">See all your posts</Link>
-                  </Button>
+                <div className="overflow-x-auto border-t border-border/60">
+                  <table className="w-full min-w-[600px] text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-muted-foreground">
+                        <th className="py-2.5 pl-4 pr-3 font-medium">Post</th>
+                        <th className="px-3 py-2.5 font-medium">Status</th>
+                        <th className="px-3 py-2.5 font-medium">Compliance</th>
+                        <th className="py-2.5 pl-3 pr-4 text-right font-medium">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sent.slice(0, RECENT_LIMIT).map((s) => (
+                        <PostRow key={s.id} s={s} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-end border-t border-border/60 px-4 py-2.5">
+                  <Link to="/submissions" className="text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                    View all your posts →
+                  </Link>
                 </div>
               </>
             )}
           </Section>
         </div>
 
-        <div className="space-y-5 min-w-0">
-          <NotificationsPanel pageSize={4} />
+        {/* Right: the day's schedule, and what reviewers did */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <DayAgenda posts={mine} loading={loading} />
 
-          {/* Where everything is, as one bar */}
-          <PipelineSection stages={STAGES} counts={byStage} total={mine.length} loading={loading}
-            title="Your Content Pipeline"
-            subtitle="Every post of yours, by stage"
-          />
+          <Section title="Activity" subtitle="What reviewers did on your posts">
+            <ActivityList items={activity} loading={summary.isLoading} empty="No reviewer activity on your posts yet." />
+          </Section>
         </div>
       </div>
-
-      {/* The week ahead */}
-      <WeekAhead posts={mine} loading={loading} title="Your Scheduled Posts" subtitle={`When your posts go out over the next ${UPCOMING_DAYS} days. Pick a day to see its posts.`} />
     </div>
   );
 }

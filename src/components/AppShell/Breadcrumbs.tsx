@@ -53,10 +53,12 @@ export default function Breadcrumbs() {
       configuration: "Configuration",
       configurations: "Configurations",
       dashboard: "Dashboard",
-      scanner: "Content Screener",
-      new: "New Submission",
-      submissions: "Upload Content",
-      "content-calendar": "Content Calendar",
+      scanner: "Content screener",
+      new: "New post",
+      submissions: "My posts",
+      "content-calendar": "Content calendar",
+      performance: "Post performance",
+      socials: "Social accounts",
     };
     const key = name.toLowerCase();
     if (specialNames[key]) {
