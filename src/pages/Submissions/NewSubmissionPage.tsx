@@ -2,15 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { addBusinessDays, format, isSameDay } from "date-fns";
 import { toast } from "sonner";
 import {
   Bold,
   Building2,
+  CalendarCheck,
   CalendarDays,
   Check,
   ChevronDown,
   ClipboardList,
+  Clock,
   CloudUpload,
   FilePlus2,
   FileText,
@@ -145,6 +147,27 @@ const HASHTAGS: Record<string, string[]> = {
 };
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
+
+/** "Need approval by" falls at this time of day unless the creator picks another. */
+const DEFAULT_APPROVAL_TIME = "17:00";
+
+/** Every half hour of the day as "HH:mm", plus the current value if it's off the half hour (an older draft). */
+const HALF_HOURS = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`);
+const timeOptions = (current: string) => (HALF_HOURS.includes(current) ? HALF_HOURS : [...HALF_HOURS, current].sort());
+
+/** "17:00" -> "5:00 PM". */
+function timeLabel(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}
+
+/** A copy of the date at the given "HH:mm" time. */
+function withTime(date: Date, time: string) {
+  const [h, m] = time.split(":").map(Number);
+  const d = new Date(date);
+  d.setHours(Number.isFinite(h) ? h : 17, Number.isFinite(m) ? m : 0, 0, 0);
+  return d;
+}
 
 // ---------------------------------------------------------------------------
 // Small building blocks
@@ -313,6 +336,10 @@ export default function NewSubmissionPage() {
   const [region, setRegion] = useState("Global");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
+  // When the creator needs it approved by (required): the reviewer's deadline once it's sent. The time defaults
+  // to 5:00 PM and applies to whichever date they pick.
+  const [approvalBy, setApprovalBy] = useState<Date | undefined>(undefined);
+  const [approvalTime, setApprovalTime] = useState(DEFAULT_APPROVAL_TIME);
   const [caption, setCaption] = useState("");
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
@@ -400,6 +427,8 @@ export default function NewSubmissionPage() {
         setRegion(s.region || "Global");
         setPlatforms(s.platforms);
         setPublishDate(s.publish_at ? new Date(s.publish_at) : undefined);
+        setApprovalBy(s.approval_needed_by ? new Date(s.approval_needed_by) : undefined);
+        setApprovalTime(s.approval_needed_by ? format(new Date(s.approval_needed_by), "HH:mm") : DEFAULT_APPROVAL_TIME);
         setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
         // The editor mounts after the loading state clears; the effect below fills it in.
@@ -433,6 +462,7 @@ export default function NewSubmissionPage() {
   const buildPayload = (): SubmissionUpdate => {
     const clear: SubmissionUpdate["clear_fields"] = [];
     if (!publishDate) clear.push("publish_at");
+    if (!approvalBy) clear.push("approval_needed_by");
     if (!accountIds.length) clear.push("account_id");
     if (!brand) clear.push("brand_code");
     if (!audience) clear.push("audience");
@@ -445,6 +475,7 @@ export default function NewSubmissionPage() {
       platforms,
       ...(accountIds.length ? { account_ids: accountIds } : {}),
       ...(publishDate ? { publish_at: publishDate.toISOString() } : {}),
+      ...(approvalBy ? { approval_needed_by: approvalBy.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
       caption_text: editorRef.current?.innerText.trim() || "",
       rule_sets: ruleSets,
@@ -670,6 +701,13 @@ export default function NewSubmissionPage() {
     }
   };
 
+  // "Need approval by": the picked day at the chosen time, never after the publish time.
+  const atApprovalTime = (d: Date) => withTime(d, approvalTime);
+  const pickApproval = (d: Date | undefined) => {
+    setApprovalBy(d && publishDate && d > publishDate ? new Date(publishDate) : d);
+    markEdited();
+  };
+
   const mainFiles = files.filter((f) => f.kind === "MAIN");
   const clientMissing = {
     title: !title.trim(),
@@ -682,6 +720,7 @@ export default function NewSubmissionPage() {
     // Every post needs a caption: the score and the sentiment analysis read it first.
     caption: !caption.trim(),
     rule_sets: ruleSets.length === 0,
+    approval_needed_by: !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
   };
@@ -694,9 +733,18 @@ export default function NewSubmissionPage() {
 
   const submit = async () => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
-    if (publishDate && publishDate.getTime() < Date.now()) {
-      missingNow.push("publish_at");
-      setServerMissing(["publish_at"]);
+    const badDates: string[] = [];
+    if (publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
+    if (approvalBy && approvalBy.getTime() < Date.now()) badDates.push("approval_needed_by");
+    if (badDates.length) {
+      missingNow.push(...badDates.filter((d) => !missingNow.includes(d)));
+      setServerMissing(badDates);
+    }
+    if (!missingNow.length && approvalBy && publishDate && approvalBy > publishDate) {
+      setServerMissing(["approval_needed_by"]);
+      setShowErrors(true);
+      toast.error("The \"need approval by\" date has to be on or before the publish date.");
+      return;
     }
     if (missingNow.length) {
       setShowErrors(true);
@@ -998,7 +1046,7 @@ export default function NewSubmissionPage() {
                 </Select>
               </Field>
 
-              <Field label="Platform(s)" required error={errorFor("platforms")} className="md:col-span-2 lg:col-span-4">
+              <Field label="Platform(s)" required error={errorFor("platforms")} className="md:col-span-2 lg:col-span-2">
                 <MultiSelect<string>
                   options={options?.platforms ?? []}
                   value={platforms}
@@ -1060,6 +1108,107 @@ export default function NewSubmissionPage() {
                       }}
                       disabled={{ before: new Date() }}
                     />
+                  </PopoverContent>
+                </Popover>
+              </Field>
+              <Field
+                label="Need approval by"
+                required
+                error={errorFor(
+                  "approval_needed_by",
+                  approvalBy && publishDate && approvalBy > publishDate ? "Must be on or before the publish date" : approvalBy ? "Pick a date in the future" : "Required"
+                )}
+                className="md:col-span-2 lg:col-span-2"
+              >
+                <Popover>
+                  <div
+                    className={`flex h-9 items-center gap-2 rounded-md border bg-background px-2.5 ${
+                      isMissing("approval_needed_by") ? "border-red-500" : "border-input"
+                    }`}
+                  >
+                    <CalendarCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <PopoverTrigger asChild>
+                      <button type="button" className="flex-1 text-left text-sm min-w-0 truncate">
+                        {approvalBy ? format(approvalBy, "EEE, MMM d · h:mm a") : <span className="text-muted-foreground">Pick a date</span>}
+                      </button>
+                    </PopoverTrigger>
+                    {approvalBy && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApprovalBy(undefined);
+                          markEdited();
+                        }}
+                        className="w-5 h-5 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center"
+                        aria-label="Clear approval date"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <PopoverContent align="end" className="flex w-auto flex-row gap-0 p-0">
+                    {/* Quick picks on the left (working days from now, at the chosen time), each showing its date. */}
+                    <div className="flex w-36 flex-col gap-0.5 border-r border-border p-2" role="group" aria-label="Quick picks">
+                      <p className="px-2 pb-1 pt-0.5 text-xs font-medium text-muted-foreground">Quick picks</p>
+                      {[
+                        { days: 1, label: "In 1 day" },
+                        { days: 3, label: "In 3 days" },
+                        { days: 5, label: "In 1 week" },
+                      ].map(({ days, label }) => {
+                        const d = atApprovalTime(addBusinessDays(new Date(), days));
+                        const tooLate = Boolean(publishDate && d > publishDate);
+                        const picked = Boolean(approvalBy && isSameDay(approvalBy, d));
+                        return (
+                          <button
+                            key={days}
+                            type="button"
+                            disabled={tooLate}
+                            title={tooLate ? "After the publish date" : undefined}
+                            aria-pressed={picked}
+                            onClick={() => pickApproval(d)}
+                            className={`flex flex-col items-start rounded-md px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                              picked ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
+                            }`}
+                          >
+                            <span className="text-sm font-medium">{label}</span>
+                            <span className="text-xs text-muted-foreground">{format(d, "EEE, MMM d")}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex flex-col">
+                      <Calendar
+                        mode="single"
+                        selected={approvalBy}
+                        defaultMonth={approvalBy ?? new Date()}
+                        onSelect={(d) => pickApproval(d ? atApprovalTime(d) : undefined)}
+                        disabled={publishDate ? [{ before: new Date() }, { after: publishDate }] : { before: new Date() }}
+                      />
+                      <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
+                        <Label htmlFor="approval-time" className="text-xs font-medium text-muted-foreground">
+                          Time
+                        </Label>
+                        <Select
+                          value={approvalTime}
+                          onValueChange={(t) => {
+                            setApprovalTime(t);
+                            if (approvalBy) pickApproval(withTime(approvalBy, t));
+                          }}
+                        >
+                          <SelectTrigger id="approval-time" size="sm" className="h-8 flex-1 gap-2 text-sm">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent position="popper" side="top" className="max-h-60">
+                            {timeOptions(approvalTime).map((t) => (
+                              <SelectItem key={t} value={t} className="text-sm">
+                                {timeLabel(t)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </PopoverContent>
                 </Popover>
               </Field>
@@ -1435,6 +1584,9 @@ export default function NewSubmissionPage() {
               </SummaryRow>
               <SummaryRow icon={CalendarDays} label="Intended Publish Date">
                 {publishDate ? format(publishDate, "MMM d, yyyy") : <span className="text-muted-foreground">—</span>}
+              </SummaryRow>
+              <SummaryRow icon={CalendarCheck} label="Need approval by">
+                {approvalBy ? format(approvalBy, "MMM d, h:mm a") : <span className="text-muted-foreground">—</span>}
               </SummaryRow>
             </div>
 

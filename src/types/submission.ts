@@ -106,6 +106,8 @@ export interface Submission {
   account_ids?: string[];
   accounts?: AccountOption[];
   publish_at?: string | null;
+  /** When the creator needs it approved by; the reviewer's deadline once it's submitted. */
+  approval_needed_by?: string | null;
   /** When the next step is due (see DueKind). */
   due_at?: string | null;
   due_kind?: DueKind | null;
@@ -197,11 +199,12 @@ export interface SubmissionUpdate {
   platforms?: string[];
   account_ids?: string[];
   publish_at?: string;
+  approval_needed_by?: string;
   caption_html?: string;
   caption_text?: string;
   rule_sets?: string[];
   reviewer_route?: string[];
-  clear_fields?: ("account_id" | "publish_at" | "brand_code" | "audience" | "region")[];
+  clear_fields?: ("account_id" | "publish_at" | "approval_needed_by" | "brand_code" | "audience" | "region")[];
 }
 
 export interface SubmissionVersion {

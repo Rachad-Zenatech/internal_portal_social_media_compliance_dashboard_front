@@ -64,7 +64,7 @@ import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import { UnderReviewBadge, authedFileUrl, dueInfo, isAnalysing } from "@/components/submissions/submissionUi";
-import { QUICK_CREATE } from "@/components/dashboard/dashboardParts";
+import { QUICK_CREATE, Score, issuesText } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
@@ -86,8 +86,8 @@ function stageOf(s: { status: string; publish_at?: string | null }): Stage {
 
 const STAGES: Record<Stage, { label: string; pill: string }> = {
   DRAFT: { label: "Draft", pill: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" },
-  IN_REVIEW: { label: "In Review", pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
-  CHANGES_REQUESTED: { label: "Changes Requested", pill: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" },
+  IN_REVIEW: { label: "In review", pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
+  CHANGES_REQUESTED: { label: "Changes requested", pill: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" },
   APPROVED: { label: "Approved", pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
   SCHEDULED: { label: "Scheduled", pill: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" },
   REJECTED: { label: "Rejected", pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" },
@@ -95,10 +95,10 @@ const STAGES: Record<Stage, { label: string; pill: string }> = {
 
 // The stage pills along the top, each a filter.
 const STAGE_FILTERS: { value: "" | Stage; label: string }[] = [
-  { value: "", label: "All Content" },
+  { value: "", label: "All" },
   { value: "DRAFT", label: "Drafts" },
-  { value: "IN_REVIEW", label: "In Review" },
-  { value: "CHANGES_REQUESTED", label: "Changes Requested" },
+  { value: "CHANGES_REQUESTED", label: "Changes requested" },
+  { value: "IN_REVIEW", label: "In review" },
   { value: "APPROVED", label: "Approved" },
   { value: "SCHEDULED", label: "Scheduled" },
 ];
@@ -318,45 +318,100 @@ function friendlyDate(iso: string) {
   return format(d, "MMM d, yyyy");
 }
 
-function GalleryCard({ s, onSelect }: { s: SubmissionSummary; onSelect: (s: SubmissionSummary) => void }) {
+/** One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,
+ * grey when it's waiting on someone else. */
+function statusLine(s: SubmissionSummary): { text: string; tone: string } {
+  const muted = "text-muted-foreground";
   const stage = stageOf(s);
-  const when = s.publish_at
-    ? { text: friendlyDate(s.publish_at), pastDue: !FINISHED.has(s.status) && isPast(new Date(s.publish_at)) }
-    : { text: `Edited ${formatDistanceToNow(new Date(s.updated_at), { addSuffix: true })}`, pastDue: false };
+  const due = s.due_at ? new Date(s.due_at) : null;
+  if (stage === "DRAFT") return { text: `Draft · edited ${format(new Date(s.updated_at), "MMM d")}`, tone: muted };
+  if (stage === "CHANGES_REQUESTED") {
+    if (!due) return { text: "A reviewer asked for changes", tone: "font-medium text-amber-700 dark:text-amber-400" };
+    return isPast(due)
+      ? { text: `Changes overdue by ${formatDistanceToNow(due)}`, tone: "font-semibold text-red-600 dark:text-red-400" }
+      : { text: `Changes due ${format(due, "EEE, MMM d · h:mm a")}`, tone: "font-semibold text-amber-700 dark:text-amber-400" };
+  }
+  if (stage === "IN_REVIEW") {
+    if (due && isPast(due)) return { text: `Waiting on reviewer · ${formatDistanceToNow(due)} past due`, tone: muted };
+    if (due) return { text: `Waiting on reviewer · due ${format(due, "EEE, MMM d")}`, tone: muted };
+    return { text: `Waiting on reviewer · sent ${format(new Date(s.submitted_at ?? s.updated_at), "MMM d")}`, tone: muted };
+  }
+  if (stage === "SCHEDULED") return { text: `Approved · goes out ${friendlyDate(s.publish_at!)}`, tone: muted };
+  if (stage === "APPROVED")
+    return { text: s.publish_at ? `Approved · publish date ${format(new Date(s.publish_at), "MMM d")}` : "Approved", tone: muted };
+  return { text: STAGES[stage]?.label ?? s.status, tone: muted };
+}
+
+function GalleryCard({
+  s,
+  onSelect,
+  onContinue,
+}: {
+  s: SubmissionSummary;
+  onSelect: (s: SubmissionSummary) => void;
+  onContinue: (s: SubmissionSummary) => void;
+}) {
+  const stage = stageOf(s);
+  const line = statusLine(s);
+  const account = accountsOf(s)[0];
+  const where = [
+    s.platforms.length ? `${platformName(s.platforms[0])}${s.platforms.length > 1 ? ` +${s.platforms.length - 1}` : ""}` : null,
+    account?.handle ? `@${account.handle.replace(/^@/, "")}` : account?.account_name,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const fix = stage === "CHANGES_REQUESTED";
+  // "to fix" only where the creator can act on it (a draft, or changes requested); otherwise just "found".
+  const issueWords = issuesText(s.issue_count);
+  const issues =
+    s.analysis_pending || s.latest_score == null
+      ? null
+      : !issueWords
+      ? "No issues"
+      : fix || stage === "DRAFT"
+      ? issueWords
+      : issueWords.replace("to fix", "found");
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(s)}
-      className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card text-left shadow-[0_1px_2px_oklch(0_0_0/0.05)] transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-    >
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
-        <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
-      </div>
-      <div className="flex flex-1 flex-col gap-2 p-3.5">
-        <p className="truncate text-sm font-semibold text-foreground">{s.title}</p>
-        {s.platforms.length > 0 && (
-          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-foreground/80">
-            {s.platforms.slice(0, 3).map((pl) => (
-              <span key={pl} className="inline-flex items-center gap-1">
-                <PlatformIcon platform={pl as SocialPlatform} className="w-3.5 h-3.5" /> {platformName(pl)}
-              </span>
-            ))}
-            {s.platforms.length > 3 && <span className="text-muted-foreground">+{s.platforms.length - 3}</span>}
-          </p>
-        )}
-        <div>
-          <StagePill stage={stage} small />
+    <article className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-shadow hover:shadow-md">
+      <button
+        type="button"
+        onClick={() => onSelect(s)}
+        className="flex flex-1 flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+      >
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+          <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+          <span className="absolute left-2.5 top-2.5 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white">
+            {CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}
+          </span>
         </div>
-        <p className={`text-xs ${when.pastDue ? "font-semibold text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
-          {when.text}
-          {when.pastDue && " · Past due"}
-        </p>
-        <DueLine dueAt={s.due_at} kind={s.due_kind} className="text-xs" />
-        <span className="mt-auto w-fit rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-          {CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}
-        </span>
-      </div>
-    </button>
+        <div className="flex flex-1 flex-col gap-2.5 px-4 pb-4 pt-3.5">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">{s.title}</p>
+            <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+              {s.platforms[0] && <PlatformIcon platform={s.platforms[0] as SocialPlatform} className="w-3.5 h-3.5 shrink-0" />}
+              <span className="truncate">{where || "No account set"}</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <StagePill stage={stage} small />
+            <Score score={s.latest_score} pending={s.analysis_pending} />
+            {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
+          </div>
+          <p className={`text-sm ${line.tone}`}>{line.text}</p>
+        </div>
+      </button>
+      {(fix || stage === "DRAFT") && (
+        <div className="px-4 pb-4">
+          <Button
+            variant={fix ? "default" : "outline"}
+            className={`h-9 w-full rounded-lg font-medium ${fix ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
+            onClick={() => onContinue(s)}
+          >
+            {fix ? "Fix issues" : "Continue draft"}
+          </Button>
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -860,6 +915,7 @@ export default function SubmissionsListPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<SubmissionSummary | null>(null);
   const [deleting, setDeleting] = useState<SubmissionSummary | null>(null);
+  const navigate = useNavigate();
   const isWide = useIsWide();
   const submit = useSubmitForReview();
   // Super admins, Content Managers and reviewers can switch to everyone's content.
@@ -896,22 +952,27 @@ export default function SubmissionsListPage() {
     [options]
   );
 
-  // Creators see one month at a time, by when each post was first created.
+  // Creators see one month at a time, by when each post was first created. Work waiting on them (drafts and
+  // changes requested) is never hidden by the month: those two tabs count and show every month.
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const onCurrentMonth = isSameMonth(month, new Date());
-  const inView = useMemo(
-    () => (gallery ? data.filter((s) => isSameMonth(new Date(s.created_at), month)) : data),
-    [data, gallery, month]
-  );
+  const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED";
+  const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month]);
+  const inView = gallery && !monthless ? inMonth : data;
 
   const stageCounts = useMemo(() => {
-    const counts: Record<string, number> = { "": inView.length };
-    for (const s of inView) {
+    const source = gallery ? inMonth : data;
+    const counts: Record<string, number> = { "": source.length };
+    for (const s of source) {
       const st = stageOf(s);
       counts[st] = (counts[st] ?? 0) + 1;
     }
+    if (gallery) {
+      counts.DRAFT = data.filter((s) => stageOf(s) === "DRAFT").length;
+      counts.CHANGES_REQUESTED = data.filter((s) => stageOf(s) === "CHANGES_REQUESTED").length;
+    }
     return counts;
-  }, [inView]);
+  }, [data, inMonth, gallery]);
 
   // Platform options come from what's actually in the list.
   const platformsInList = useMemo(() => [...new Set(data.flatMap((s) => s.platforms))].sort(), [data]);
@@ -972,8 +1033,14 @@ export default function SubmissionsListPage() {
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Content Portal</h1>
-          {isReviewer && <p className="mt-1 text-sm text-muted-foreground">Review submitted content, run compliance checks, and manage approvals.</p>}
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">{scope === "all" ? "All posts" : "My posts"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isReviewer
+              ? "Review submitted content, run compliance checks, and manage approvals."
+              : scope === "all"
+              ? "Everyone's posts on your brands, with what needs action first."
+              : "Everything you've created, with what needs you first."}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           {waitingForMe > 0 && (
@@ -987,30 +1054,35 @@ export default function SubmissionsListPage() {
           )}
           <Button asChild className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
             <Link to="/submissions/new">
-              <Plus className="w-4 h-4" /> New Submission
+              <Plus className="w-4 h-4" /> New post
             </Link>
           </Button>
         </div>
       </header>
 
-      {/* Status pills, each a filter */}
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+      {/* Status tabs: the one status filter */}
+      <div className="flex max-w-full flex-wrap gap-1 self-start rounded-[10px] bg-muted p-1 w-fit" role="group" aria-label="Filter by status">
         {STAGE_FILTERS.map((f) => {
           const active = stage === f.value;
+          const count = stageCounts[f.value] ?? 0;
           return (
             <button
               key={f.value || "all"}
               type="button"
               aria-pressed={active}
               onClick={() => setStage(active && f.value ? "" : f.value)}
-              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`inline-flex h-8 items-center gap-1.5 rounded-[7px] px-3 text-[13px] font-medium transition-colors ${
                 active
-                  ? "border-blue-700 bg-blue-700 text-white"
-                  : "border-border/70 bg-card text-foreground hover:border-blue-300 hover:text-blue-700 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
+                  ? "bg-card text-foreground shadow-sm"
+                  : count === 0
+                  ? "text-muted-foreground/60 hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {f.label}
-              <span className={`tabular-nums ${active ? "text-white/80" : "text-muted-foreground"}`}>{isLoading ? "–" : stageCounts[f.value] ?? 0}</span>
+              <span className={`text-xs tabular-nums ${active ? "text-muted-foreground" : count === 0 ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
+                {isLoading ? "–" : count}
+              </span>
             </button>
           );
         })}
@@ -1022,29 +1094,42 @@ export default function SubmissionsListPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-1" role="group" aria-label="Month">
-                <Button variant="outline" size="icon" className="h-8 w-8 bg-card" onClick={() => setMonth(addMonths(month, -1))} aria-label="Previous month">
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="min-w-[120px] text-center text-sm font-semibold text-foreground" aria-live="polite">
-                  {format(month, "MMMM yyyy")}
-                </span>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 bg-card"
+                  className="h-9 w-9 bg-card"
+                  onClick={() => setMonth(addMonths(month, -1))}
+                  disabled={monthless}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="min-w-[140px] text-center leading-tight" aria-live="polite">
+                  <p className="text-sm font-semibold text-foreground">{monthless ? "All months" : format(month, "MMMM yyyy")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isLoading
+                      ? "Loading..."
+                      : monthless
+                      ? `${visible.length} ${visible.length === 1 ? "post" : "posts"} waiting on you`
+                      : `${inMonth.length} ${inMonth.length === 1 ? "post" : "posts"} this month`}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 bg-card"
                   onClick={() => setMonth(addMonths(month, 1))}
-                  disabled={onCurrentMonth}
+                  disabled={onCurrentMonth || monthless}
                   aria-label="Next month"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
-                {!onCurrentMonth && (
+                {!onCurrentMonth && !monthless && (
                   <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} className="ml-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
                     This month
                   </button>
                 )}
               </div>
-              <span>{isLoading ? "Loading..." : `${visible.length} ${visible.length === 1 ? "post" : "posts"}`}</span>
               {filtersActive && (
                 <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                   <X className="w-3.5 h-3.5" /> Clear filters
@@ -1074,14 +1159,14 @@ export default function SubmissionsListPage() {
                   ))}
                 </div>
               )}
-              <div className="relative w-full sm:w-56">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search content..."
-                  aria-label="Search content"
-                  className="h-9 rounded-lg bg-card pl-9 text-xs"
+                  placeholder="Search by title or SUB number"
+                  aria-label="Search posts"
+                  className="h-9 rounded-lg bg-card pl-9 text-sm"
                 />
               </div>
               <Select value={platform} onValueChange={setPlatform}>
@@ -1106,19 +1191,6 @@ export default function SubmissionsListPage() {
                   {brandsInList.map((b) => (
                     <SelectItem key={b} value={b} className="text-xs">
                       {labels.brand(b)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
-                <SelectTrigger className="h-9 w-[150px] rounded-lg bg-card text-xs" aria-label="Status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                  {(Object.keys(STAGES) as Stage[]).map((st) => (
-                    <SelectItem key={st} value={st} className="text-xs">
-                      {STAGES[st].label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1183,7 +1255,12 @@ export default function SubmissionsListPage() {
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {visible.map((s) => (
-                  <GalleryCard key={s.id} s={s} onSelect={(item) => setSelectedId(item.id)} />
+                  <GalleryCard
+                    key={s.id}
+                    s={s}
+                    onSelect={(item) => setSelectedId(item.id)}
+                    onContinue={(item) => navigate(`/submissions/new?id=${item.id}`)}
+                  />
                 ))}
               </div>
             </>
@@ -1244,7 +1321,7 @@ export default function SubmissionsListPage() {
                     className="h-9 rounded-lg pl-9 text-xs"
                   />
                 </div>
-                <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
+                <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
                   <Select value={platform} onValueChange={setPlatform}>
                     <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
                       <SelectValue />
@@ -1271,21 +1348,8 @@ export default function SubmissionsListPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={stage || "all"} onValueChange={(v) => setStage(v === "all" ? "" : (v as Stage))}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                      {(Object.keys(STAGES) as Stage[]).map((st) => (
-                        <SelectItem key={st} value={st} className="text-xs">
-                          {STAGES[st].label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Sort by">
+                    <SelectTrigger className={`h-9 w-full rounded-lg text-xs ${isWide ? "col-span-2" : "col-span-2 sm:col-span-1"}`} aria-label="Sort by">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -61,6 +61,7 @@ export const MISSING_LABELS: Record<string, string> = {
   content: "content file or caption",
   caption: "caption",
   publish_at: "a publish date in the future",
+  approval_needed_by: "a \"need approval by\" date in the future",
 };
 
 export function formatBytes(bytes: number) {
