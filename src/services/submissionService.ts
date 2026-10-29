@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/apiClient";
-import type { CaptionSuggestions } from "@/types/caption";
+import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
 import type { MoodVerdict, PublicMood } from "@/types/publicMood";
 import type {
   AiUsage,
@@ -122,6 +122,17 @@ export const submissionService = {
   /** Three captions drafted from the post (images, the video itself, its transcript, title), each already compliance-checked. */
   suggestCaptions: (id: string, data: { hint?: string; max_chars: number }) =>
     apiClient.post<CaptionSuggestions>(`/api/submissions/${id}/caption-suggestions`, data, quiet),
+
+  /** Hashtags and the company cashtag suited to a post, screened against the rules that apply to it. */
+  hashtagLibrary: (p: { brand?: string; audience?: string; region?: string; platforms: string[]; ruleSets: string[] }) => {
+    const q = new URLSearchParams();
+    if (p.brand) q.set("brand_code", p.brand);
+    if (p.audience) q.set("audience", p.audience);
+    if (p.region) q.set("region", p.region);
+    p.platforms.forEach((v) => q.append("platforms", v));
+    p.ruleSets.forEach((v) => q.append("rule_sets", v));
+    return apiClient.get<HashtagLibrary>(`/api/submissions/hashtags?${q.toString()}`, quiet);
+  },
 
   /** How people online feel about the topics this post touches (social listening), with any saved summary. */
   getPublicMood: (id: string) => apiClient.get<PublicMood>(`/api/submissions/${id}/public-mood`, quiet),

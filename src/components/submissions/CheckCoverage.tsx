@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Eye, Loader2, UserCheck } from "lucide-react";
+import { ChevronDown, Eye, Hash, Info, Loader2, UserCheck } from "lucide-react";
 
 import type { StoredCheck } from "@/types/submission";
 
@@ -16,9 +16,23 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
   const pending = check.images_pending ?? 0;
   const failed = check.images_failed ?? 0;
 
+  const docsPending = check.documents_pending ?? 0;
+  const docsFailed = check.documents_failed ?? [];
+
   const sources = ["title", "caption"];
+  if (check.includes_script) sources.push("script");
+  else if ((check.documents_read ?? 0) > 0) sources.push("article");
   if (check.includes_transcript) sources.push("video transcript");
   if (read > 0) sources.push(`text in ${read === images ? (images === 1 ? "its image" : `all ${images} images`) : `${read} of ${images} images`}`);
+
+  // Cashtags, hashtags, mentions and links the check picked out of the post.
+  const signals = check.signals;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const picked: string[] = [];
+  if (signals?.cashtags.length) picked.push(signals.cashtags.join(" "));
+  if (signals?.hashtags.length) picked.push(plural(signals.hashtags.length, "hashtag"));
+  if (signals?.mentions.length) picked.push(signals.mentions.join(" "));
+  if (signals?.links.length) picked.push(plural(signals.links.length, "link"));
 
   return (
     <div className={`space-y-1 text-[11px] text-muted-foreground ${className}`}>
@@ -29,6 +43,29 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
           {check.transcript_pending && " The video transcript is still being made; the score updates when it's ready."}
         </span>
       </p>
+      {picked.length > 0 && (
+        <p className="flex items-start gap-1.5">
+          <Hash className="mt-px w-3.5 h-3.5 shrink-0" />
+          <span>Picked out: {picked.join(" · ")}.</span>
+        </p>
+      )}
+      {signals?.notes.map((note) => (
+        <p key={note} className="flex items-start gap-1.5 text-amber-700 dark:text-amber-300">
+          <Info className="mt-px w-3.5 h-3.5 shrink-0" />
+          <span>{note}</span>
+        </p>
+      ))}
+      {docsPending > 0 && (
+        <p className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+          <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+          Reading the script; the score updates when it's done.
+        </p>
+      )}
+      {docsFailed.map((d) => (
+        <p key={d.name} className="text-amber-700 dark:text-amber-300">
+          {d.name} wasn't checked: {d.error ?? "its text couldn't be read."}
+        </p>
+      ))}
       {pending > 0 && (
         <p className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
           <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />

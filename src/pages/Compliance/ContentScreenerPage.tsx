@@ -8,6 +8,8 @@ import {
   ExternalLink,
   Layers,
   Loader2,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pause,
   Play,
   Search,
@@ -56,6 +58,7 @@ interface Filters {
   check: CheckFilter;
 }
 const NO_FILTERS: Filters = { brand: "all", platform: "all", due: "any", check: "any" };
+const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
 const DUE_LABELS: Record<DueFilter, string> = {
   any: "Any deadline",

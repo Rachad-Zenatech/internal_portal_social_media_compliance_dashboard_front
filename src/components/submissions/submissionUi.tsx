@@ -42,7 +42,7 @@ export function UnderReviewBadge({ className = "" }: { className?: string }) {
 
 export const FILE_KIND_LABELS: Record<string, string> = {
   MAIN: "Main content",
-  SCRIPT: "Caption / script",
+  SCRIPT: "Script",
   IMAGE: "Image",
   SUPPORTING: "Supporting document",
 };
@@ -139,6 +139,11 @@ export function DueBadge({ dueAt, kind, className = "" }: { dueAt?: string | nul
 }
 
 /** Thumbnail, name and size for a stored file, with optional remove action. */
+/** Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service). */
+function isReadDocument(file: SubmissionFile) {
+  return (file.kind === "SCRIPT" || file.kind === "MAIN") && /\.(txt|md|docx?|pdf)$/i.test(file.original_name);
+}
+
 export function SubmissionFileRow({
   file,
   onRemove,
@@ -187,7 +192,18 @@ export function SubmissionFileRow({
         <p className="text-[11px] text-muted-foreground">
           {FILE_KIND_LABELS[file.kind]} · {formatBytes(file.size_bytes)}
           {duration && Number.isFinite(duration) ? ` · ${formatDuration(duration)}` : ""}
+          {isReadDocument(file) && file.doc_text_status === "COMPLETED" && " · Text read for the check"}
         </p>
+        {isReadDocument(file) && (file.doc_text_status == null || file.doc_text_status === "PROCESSING") && (
+          <p className="flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300">
+            <Loader2 className="w-3 h-3 animate-spin" /> Reading the text for the check...
+          </p>
+        )}
+        {isReadDocument(file) && file.doc_text_status === "FAILED" && (
+          <p className="text-[11px] text-amber-700 dark:text-amber-300" title={file.doc_text_error ?? undefined}>
+            Not checked: {file.doc_text_error ?? "the text couldn't be read."}
+          </p>
+        )}
       </div>
       {removing ? (
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />

@@ -124,6 +124,27 @@ export interface ComplianceCheckResponse {
   rules_checked?: number;
   /** Of those, the rules the text check can't test (nothing to look for in text): a reviewer confirms them. */
   manual_review_rules?: ManualReviewRule[];
+  /** Cashtags, hashtags, @mentions and links read from the post (missing on checks saved before they were read). */
+  signals?: CheckSignals | null;
+  /** Audiences the rules were picked for: the target plus any implied (empty when none is set: all audiences). */
+  audiences_checked?: string[];
+  /** What the content is made of, matched against each rule's applies_to (empty when not known). */
+  content_parts?: string[];
+}
+
+/** What the check read from the post's symbols, before its wording was matched against the rules. */
+export interface CheckSignals {
+  cashtags: string[];
+  hashtags: string[];
+  mentions: string[];
+  /** Domains linked to, e.g. "army.mil". */
+  links: string[];
+  /** The mentions and domains above that belong to a government or military. */
+  government_references: string[];
+  /** Audiences the post reaches whatever it targets, e.g. INVESTORS for a cashtag (missing on older checks). */
+  implied_audiences?: string[];
+  /** Worth a look but not a rule breach, so no points off (outside links, too many hashtags). */
+  notes: string[];
 }
 
 /** An applicable rule the automated check can't test from text (e.g. image editing, image rights). */

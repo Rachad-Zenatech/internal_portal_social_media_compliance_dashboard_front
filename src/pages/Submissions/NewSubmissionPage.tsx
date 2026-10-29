@@ -52,6 +52,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
+import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
+import HashtagPicker from "@/components/submissions/HashtagPicker";
+import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
@@ -101,12 +104,20 @@ const VIDEO_RE = /\.(mp4|mov|avi|webm|mkv|m4v)$/i;
 const IMAGE_RE = /\.(jpe?g|png|webp|gif)$/i;
 const ARTICLE_RE = /\.(pdf|docx?|md|txt)$/i;
 const DOC_RE = /\.(pdf|docx?|md|txt|xlsx?|csv|zip|pptx?)$/i;
+/** Files the check can read as a script. */
+const SCRIPT_RE = /\.(pdf|docx?|md|txt)$/i;
+const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
 
 /**
  * Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
  * Returns null with a reason for files this submission can't take.
  */
-function classifyFile(file: File, type: ContentType, mainTaken: boolean): { kind: SubmissionFileKind } | { error: string } {
+function classifyFile(
+  file: File,
+  type: ContentType,
+  mainTaken: boolean,
+  scriptTaken = false
+): { kind: SubmissionFileKind } | { error: string } {
   const name = file.name;
   const isVideo = VIDEO_RE.test(name) || file.type.startsWith("video/");
   const isImage = IMAGE_RE.test(name) || file.type.startsWith("image/");
@@ -125,6 +136,8 @@ function classifyFile(file: File, type: ContentType, mainTaken: boolean): { kind
     };
   }
   if (isImage) return { kind: "IMAGE" };
+  // A document named as a script is the script (read into the compliance check); other documents are supporting.
+  if (SCRIPT_RE.test(name) && !scriptTaken && /script/i.test(name)) return { kind: "SCRIPT" };
   if (DOC_RE.test(name)) return { kind: "SUPPORTING" };
   return { error: "this file type isn't supported." };
 }
@@ -136,14 +149,6 @@ const CHAR_LIMITS: Partial<Record<string, number>> = {
   LINKEDIN: 3000,
   YOUTUBE: 5000,
   YOUTUBE_SHORTS: 5000,
-};
-
-const HASHTAGS: Record<string, string[]> = {
-  ZENATECH: ["#ZenaTech", "#DroneTech", "#AI", "#Innovation"],
-  ZENADRONE: ["#ZenaDrone", "#DefenseInnovation", "#AutonomousSystems", "#Drones"],
-  DAAS: ["#DroneAsAService", "#DaaS", "#ZenaTech"],
-  SOFTWARE: ["#ZooOffice", "#FutureOfWork", "#SaaS", "#ZenaTech"],
-  CEO_THOUGHT_LEADERSHIP: ["#Leadership", "#DefenseTech", "#Autonomy", "#ZenaTech"],
 };
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -365,6 +370,7 @@ export default function NewSubmissionPage() {
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const saveChain = useRef<Promise<string | null>>(Promise.resolve(null));
   // A draft this page just created; the URL update that follows mustn't reload it over the user's typing.
   const createdIdRef = useRef<string | null>(null);
@@ -394,6 +400,30 @@ export default function NewSubmissionPage() {
   const audienceLabel = audience ? options?.audiences[audience] : undefined;
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
+
+  // Scripts are read in the background; refresh their status until they're done so the creator sees it.
+  const readingScript = files.some(
+    (f) => (f.kind === "SCRIPT" || f.kind === "MAIN") && SCRIPT_RE.test(f.original_name) && (f.doc_text_status == null || f.doc_text_status === "PROCESSING")
+  );
+  useEffect(() => {
+    if (!readingScript || !submissionId) return;
+    const t = window.setInterval(async () => {
+      try {
+        const fresh = await submissionService.get(submissionId);
+        const byId = new Map(fresh.files.map((f) => [f.id, f]));
+        // Only the read status changes; everything else the creator is editing stays as it is.
+        setFiles((prev) =>
+          prev.map((f) => {
+            const n = byId.get(f.id);
+            return n ? { ...f, doc_text_status: n.doc_text_status, doc_text_error: n.doc_text_error } : f;
+          })
+        );
+      } catch {
+        // Try again on the next tick.
+      }
+    }, 4000);
+    return () => window.clearInterval(t);
+  }, [readingScript, submissionId]);
 
   // ----- Load an existing draft (S08 resume) -----
   const applyServer = useCallback((s: Submission) => {
@@ -592,18 +622,25 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Files (S05, S07) -----
-  const uploadFiles = async (list: File[], opts: { replacingMain?: boolean } = {}) => {
+  const uploadFiles = async (list: File[], opts: { replacingMain?: boolean; asScript?: boolean } = {}) => {
     if (list.length === 0) return;
 
     let mainTaken = !opts.replacingMain && files.some((f) => f.kind === "MAIN");
+    // One script per submission: a new one replaces the old (the server keeps the old with its version).
+    let scriptTaken = !opts.asScript && files.some((f) => f.kind === "SCRIPT");
     const batch: { file: File; kind: SubmissionFileKind; key: string }[] = [];
     for (const file of list) {
-      const result = classifyFile(file, contentType, mainTaken);
+      const result: { kind: SubmissionFileKind } | { error: string } = opts.asScript
+        ? SCRIPT_RE.test(file.name)
+          ? { kind: "SCRIPT" }
+          : { error: "a script has to be a PDF, Word (.docx), .txt or .md file." }
+        : classifyFile(file, contentType, mainTaken, scriptTaken);
       if ("error" in result) {
         toast.error(`${file.name}: ${result.error}`);
         continue;
       }
       if (result.kind === "MAIN") mainTaken = true;
+      if (result.kind === "SCRIPT") scriptTaken = true;
       batch.push({ file, kind: result.kind, key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}` });
     }
     if (batch.length === 0) return;
@@ -626,7 +663,8 @@ export default function NewSubmissionPage() {
     for (const { file, key, kind } of batch) {
       try {
         const saved = await submissionService.uploadFile(id, kind, file);
-        setFiles((prev) => [...prev, saved]);
+        // The server keeps one script: the new one replaces any earlier one.
+        setFiles((prev) => [...(kind === "SCRIPT" ? prev.filter((f) => f.kind !== "SCRIPT") : prev), saved]);
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       } finally {
@@ -792,22 +830,52 @@ export default function NewSubmissionPage() {
     markEdited();
   };
 
+  /** Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line. */
   const insertHashtag = (tag: string) => {
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
     const sel = window.getSelection();
-    if (sel && (!sel.rangeCount || !editor.contains(sel.anchorNode))) {
+    if (sel) {
       const range = document.createRange();
       range.selectNodeContents(editor);
       range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
     }
-    const text = editor.innerText || "";
-    document.execCommand("insertText", false, `${text && !text.endsWith(" ") && !text.endsWith("\n") ? " " : ""}${tag} `);
+    const text = (editor.innerText || "").replace(/\s+$/, "");
+    const lastLine = text.split("\n").pop() ?? "";
+    const onTagLine = /^\s*([#$][A-Za-z][\w.]*\s*)+$/.test(lastLine);
+    const sep = !text ? "" : onTagLine ? " " : "\n\n";
+    // The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    const typedTail = (editor.innerText || "").slice(text.length);
+    document.execCommand("insertText", false, `${typedTail ? sep.slice(Math.min(typedTail.length, sep.length)) : sep}${tag}`);
     setCaption(editor.innerText || "");
     markEdited();
+  };
+
+  /** Takes a hashtag or cashtag out of the caption (undo brings it back). */
+  const removeHashtag = (tag: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`\\s?(?<![\\w#$])${escaped}(?![\\w])`, "i");
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const m = pattern.exec(node.textContent ?? "");
+      if (!m) continue;
+      editor.focus();
+      const range = document.createRange();
+      range.setStart(node, m.index);
+      range.setEnd(node, m.index + m[0].length);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      document.execCommand("delete");
+      setCaption(editor.innerText || "");
+      markEdited();
+      return;
+    }
   };
 
   /** A suggested caption, in place of whatever is in the editor (undo brings the old one back). */
@@ -831,7 +899,7 @@ export default function NewSubmissionPage() {
     return limits.length ? Math.min(...limits) : 2200;
   }, [platforms]);
 
-  const hashtagSuggestions = HASHTAGS[brand] || [...HASHTAGS.ZENATECH, ...HASHTAGS.ZENADRONE].slice(0, 6);
+  const hashtagLibrary = useHashtagLibrary({ brand, audience, region, platforms, ruleSets });
 
   const saveLabel =
     saveState === "saving"
@@ -1227,6 +1295,16 @@ export default function NewSubmissionPage() {
                 e.target.value = "";
               }}
             />
+            <input
+              ref={scriptInputRef}
+              type="file"
+              accept={ACCEPT_SCRIPT}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) uploadFiles(Array.from(e.target.files), { asScript: true });
+                e.target.value = "";
+              }}
+            />
             {/* Two ways to add content: upload files, or import a Canva design. */}
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
             <div
@@ -1257,7 +1335,7 @@ export default function NewSubmissionPage() {
               </span>
               <span className="text-sm font-semibold text-foreground">Drag & drop files here</span>
               <span className="text-xs text-muted-foreground max-w-md">
-                Add {mainUpload.main}, plus any scripts, extra images or supporting documents. You can select several files at once.
+                Add {mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.
               </span>
               <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold shadow-2xs">
                 <CloudUpload className="w-3.5 h-3.5" /> Choose Files
@@ -1278,6 +1356,22 @@ export default function NewSubmissionPage() {
               <span className="text-xs text-muted-foreground">Pick a design from your Canva account. It's reviewed like any upload.</span>
               <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
             </button>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => scriptInputRef.current?.click()}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                {files.some((f) => f.kind === "SCRIPT") ? "Replace the script" : "Add a script"}
+              </Button>
+              <span>
+                PDF, Word (.docx), .txt or .md. Its text is checked against the rulebook with the rest of the post. Files
+                with "script" in the name are picked up as the script automatically.
+              </span>
             </div>
             {isMissing("main_file") && (
               <p className="text-[11px] text-red-600 mt-1.5">
@@ -1415,21 +1509,18 @@ export default function NewSubmissionPage() {
                       <Hash className="w-3.5 h-3.5" /> Hashtags
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 p-2">
-                    <p className="text-[11px] text-muted-foreground px-1 pb-1.5">Suggested for {brandName || "ZenaTech brands"}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {hashtagSuggestions.map((tag) => (
-                        <button
-                          key={tag}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => insertHashtag(tag)}
-                          className="rounded-md border border-border px-2 py-0.5 text-xs hover:bg-muted"
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
+                  <PopoverContent align="end" className="w-80 p-2.5">
+                    <p className="text-[11px] font-semibold text-foreground px-1 pb-1">
+                      Hashtags for {brandName || "ZenaTech brands"}
+                    </p>
+                    <HashtagPicker
+                      library={hashtagLibrary.data}
+                      loading={hashtagLibrary.isLoading}
+                      caption={caption}
+                      hasBrand={Boolean(brand)}
+                      onAdd={insertHashtag}
+                      onRemove={removeHashtag}
+                    />
                   </PopoverContent>
                 </Popover>
                 <span className="w-px h-5 bg-border mx-1" />
@@ -1468,6 +1559,17 @@ export default function NewSubmissionPage() {
               {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
               {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
             </p>
+            <CaptionSignalsBar
+              caption={caption}
+              maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
+              maxReason={hashtagLibrary.data?.max_reason}
+              ruleSets={ruleSets}
+              onAddRuleSet={(rs) => {
+                setRuleSets((prev) => (prev.includes(rs) ? prev : [...prev, rs]));
+                markEdited();
+                toast.success(`${rs} rules added. They apply when the post is checked.`);
+              }}
+            />
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">
                 Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
