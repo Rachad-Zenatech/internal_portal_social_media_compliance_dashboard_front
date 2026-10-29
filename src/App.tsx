@@ -22,6 +22,8 @@ const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbac
 const ComplianceRulesPage = lazy(() => import("./pages/Compliance/ComplianceRulesPage"));
 const MessagingContextPage = lazy(() => import("./pages/Compliance/MessagingContextPage"));
 const PostPerformancePage = lazy(() => import("./pages/Performance/PostPerformancePage"));
+const ContentScreenerPage = lazy(() => import("./pages/Compliance/ContentScreenerPage"));
+// The previous screener, kept reachable while the new one beds in.
 const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
 const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
 const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsListPage"));
@@ -41,7 +43,8 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
   { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
   { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
-  { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
+  { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <ContentScreenerPage /> },
+  { path: "/compliance/scanner/classic", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
   { path: "/compliance/rules", navigationCode: "DASHBOARD", element: <ComplianceRulesPage /> },
   { path: "/compliance/context", navigationCode: "DASHBOARD", element: <MessagingContextPage /> },
   { path: "/performance", navigationCode: "DASHBOARD", element: <PostPerformancePage /> },

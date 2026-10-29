@@ -95,8 +95,11 @@ export default function ReviewCommentsPanel({
   placeholder = "Add a comment...",
   emptyText = "No comments yet.",
   showHeader = true,
+  showComposer = true,
 }: {
   submissionId: string;
+  /** Hide the box for writing a comment, when the page has its own (the Content screener's, under the video). */
+  showComposer?: boolean;
   /** Hide the "Review comments" heading when the page already titles the section. */
   showHeader?: boolean;
   /** Reviewers and the creator. */
@@ -156,7 +159,7 @@ export default function ReviewCommentsPanel({
         </div>
       )}
 
-      {canComment && (
+      {canComment && showComposer && (
         <div className="space-y-2 rounded-lg border border-border/80 p-2.5">
           <Textarea
             rows={2}

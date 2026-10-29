@@ -57,6 +57,10 @@ export interface SubmissionFile {
   transcript_status?: TranscriptStatus | null;
   transcript?: TranscriptSegment[] | null;
   transcript_error?: string | null;
+  /** Scripts and article files: their text is read in the background so the check screens it. Null = not read yet. */
+  doc_text_status?: "PROCESSING" | "COMPLETED" | "FAILED" | null;
+  /** Why it couldn't be read, in words the creator can act on. */
+  doc_text_error?: string | null;
   /** CANVA files remember the design and revision they came from, for "reimport latest". */
   source?: "UPLOAD" | "CANVA";
   canva_design_id?: string | null;
@@ -84,7 +88,15 @@ export type StoredCheck = ComplianceCheckResponse & {
   images_read?: number;
   images_pending?: number;
   images_failed?: number;
-  /** Still reading the video transcript or the text in images: no score until the post has been read in full. */
+  /** The script (or a blog's article file): whether its text was read into the check, and any still being read or
+   * unreadable (with why). */
+  includes_script?: boolean;
+  documents_total?: number;
+  documents_read?: number;
+  documents_pending?: number;
+  documents_failed?: { name: string; error?: string | null }[];
+  /** Still reading the video transcript, the script or the text in images: no score until the post has been read
+   * in full. */
   analysis_pending?: boolean;
 };
 
@@ -330,6 +342,10 @@ export interface ReviewQueueItem {
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
   publish_at?: string | null;
+  brand_code?: string | null;
+  audience?: string | null;
+  /** When the creator needs it approved by. */
+  approval_needed_by?: string | null;
   /** When the next step is due (see DueKind). */
   due_at?: string | null;
   due_kind?: DueKind | null;
