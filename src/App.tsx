@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { lazy, Suspense, type ReactNode } from "react";
-import { AuthProvider } from "./lib/AuthContext";
+import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "./components/ui/button";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -79,6 +79,12 @@ function PrefixRedirect({ from, to }: { from: string; to: string }) {
   return <Navigate to={`${to}${pathname.slice(from.length)}${search}`} replace />;
 }
 
+/** My posts is the creators' page; reviewers work from the Content screener, so they're sent there. */
+function PostsListRoute() {
+  const { hasPermission } = useAuth();
+  return hasPermission("CONTENT_REVIEW_APPROVE") ? <Navigate to="/compliance/scanner" replace /> : <SubmissionsListPage />;
+}
+
 function NotFoundAlert() {
   return (
     <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-card rounded-xl border border-border shadow-xs my-6 max-w-lg mx-auto">
@@ -131,7 +137,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="/submissions" element={<SubmissionsListPage />} />
+                  <Route path="/submissions" element={<PostsListRoute />} />
                   <Route path="/submissions/new" element={<NewSubmissionPage />} />
                 </Route>
 

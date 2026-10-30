@@ -422,7 +422,7 @@ export default function PostPerformancePage() {
   const showingMine = mine ?? (report ? !report.team_view : false);
 
   return (
-    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+    <div data-canvas="plain" className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Post Performance</h1>

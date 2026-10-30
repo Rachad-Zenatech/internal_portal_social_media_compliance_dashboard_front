@@ -2,6 +2,8 @@ import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/lib/AuthContext";
+
 export interface BreadcrumbItem {
   title: string;
   path?: string;
@@ -10,6 +12,9 @@ export interface BreadcrumbItem {
 export default function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
+  // Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
+  const { hasPermission } = useAuth();
+  const reviewerView = hasPermission("CONTENT_REVIEW_APPROVE");
   const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
   const [customTrails, setCustomTrails] = useState<Record<string, BreadcrumbItem[]>>({});
 
@@ -78,8 +83,13 @@ export default function Breadcrumbs() {
   const activeTrail = customTrails[location.pathname];
 
   const breadcrumbItems = pathnames.map((value, index) => {
+    if (reviewerView && index === 0 && value === "submissions") {
+      const id = pathnames[1] && pathnames[1] !== "new" ? pathnames[1] : null;
+      return { value, title: "Content screener", to: `/compliance/scanner${id ? `?id=${id}` : ""}` };
+    }
     return {
       value,
+      title: null as string | null,
       to: `/${pathnames.slice(0, index + 1).join("/")}`,
     };
   });
@@ -118,7 +128,7 @@ export default function Breadcrumbs() {
       ) : (
         breadcrumbItems.map((item, index) => {
           const isLast = index === breadcrumbItems.length - 1;
-          const displayName = customTitles[item.to] || formatName(item.value);
+          const displayName = item.title || customTitles[item.to] || formatName(item.value);
 
           return (
             <div key={item.to} className="flex items-center">

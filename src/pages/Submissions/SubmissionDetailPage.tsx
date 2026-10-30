@@ -255,6 +255,10 @@ export default function SubmissionDetailPage() {
   const { comments } = useReviewComments(id);
   const isCreator = Boolean(s && user && s.created_by === user.id);
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  // Where "back" goes: reviewers don't have My posts, so they go back to the Content screener.
+  const backTo = isReviewer
+    ? { label: "Content screener", path: `/compliance/scanner${id ? `?id=${id}` : ""}` }
+    : { label: "My posts", path: "/submissions" };
   // A super admin viewing the app as a creator sees it as the creator would.
   const canReview = Boolean(s?.can_review) && !creatorView;
 
@@ -295,7 +299,7 @@ export default function SubmissionDetailPage() {
       <div className="py-24 text-center space-y-3">
         <p className="text-sm text-muted-foreground">This submission couldn't be found.</p>
         <Button size="sm" variant="outline" asChild>
-          <Link to="/submissions">Back to Content Portal</Link>
+          <Link to={backTo.path}>Back to {backTo.label}</Link>
         </Button>
       </div>
     );
@@ -305,7 +309,7 @@ export default function SubmissionDetailPage() {
   const mainImage = s.files.find((f) => f.kind === "MAIN" && f.mime_type.startsWith("image/"));
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300">
+    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2000px]">
       <DashboardHeader
         title={s.title}
         subtitle={
@@ -320,8 +324,8 @@ export default function SubmissionDetailPage() {
         actions={
           <>
             <Button size="sm" variant="outline" asChild className="text-xs gap-1.5 font-semibold">
-              <Link to="/submissions">
-                <ArrowLeft className="w-3.5 h-3.5" /> Content Portal
+              <Link to={backTo.path}>
+                <ArrowLeft className="w-3.5 h-3.5" /> {backTo.label}
               </Link>
             </Button>
             {s.can_edit && (
@@ -389,6 +393,8 @@ export default function SubmissionDetailPage() {
             can_approve: s.can_approve,
             approver_names: s.approver_names,
             open_critical_flags: s.open_critical_flags,
+            approval_score: s.approval_score,
+            min_approval_score: s.min_approval_score,
             score: isAnalysing(s.latest_check) ? null : s.latest_check?.score ?? null,
             manual_rules: s.latest_check?.manual_review_rules,
           }}
@@ -562,7 +568,7 @@ export default function SubmissionDetailPage() {
       <DeleteDraftDialog
         target={confirmDelete ? s : null}
         onClose={() => setConfirmDelete(false)}
-        onDeleted={() => navigate("/submissions")}
+        onDeleted={() => navigate(backTo.path)}
       />
     </div>
   );
