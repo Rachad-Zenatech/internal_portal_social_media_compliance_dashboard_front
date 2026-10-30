@@ -282,3 +282,69 @@ export function recordPublish(itemId: string, platform: string, mode: PublishMod
 export function clearPublished() {
   write({});
 }
+
+// ---------------------------------------------------------------------------
+// Sent to Sprout Social (simulated in this browser until the Sprout API is connected)
+// ---------------------------------------------------------------------------
+
+/** One approved post handed to Sprout Social, which then schedules and publishes it on each profile. */
+export interface SproutRecord {
+  at: string;
+  /** Mock Sprout post reference. */
+  ref: string;
+}
+
+const SPROUT_KEY = "contentCalendar.sprout";
+const SPROUT_EVENT = "content-calendar-sprout";
+const NONE: Record<string, SproutRecord> = {};
+let sproutCache: { raw: string | null; value: Record<string, SproutRecord> } = { raw: null, value: NONE };
+
+function readSprout(): Record<string, SproutRecord> {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(SPROUT_KEY);
+  } catch {
+    return NONE;
+  }
+  if (raw !== sproutCache.raw) {
+    try {
+      sproutCache = { raw, value: raw ? JSON.parse(raw) : NONE };
+    } catch {
+      sproutCache = { raw, value: NONE };
+    }
+  }
+  return sproutCache.value;
+}
+
+function writeSprout(next: Record<string, SproutRecord>) {
+  try {
+    localStorage.setItem(SPROUT_KEY, JSON.stringify(next));
+  } catch {
+    // simulated state just won't persist
+  }
+  window.dispatchEvent(new Event(SPROUT_EVENT));
+}
+
+function subscribeSprout(cb: () => void) {
+  window.addEventListener(SPROUT_EVENT, cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    window.removeEventListener(SPROUT_EVENT, cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+
+/** Posts sent to Sprout Social (simulated), by calendar item id. */
+export function useSentToSprout() {
+  return useSyncExternalStore(subscribeSprout, readSprout, () => NONE);
+}
+
+export function recordSproutSend(itemId: string): SproutRecord {
+  const record: SproutRecord = { at: new Date().toISOString(), ref: `SPR-${Math.random().toString(36).slice(2, 8).toUpperCase()}` };
+  writeSprout({ ...readSprout(), [itemId]: record });
+  return record;
+}
+
+export function clearSproutSends() {
+  writeSprout({});
+}
