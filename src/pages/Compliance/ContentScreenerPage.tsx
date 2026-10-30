@@ -31,7 +31,15 @@ import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewC
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
-import { authedFileUrl } from "@/components/submissions/submissionUi";
+import {
+  ANALYSING_REFETCH_MS,
+  AnalysisProgressPanel,
+  authedFileUrl,
+  countdownText,
+  isAnalysing,
+  progressSteps,
+  useAnalysisCountdown,
+} from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
@@ -118,9 +126,22 @@ function dueText(s: ReviewQueueItem, tab: QueueTab): { text: string; tone: strin
   return { text: `${who}due ${format(due, "EEE, MMM d")}`, tone: muted };
 }
 
+/** "Checking · ~35 s" while the post is still being read. */
+function CheckingBadge({ s }: { s: ReviewQueueItem }) {
+  const countdown = useAnalysisCountdown(s.analysis_progress);
+  return (
+    <span
+      className="whitespace-nowrap rounded-full bg-muted px-2 text-xs font-medium tabular-nums text-muted-foreground"
+      title={s.analysis_progress ? progressSteps(s.analysis_progress) : undefined}
+    >
+      Checking{countdown && ` · ${countdownText(countdown, true)}`}
+    </span>
+  );
+}
+
 function ScoreBadge({ s }: { s: ReviewQueueItem }) {
   const score = scoreOf(s);
-  if (score == null) return <span className="rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">Checking</span>;
+  if (score == null) return <CheckingBadge s={s} />;
   const tone =
     score >= 80 && !hasCritical(s)
       ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
@@ -549,12 +570,12 @@ function PostView({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 p-5">
+      <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 p-5 min-[112.5rem]:max-w-[1000px]">
         {s.video ? (
           <>
             {/* The frame matches the video's own shape: vertical reels stay vertical, landscape stays wide */}
             <div
-              className={`relative mx-auto max-w-full overflow-hidden rounded-xl bg-black ${tall ? "h-[min(50vh,500px)]" : "w-full max-w-[640px]"}`}
+              className={`relative mx-auto max-w-full overflow-hidden rounded-xl bg-black ${tall ? "h-[min(50vh,500px)] min-[112.5rem]:h-[min(60vh,680px)]" : "w-full max-w-[640px] min-[112.5rem]:max-w-[900px]"}`}
               style={{ aspectRatio: shape }}
             >
               <video
@@ -690,13 +711,18 @@ function ReviewPanel({
             <span className="text-[10px] text-muted-foreground">/100</span>
           </span>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
-          <p className="text-sm text-muted-foreground">
-            {open.length} open flag{open.length === 1 ? "" : "s"}
-            {openCritical > 0 && ` · ${openCritical} critical`}
-            {flags.length > open.length && ` · ${flags.length - open.length} dismissed`}
-          </p>
+          {score == null && s.analysis_progress ? (
+            // Still reading the post: what's left and how long, instead of a flag count that isn't final yet.
+            <AnalysisProgressPanel progress={s.analysis_progress} className="mt-1" />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {open.length} open flag{open.length === 1 ? "" : "s"}
+              {openCritical > 0 && ` · ${openCritical} critical`}
+              {flags.length > open.length && ` · ${flags.length - open.length} dismissed`}
+            </p>
+          )}
           {check?.rules_checked != null && (
             <p className="text-xs text-muted-foreground">
               {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
@@ -895,6 +921,8 @@ function ReviewPanel({
                 can_approve: s.can_approve,
                 approver_names: s.approver_names,
                 open_critical_flags: s.open_critical_flags,
+                approval_score: s.approval_score,
+                min_approval_score: s.min_approval_score,
                 score: s.latest_check?.score ?? null,
                 manual_rules: manual,
               }}
@@ -977,7 +1005,7 @@ function Workspace({
       </section>
       <aside
         aria-label="Your review"
-        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:w-[400px] lg:border-l lg:border-t-0 2xl:w-[440px]"
+        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:w-[400px] lg:border-l lg:border-t-0 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <ReviewPanel s={s} flags={flags} dismissed={dismissed} canReview={canReview} now={now} hasVideo={Boolean(s.video)} seek={seek} />
       </aside>
@@ -1008,7 +1036,8 @@ export default function ContentScreenerPage() {
     queryKey: ["review-queue", tab, scope],
     queryFn: () => submissionService.reviewQueue(tab, undefined, scope),
     staleTime: 0,
-    refetchInterval: 60_000,
+    // Quickly while a post is still being read (so its score shows up soon after it's ready), otherwise each minute.
+    refetchInterval: (q) => (q.state.data?.some((s) => isAnalysing(s.latest_check)) ? ANALYSING_REFETCH_MS : 60_000),
   });
   const counts = useQuery({
     queryKey: ["review-queue", "counts", scope],
@@ -1070,7 +1099,7 @@ export default function ContentScreenerPage() {
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${visible.length} posts`}>
             {visible.length}
           </span>
-          <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1 pb-1">
+          <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1.5 pb-1 pt-1.5">
             {visible.map((s) => {
               const failing = hasCritical(s) || isFailing(s);
               return (
@@ -1101,7 +1130,7 @@ export default function ContentScreenerPage() {
       {/* ===== Queue ===== */}
       <section
         aria-label="Review queue"
-        className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:w-[300px] lg:border-b-0 lg:border-r ${queueCollapsed ? "lg:hidden" : ""}`}
+        className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:w-[300px] lg:border-b-0 lg:border-r min-[112.5rem]:w-[360px] ${queueCollapsed ? "lg:hidden" : ""}`}
       >
         <div className="flex flex-col gap-3 border-b border-border/70 p-4">
           <div className="flex items-center justify-between gap-2">

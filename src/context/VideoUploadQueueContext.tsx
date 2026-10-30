@@ -98,6 +98,9 @@ export interface VideoQueueItem {
   canApprove?: boolean;
   approverNames?: string[];
   openCriticalFlags?: number;
+  /** Rulebook score counting only flags nobody has dismissed (null: none yet), and the least approval needs. */
+  approvalScore?: number | null;
+  minApprovalScore?: number;
   createdBy?: string | null;
   canManageApproval?: boolean;
   decidedAt?: string | null;
@@ -407,6 +410,8 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
     canApprove: s.can_approve ?? Boolean(s.can_review),
     approverNames: s.approver_names ?? [],
     openCriticalFlags: s.open_critical_flags ?? 0,
+    approvalScore: s.approval_score ?? null,
+    minApprovalScore: s.min_approval_score,
     createdBy: s.created_by ?? null,
     canManageApproval: Boolean(s.can_manage_approval),
     decidedAt: s.decided_at ?? null,
@@ -444,11 +449,9 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         // with their review actions, after switching to the creator view).
         placeholderData: (previous: ReviewQueueItem[] | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
           previousQuery?.queryKey[3] === queueScope ? previous : undefined,
-        // Check back quickly while a transcript is being generated, otherwise once a minute.
+        // Check back quickly while a post is still being read (its video, images or script), otherwise once a minute.
         refetchInterval: (query: { state: { data?: ReviewQueueItem[] } }) =>
-          query.state.data?.some((s) => s.video?.transcript_status === 'PENDING' || s.video?.transcript_status === 'PROCESSING')
-            ? 5_000
-            : 60_000,
+          query.state.data?.some((s) => isAnalysing(s.latest_check)) ? 5_000 : 60_000,
       };
     }),
   });

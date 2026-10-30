@@ -1,3 +1,4 @@
+import { useState, useSyncExternalStore } from "react";
 import { format, formatDistanceToNowStrict, isPast } from "date-fns";
 import { withLinkToken } from "@/lib/linkToken";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
@@ -22,21 +23,116 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { StoredCheck, SubmissionFile, SubmissionStatus } from "@/types/submission";
+import type { AnalysisProgress, StoredCheck, SubmissionFile, SubmissionStatus } from "@/types/submission";
 
 /** Whether the post is still being read (video transcript, text in images): no score is shown until it has. */
 export const isAnalysing = (check?: StoredCheck | null) =>
   Boolean(check && (check.analysis_pending ?? (check.transcript_pending || (check.images_pending ?? 0) > 0)));
 
-/** Shown in place of a score while the post is still being analysed. */
-export function UnderReviewBadge({ className = "" }: { className?: string }) {
+/** Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready. */
+export const ANALYSING_REFETCH_MS = 5_000;
+
+/** refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all. */
+export const refetchWhileAnalysing = (query: { state: { data?: { analysis_pending?: boolean }[] } }) =>
+  query.state.data?.some((s) => s.analysis_pending) ? ANALYSING_REFETCH_MS : false;
+
+export interface AnalysisCountdown {
+  /** Seconds until the score is expected (negative once it's late). */
+  remaining: number;
+  /** How far along, 0-100 (held below 100 until the score actually arrives). */
+  percent: number;
+}
+
+// One shared 1-second clock for every countdown on the page; it only ticks while something is counting down.
+let clockNow = Date.now();
+const clockListeners = new Set<() => void>();
+let clockTimer: number | undefined;
+
+function subscribeClock(onTick: () => void) {
+  clockListeners.add(onTick);
+  if (clockTimer === undefined) {
+    clockNow = Date.now();
+    clockTimer = window.setInterval(() => {
+      clockNow = Date.now();
+      clockListeners.forEach((l) => l());
+    }, 1000);
+  }
+  return () => {
+    clockListeners.delete(onTick);
+    if (!clockListeners.size && clockTimer !== undefined) {
+      window.clearInterval(clockTimer);
+      clockTimer = undefined;
+    }
+  };
+}
+const noSubscription = () => () => {};
+const readClock = () => clockNow;
+
+/** A live countdown to when the post's score is expected. Counts on the server's clock, so a viewer whose clock is
+ * off still sees the right time. Null without progress. */
+export function useAnalysisCountdown(progress?: AnalysisProgress | null): AnalysisCountdown | null {
+  const now = useSyncExternalStore(progress ? subscribeClock : noSubscription, readClock);
+  // When this progress arrived, by our clock: the server's clock minus ours is the offset.
+  const [arrived, setArrived] = useState({ key: progress?.server_time, at: now });
+  if (arrived.key !== progress?.server_time) setArrived({ key: progress?.server_time, at: now });
+  if (!progress) return null;
+  const serverNow = now + (Date.parse(progress.server_time) - arrived.at);
+  const start = Date.parse(progress.started_at);
+  const end = Date.parse(progress.expected_done_at);
+  const percent = Math.min(95, Math.max(3, ((serverNow - start) / Math.max(1000, end - start)) * 100));
+  return { remaining: Math.round((end - serverNow) / 1000), percent };
+}
+
+/** "about 35 s left", "about 2 min left", "almost done", "taking longer than usual". */
+export function countdownText(c: AnalysisCountdown, short = false): string {
+  const r = c.remaining;
+  if (r > 90) return short ? `~${Math.ceil(r / 60)} min` : `about ${Math.ceil(r / 60)} min left`;
+  if (r > 10) return short ? `~${r} s` : `about ${r} s left`;
+  if (r > 0) return short ? "a few s" : "a few seconds left";
+  if (r > -30) return "almost done";
+  return short ? "taking longer" : "taking longer than usual";
+}
+
+/** What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images". */
+export const progressSteps = (progress: AnalysisProgress) =>
+  progress.steps.map((s) => `${s.label}${s.state === "WAITING" ? " (queued)" : ""}`).join(" · ") || "Finishing the check";
+
+/** Shown in place of a score while the post is still being analysed, with time left when it's known. */
+export function UnderReviewBadge({ className = "", progress }: { className?: string; progress?: AnalysisProgress | null }) {
+  const countdown = useAnalysisCountdown(progress);
   return (
     <span
       className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 ${className}`}
-      title="Still reading the video and images; the score appears once the whole post has been analysed"
+      title={
+        progress
+          ? `${progressSteps(progress)}. The score appears once the whole post has been read.`
+          : "Still reading the video and images; the score appears once the whole post has been analysed"
+      }
     >
       <Hourglass className="w-3 h-3" /> Under review
+      {countdown && <span className="font-medium tabular-nums opacity-80">· {countdownText(countdown, true)}</span>}
     </span>
+  );
+}
+
+/** The fuller version for a review screen: each step still running, a progress bar and the time left. */
+export function AnalysisProgressPanel({ progress, className = "" }: { progress?: AnalysisProgress | null; className?: string }) {
+  const countdown = useAnalysisCountdown(progress);
+  if (!progress || !countdown) return null;
+  const late = countdown.remaining <= -30;
+  return (
+    <div className={`space-y-1.5 ${className}`} role="status" aria-live="polite">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${late ? "bg-amber-500" : "bg-blue-600"}`}
+          style={{ width: `${countdown.percent}%` }}
+        />
+      </div>
+      <p className={`text-xs tabular-nums ${late ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
+        {progressSteps(progress)} · {countdownText(countdown)}
+        {!progress.from_history && countdown.remaining > 0 && " (rough estimate)"}
+      </p>
+    </div>
   );
 }
 

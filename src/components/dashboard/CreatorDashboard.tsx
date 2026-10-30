@@ -20,6 +20,7 @@ import {
   statusOf,
 } from "@/components/dashboard/dashboardParts";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import type { SubmissionSummary } from "@/types/submission";
@@ -118,7 +119,7 @@ function PostRow({ s }: { s: SubmissionSummary }) {
       </td>
       <td className="px-3 py-3">
         <div className="flex flex-col gap-0.5">
-          <Score score={s.latest_score} pending={s.analysis_pending} />
+          <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} />
           {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
         </div>
       </td>
@@ -143,6 +144,7 @@ export default function CreatorDashboard() {
     queryKey: ["submissions", "mine"],
     queryFn: () => submissionService.list(undefined, "mine"),
     staleTime: 0,
+    refetchInterval: refetchWhileAnalysing,
   });
   const summary = useQuery({
     queryKey: ["dashboard-summary", "mine"],
@@ -194,7 +196,7 @@ export default function CreatorDashboard() {
       }`;
 
   return (
-    <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300">
+    <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
       {/* Heading */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
@@ -252,7 +254,7 @@ export default function CreatorDashboard() {
         />
       </section>
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: what needs them, and what they've sent */}
         <div className="flex min-w-0 flex-col gap-6">
           <Section

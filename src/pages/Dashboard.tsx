@@ -19,6 +19,7 @@ import {
   greeting,
   issuesText,
 } from "@/components/dashboard/dashboardParts";
+import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -49,6 +50,7 @@ function ReviewerDashboard() {
     queryKey: ["submissions", "all"],
     queryFn: () => submissionService.list(undefined, "all"),
     staleTime: 0,
+    refetchInterval: refetchWhileAnalysing,
   });
   const summary = useQuery({
     queryKey: ["dashboard-summary", "all"],
@@ -104,7 +106,7 @@ function ReviewerDashboard() {
   const decided = s ? s.approved + s.changes_requested : 0;
 
   return (
-    <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300">
+    <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
       {/* Heading */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
@@ -163,7 +165,7 @@ function ReviewerDashboard() {
         />
       </section>
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: the queue, and how reviewing is going */}
         <div className="flex min-w-0 flex-col gap-6">
           <Section
@@ -230,7 +232,7 @@ function ReviewerDashboard() {
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-0.5">
-                              <Score score={r.latest_score} pending={r.analysis_pending} />
+                              <Score score={r.latest_score} pending={r.analysis_pending} progress={r.analysis_progress} />
                               {!r.analysis_pending && r.latest_score != null && (
                                 <span className="whitespace-nowrap text-xs text-muted-foreground">
                                   {issuesText(r.issue_count)?.replace("to fix", "found") ?? "No issues"}

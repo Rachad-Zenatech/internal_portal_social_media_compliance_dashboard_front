@@ -63,7 +63,15 @@ import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
-import { UnderReviewBadge, authedFileUrl, dueInfo, isAnalysing } from "@/components/submissions/submissionUi";
+import {
+  ANALYSING_REFETCH_MS,
+  AnalysisProgressPanel,
+  UnderReviewBadge,
+  authedFileUrl,
+  dueInfo,
+  isAnalysing,
+  refetchWhileAnalysing,
+} from "@/components/submissions/submissionUi";
 import { QUICK_CREATE, Score, issuesText } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
@@ -394,7 +402,7 @@ function GalleryCard({
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <StagePill stage={stage} small />
-            <Score score={s.latest_score} pending={s.analysis_pending} />
+            <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} />
             {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
           </div>
           <p className={`text-sm ${line.tone}`}>{line.text}</p>
@@ -439,8 +447,9 @@ function ComplianceView({ sub }: { sub: Submission }) {
           )}
           {check.is_compliant ? "No issues found in the text" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
         </span>
-        {isAnalysing(check) ? <UnderReviewBadge /> : <span className="tabular-nums">{check.score}/100</span>}
+        {isAnalysing(check) ? <UnderReviewBadge progress={sub.analysis_progress} /> : <span className="tabular-nums">{check.score}/100</span>}
       </div>
+      {isAnalysing(check) && <AnalysisProgressPanel progress={sub.analysis_progress} />}
       <CheckCoverage check={check} />
       {sub.check_outdated && (
         <p className="rounded-md bg-muted/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
@@ -590,6 +599,8 @@ function ReviewCard({
     queryKey: ["submission", summary.id],
     queryFn: () => submissionService.get(summary.id),
     staleTime: 0,
+    // Check back quickly while the post is still being read, so the score shows up soon after it's ready.
+    refetchInterval: (q) => (isAnalysing(q.state.data?.latest_check) ? ANALYSING_REFETCH_MS : false),
   });
   const { analysis } = useSentiment(summary.id);
   const runCheck = useMutation({
@@ -660,6 +671,8 @@ function ReviewCard({
           can_approve: sub.can_approve,
           approver_names: sub.approver_names,
           open_critical_flags: sub.open_critical_flags,
+          approval_score: sub.approval_score,
+          min_approval_score: sub.min_approval_score,
           score: isAnalysing(sub.latest_check) ? null : sub.latest_check?.score ?? null,
           manual_rules: sub.latest_check?.manual_review_rules,
         }}
@@ -938,6 +951,7 @@ export default function SubmissionsListPage() {
     queryFn: () => submissionService.list(undefined, scope),
     // Statuses change from other screens (autosave, submit); always show the latest.
     staleTime: 0,
+    refetchInterval: refetchWhileAnalysing,
   });
   const { data: options } = useQuery({
     queryKey: ["submission-options"],
@@ -1029,7 +1043,7 @@ export default function SubmissionsListPage() {
   const [showFilters, setShowFilters] = useState(true);
 
   return (
-    <div data-canvas={gallery ? "contrast" : "plain"} className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300">
+    <div data-canvas={gallery ? "contrast" : "plain"} className="w-full max-w-[1600px] mx-auto space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
       {/* Header */}
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
@@ -1253,7 +1267,7 @@ export default function SubmissionsListPage() {
             </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 min-[112.5rem]:grid-cols-5">
                 {visible.map((s) => (
                   <GalleryCard
                     key={s.id}

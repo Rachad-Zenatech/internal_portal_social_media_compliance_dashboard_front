@@ -30,7 +30,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { CoverThumb } from "@/components/submissions/PostPreview";
 import { UnderReviewBadge } from "@/components/submissions/submissionUi";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import type { DashboardSummary, SubmissionSummary } from "@/types/submission";
+import type { AnalysisProgress, DashboardSummary, SubmissionSummary } from "@/types/submission";
 
 export const UPCOMING_DAYS = 7;
 
@@ -148,8 +148,8 @@ export const initials = (name?: string | null) =>
 export const avatarTone = (key: string) => AVATAR_TONES[[...key].reduce((sum, c) => sum + c.charCodeAt(0), 0) % AVATAR_TONES.length];
 
 /** A compliance score the way the Content Screener shows it. */
-export function Score({ score, pending = false }: { score?: number | null; pending?: boolean }) {
-  if (pending) return <UnderReviewBadge />;
+export function Score({ score, pending = false, progress }: { score?: number | null; pending?: boolean; progress?: AnalysisProgress | null }) {
+  if (pending) return <UnderReviewBadge progress={progress} />;
   if (score == null) return <span className="text-xs text-muted-foreground">Not checked</span>;
   const [tone, Icon] =
     score >= 80

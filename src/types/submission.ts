@@ -100,6 +100,29 @@ export type StoredCheck = ComplianceCheckResponse & {
   analysis_pending?: boolean;
 };
 
+/** One part of the post still being read before the rulebook check can score it. */
+export interface AnalysisStep {
+  kind: "VIDEO" | "IMAGES" | "DOCUMENTS";
+  /** e.g. "Reading the video", "Reading the text in 3 images". */
+  label: string;
+  /** WAITING: queued, not started yet. RUNNING: being read now. */
+  state: "WAITING" | "RUNNING";
+  started_at?: string | null;
+  expected_seconds: number;
+  expected_done_at: string;
+}
+
+/** While the check is still reading the post: what's left and when the score is expected. */
+export interface AnalysisProgress {
+  steps: AnalysisStep[];
+  started_at: string;
+  expected_done_at: string;
+  /** The server's clock when this was made, so the countdown doesn't depend on the viewer's clock. */
+  server_time: string;
+  /** The estimate comes from how long recent reads took (false while there's too little history). */
+  from_history?: boolean;
+}
+
 export interface Submission {
   /** The saved check was made before the rulebook last changed. */
   check_outdated?: boolean;
@@ -130,6 +153,8 @@ export interface Submission {
   status: SubmissionStatus;
   current_version: number;
   latest_check?: StoredCheck | null;
+  /** While the check is still reading the post: what's left and when the score is expected. */
+  analysis_progress?: AnalysisProgress | null;
   files: SubmissionFile[];
   can_edit: boolean;
   /** Drafts: the creator, super admins and Content Managers can delete them. */
@@ -142,6 +167,9 @@ export interface Submission {
   can_approve?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
+  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
+  approval_score?: number | null;
+  min_approval_score?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
   created_by?: string | null;
@@ -171,6 +199,8 @@ export interface SubmissionSummary {
   /** How many rulebook issues the latest check found; null while it's still being analysed. */
   issue_count?: number | null;
   analysis_pending?: boolean;
+  /** While analysis_pending: what's still being read and when the score is expected. */
+  analysis_progress?: AnalysisProgress | null;
   file_count: number;
   /** Review comments across all versions. */
   comment_count?: number;
@@ -198,6 +228,9 @@ export interface SubmissionSummary {
   can_approve?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
+  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
+  approval_score?: number | null;
+  min_approval_score?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
 }
@@ -326,6 +359,8 @@ export interface ReviewQueueItem {
   account?: AccountOption | null;
   caption_text?: string | null;
   latest_check?: StoredCheck | null;
+  /** While the check is still reading the post: what's left and when the score is expected. */
+  analysis_progress?: AnalysisProgress | null;
   current_version: number;
   submitted_at?: string | null;
   creator_name?: string | null;
@@ -341,6 +376,9 @@ export interface ReviewQueueItem {
   can_approve?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
+  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
+  approval_score?: number | null;
+  min_approval_score?: number;
   publish_at?: string | null;
   brand_code?: string | null;
   audience?: string | null;

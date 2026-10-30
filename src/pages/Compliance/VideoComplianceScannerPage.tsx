@@ -2456,6 +2456,8 @@ export default function VideoComplianceScannerPage() {
                     can_approve: activeVideo.canApprove,
                     approver_names: activeVideo.approverNames,
                     open_critical_flags: activeVideo.openCriticalFlags,
+                    approval_score: activeVideo.approvalScore,
+                    min_approval_score: activeVideo.minApprovalScore,
                     manual_rules: activeVideo.serverCheck?.manual_review_rules,
                     score: isAnalysing(activeVideo.serverCheck) ? null : activeVideo.serverCheck?.score ?? null,
                   }}

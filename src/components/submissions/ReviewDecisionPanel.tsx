@@ -31,6 +31,9 @@ export interface ReviewTarget {
   approver_names?: string[];
   /** Critical flags nobody has dismissed: approving waits until they're fixed or dismissed. */
   open_critical_flags?: number;
+  /** The score counting only flags nobody has dismissed; approving waits until it reaches min_approval_score. */
+  approval_score?: number | null;
+  min_approval_score?: number;
   score?: number | null;
   /** Rules the automated check can't test from text; the reviewer confirms each one when approving. */
   manual_rules?: { rule_number: string; title: string }[];
@@ -61,7 +64,11 @@ export default function ReviewDecisionPanel({
   layout?: "panel" | "bar" | "inline";
 }) {
   const openCritical = target.open_critical_flags ?? 0;
-  const mayApprove = target.can_approve !== false && openCritical === 0;
+  const minScore = target.min_approval_score ?? 70;
+  const approvalScore = target.approval_score ?? null;
+  // Shown once critical flags are dealt with, since those come first (and cap the score anyway).
+  const scoreTooLow = openCritical === 0 && approvalScore != null && approvalScore < minScore;
+  const mayApprove = target.can_approve !== false && openCritical === 0 && !scoreTooLow;
   const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
   const { creatorView } = useAuth();
@@ -135,6 +142,7 @@ export default function ReviewDecisionPanel({
           <p className="text-[11px] text-muted-foreground">
             Version {target.current_version}
             {target.score != null && ` · rulebook check ${target.score}/100`}
+            {approvalScore != null && target.score != null && approvalScore !== target.score && ` (${approvalScore}/100 after dismissed flags)`}
             {openComments > 0 && ` · ${openComments} open comment${openComments === 1 ? "" : "s"}`}
             {planned && ` · planned for ${format(planned, "MMM d, h:mm a")}`}
           </p>
@@ -145,6 +153,12 @@ export default function ReviewDecisionPanel({
         <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
           {openCritical} critical flag{openCritical === 1 ? " is" : "s are"} still open. Request changes to fix{" "}
           {openCritical === 1 ? "it" : "them"}, or dismiss {openCritical === 1 ? "it" : "them"} as a false alarm in the flags list, before approving.
+        </p>
+      )}
+      {scoreTooLow && (
+        <p className="rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
+          The rulebook score is {approvalScore}/100; approval needs at least {minScore}. Request changes to fix the
+          flagged wording, or dismiss flags that are false alarms in the flags list (each gives its points back).
         </p>
       )}
       {target.approver_names && target.approver_names.length > 0 && (
