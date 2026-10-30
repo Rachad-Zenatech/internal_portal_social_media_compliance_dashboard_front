@@ -130,6 +130,8 @@ export interface ComplianceCheckResponse {
   audiences_checked?: string[];
   /** What the content is made of, matched against each rule's applies_to (empty when not known). */
   content_parts?: string[];
+  /** Rule sets the post's wording brought in on top of the chosen ones, and the wording that did it. */
+  added_rule_sets?: { rule_set: string; because: string[] }[];
 }
 
 /** What the check read from the post's symbols, before its wording was matched against the rules. */

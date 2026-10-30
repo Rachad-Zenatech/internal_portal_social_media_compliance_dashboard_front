@@ -921,7 +921,7 @@ export default function NewSubmissionPage() {
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300">
+    <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[1800px]">
       <DashboardHeader
         title={referenceCode ? `Edit Submission ${referenceCode}` : "New Submission"}
         subtitle="Create a new content submission for compliance review and approval."
@@ -1564,11 +1564,6 @@ export default function NewSubmissionPage() {
               maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
               maxReason={hashtagLibrary.data?.max_reason}
               ruleSets={ruleSets}
-              onAddRuleSet={(rs) => {
-                setRuleSets((prev) => (prev.includes(rs) ? prev : [...prev, rs]));
-                markEdited();
-                toast.success(`${rs} rules added. They apply when the post is checked.`);
-              }}
             />
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">

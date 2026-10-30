@@ -1,33 +1,30 @@
 import { AtSign, Hash, TrendingUp } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { readSignals } from "@/lib/postSignals";
 
 const DISCLOSURE_RULE_SET = "Public Company Disclosure";
 
 /**
  * Live feedback under the caption: the hashtags, cashtags and mentions in it, whether there are more hashtags than
- * the platforms suit, and, when the caption carries the company cashtag, that investor-disclosure rules apply (with
- * a one-click fix if that rule set isn't selected).
+ * the platforms suit, and, when the caption carries the company cashtag, that investor-disclosure rules apply (the
+ * check adds them automatically when they aren't selected).
  */
 export default function CaptionSignalsBar({
   caption,
   maxHashtags,
   maxReason,
   ruleSets,
-  onAddRuleSet,
 }: {
   caption: string;
   maxHashtags: number | null;
   maxReason?: string | null;
   ruleSets: string[];
-  onAddRuleSet: (ruleSet: string) => void;
 }) {
   const { cashtags, hashtags, mentions } = readSignals(caption);
   if (!cashtags.length && !hashtags.length && !mentions.length) return null;
 
   const over = maxHashtags != null && hashtags.length > maxHashtags;
-  const needsDisclosure = cashtags.length > 0 && !ruleSets.includes(DISCLOSURE_RULE_SET);
+  const disclosureChosen = ruleSets.includes(DISCLOSURE_RULE_SET);
 
   return (
     <div className="mt-1.5 space-y-1 text-[11px]">
@@ -57,19 +54,9 @@ export default function CaptionSignalsBar({
         </p>
       )}
       {cashtags.length > 0 && (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
-          <span>{cashtags.join(" ")} puts this post in front of investors, so investor-disclosure rules apply to everything it says.</span>
-          {needsDisclosure && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-6 px-2 text-[11px]"
-              onClick={() => onAddRuleSet(DISCLOSURE_RULE_SET)}
-            >
-              Add the {DISCLOSURE_RULE_SET} rules
-            </Button>
-          )}
+        <p className="text-muted-foreground">
+          {cashtags.join(" ")} puts this post in front of investors, so investor-disclosure rules apply to everything it
+          says{disclosureChosen ? "." : `: the check adds the ${DISCLOSURE_RULE_SET} rules automatically.`}
         </p>
       )}
       {mentions.length > 0 && (
