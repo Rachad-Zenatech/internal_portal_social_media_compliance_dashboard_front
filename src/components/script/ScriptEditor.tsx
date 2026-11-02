@@ -203,8 +203,11 @@ export default function ScriptEditor({
 }) {
   // The text this editor last handed out: a `value` equal to it is the editor's own change coming back, not a new one.
   const emitted = useRef(value);
+  // The editor's update handler is made once, so it reads the latest onChange from here.
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const editor = useEditor({
     extensions: SCRIPT_EXTENSIONS,
