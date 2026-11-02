@@ -1,6 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
-import type { MoodVerdict, PublicMood } from "@/types/publicMood";
+import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
 import type {
   AiUsage,
   FindingFeedback,
@@ -136,6 +136,10 @@ export const submissionService = {
 
   /** How people online feel about the topics this post touches (social listening), with any saved summary. */
   getPublicMood: (id: string) => apiClient.get<PublicMood>(`/api/submissions/${id}/public-mood`, quiet),
+
+  /** Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations. */
+  listeningTrends: (refresh = false) =>
+    apiClient.get<XTrendOpportunity[]>(`/api/listening/trends${refresh ? "?refresh=true" : ""}`, quiet),
 
   /** Write (or reuse) the AI reading of how this post may land given the current mood. */
   summarisePublicMood: (id: string) => apiClient.post<PublicMood>(`/api/submissions/${id}/public-mood/summary`, undefined, quiet),

@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
+import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
+import { usePublicMood } from "@/hooks/usePublicMood";
 import { useLiveScriptCheck, useScriptActions, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
@@ -102,6 +104,8 @@ function Editor({
   const textRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
   const { decide } = useScriptActions(submissionId);
+  const { mood } = usePublicMood(submissionId, true);
+  const moodDecision = overallPostDecision(mood);
 
   const hasEdits = !sameText(draft, sent.body);
   useEffect(() => {
@@ -161,9 +165,14 @@ function Editor({
   };
   const approve = () => decide.mutate({ decision: "APPROVE", note: note.trim() || undefined });
 
-  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean }[] = [
+  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
     { value: "flags", label: "Flags", count: violations.length, alert: verdict.critical > 0 },
-    { value: "sentiment", label: "Sentiment" },
+    {
+      value: "sentiment",
+      label: "Sentiment",
+      count: moodDecision ? undefined : mood?.topics.length || undefined,
+      badge: moodDecision ? REC_BADGE[moodDecision.recommendation] : undefined,
+    },
     { value: "history", label: "History", count: versions.length },
   ];
 
@@ -323,6 +332,32 @@ function Editor({
           </div>
         </div>
 
+        {/* Live Market & News Sentiment Banner */}
+        <button
+          type="button"
+          onClick={() => setTab("sentiment")}
+          className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-2 text-left text-xs transition-colors hover:bg-muted/50"
+        >
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Globe2 className="h-3.5 w-3.5 shrink-0 text-sky-600" />
+            <span className="font-semibold text-foreground">Market & news sentiment:</span>
+            <span className="truncate text-muted-foreground">
+              {moodDecision
+                ? moodDecision.reason
+                : mood?.topics.length
+                ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"}`
+                : "View live trends & VADER sentiment"}
+            </span>
+          </span>
+          {moodDecision ? (
+            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+              {moodDecision.recommendation}
+            </span>
+          ) : (
+            <span className="shrink-0 text-[11px] font-medium text-sky-700 dark:text-sky-300">Open →</span>
+          )}
+        </button>
+
         <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
           {tabs.map((t) => (
             <button
@@ -336,6 +371,11 @@ function Editor({
               }`}
             >
               {t.label}
+              {t.badge && (
+                <span className={`rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${t.badge.cls}`}>
+                  {t.badge.label}
+                </span>
+              )}
               {t.count != null && (
                 <span
                   className={`min-w-[18px] rounded-full px-1.5 text-[11px] font-semibold ${

@@ -62,3 +62,13 @@ export function usePublicMood(submissionId?: string | null, enabled = true) {
     usage: usage.data?.PUBLIC_MOOD ?? null,
   };
 }
+
+/** Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations. */
+export function useMarketTrends(enabled = true) {
+  return useQuery({
+    queryKey: ["listening-trends"],
+    queryFn: () => submissionService.listeningTrends(),
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}

@@ -58,7 +58,7 @@ import type {
 
 // "How its topics are doing online" runs on sample data until Sprout Social is connected, so it's hidden (with its
 // signals in the summary) for now. Set to true to bring it back.
-const SHOW_TOPIC_TRENDS = false;
+const SHOW_TOPIC_TRENDS = true;
 
 const ASSESSMENT: Record<SentimentAssessment, { label: string; tone: string; Icon: typeof CheckCircle2 }> = {
   NO_CONCERNS: {

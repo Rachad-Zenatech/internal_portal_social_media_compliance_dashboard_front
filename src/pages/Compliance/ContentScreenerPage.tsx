@@ -7,6 +7,7 @@ import {
   Clock,
   ExternalLink,
   FileText,
+  Globe2,
   Layers,
   Loader2,
   PanelLeftClose,
@@ -28,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -42,6 +44,7 @@ import {
   useAnalysisCountdown,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
+import { usePublicMood } from "@/hooks/usePublicMood";
 import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -718,6 +721,8 @@ function ReviewPanel({
 }) {
   const [tab, setTab] = useState<PanelTab>("flags");
   const { comments } = useReviewComments(s.id);
+  const { mood } = usePublicMood(s.id, true);
+  const moodDecision = overallPostDecision(mood);
   const check = s.latest_check;
   const score = scoreOf(s);
   const open = flags.filter((f) => !dismissed.has(f.v.rule_id));
@@ -734,9 +739,14 @@ function ReviewPanel({
       ? { text: "Review suggested", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
       : { text: "Ready to approve", tone: "text-emerald-700 dark:text-emerald-400", ring: "border-emerald-300 dark:border-emerald-500/50" };
 
-  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean }[] = [
+  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
     { value: "flags", label: "Flags", count: open.length, alert: openCritical > 0 },
-    { value: "sentiment", label: "Sentiment" },
+    {
+      value: "sentiment",
+      label: "Sentiment",
+      count: moodDecision ? undefined : mood?.topics.length || undefined,
+      badge: moodDecision ? REC_BADGE[moodDecision.recommendation] : undefined,
+    },
     { value: "comments", label: "Comments", count: comments.length },
     ...(hasVideo ? [{ value: "script" as const, label: "Script", count: transcript.length }] : []),
   ];
@@ -771,6 +781,32 @@ function ReviewPanel({
         </div>
       </div>
 
+      {/* Live Market & News Sentiment Banner (always visible so reviewers see sentiment immediately) */}
+      <button
+        type="button"
+        onClick={() => setTab("sentiment")}
+        className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-2 text-left text-xs transition-colors hover:bg-muted/50"
+      >
+        <span className="flex min-w-0 items-center gap-1.5">
+          <Globe2 className="h-3.5 w-3.5 shrink-0 text-sky-600" />
+          <span className="font-semibold text-foreground">Market & news sentiment:</span>
+          <span className="truncate text-muted-foreground">
+            {moodDecision
+              ? moodDecision.reason
+              : mood?.topics.length
+              ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"}`
+              : "View live trends & VADER sentiment"}
+          </span>
+        </span>
+        {moodDecision ? (
+          <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+            {moodDecision.recommendation}
+          </span>
+        ) : (
+          <span className="shrink-0 text-[11px] font-medium text-sky-700 dark:text-sky-300">Open →</span>
+        )}
+      </button>
+
       {/* Tabs */}
       <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
         {tabs.map((t) => (
@@ -785,6 +821,11 @@ function ReviewPanel({
             }`}
           >
             {t.label}
+            {t.badge && (
+              <span className={`rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${t.badge.cls}`}>
+                {t.badge.label}
+              </span>
+            )}
             {t.count != null && (
               <span
                 className={`min-w-[18px] rounded-full px-1.5 text-[11px] font-semibold ${
