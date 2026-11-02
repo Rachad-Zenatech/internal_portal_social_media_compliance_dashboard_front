@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
-import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileText, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import UploadScriptDialog from "@/components/script/UploadScriptDialog";
 import {
   ActivityList,
   Empty,
@@ -139,6 +140,7 @@ export default function CreatorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const now = useMemo(() => new Date(), []);
+  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
 
   const submissions = useQuery({
     queryKey: ["submissions", "mine"],
@@ -207,6 +209,15 @@ export default function CreatorDashboard() {
           <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
+            onClick={() => setScriptDialogOpen(true)}
+            title="Upload a new video script to check and review"
+          >
+            <FileText className="w-4 h-4 text-blue-600" /> Upload script
+          </Button>
           <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
             <Link to="/content-calendar">
               <CalendarDays className="w-4 h-4" /> Calendar
@@ -350,6 +361,12 @@ export default function CreatorDashboard() {
           </Section>
         </div>
       </div>
+
+      <UploadScriptDialog
+        open={scriptDialogOpen}
+        onOpenChange={setScriptDialogOpen}
+        onSuccess={(id) => navigate(`/compliance/scanner?script=${id}`)}
+      />
     </div>
   );
 }
