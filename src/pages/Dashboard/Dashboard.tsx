@@ -119,14 +119,10 @@ function ReviewerDashboard() {
           <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
-            onClick={() => setScriptDialogOpen(true)}
-            title="Upload a new video script to check and review"
-          >
-            <FileText className="w-4 h-4 text-blue-600" /> Upload script
+          <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100">
+            <Link to="/submissions/new?type=VIDEO" title="Upload a new video script to check and review">
+              <FileText className="w-4 h-4 text-blue-600" /> Upload script
+            </Link>
           </Button>
           <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
             <Link to="/content-calendar">
