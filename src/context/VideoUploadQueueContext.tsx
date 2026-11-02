@@ -514,11 +514,14 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
       .forEach((item) => {
         checksInFlight.current.add(item.id);
         complianceService
-          .checkCompliance({
-            text: item.segments.map((s) => s.text).join(' '),
-            video_title: item.title,
-            content_type: `VIDEO_${item.platform}`,
-          })
+          .checkCompliance(
+            {
+              text: item.segments.map((s) => s.text).join(' '),
+              video_title: item.title,
+              content_type: `VIDEO_${item.platform}`,
+            },
+            { skipGlobalLoading: true }
+          )
           .then((res) => {
             setQueue((prev) =>
               prev.map((q) =>

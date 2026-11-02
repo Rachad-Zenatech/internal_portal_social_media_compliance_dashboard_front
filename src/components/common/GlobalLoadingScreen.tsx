@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { useIsMutating } from "@tanstack/react-query";
 import { subscribeToApiActions, type ActiveApiAction } from "@/services/apiClient";
 import { Sparkles, FileText } from "lucide-react";
 
 export default function GlobalLoadingScreen() {
   const [activeActions, setActiveActions] = useState<ActiveApiAction[]>([]);
-  const isQueryMutating = useIsMutating();
   const [lastMeta, setLastMeta] = useState<{ title: string; subtitle: string }>({
     title: "Processing Request",
     subtitle: "Please wait while your request is being processed...",
@@ -24,7 +22,7 @@ export default function GlobalLoadingScreen() {
     });
   }, []);
 
-  const hasActiveWork = activeActions.length > 0 || isQueryMutating > 0;
+  const hasActiveWork = activeActions.length > 0;
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

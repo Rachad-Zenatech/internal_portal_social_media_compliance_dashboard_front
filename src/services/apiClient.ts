@@ -92,6 +92,10 @@ function resolveActionMeta(
     return { title: "Updating Notification", subtitle: "Please wait..." };
   }
 
+  if (lower.includes("/compliance/check")) {
+    return { title: "Checking Compliance", subtitle: "Scanning content against compliance rulebook..." };
+  }
+
   // General fallbacks based on HTTP method
   if (m === "DELETE") {
     return {
@@ -157,7 +161,10 @@ async function monitoredFetch(endpoint: string, options: ApiRequestOptions): Pro
     targetEndpoint.includes("/observability/") ||
     targetEndpoint.includes("/client-performance") ||
     targetEndpoint.includes("/heartbeat") ||
-    targetEndpoint.includes("/stream");
+    targetEndpoint.includes("/stream") ||
+    targetEndpoint.includes("/compliance/check") ||
+    targetEndpoint.includes("/auth/exchange") ||
+    targetEndpoint.includes("/auth/link-token");
 
   let actionId: string | null = null;
   if (isMutating && !isIgnored) {

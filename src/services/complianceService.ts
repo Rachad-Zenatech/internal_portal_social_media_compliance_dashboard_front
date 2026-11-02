@@ -296,8 +296,8 @@ export const complianceService = {
   /** Per rule: flags on submitted versions and how many reviewers dismissed. */
   flagStats: () => apiClient.get<RuleFlagStats[]>('/api/compliance/rules/flag-stats'),
 
-  checkCompliance: (data: ComplianceCheckRequest) =>
-    apiClient.post<ComplianceCheckResponse>('/api/compliance/check', data),
+  checkCompliance: (data: ComplianceCheckRequest, options?: { skipGlobalLoading?: boolean }) =>
+    apiClient.post<ComplianceCheckResponse>('/api/compliance/check', data, options ?? { skipGlobalLoading: true }),
 
   getStats: () => apiClient.get<ComplianceStats>('/api/compliance/stats'),
 
