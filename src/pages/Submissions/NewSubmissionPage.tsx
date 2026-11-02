@@ -18,6 +18,7 @@ import {
   FileText,
   GalleryHorizontalEnd,
   Globe,
+  Globe2,
   Hash,
   Image as ImageIcon,
   Italic,
@@ -59,6 +60,8 @@ import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import ScriptStageCard from "@/components/script/ScriptStageCard";
+import TopicTrend, { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
+import { usePublicMood } from "@/hooks/usePublicMood";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
@@ -410,6 +413,10 @@ export default function NewSubmissionPage() {
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
+
+  // Live public mood & news sentiment for the post's topics.
+  const { mood, isLoading: moodLoading, refresh: refreshMood } = usePublicMood(submissionId, Boolean(submissionId));
+  const moodDecision = overallPostDecision(mood);
 
   // Scripts are read in the background; refresh their status until they're done so the creator sees it.
   const readingScript = files.some(
@@ -1647,7 +1654,76 @@ export default function NewSubmissionPage() {
           </div>
 
           {showDetails && (
-          <Section step={5} title="Compliance" description="Select the rule sets this content is checked against.">
+          <Section
+            step={5}
+            title="Market & News Sentiment"
+            description="Live industry conversation on X and news outlets for your post's topics, and whether posting now carries backlash risk."
+          >
+            {submissionId ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-foreground">
+                        {moodDecision
+                          ? moodDecision.reason
+                          : mood?.topics.length
+                          ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"} found in current conversation`
+                          : "No negative crisis or backlash topics matched in current feeds."}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {mood?.topics.length
+                          ? `Topics: ${mood.topics.map((t) => t.name).join(", ")}`
+                          : "Topics are matched continuously from your title, caption, script and video transcript."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {moodDecision && (
+                      <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+                        {moodDecision.recommendation}
+                      </span>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => refreshMood()}
+                      disabled={moodLoading}
+                    >
+                      {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+                    </Button>
+                  </div>
+                </div>
+
+                <TopicTrend mood={mood} isLoading={moodLoading} canEdit={false} />
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
+                <div className="flex items-center gap-2.5">
+                  <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
+                  <span className="text-xs text-muted-foreground">
+                    Save your draft to check live social sentiment and industry news on your topics before sending for review.
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 shrink-0"
+                  onClick={() => saveNow()}
+                >
+                  <Save className="w-3 h-3" /> Check Sentiment
+                </Button>
+              </div>
+            )}
+          </Section>
+          )}
+
+          {showDetails && (
+          <Section step={6} title="Compliance" description="Select the rule sets this content is checked against.">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3.5">
               <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
                 <MultiSelect
@@ -1746,6 +1822,18 @@ export default function NewSubmissionPage() {
               </SummaryRow>
               <SummaryRow icon={CalendarCheck} label="Need approval by">
                 {approvalBy ? format(approvalBy, "MMM d, h:mm a") : <span className="text-muted-foreground">—</span>}
+              </SummaryRow>
+              <SummaryRow icon={Globe2} label="Market Sentiment">
+                {moodDecision ? (
+                  <span className="inline-flex items-center gap-1.5 min-w-0">
+                    <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+                      {moodDecision.recommendation}
+                    </span>
+                    <span className="truncate text-xs text-foreground/80">{moodDecision.reason}</span>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground text-xs">Unmonitored / Neutral</span>
+                )}
               </SummaryRow>
             </div>
 

@@ -4,12 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import {
   CheckCircle2,
+  ChevronDown,
   Clock,
   ExternalLink,
   FileText,
+  GalleryHorizontalEnd,
   Globe2,
+  Image as ImageIcon,
   Layers,
   Loader2,
+  Megaphone,
+  MessageSquareText,
   PanelLeftClose,
   PanelLeftOpen,
   Pause,
@@ -20,10 +25,18 @@ import {
   SkipBack,
   SkipForward,
   SlidersHorizontal,
+  Video,
   X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -110,6 +123,15 @@ function ScriptThumb() {
     </div>
   );
 }
+
+const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
+  VIDEO: { label: "Video", cls: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
+  SOCIAL_POST: { label: "Post", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
+  CAROUSEL: { label: "Carousel", cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
+  IMAGE: { label: "Image", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
+  BLOG: { label: "Article", cls: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" },
+  AD: { label: "Paid Ad", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" },
+};
 
 type DueFilter = "any" | "overdue" | "today" | "week" | "none";
 type CheckFilter = "any" | "failing" | "critical" | "passing";
@@ -1284,11 +1306,63 @@ export default function ContentScreenerPage() {
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground">Content screener</h1>
             <div className="flex items-center gap-1.5">
-              <Button asChild size="sm" className="h-7 gap-1 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+              <Button asChild size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs font-semibold">
                 <Link to="/submissions/new?type=VIDEO" title="Add a new video script to check and review">
-                  <Plus className="w-3.5 h-3.5" /> Add script
+                  <Plus className="w-3.5 h-3.5 text-blue-600" /> Script
                 </Link>
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" className="h-7 gap-1 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+                    <Plus className="w-3.5 h-3.5" /> Post <ChevronDown className="w-3 h-3 ml-0.5 opacity-80" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=VIDEO" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <Video className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Video</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=SOCIAL_POST" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <MessageSquareText className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Social Post</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=CAROUSEL" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <GalleryHorizontalEnd className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Carousel</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=IMAGE" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Image</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=BLOG" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <FileText className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Blog / Article</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=AD" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
+                      <Megaphone className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Paid Ad</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/submissions/new?type=VIDEO" className="flex items-center gap-2 cursor-pointer text-xs font-medium text-blue-700 dark:text-blue-400">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New Script Draft</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1475,8 +1549,15 @@ export default function ContentScreenerPage() {
                     <Thumb s={s} />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {s.reference_code} · {s.platforms.map(platformName).join(", ") || "No platform"}
+                      <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                        {s.content_type && CONTENT_TYPE_BADGES[s.content_type] && (
+                          <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide ${CONTENT_TYPE_BADGES[s.content_type].cls}`}>
+                            {CONTENT_TYPE_BADGES[s.content_type].label}
+                          </span>
+                        )}
+                        <span className="truncate">
+                          {s.reference_code} · {s.platforms.map(platformName).join(", ") || "No platform"}
+                        </span>
                       </span>
                       <span className="mt-0.5 flex items-center justify-between gap-2">
                         <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>

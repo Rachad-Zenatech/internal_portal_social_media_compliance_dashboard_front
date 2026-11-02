@@ -247,18 +247,18 @@ function MarketTrendRow({ t }: { t: XTrendOpportunity }) {
 export default function TopicTrend({
   mood,
   isLoading,
-  canEdit,
-  busy,
+  canEdit = false,
+  busy = false,
   onDismiss,
   onRestore,
 }: {
   mood?: PublicMood | null;
   isLoading: boolean;
   /** Can say a topic isn't what the post is about (and put it back). */
-  canEdit: boolean;
-  busy: boolean;
-  onDismiss: (topicId: string) => void;
-  onRestore: (topicId: string) => void;
+  canEdit?: boolean;
+  busy?: boolean;
+  onDismiss?: (topicId: string) => void;
+  onRestore?: (topicId: string) => void;
 }) {
   const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(true);
   const [showAllTrends, setShowAllTrends] = useState(false);
@@ -323,7 +323,7 @@ export default function TopicTrend({
       ) : (
         <ul className="divide-y divide-border/60 rounded-lg border border-border/70 px-2.5 py-2">
           {mood.topics.map((t) => (
-            <TopicRow key={t.topic_id} t={t} busy={busy} onDismiss={canEdit ? () => onDismiss(t.topic_id) : undefined} />
+            <TopicRow key={t.topic_id} t={t} busy={busy} onDismiss={canEdit && onDismiss ? () => onDismiss(t.topic_id) : undefined} />
           ))}
         </ul>
       )}
@@ -334,7 +334,7 @@ export default function TopicTrend({
           {mood.dismissed.map((d) => (
             <span key={d.topic_id} className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5" title={d.by_name ? `Left out by ${d.by_name}` : undefined}>
               {d.name}
-              {canEdit && (
+              {canEdit && onRestore && (
                 <button
                   type="button"
                   onClick={() => onRestore(d.topic_id)}
