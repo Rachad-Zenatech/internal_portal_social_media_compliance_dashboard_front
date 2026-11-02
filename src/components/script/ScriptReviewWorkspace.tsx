@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
+import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -485,6 +486,20 @@ function Editor({
                 Approve script
               </Button>
             </div>
+          </div>
+        ) : status === "APPROVED" ? (
+          <div className="flex flex-col gap-2.5 border-t border-border/70 bg-emerald-50/50 p-4 dark:bg-emerald-500/10">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-800 dark:text-emerald-300">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Script approved
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The script is approved and ready. You or the creator can now attach the final video to this submission.
+            </p>
+            <Button asChild className="h-9 gap-1.5 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white">
+              <Link to={`/submissions/new?id=${submissionId}`}>
+                <Upload className="w-3.5 h-3.5" /> Attach Video to Post
+              </Link>
+            </Button>
           </div>
         ) : (
           <p className="border-t border-border/70 bg-muted/40 px-4 py-3.5 text-xs text-muted-foreground">

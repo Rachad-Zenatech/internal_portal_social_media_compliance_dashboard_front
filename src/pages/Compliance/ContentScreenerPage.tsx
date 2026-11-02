@@ -14,6 +14,7 @@ import {
   PanelLeftOpen,
   Pause,
   Play,
+  Plus,
   Search,
   Send,
   SkipBack,
@@ -1282,16 +1283,23 @@ export default function ContentScreenerPage() {
         <div className="flex flex-col gap-3 border-b border-border/70 p-4">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground">Content screener</h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden h-8 w-8 text-muted-foreground lg:inline-flex"
-              onClick={() => setCollapsed(true)}
-              aria-label="Collapse the queue"
-              title="Collapse the queue"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button asChild size="sm" className="h-7 gap-1 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+                <Link to="/submissions/new?type=VIDEO" title="Add a new video script to check and review">
+                  <Plus className="w-3.5 h-3.5" /> Add script
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden h-8 w-8 text-muted-foreground lg:inline-flex"
+                onClick={() => setCollapsed(true)}
+                aria-label="Collapse the queue"
+                title="Collapse the queue"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           <div role="tablist" aria-label="Queue" className="flex rounded-lg bg-muted p-0.5">
             {TABS.map((t) => (
