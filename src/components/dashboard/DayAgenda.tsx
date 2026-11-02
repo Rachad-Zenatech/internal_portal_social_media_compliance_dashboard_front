@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { Loading, STATUS_PILL, Section, Thumb, statusOf, viewAll } from "@/components/dashboard/dashboardParts";
+import { Loading, Section, Thumb, statusPillOf, viewAll } from "@/components/dashboard/dashboardParts";
 import type { SubmissionSummary } from "@/types/submission";
 
 const dayName = (d: Date) =>
@@ -82,7 +82,7 @@ export default function DayAgenda({
       ) : (
         <ul className="max-h-[360px] divide-y divide-border/60 overflow-y-auto border-t border-border/60">
           {shown.map(({ s, at }) => {
-            const status = STATUS_PILL[statusOf(s)] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
+            const status = statusPillOf(s);
             return (
               <li key={s.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span className="w-16 shrink-0 text-xs font-semibold tabular-nums text-foreground">{format(at, "h:mm a")}</span>

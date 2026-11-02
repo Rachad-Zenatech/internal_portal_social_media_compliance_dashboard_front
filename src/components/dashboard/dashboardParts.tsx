@@ -133,6 +133,20 @@ const AVATAR_TONES = [
   "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
 ];
 
+/** A video draft whose script has been sent or reviewed says so instead of plain "Draft". */
+export function scriptPillOf(s: { status: string; script_status?: string | null }): { label: string; pill: string } | null {
+  if (s.status !== "DRAFT" || !s.script_status || s.script_status === "DRAFT") return null;
+  if (s.script_status === "IN_REVIEW") return { label: "Script in review", pill: STATUS_PILL.IN_REVIEW.pill };
+  return {
+    label: "Script reviewed",
+    pill: s.script_status === "APPROVED" ? STATUS_PILL.APPROVED.pill : STATUS_PILL.CHANGES_REQUESTED.pill,
+  };
+}
+
+/** The status pill for a submission: its script's state while it's a draft in the script stage, else its status. */
+export const statusPillOf = (s: SubmissionSummary): { label: string; pill: string } =>
+  scriptPillOf(s) ?? STATUS_PILL[statusOf(s)] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
+
 /** Approved content with a publish time still ahead counts as scheduled. */
 export const statusOf = (s: SubmissionSummary) =>
   s.status === "APPROVED" && s.publish_at && !isPast(new Date(s.publish_at)) ? "SCHEDULED" : s.status;
@@ -167,7 +181,7 @@ export function Score({ score, pending = false, progress }: { score?: number | n
 export function Thumb({ s, className = "" }: { s: SubmissionSummary; className?: string }) {
   return (
     <div className={`relative shrink-0 overflow-hidden rounded-md bg-muted ${className}`}>
-      <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+      <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
     </div>
   );
 }

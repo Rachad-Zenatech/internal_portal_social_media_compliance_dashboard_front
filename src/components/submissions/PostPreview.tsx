@@ -60,17 +60,29 @@ const CONTENT_ICONS: Record<string, typeof FileText> = {
   AD: Megaphone,
 };
 
+const EMPTY_LABELS: Record<string, string> = {
+  VIDEO: "Video not added yet",
+  IMAGE: "Image not added yet",
+  CAROUSEL: "Images not added yet",
+  AD: "Creative not added yet",
+  SOCIAL_POST: "No copy yet",
+  BLOG: "No copy yet",
+};
+
 /** Card/list thumbnail: the picked video frame, the image itself, or a styled placeholder. */
 export function CoverThumb({
   cover,
   contentType,
   caption,
+  script,
   className = "",
   showPlay = true,
 }: {
   cover?: SubmissionFile | null;
   contentType: ContentType | string;
   caption?: string | null;
+  /** The start of the script, shown while there's no video or image yet. */
+  script?: string | null;
   className?: string;
   showPlay?: boolean;
 }) {
@@ -107,11 +119,39 @@ export function CoverThumb({
       </div>
     );
   }
-  // No media: show the caption itself, like a text post.
+  const text = caption?.trim();
+  const scriptText = script?.trim();
+  // No video yet but a script: show it like a page of the document.
+  if (scriptText) {
+    // Small thumbnails (list rows) only have room for the icon; the excerpt shows once there's space for it.
+    return (
+      <div className={`@container w-full h-full bg-gradient-to-br from-primary/5 via-muted/60 to-muted p-1.5 @[8rem]:p-3 flex flex-col ${className}`}>
+        <div className="flex-1 min-h-0 overflow-hidden rounded-md bg-background/90 ring-1 ring-border shadow-sm p-1 @[8rem]:p-2.5 flex flex-col items-center justify-center @[8rem]:items-stretch @[8rem]:justify-start">
+          <FileText className="w-5 h-5 text-primary/70 @[8rem]:hidden" />
+          <p className="hidden @[8rem]:flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary/70 shrink-0">
+            <FileText className="w-3 h-3" /> Script
+          </p>
+          <p className="hidden @[8rem]:block mt-1.5 text-[11px] leading-snug text-foreground/80 whitespace-pre-line line-clamp-6">{scriptText}</p>
+        </div>
+      </div>
+    );
+  }
+  // No media but a caption: show the caption itself, like a text post.
+  if (text) {
+    return (
+      <div className={`w-full h-full bg-gradient-to-br from-primary/10 via-muted to-muted p-3 flex flex-col ${className}`}>
+        <Icon className="w-4 h-4 text-primary/70 shrink-0" />
+        <p className="mt-2 text-[11px] leading-snug text-foreground/80 line-clamp-4">{text}</p>
+      </div>
+    );
+  }
+  // Nothing yet: a calm, centered placeholder instead of a blank card.
   return (
-    <div className={`w-full h-full bg-gradient-to-br from-primary/10 via-muted to-muted p-3 flex flex-col ${className}`}>
-      <Icon className="w-4 h-4 text-primary/70 shrink-0" />
-      <p className="mt-2 text-[11px] leading-snug text-foreground/80 line-clamp-4">{caption?.trim() || "No media or caption yet"}</p>
+    <div className={`@container w-full h-full bg-gradient-to-br from-primary/5 via-muted/60 to-muted flex flex-col items-center justify-center gap-2 ${className}`}>
+      <span className="w-8 h-8 @[8rem]:w-11 @[8rem]:h-11 rounded-full bg-background/80 ring-1 ring-border grid place-items-center shadow-sm">
+        <Icon className="w-4 h-4 @[8rem]:w-5 @[8rem]:h-5 text-primary/60" />
+      </span>
+      <p className="hidden @[8rem]:block text-[11px] font-medium text-muted-foreground">{EMPTY_LABELS[contentType] ?? "No content yet"}</p>
     </div>
   );
 }

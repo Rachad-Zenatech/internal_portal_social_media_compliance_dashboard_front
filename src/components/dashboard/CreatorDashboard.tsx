@@ -10,7 +10,7 @@ import {
   ActivityList,
   Empty,
   Loading,
-  STATUS_PILL,
+  statusPillOf,
   Score,
   Section,
   StatCard,
@@ -57,7 +57,7 @@ const FILTERS: { v: PostFilter; label: string }[] = [
 /** One thing waiting on the creator: what it is, what's wrong, when it's due, and one button. */
 function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
   const changes = s.status === "CHANGES_REQUESTED";
-  const status = STATUS_PILL[s.status] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
+  const status = statusPillOf(s);
   const due = changes ? dueLabel(s.due_kind === "REVISION" ? s.due_at : null) : null;
   const details = changes
     ? [issuesText(s.issue_count) ?? "A reviewer asked for changes"]
@@ -89,7 +89,7 @@ function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }
 }
 
 function PostRow({ s }: { s: SubmissionSummary }) {
-  const status = STATUS_PILL[statusOf(s)] ?? { label: s.status, pill: "bg-muted text-muted-foreground" };
+  const status = statusPillOf(s);
   const platform = s.platforms[0] as SocialPlatform | undefined;
   const where = [
     platform ? PLATFORM_LABELS[platform] ?? platform : null,

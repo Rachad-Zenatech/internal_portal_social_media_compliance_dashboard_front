@@ -176,7 +176,7 @@ interface FindingContext {
 
 /** Whether a finding's suggested revision can replace its wording directly (the quote is one exact passage). */
 export const canApplyRevision = (f: SentimentFinding) =>
-  Boolean(f.suggested_revision && (f.source === "caption" || f.source === "title") && !/\.\.\.|…/.test(f.quote));
+  Boolean(f.suggested_revision && (f.source === "caption" || f.source === "title" || f.source === "script") && !/\.\.\.|…/.test(f.quote));
 
 /** The analysed video's frame at the finding's moment, so a reviewer can confirm it at a glance. */
 function FindingFrame({ ctx, at, onSeek }: { ctx: FindingContext; at: number; onSeek?: (sec: number) => void }) {

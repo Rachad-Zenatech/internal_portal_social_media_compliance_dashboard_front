@@ -18,7 +18,7 @@ export interface SentimentFinding {
   basis: "OBSERVED_WORDING" | "POSSIBLE_INTERPRETATION" | "OBSERVED_VISUAL" | "OBSERVED_AUDIO";
   guideline_rule_number?: string | null;
   suggested_revision?: string | null;
-  source?: "title" | "caption" | "transcript" | "video" | "image" | null;
+  source?: "title" | "caption" | "script" | "transcript" | "video" | "image" | null;
   start_sec?: number | null;
   end_sec?: number | null;
   /** Findings about an image: which one (1 = the first, matching SentimentAnalysis.images). */

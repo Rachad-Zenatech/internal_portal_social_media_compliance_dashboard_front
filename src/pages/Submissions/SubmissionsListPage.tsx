@@ -72,7 +72,7 @@ import {
   isAnalysing,
   refetchWhileAnalysing,
 } from "@/components/submissions/submissionUi";
-import { QUICK_CREATE, Score, issuesText } from "@/components/dashboard/dashboardParts";
+import { QUICK_CREATE, Score, issuesText, scriptPillOf } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
@@ -184,8 +184,8 @@ interface Labels {
 // Small pieces
 // ---------------------------------------------------------------------------
 
-function StagePill({ stage, small = false }: { stage: Stage; small?: boolean }) {
-  const st = STAGES[stage] ?? { label: stage, pill: "bg-muted text-muted-foreground" };
+function StagePill({ stage, small = false, script }: { stage: Stage; small?: boolean; script?: string | null }) {
+  const st = scriptPillOf({ status: stage, script_status: script }) ?? STAGES[stage] ?? { label: stage, pill: "bg-muted text-muted-foreground" };
   return (
     <span className={`inline-flex shrink-0 items-center rounded-full font-semibold whitespace-nowrap ${small ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs"} ${st.pill}`}>
       {st.label}
@@ -263,7 +263,7 @@ function SubmissionCard({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <StagePill stage={stage} small />
+        <StagePill stage={stage} small script={s.script_status} />
         {selected ? (
           <span className="text-[10px] font-semibold tracking-wider text-blue-700 dark:text-blue-300">SELECTED</span>
         ) : (
@@ -274,7 +274,7 @@ function SubmissionCard({
       <div className="mt-3 flex gap-3">
         <div className="w-16 shrink-0">
           <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
-            <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+            <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
           </div>
           <p className="mt-1 text-[10px] text-muted-foreground">{CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}</p>
         </div>
@@ -332,6 +332,14 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
   const muted = "text-muted-foreground";
   const stage = stageOf(s);
   const due = s.due_at ? new Date(s.due_at) : null;
+  // Video drafts in the script stage: where the script is comes first.
+  if (stage === "DRAFT" && s.script_status && s.script_status !== "DRAFT") {
+    const amber = "font-semibold text-amber-700 dark:text-amber-400";
+    if (s.script_status === "IN_REVIEW") return { text: "Script with a reviewer", tone: muted };
+    if (s.script_status === "EDITS_PROPOSED") return { text: "Reviewer edited your script · review the changes", tone: amber };
+    if (s.script_status === "CHANGES_REQUESTED") return { text: "Script needs changes", tone: amber };
+    if (s.script_status === "APPROVED") return { text: "Script approved · add the video", tone: "font-medium text-emerald-700 dark:text-emerald-400" };
+  }
   if (stage === "DRAFT") return { text: `Draft · edited ${format(new Date(s.updated_at), "MMM d")}`, tone: muted };
   if (stage === "CHANGES_REQUESTED") {
     if (!due) return { text: "A reviewer asked for changes", tone: "font-medium text-amber-700 dark:text-amber-400" };
@@ -387,7 +395,7 @@ function GalleryCard({
         className="flex flex-1 flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
       >
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
-          <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} showPlay={false} />
+          <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
           <span className="absolute left-2.5 top-2.5 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white">
             {CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}
           </span>
@@ -401,23 +409,31 @@ function GalleryCard({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <StagePill stage={stage} small />
+            <StagePill stage={stage} small script={s.script_status} />
             <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} />
             {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
           </div>
           <p className={`text-sm ${line.tone}`}>{line.text}</p>
         </div>
       </button>
-      {(fix || stage === "DRAFT") && (
+      {stage === "DRAFT" && s.script_status === "EDITS_PROPOSED" ? (
         <div className="px-4 pb-4">
-          <Button
-            variant={fix ? "default" : "outline"}
-            className={`h-9 w-full rounded-lg font-medium ${fix ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
-            onClick={() => onContinue(s)}
-          >
-            {fix ? "Fix issues" : "Continue draft"}
+          <Button asChild className="h-9 w-full rounded-lg bg-blue-700 font-medium text-white hover:bg-blue-800">
+            <Link to={`/submissions/${s.id}/script`}>Review script changes</Link>
           </Button>
         </div>
+      ) : (
+        (fix || stage === "DRAFT") && (
+          <div className="px-4 pb-4">
+            <Button
+              variant={fix ? "default" : "outline"}
+              className={`h-9 w-full rounded-lg font-medium ${fix ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
+              onClick={() => onContinue(s)}
+            >
+              {fix ? "Fix issues" : "Continue draft"}
+            </Button>
+          </div>
+        )
       )}
     </article>
   );
@@ -748,7 +764,7 @@ function ReviewCard({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <StagePill stage={stage} small />
+          <StagePill stage={stage} small script={summary.script_status} />
         </div>
       </div>
 
@@ -780,7 +796,7 @@ function ReviewCard({
             ) : media ? (
               <img src={authedFileUrl(media.url)} alt="" className="h-full w-full object-contain" />
             ) : (
-              <CoverThumb cover={summary.cover} contentType={summary.content_type} caption={summary.caption_text} showPlay={false} />
+              <CoverThumb cover={summary.cover} contentType={summary.content_type} caption={summary.caption_text} script={summary.script_excerpt} showPlay={false} />
             )}
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">

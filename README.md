@@ -8,48 +8,51 @@ Social Media Compliance web portal for ZenaTech. Built with **React 19**, **Type
 
 ```mermaid
 flowchart TD
-    subgraph BrowserClient [Browser / Client Environment :5179]
-        AppRoot[React 19 App Root]
-        AuthRouter[React Router v7 Protected Routes]
-        AppShellLayout[AppShell Layout: Sidebar, TopBar, Breadcrumbs]
+    subgraph BrowserClient["Browser client (:5179)"]
+        direction LR
+        AppRoot["React 19 app root"]
+        AuthRouter["React Router v7<br/>protected routes"]
+        AppShellLayout["AppShell layout<br/>sidebar, top bar, breadcrumbs"]
+        AppRoot --> AuthRouter --> AppShellLayout
     end
 
-    subgraph StateAndProviders [Contexts & Client Cache]
-        AuthContext[Auth Context & Current User Roles]
-        QueryClient[TanStack React Query v5 Cache]
-        SSEClient[useNotifications EventSource Hook]
-        ThemeEngine[Next Themes: Dark / Light Mode]
+    subgraph ViewsAndPages["Portal views"]
+        direction LR
+        DashboardView["KPI dashboard &<br/>system status"]
+        UserManagement["Users<br/>management table"]
+        RoleManagement["Role hierarchies &<br/>PBAC matrix"]
+        AuditLogsView["Audit trail &<br/>diff viewer"]
+        SystemLogsView["Live virtualized<br/>log console"]
     end
 
-    subgraph ViewsAndPages [Portal Views]
-        DashboardView[KPI Dashboard & System Status]
-        UserManagement[Users Management Table]
-        RoleManagement[Role Hierarchies & PBAC Matrix]
-        AuditLogsView[Audit Trail & Diff Viewer]
-        SystemLogsView[Live Virtualized Log Console]
+    subgraph UIComponents["Component library"]
+        direction LR
+        ShadcnPrimitives["shadcn/ui<br/>Radix primitives"]
+        VirtualTable["TanStack Table v8<br/>+ virtualizer"]
+        MotionComponents["Framer Motion<br/>animations"]
+        ToastNotifications["Sonner toasts"]
     end
 
-    subgraph UIComponents [Component Library]
-        ShadcnPrimitives[shadcn/ui Radix Primitives]
-        VirtualTable[TanStack React Table v8 + Virtualizer]
-        MotionComponents[Framer Motion Animations]
-        ToastNotifications[Sonner Toasts]
+    subgraph StateAndProviders["Contexts & client cache"]
+        direction LR
+        AuthContext["Auth context &<br/>current user roles"]
+        QueryClient["TanStack Query v5<br/>cache"]
+        SSEClient["useNotifications<br/>EventSource hook"]
+        ThemeEngine["next-themes<br/>dark / light mode"]
     end
 
-    subgraph BackendAPI [FastAPI Backend Service :8009]
-        RestAPI[/api/auth, /api/configuration, /api/logs]
-        SSEStream[/api/notifications/stream]
+    subgraph BackendAPI["FastAPI backend (:8009)"]
+        direction LR
+        RestAPI["REST API<br/>/api/auth, /api/configuration, /api/logs"]
+        SSEStream["SSE stream<br/>/api/notifications/stream"]
     end
 
-    AppRoot --> AuthRouter
-    AuthRouter --> AppShellLayout
     AppShellLayout --> ViewsAndPages
     ViewsAndPages --> UIComponents
-
     ViewsAndPages <--> StateAndProviders
-    AuthContext -->|Route Guards & Perms| AuthRouter
-    QueryClient -->|REST API Requests| RestAPI
-    SSEClient -->|Persistent Connection| SSEStream
+    AuthContext -->|"route guards & permissions"| AuthRouter
+    QueryClient -->|"REST requests"| RestAPI
+    SSEClient -->|"persistent connection"| SSEStream
 ```
 
 ---
