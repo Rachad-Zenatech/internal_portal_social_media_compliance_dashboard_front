@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Download, Loader2, PencilLine, Upload } from "
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import ScriptEditor from "@/components/script/ScriptEditor";
 import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
@@ -206,18 +207,12 @@ function Changes({ stage }: { stage: ScriptStage }) {
 
         <div className="px-5 pb-6 sm:px-6">
           {editing ? (
-            <div className="mx-auto flex max-w-[760px] flex-col gap-2">
+            <div className="mx-auto flex max-w-[1000px] flex-col gap-2">
               <p className="text-[13px] text-muted-foreground">
                 {fromReviewer ? `You're editing ${reviewer ?? "the reviewer"}'s version.` : "You're editing your script."} It's checked again and goes back to the
                 reviewer, who sees what you changed.
               </p>
-              <Textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                aria-label="Script"
-                rows={18}
-                className="rounded-xl border-blue-500/60 bg-card px-7 py-6 text-[15px] leading-[1.85] focus-visible:ring-blue-500/30"
-              />
+              <ScriptEditor value={text} onChange={setText} />
             </div>
           ) : base && view === "side" ? (
             <SideBySide

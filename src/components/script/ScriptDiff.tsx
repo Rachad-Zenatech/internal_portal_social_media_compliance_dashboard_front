@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ITALIC } from "@/lib/scriptDoc";
 import type { DiffPart } from "@/lib/wordDiff";
 import type { ScriptStatus } from "@/types/script";
 
@@ -84,11 +85,13 @@ export function InlineDiff({
 const PAGE_LINE = /^--- Page (\d+) ---$/;
 const HEADING_LINE = /^#{1,3} /;
 const TABLE_LINE = /^\|.*\|$/;
+const BULLET_LINE = /^\s*[-\u2022] /;
+const ORDERED_LINE = /^\s*(\d+)[.)] /;
 
 /** Whether any of the visible text uses those marks. */
 export function isStructured(parts: DiffPart[]): boolean {
   const text = parts.map((p) => (p.kind === "same" ? p.after : p.added)).join("");
-  return /^(--- Page \d+ ---|# |\|.*\|)\s*$/m.test(text);
+  return /^(--- Page \d+ ---|#{1,3} |\|.*\||\s*[-\u2022] |\s*\d+[.)] )/m.test(text) || /(^|\s)_\S[^_\n]*\S_(?=$|[\s.,;:!?])/m.test(text);
 }
 
 interface Seg {
@@ -177,7 +180,8 @@ function cellsOf(segs: Seg[]): Seg[][] {
 }
 
 type Block =
-  | { type: "heading"; segs: Seg[] }
+  | { type: "heading"; segs: Seg[]; level: number }
+  | { type: "item"; segs: Seg[]; marker: string }
   | { type: "text"; segs: Seg[] }
   | { type: "table"; rows: Seg[][][] }
   | { type: "gap" };
@@ -198,7 +202,16 @@ function toSheets(lines: Seg[][]): Sheet[] {
     } else if (HEADING_LINE.test(text)) {
       const raw = visible(line);
       const mark = raw.indexOf("#");
-      sheet.blocks.push({ type: "heading", segs: dropChars(line, mark + raw.slice(mark).indexOf(" ") + 1) });
+      sheet.blocks.push({
+        type: "heading",
+        level: text.indexOf(" "),
+        segs: dropChars(line, mark + raw.slice(mark).indexOf(" ") + 1),
+      });
+    } else if (BULLET_LINE.test(visible(line))) {
+      sheet.blocks.push({ type: "item", marker: "\u2022", segs: dropChars(line, BULLET_LINE.exec(visible(line))![0].length) });
+    } else if (ORDERED_LINE.test(visible(line))) {
+      const m = ORDERED_LINE.exec(visible(line))!;
+      sheet.blocks.push({ type: "item", marker: `${m[1]}.`, segs: dropChars(line, m[0].length) });
     } else if (TABLE_LINE.test(text)) {
       const rows = cellsOf(line);
       const last = sheet.blocks[sheet.blocks.length - 1];
@@ -211,6 +224,25 @@ function toSheets(lines: Seg[][]): Sheet[] {
     }
   }
   return sheets.filter((s) => s.blocks.some((b) => b.type !== "gap"));
+}
+
+/** A stretch of text with its _italic_ words set in italics and flagged wording marked. */
+function italics(text: string, terms: string[]): ReactNode {
+  const out: ReactNode[] = [];
+  let at = 0;
+  for (const m of text.matchAll(ITALIC)) {
+    const start = (m.index ?? 0) + m[1].length;
+    if (start > at) out.push(<Highlighted key={`t${at}`} text={text.slice(at, start)} terms={terms} />);
+    out.push(
+      <em key={`i${start}`}>
+        <Highlighted text={m[2]} terms={terms} />
+      </em>
+    );
+    at = start + m[2].length + 2;
+  }
+  if (!out.length) return <Highlighted text={text} terms={terms} />;
+  if (at < text.length) out.push(<Highlighted key={`t${at}`} text={text.slice(at)} terms={terms} />);
+  return <>{out}</>;
 }
 
 function StructuredDiff({
@@ -238,7 +270,7 @@ function StructuredDiff({
       const nodes = s.text.split("**").map((chunk, c) => {
         if (c > 0) bold = !bold;
         if (!chunk) return null;
-        const body = s.kind === "del" ? chunk : <Highlighted text={chunk} terms={terms} />;
+        const body = s.kind === "del" ? chunk : italics(chunk, terms);
         const weighted = bold || forceBold ? <strong className="font-semibold">{body}</strong> : body;
         if (s.kind === "del") return <del key={c} className={REMOVED}>{weighted}</del>;
         if (s.kind === "ins") return <ins key={c} className={ADDED}>{weighted}</ins>;
@@ -265,10 +297,19 @@ function StructuredDiff({
   const render = (b: Block, key: number) => {
     if (b.type === "gap") return <div key={key} className="h-2" />;
     if (b.type === "heading") {
+      const size = b.level === 1 ? "text-lg" : b.level === 2 ? "text-base" : "text-[15px]";
       return (
-        <h3 key={key} className="mb-2 mt-1 text-lg font-semibold leading-snug text-foreground first:mt-0">
+        <h3 key={key} className={`mb-2 mt-1 ${size} font-semibold leading-snug text-foreground first:mt-0`}>
           {inline(b.segs, true)}
         </h3>
+      );
+    }
+    if (b.type === "item") {
+      return (
+        <p key={key} className="my-0.5 flex gap-2 pl-4 text-[14px] leading-[1.7] text-foreground">
+          <span className="w-5 shrink-0 text-right text-muted-foreground">{b.marker}</span>
+          <span className="min-w-0 whitespace-pre-wrap break-words">{inline(b.segs)}</span>
+        </p>
       );
     }
     if (b.type === "text") {

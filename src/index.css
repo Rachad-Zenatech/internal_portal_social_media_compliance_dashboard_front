@@ -322,3 +322,56 @@
     box-shadow: 0 1px 2px oklch(0 0 0 / 0.05);
   }
 }
+
+/* The script editor: a document, like Word or Google Docs. Looks like the read view (see components/script/ScriptDiff). */
+.script-editor .script-doc {
+  min-height: 420px;
+  padding: 1.75rem 2rem;
+  border: 1px solid color-mix(in oklab, var(--color-blue-500) 55%, transparent);
+  border-radius: 0.75rem;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font-size: 14px;
+  line-height: 1.7;
+  counter-reset: script-page 1;
+}
+.script-editor .script-doc:focus-within { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-blue-500) 22%, transparent); }
+.script-editor .script-doc p { margin: 0.25rem 0; }
+.script-editor .script-doc h1, .script-editor .script-doc h2, .script-editor .script-doc h3 { margin: 0.5rem 0; font-weight: 600; line-height: 1.3; }
+.script-editor .script-doc h1 { font-size: 1.25rem; }
+.script-editor .script-doc h2 { font-size: 1.1rem; }
+.script-editor .script-doc h3 { font-size: 1rem; }
+.script-editor .script-doc ul { list-style: disc; padding-left: 1.5rem; margin: 0.25rem 0; }
+.script-editor .script-doc ol { list-style: decimal; padding-left: 1.5rem; margin: 0.25rem 0; }
+.script-editor .script-doc li p { margin: 0; }
+.script-editor .script-doc table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 13px; line-height: 1.4; table-layout: auto; }
+.script-editor .script-doc th, .script-editor .script-doc td {
+  position: relative;
+  border: 1px solid var(--color-border);
+  padding: 0.4rem 0.6rem;
+  vertical-align: top;
+  text-align: left;
+}
+.script-editor .script-doc th { background: #1e293b; color: #fff; font-weight: 600; }
+.script-editor .script-doc tr:nth-child(even) td { background: color-mix(in oklab, var(--color-muted) 40%, transparent); }
+.script-editor .script-doc td p, .script-editor .script-doc th p { margin: 0; }
+.script-editor .script-doc .selectedCell::after { content: ""; position: absolute; inset: 0; background: color-mix(in oklab, var(--color-blue-500) 22%, transparent); pointer-events: none; }
+.script-editor .script-doc .script-page-break {
+  position: relative;
+  margin: 1.5rem -0.5rem;
+  border-top: 2px dashed var(--color-border);
+  counter-increment: script-page;
+  cursor: pointer;
+}
+.script-editor .script-doc .script-page-break::after {
+  content: "Page " counter(script-page);
+  position: absolute;
+  top: -0.7rem;
+  right: 0;
+  padding: 0 0.5rem;
+  background: var(--color-card);
+  color: var(--color-muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+}
+.script-editor .script-doc .script-page-break.ProseMirror-selectednode { border-top-color: var(--color-blue-500); }
