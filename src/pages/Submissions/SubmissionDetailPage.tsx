@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
@@ -13,6 +13,7 @@ import {
   Circle,
   ClipboardCheck,
   FilePen,
+  FileText,
   History,
   Loader2,
   RotateCcw,
@@ -36,11 +37,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import ScriptStageCard from "@/components/script/ScriptStageCard";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
+import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
@@ -48,6 +51,8 @@ import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import type { ReviewJob, StoredCheck, Submission, SubmissionVersion } from "@/types/submission";
+
+const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
 
 const TYPE_LABELS: Record<string, string> = {
   VIDEO: "Video",
@@ -247,12 +252,15 @@ export default function SubmissionDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const scriptInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingScript, setUploadingScript] = useState(false);
 
   const submissionQuery = useQuery({ queryKey: ["submission", id], queryFn: () => submissionService.get(id), enabled: Boolean(id), staleTime: 0 });
   const optionsQuery = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 60_000 });
   const historyQuery = useQuery({ queryKey: ["submission-history", id], queryFn: () => submissionService.history(id), enabled: Boolean(id), staleTime: 0 });
   const s = submissionQuery.data;
   const history = historyQuery.data;
+  const scriptStage = useScriptStage(id, Boolean(id) && s?.content_type === "VIDEO");
   const { user, hasPermission, creatorView } = useAuth();
   const { comments } = useReviewComments(id);
   const isCreator = Boolean(s && user && s.created_by === user.id);
@@ -276,6 +284,23 @@ export default function SubmissionDetailPage() {
     queryClient.invalidateQueries({ queryKey: ["submission", id] });
     queryClient.invalidateQueries({ queryKey: ["submission-history", id] });
     queryClient.invalidateQueries({ queryKey: ["submissions"] });
+    queryClient.invalidateQueries({ queryKey: ["script", id] });
+  };
+
+  const handleScriptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    e.target.value = "";
+    if (!selected || !id) return;
+    setUploadingScript(true);
+    try {
+      await submissionService.uploadFile(id, "SCRIPT", selected);
+      refresh();
+      toast.success(`Uploaded ${selected.name} to ${s?.reference_code ?? "post"}.`);
+    } catch (err) {
+      toast.error(`Couldn't upload script: ${(err as Error).message}`);
+    } finally {
+      setUploadingScript(false);
+    }
   };
 
   const withdrawMutation = useMutation({
@@ -312,6 +337,14 @@ export default function SubmissionDetailPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2000px]">
+      <input
+        ref={scriptInputRef}
+        type="file"
+        accept={ACCEPT_SCRIPT}
+        className="hidden"
+        onChange={handleScriptUpload}
+      />
+
       <DashboardHeader
         title={s.title}
         subtitle={
@@ -330,6 +363,19 @@ export default function SubmissionDetailPage() {
                 <ArrowLeft className="w-3.5 h-3.5" /> {backTo.label}
               </Link>
             </Button>
+            {s.content_type === "VIDEO" && s.can_edit && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={uploadingScript}
+                onClick={() => scriptInputRef.current?.click()}
+                className="text-xs gap-1.5 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 hover:bg-blue-100"
+              >
+                {uploadingScript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5 text-blue-600" />}
+                Upload script
+              </Button>
+            )}
             {s.can_edit && (
               <Button size="sm" asChild className="text-xs gap-1.5 font-semibold bg-blue-600 hover:bg-blue-700 text-white">
                 <Link to={`/submissions/new?id=${s.id}`}>
@@ -378,6 +424,15 @@ export default function SubmissionDetailPage() {
           <StatusTrack s={s} />
         </div>
       </Card>
+
+      {s.content_type === "VIDEO" && (
+        <ScriptStageCard
+          submissionId={s.id}
+          stage={scriptStage.data}
+          canEdit={Boolean(s.can_edit) && !uploadingScript}
+          onAddScript={() => scriptInputRef.current?.click()}
+        />
+      )}
 
       {canReview && (
         <ReviewDecisionPanel

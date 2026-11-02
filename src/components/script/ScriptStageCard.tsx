@@ -25,7 +25,10 @@ export default function ScriptStageCard({
   const status = stage?.status ?? "DRAFT";
   const latest = stage?.versions.at(-1);
   const decided = stage ? [...stage.versions].reverse().find((v) => v.review_decision) : undefined;
-  const reading = stage?.file_status === "PENDING" || stage?.file_status === "PROCESSING";
+  const reading =
+    stage?.file_status === "PENDING" ||
+    stage?.file_status === "PROCESSING" ||
+    (Boolean(stage?.file_name) && stage?.file_status == null);
   const scriptLink = submissionId ? `/submissions/${submissionId}/script` : "#";
 
   if (status === "APPROVED") {
@@ -34,9 +37,16 @@ export default function ScriptStageCard({
         <p className="flex items-center gap-2 text-[13px] font-medium text-emerald-800 dark:text-emerald-300">
           <CheckCircle2 className="w-4 h-4" /> Script approved. Add your video below; it's checked against the approved script.
         </p>
-        <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-          <Link to={scriptLink}>View the script</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onAddScript}>
+              <FileText className="w-3.5 h-3.5" /> Replace script
+            </Button>
+          )}
+          <Button asChild size="sm" variant="outline" className="h-7 text-xs">
+            <Link to={scriptLink}>View the script</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -93,9 +103,16 @@ function Body({
           Your script is with a reviewer{sentAt ? ` (sent ${formatDistanceToNow(new Date(sentAt), { addSuffix: true })})` : ""}. Fill in the rest of the post
           while you wait.
         </p>
-        <Button asChild size="sm" variant="outline" className="h-8 text-xs">
-          <Link to={scriptLink}>View the script</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript}>
+              <FileText className="w-3.5 h-3.5" /> Replace the script
+            </Button>
+          )}
+          <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+            <Link to={scriptLink}>View the script</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -106,9 +123,16 @@ function Body({
           <span className="font-semibold text-foreground">{reviewer ?? "Your reviewer"} edited your script.</span> Compare the two versions, then accept the
           changes or edit them.
         </p>
-        <Button asChild size="sm" className="h-8 text-xs">
-          <Link to={scriptLink}>Review the changes</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript}>
+              <FileText className="w-3.5 h-3.5" /> Replace the script
+            </Button>
+          )}
+          <Button asChild size="sm" className="h-8 text-xs">
+            <Link to={scriptLink}>Review the changes</Link>
+          </Button>
+        </div>
       </div>
     );
   }
