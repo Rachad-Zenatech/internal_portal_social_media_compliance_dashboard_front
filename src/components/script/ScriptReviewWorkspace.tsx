@@ -48,9 +48,11 @@ function writeDraft(id: string, version: number, text: string | null) {
 export default function ScriptReviewWorkspace({
   submissionId,
   isReviewer,
+  onUploadScript,
 }: {
   submissionId: string;
   isReviewer: boolean;
+  onUploadScript?: () => void;
 }) {
   const stage = useScriptStage(submissionId);
   const data = stage.data;
@@ -63,7 +65,25 @@ export default function ScriptReviewWorkspace({
     );
   }
   if (!sent) {
-    return <div className="grid flex-1 place-items-center p-10 text-sm text-muted-foreground">This post has no script yet.</div>;
+    return (
+      <div className="grid flex-1 place-items-center p-10 text-center">
+        <div className="max-w-md space-y-3">
+          <FileText className="mx-auto w-10 h-10 text-blue-600/70" />
+          <p className="text-base font-semibold text-foreground">This post has no script yet.</p>
+          <p className="text-xs text-muted-foreground">Upload the script to start the compliance check.</p>
+          {onUploadScript && (
+            <Button
+              type="button"
+              size="sm"
+              className="mt-2 h-8 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
+              onClick={onUploadScript}
+            >
+              <FileText className="w-3.5 h-3.5" /> Upload the script
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
   return (
     <Editor
@@ -74,6 +94,7 @@ export default function ScriptReviewWorkspace({
       reference={data.reference_code}
       status={data.status}
       canReview={isReviewer && data.can_review}
+      onUploadScript={onUploadScript}
     />
   );
 }
@@ -85,6 +106,7 @@ function Editor({
   reference,
   status,
   canReview,
+  onUploadScript,
 }: {
   submissionId: string;
   versions: ScriptVersion[];
@@ -92,6 +114,7 @@ function Editor({
   reference: string;
   status?: string | null;
   canReview: boolean;
+  onUploadScript?: () => void;
 }) {
   const sent = versions[versions.length - 1];
   const previous = versions.length > 1 ? versions[versions.length - 2] : null;
@@ -244,6 +267,17 @@ function Editor({
             )
           )}
           <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            {onUploadScript && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 hover:bg-blue-100"
+                onClick={onUploadScript}
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
+              </Button>
+            )}
             {sent.file_name && (
               <span className="inline-flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5" /> {sent.file_name}

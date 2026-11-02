@@ -564,6 +564,7 @@ function PostView({
   onDuration,
   onPlaying,
   seek,
+  onUploadScript,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
@@ -578,6 +579,7 @@ function PostView({
   onDuration: (d: number) => void;
   onPlaying: (p: boolean) => void;
   seek: (t: number) => void;
+  onUploadScript?: () => void;
 }) {
   const [imageIndex, setImageIndex] = useState(0);
   const images = s.images ?? [];
@@ -617,11 +619,24 @@ function PostView({
               {s.creator_name && ` · by ${s.creator_name}`}
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-            <Link to={`/submissions/${s.id}`}>
-              <ExternalLink className="w-3.5 h-3.5" /> Full details & history
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {onUploadScript && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 hover:bg-blue-100 dark:bg-blue-500/10"
+                onClick={onUploadScript}
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
+              </Button>
+            )}
+            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+              <Link to={`/submissions/${s.id}`}>
+                <ExternalLink className="w-3.5 h-3.5" /> Full details & history
+              </Link>
+            </Button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {s.platforms.map((p) => (
@@ -1089,10 +1104,12 @@ function Workspace({
   s,
   labels,
   canReview,
+  onUploadScript,
 }: {
   s: ReviewQueueItem;
   labels: { brand: (c?: string | null) => string | null; audience: (c?: string | null) => string | null };
   canReview: boolean;
+  onUploadScript?: () => void;
 }) {
   const { flags, dismissed } = useFlags(s);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -1124,6 +1141,7 @@ function Workspace({
           onDuration={setDuration}
           onPlaying={setPlaying}
           seek={seek}
+          onUploadScript={onUploadScript}
         />
       </section>
       <aside
@@ -1254,6 +1272,16 @@ export default function ContentScreenerPage() {
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCollapsed(false)} aria-label="Expand the queue" title="Expand the queue">
             <PanelLeftOpen className="w-4 h-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 text-blue-600 border-blue-200 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-500/30 dark:bg-blue-500/10"
+            onClick={() => setScriptDialogOpen(true)}
+            aria-label="Upload script"
+            title="Upload script"
+          >
+            <FileText className="w-4 h-4" />
+          </Button>
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${listCount} items`}>
             {listCount}
           </span>
@@ -1304,27 +1332,39 @@ export default function ContentScreenerPage() {
         aria-label="Review queue"
         className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:w-[300px] lg:border-b-0 lg:border-r min-[112.5rem]:w-[360px] ${queueCollapsed ? "lg:hidden" : ""}`}
       >
-        <div className="flex flex-col gap-3 border-b border-border/70 p-4">
+        <div className="flex flex-col gap-2.5 border-b border-border/70 p-4">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground">Content screener</h1>
-            <div className="flex items-center gap-1.5">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 gap-1 px-2.5 text-xs font-semibold text-foreground hover:bg-muted"
-                onClick={() => setScriptDialogOpen(true)}
-                title="Upload a new video script to check and review"
-              >
-                <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" className="h-7 gap-1 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
-                    <Plus className="w-3.5 h-3.5" /> Post <ChevronDown className="w-3 h-3 ml-0.5 opacity-80" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden h-8 w-8 text-muted-foreground lg:inline-flex"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse the queue"
+              title="Collapse the queue"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 px-2 text-xs font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
+              onClick={() => setScriptDialogOpen(true)}
+              title="Upload a new video script to check and review"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
+                  <Plus className="w-3.5 h-3.5" /> New post <ChevronDown className="w-3 h-3 ml-0.5 opacity-80" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
                     <Link to="/submissions/new?type=VIDEO" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
                       <Video className="w-3.5 h-3.5 text-purple-600" />
@@ -1364,25 +1404,14 @@ export default function ContentScreenerPage() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setScriptDialogOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer text-xs font-medium text-blue-700 dark:text-blue-400"
+                    className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-blue-700 dark:text-blue-400"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>Upload the script</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden h-8 w-8 text-muted-foreground lg:inline-flex"
-                onClick={() => setCollapsed(true)}
-                aria-label="Collapse the queue"
-                title="Collapse the queue"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </Button>
             </div>
-          </div>
           <div role="tablist" aria-label="Queue" className="flex rounded-lg bg-muted p-0.5">
             {TABS.map((t) => (
               <button
@@ -1583,7 +1612,12 @@ export default function ContentScreenerPage() {
       {/* ===== The post (or script) and the review panel ===== */}
       {onScripts ? (
         selectedScript ? (
-          <ScriptReviewWorkspace key={selectedScript.id} submissionId={selectedScript.id} isReviewer={isReviewer} />
+          <ScriptReviewWorkspace
+            key={selectedScript.id}
+            submissionId={selectedScript.id}
+            isReviewer={isReviewer}
+            onUploadScript={() => setScriptDialogOpen(true)}
+          />
         ) : (
           <div className="grid flex-1 place-items-center p-10 text-center">
             <div className="max-w-md space-y-3">
@@ -1604,7 +1638,13 @@ export default function ContentScreenerPage() {
           </div>
         )
       ) : selected ? (
-        <Workspace key={`${selected.id}-${selected.current_version}`} s={selected} labels={labels} canReview={isReviewer && Boolean(selected.can_review)} />
+        <Workspace
+          key={`${selected.id}-${selected.current_version}`}
+          s={selected}
+          labels={labels}
+          canReview={isReviewer && Boolean(selected.can_review)}
+          onUploadScript={() => setScriptDialogOpen(true)}
+        />
       ) : (
         <div className="grid flex-1 place-items-center p-10 text-center">
           <div className="max-w-md space-y-3">
