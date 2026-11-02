@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, Download, Loader2, PencilLine, Upload } from "
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DiffLegend, InlineDiff, SideBySide, StageSteps } from "@/components/script/ScriptDiff";
+import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { useScriptActions, useScriptStage } from "@/hooks/useScript";
@@ -231,7 +231,13 @@ function Changes({ stage }: { stage: ScriptStage }) {
               onPick={setFocusId}
             />
           ) : (
-            <article className="mx-auto max-w-[760px] rounded-xl border border-border bg-card px-6 py-7 shadow-xs sm:px-10">
+            <article
+              className={
+                isStructured(parts)
+                  ? "mx-auto max-w-[1000px]"
+                  : "mx-auto max-w-[760px] rounded-xl border border-border bg-card px-6 py-7 shadow-xs sm:px-10"
+              }
+            >
               <InlineDiff parts={parts} focusId={focusId} onPick={setFocusId} />
             </article>
           )}

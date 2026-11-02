@@ -5,7 +5,7 @@ import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
-import { DiffLegend, InlineDiff, StageSteps } from "@/components/script/ScriptDiff";
+import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { useLiveScriptCheck, useScriptActions, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
@@ -96,6 +96,8 @@ function Editor({
   const [compare, setCompare] = useState<Compare>("mine");
   const [tab, setTab] = useState<PanelTab>("flags");
   const [note, setNote] = useState("");
+  const [needNote, setNeedNote] = useState(false);
+  const noteRef = useRef<HTMLTextAreaElement | null>(null);
   const [focusId, setFocusId] = useState<number | null>(null);
   const textRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
@@ -149,7 +151,14 @@ function Editor({
   };
 
   const criticalNeedsNote = !hasEdits && verdict.critical > 0 && !note.trim();
-  const sendBack = () => decide.mutate({ decision: "SEND_BACK", text: hasEdits ? draft : undefined, note: note.trim() || undefined });
+  const sendBack = () => {
+    if (!hasEdits && !note.trim()) {
+      setNeedNote(true);
+      noteRef.current?.focus();
+      return;
+    }
+    decide.mutate({ decision: "SEND_BACK", text: hasEdits ? draft : undefined, note: note.trim() || undefined });
+  };
   const approve = () => decide.mutate({ decision: "APPROVE", note: note.trim() || undefined });
 
   const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean }[] = [
@@ -265,7 +274,13 @@ function Editor({
               </p>
             </div>
           ) : (
-            <article className="mx-auto max-w-[760px] rounded-xl border border-border bg-card px-6 py-7 shadow-xs sm:px-10">
+            <article
+              className={
+                isStructured(parts)
+                  ? "mx-auto max-w-[1000px]"
+                  : "mx-auto max-w-[760px] rounded-xl border border-border bg-card px-6 py-7 shadow-xs sm:px-10"
+              }
+            >
               {changes.length > 0 && showChanges && (
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-3">
                   <span className="text-xs font-medium text-foreground">
@@ -375,14 +390,31 @@ function Editor({
 
         {canReview ? (
           <div className="flex flex-col gap-2.5 border-t border-border/70 bg-muted/40 px-4 py-3.5">
+            <label htmlFor="script-note" className="flex items-baseline justify-between gap-2 text-xs font-medium text-foreground">
+              <span>Comments for the creator</span>
+              <span className={needNote ? "font-semibold text-red-600 dark:text-red-400" : "text-muted-foreground"}>
+                {hasEdits ? "Optional with your edits" : "Required to request changes"}
+              </span>
+            </label>
             <Textarea
+              id="script-note"
+              ref={noteRef}
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={(e) => {
+                setNote(e.target.value);
+                if (e.target.value.trim()) setNeedNote(false);
+              }}
               rows={2}
-              placeholder={hasEdits ? "Note for the creator (optional): why you changed it" : "Note for the creator: what needs to change"}
-              aria-label="Note for the creator"
-              className="min-h-0 resize-none bg-card text-[13px]"
+              placeholder={hasEdits ? "Why you changed it (optional)" : "What needs to change? Required if you request changes"}
+              aria-invalid={needNote}
+              aria-required={!hasEdits}
+              className={`min-h-0 resize-none bg-card text-[13px] ${needNote ? "border-red-500 ring-2 ring-red-500/20 focus-visible:ring-red-500/30" : ""}`}
             />
+            {needNote && (
+              <p role="alert" className="text-xs font-medium text-red-600 dark:text-red-400">
+                Add a comment saying what needs to change before you request changes.
+              </p>
+            )}
             <p
               className={`text-xs font-medium ${
                 hasEdits ? "text-blue-700 dark:text-blue-300" : verdict.critical ? "text-red-700 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"
@@ -398,8 +430,8 @@ function Editor({
               <Button
                 variant={hasEdits ? "default" : "outline"}
                 className="h-10 flex-1"
-                disabled={decide.isPending || (!hasEdits && !note.trim())}
-                title={!hasEdits && !note.trim() ? "Edit the script or write a note first" : undefined}
+                disabled={decide.isPending}
+                title={!hasEdits && !note.trim() ? "A comment is required to request changes" : undefined}
                 onClick={sendBack}
               >
                 {decide.isPending && decide.variables?.decision === "SEND_BACK" && <Loader2 className="w-4 h-4 animate-spin" />}
