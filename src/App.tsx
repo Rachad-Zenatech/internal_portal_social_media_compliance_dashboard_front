@@ -28,6 +28,7 @@ const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoCo
 const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
 const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsListPage"));
 const SubmissionDetailPage = lazy(() => import("./pages/Submissions/SubmissionDetailPage"));
+const ScriptChangesPage = lazy(() => import("./pages/Submissions/ScriptChangesPage"));
 const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
 const PublishDraftPage = lazy(() => import("./pages/ContentCalendar/PublishDraftPage"));
@@ -41,6 +42,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/dashboard", navigationCode: "DASHBOARD", element: <Dashboard /> },
   { path: "/socials", navigationCode: "DASHBOARD", element: <SocialMediaPage /> },
   { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
+  { path: "/submissions/:id/script", navigationCode: "DASHBOARD", element: <ScriptChangesPage /> },
   { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
   { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
   { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <ContentScreenerPage /> },

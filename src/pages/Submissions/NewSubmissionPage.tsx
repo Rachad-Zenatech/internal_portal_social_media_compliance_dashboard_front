@@ -58,6 +58,9 @@ import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
+import ScriptStageCard from "@/components/script/ScriptStageCard";
+import { useScriptStage } from "@/hooks/useScript";
+import { scriptService } from "@/services/scriptService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
 import { canvaService } from "@/services/canvaService";
@@ -401,6 +404,13 @@ export default function NewSubmissionPage() {
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
+  // Video posts start with the script: it's reviewed and approved before the video can be added. Drafts from before
+  // the script stage (required: false) work as they always did.
+  const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
+  const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
+  const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
+  const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
+
   // Scripts are read in the background; refresh their status until they're done so the creator sees it.
   const readingScript = files.some(
     (f) => (f.kind === "SCRIPT" || f.kind === "MAIN") && SCRIPT_RE.test(f.original_name) && (f.doc_text_status == null || f.doc_text_status === "PROCESSING")
@@ -639,6 +649,10 @@ export default function NewSubmissionPage() {
         toast.error(`${file.name}: ${result.error}`);
         continue;
       }
+      if (result.kind === "MAIN" && videoLocked) {
+        toast.error(`${file.name}: get the script approved first, then add the video.`);
+        continue;
+      }
       if (result.kind === "MAIN") mainTaken = true;
       if (result.kind === "SCRIPT") scriptTaken = true;
       batch.push({ file, kind: result.kind, key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}` });
@@ -672,6 +686,7 @@ export default function NewSubmissionPage() {
       }
     }
     setServerMissing([]);
+    if (batch.some((b) => b.kind === "SCRIPT")) refreshScript();
   };
 
   const removeFile = async (file: SubmissionFile) => {
@@ -681,6 +696,7 @@ export default function NewSubmissionPage() {
       await submissionService.removeFile(submissionId, file.id);
       setFiles((prev) => prev.filter((f) => f.id !== file.id));
       toast.success(`Removed ${file.original_name}`);
+      if (file.kind === "SCRIPT") refreshScript();
     } catch (err) {
       toast.error(`Couldn't remove the file: ${(err as Error).message}`);
     } finally {
@@ -754,9 +770,10 @@ export default function NewSubmissionPage() {
     audience: !audience,
     region: !region,
     platforms: platforms.length === 0,
-    main_file: MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
+    // While the script is still being approved, the video and the caption aren't asked for yet.
+    main_file: !videoLocked && MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
     // Every post needs a caption: the score and the sentiment analysis read it first.
-    caption: !caption.trim(),
+    caption: !videoLocked && !caption.trim(),
     rule_sets: ruleSets.length === 0,
     approval_needed_by: !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
@@ -788,6 +805,33 @@ export default function NewSubmissionPage() {
       setShowErrors(true);
       setShowAllDetails(true);
       toast.error(`Please add: ${missingNow.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
+      return;
+    }
+    if (videoLocked) {
+      // Until the script is approved, "Send for Review" sends the script; the video and caption come after.
+      const stage = scriptStage.data;
+      if (stage && !stage.can_submit) {
+        toast.info(
+          stage.status === "IN_REVIEW"
+            ? "Your script is already with a reviewer. Add the video once it's approved."
+            : "Your script isn't ready to send yet. Open it from the script card above."
+        );
+        return;
+      }
+      setSubmitting(true);
+      try {
+        const id = await save({ force: true });
+        const next = await scriptService.submit(id!);
+        queryClient.setQueryData(["script", id], next);
+        queryClient.invalidateQueries({ queryKey: ["script-queue"] });
+        queryClient.invalidateQueries({ queryKey: ["submission", id] });
+        queryClient.invalidateQueries({ queryKey: ["submissions"] });
+        toast.success("Script sent for review. Add the video and caption once it's approved.");
+      } catch (err) {
+        toast.error(`Couldn't send the script: ${(err as Error).message}`);
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
     setSubmitting(true);
@@ -1305,6 +1349,14 @@ export default function NewSubmissionPage() {
                 e.target.value = "";
               }}
             />
+            {scriptFirst && (
+              <ScriptStageCard
+                submissionId={submissionId}
+                stage={scriptStage.data}
+                canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
+                onAddScript={() => scriptInputRef.current?.click()}
+              />
+            )}
             {/* Two ways to add content: upload files, or import a Canva design. */}
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
             <div
@@ -1335,7 +1387,9 @@ export default function NewSubmissionPage() {
               </span>
               <span className="text-sm font-semibold text-foreground">Drag & drop files here</span>
               <span className="text-xs text-muted-foreground max-w-md">
-                Add {mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.
+                {videoLocked
+                  ? "Add a cover image or supporting documents now. Your video can go in once the script is approved."
+                  : `Add ${mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.`}
               </span>
               <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold shadow-2xs">
                 <CloudUpload className="w-3.5 h-3.5" /> Choose Files
@@ -1347,8 +1401,14 @@ export default function NewSubmissionPage() {
             <button
               type="button"
               onClick={() => setCanvaOpen(true)}
-              disabled={!canvaFits}
-              title={canvaFits ? undefined : "Canva designs can't be the main file of a blog or article"}
+              disabled={!canvaFits || videoLocked}
+              title={
+                videoLocked
+                  ? "Get the script approved first, then add the video"
+                  : canvaFits
+                  ? undefined
+                  : "Canva designs can't be the main file of a blog or article"
+              }
               className="min-h-[190px] rounded-xl border border-[#7d2ae8]/30 bg-[#7d2ae8]/5 hover:bg-[#7d2ae8]/10 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 p-5 text-center transition-colors"
             >
               <CanvaMark className="w-11 h-11 text-base" />
@@ -1357,6 +1417,7 @@ export default function NewSubmissionPage() {
               <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
             </button>
             </div>
+            {!scriptFirst && (
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
               <Button
                 type="button"
@@ -1373,6 +1434,7 @@ export default function NewSubmissionPage() {
                 with "script" in the name are picked up as the script automatically.
               </span>
             </div>
+            )}
             {isMissing("main_file") && (
               <p className="text-[11px] text-red-600 mt-1.5">
                 Add {mainUpload.main} to submit this {CONTENT_TYPES.find((c) => c.value === contentType)?.label.toLowerCase()}.
@@ -1718,7 +1780,7 @@ export default function NewSubmissionPage() {
               disabled={submitting || uploading.length > 0}
               className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {resubmitting ? "Resubmit for Review" : "Send for Review"}
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
             </Button>
           </div>
           {optionsQuery.isError && (

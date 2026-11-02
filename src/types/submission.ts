@@ -1,4 +1,5 @@
 import type { ComplianceCheckResponse } from "@/services/complianceService";
+import type { ScriptStatus } from "@/types/script";
 
 /** AD: paid social ad. Ad-specific fields and rules are still to be defined. */
 export type ContentType = "VIDEO" | "SOCIAL_POST" | "CAROUSEL" | "IMAGE" | "BLOG" | "AD";
@@ -172,6 +173,9 @@ export interface Submission {
   min_approval_score?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
+  /** Video posts: the script is approved before the video goes in. Null when the post has no script stage. */
+  script_required?: boolean;
+  script_status?: ScriptStatus | null;
   created_by?: string | null;
   /** Only filled in when someone other than the creator is viewing. */
   created_by_name?: string | null;
@@ -181,6 +185,8 @@ export interface Submission {
 }
 
 export interface SubmissionSummary {
+  /** Video drafts in the script stage: where the script is (null when there's no script stage). */
+  script_status?: ScriptStatus | null;
   id: string;
   reference_code: string;
   title: string;
@@ -214,6 +220,8 @@ export interface SubmissionSummary {
   accounts?: AccountOption[];
   /** First 600 characters of the caption. */
   caption_text?: string | null;
+  /** Video posts with a script: the start of the script, shown on the card until a video is added. */
+  script_excerpt?: string | null;
   /** Main video/image, or the first attached image, for the card thumbnail. */
   cover?: SubmissionFile | null;
   created_by?: string | null;
@@ -441,7 +449,8 @@ export interface RuleFlagStats {
 /** The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days). */
 export type QueueTab = "review" | "sent_back" | "done";
 
-export type ReviewQueueCounts = Record<QueueTab, number>;
+/** Posts in each Screener tab, plus scripts waiting for a reviewer. */
+export type ReviewQueueCounts = Record<QueueTab, number> & { scripts?: number; scripts_sent_back?: number; scripts_done?: number };
 
 /** The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard). */
 export interface DashboardSummary {
