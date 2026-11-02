@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  FileText,
   Layers,
   Loader2,
   PanelLeftClose,
@@ -44,18 +45,57 @@ import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
+import { scriptService } from "@/services/scriptService";
+import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
 import type { ComplianceViolation } from "@/services/complianceService";
+import type { ScriptQueueItem } from "@/types/script";
 import type { QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Queue: tabs, filters and the few facts each row needs
 // ---------------------------------------------------------------------------
 
+/** Video scripts waiting for a reviewer are listed under "To review" with the posts, marked with a "Script" label. */
 const TABS: { value: QueueTab; label: string }[] = [
   { value: "review", label: "To review" },
   { value: "sent_back", label: "Sent back" },
   { value: "done", label: "Done" },
 ];
+
+/** "Due tomorrow" for a script: its approval date, if the creator set one already. */
+function scriptDue(s: ScriptQueueItem): { text: string; tone: string } {
+  const muted = "text-muted-foreground";
+  if (s.script_status !== "IN_REVIEW") {
+    const what =
+      s.script_status === "APPROVED" ? "Approved" : s.script_status === "EDITS_PROPOSED" ? "Edited, with the creator" : "Changes requested";
+    return { text: `${what}${s.decided_at ? ` ${formatDistanceToNow(new Date(s.decided_at), { addSuffix: true })}` : ""}`, tone: muted };
+  }
+  const sent = `Sent ${formatDistanceToNow(new Date(s.sent_at), { addSuffix: true })}`;
+  if (!s.approval_needed_by) return { text: sent, tone: muted };
+  const due = new Date(s.approval_needed_by);
+  if (isPast(due)) return { text: `Post overdue ${formatDistanceToNow(due)}`, tone: "text-red-600 dark:text-red-400" };
+  if (isToday(due)) return { text: `Post due today, ${format(due, "h:mm a")}`, tone: "text-amber-700 dark:text-amber-400" };
+  return { text: `${sent} · post due ${format(due, "MMM d")}`, tone: muted };
+}
+
+function ScriptScore({ s }: { s: ScriptQueueItem }) {
+  if (s.score == null) return null;
+  const tone =
+    s.traffic_light === "RED" || s.score < 60
+      ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+      : s.score >= 80
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+      : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300";
+  return <span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${tone}`}>{s.score}</span>;
+}
+
+function ScriptThumb() {
+  return (
+    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+      <FileText className="w-5 h-5" />
+    </div>
+  );
+}
 
 type DueFilter = "any" | "overdue" | "today" | "week" | "none";
 type CheckFilter = "any" | "failing" | "critical" | "passing";
@@ -1024,17 +1064,27 @@ export default function ContentScreenerPage() {
   const [params, setParams] = useSearchParams();
   const { activeVideoId } = useVideoUploadQueue();
 
+  // ?script=... (from a "script to review" notification) opens that script in the To review list.
   const [tab, setTab] = useState<QueueTab>("review");
+  const postTab: QueueTab = tab;
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   // Opened from elsewhere: ?id=..., or the post another page picked for the screener.
   const [selectedId, setSelectedId] = useState<string | null>(
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
   );
+  const [selectedScriptId, setSelectedScriptId] = useState<string | null>(() => params.get("script"));
+
+  const scripts = useQuery({
+    queryKey: ["script-queue", tab],
+    queryFn: () => scriptService.queue(tab),
+    staleTime: 0,
+    refetchInterval: 60_000,
+  });
 
   const queue = useQuery({
-    queryKey: ["review-queue", tab, scope],
-    queryFn: () => submissionService.reviewQueue(tab, undefined, scope),
+    queryKey: ["review-queue", postTab, scope],
+    queryFn: () => submissionService.reviewQueue(postTab, undefined, scope),
     staleTime: 0,
     // Quickly while a post is still being read (so its score shows up soon after it's ready), otherwise each minute.
     refetchInterval: (q) => (q.state.data?.some((s) => isAnalysing(s.latest_check)) ? ANALYSING_REFETCH_MS : 60_000),
@@ -1056,7 +1106,19 @@ export default function ContentScreenerPage() {
   const items = useMemo(() => queue.data ?? [], [queue.data]);
   const q = search.trim().toLowerCase();
   const visible = useMemo(() => items.filter((s) => matches(s, filters, q)), [items, filters, q]);
-  const selected = visible.find((s) => s.id === selectedId) ?? visible[0] ?? null;
+  const scriptItems = useMemo(
+    () =>
+      (scripts.data ?? []).filter(
+        (s) => !q || s.title.toLowerCase().includes(q) || s.reference_code.toLowerCase().includes(q) || (s.creator_name ?? "").toLowerCase().includes(q)
+      ),
+    [scripts.data, q]
+  );
+  // One selection across posts and scripts: whatever was picked last, else the first post, else the first script.
+  const pickedScript = scriptItems.find((s) => s.id === selectedScriptId) ?? null;
+  const selected = pickedScript ? null : visible.find((s) => s.id === selectedId) ?? visible[0] ?? null;
+  const selectedScript = pickedScript ?? (selected ? null : scriptItems[0] ?? null);
+  const onScripts = Boolean(selectedScript);
+  const listCount = visible.length + scriptItems.length;
 
   const brands = useMemo(() => [...new Set(items.map((s) => s.brand_code).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
@@ -1081,9 +1143,21 @@ export default function ContentScreenerPage() {
 
   const pick = (id: string) => {
     setSelectedId(id);
+    setSelectedScriptId(null);
     setParams((p) => {
       const next = new URLSearchParams(p);
       next.set("id", id);
+      next.delete("script");
+      return next;
+    }, { replace: true });
+  };
+  const pickScript = (id: string) => {
+    setSelectedScriptId(id);
+    setSelectedId(null);
+    setParams((p) => {
+      const next = new URLSearchParams(p);
+      next.set("script", id);
+      next.delete("id");
       return next;
     }, { replace: true });
   };
@@ -1096,10 +1170,24 @@ export default function ContentScreenerPage() {
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCollapsed(false)} aria-label="Expand the queue" title="Expand the queue">
             <PanelLeftOpen className="w-4 h-4" />
           </Button>
-          <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${visible.length} posts`}>
-            {visible.length}
+          <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${listCount} items`}>
+            {listCount}
           </span>
           <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1.5 pb-1 pt-1.5">
+            {scriptItems.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => pickScript(s.id)}
+                    aria-current={selectedScript?.id === s.id}
+                    aria-label={`${s.title} script (${s.reference_code})`}
+                    title={`${s.title} · script`}
+                    className={`block rounded-lg p-0.5 ${selectedScript?.id === s.id ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-border"}`}
+                  >
+                    <ScriptThumb />
+                  </button>
+                </li>
+              ))}
             {visible.map((s) => {
               const failing = hasCritical(s) || isFailing(s);
               return (
@@ -1109,7 +1197,7 @@ export default function ContentScreenerPage() {
                     onClick={() => pick(s.id)}
                     aria-current={selected?.id === s.id}
                     aria-label={`${s.title} (${s.reference_code})`}
-                    title={`${s.title} · ${dueText(s, tab).text}`}
+                    title={`${s.title} · ${dueText(s, postTab).text}`}
                     className={`relative block rounded-lg p-0.5 ${selected?.id === s.id ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-border"}`}
                   >
                     <Thumb s={s} />
@@ -1154,11 +1242,17 @@ export default function ContentScreenerPage() {
                 role="tab"
                 aria-selected={tab === t.value}
                 onClick={() => setTab(t.value)}
-                className={`h-7 flex-1 rounded-md text-xs font-medium transition-colors ${
+                className={`h-7 flex-1 whitespace-nowrap rounded-md px-1 text-[11px] font-medium transition-colors ${
                   tab === t.value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t.label} <span className="text-muted-foreground">{counts.data?.[t.value] ?? ""}</span>
+                {t.label}{" "}
+                <span className="text-muted-foreground">
+                  {counts.data
+                    ? counts.data[t.value] +
+                      ((t.value === "review" ? counts.data.scripts : t.value === "sent_back" ? counts.data.scripts_sent_back : counts.data.scripts_done) ?? 0)
+                    : ""}
+                </span>
               </button>
             ))}
           </div>
@@ -1247,9 +1341,46 @@ export default function ContentScreenerPage() {
           )}
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
-          {queue.isLoading ? "Loading..." : `${visible.length} post${visible.length === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}`}
+          {queue.isLoading ? "Loading..." : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · scripts first, then soonest deadline"}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
+          {scripts.isError && (
+            <li className="px-3 py-2 text-center text-xs text-red-600">Couldn't load the scripts: {(scripts.error as Error).message}</li>
+          )}
+          {scriptItems.map((s) => {
+            const due = scriptDue(s);
+            const current = selectedScript?.id === s.id;
+            return (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => pickScript(s.id)}
+                  aria-current={current}
+                  className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
+                    current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
+                  }`}
+                >
+                  <ScriptThumb />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
+                    <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                      <span className="shrink-0 rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                        Script
+                      </span>
+                      <span className="truncate">
+                        v{s.version_number} · {s.creator_name ?? s.reference_code}
+                        {s.platforms.length > 0 && ` · ${s.platforms.map(platformName).join(", ")}`}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 flex items-center justify-between gap-2">
+                      <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
+                      <ScriptScore s={s} />
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
           {queue.isLoading ? (
             <li className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading the queue...
@@ -1257,12 +1388,12 @@ export default function ContentScreenerPage() {
           ) : queue.isError ? (
             <li className="px-3 py-10 text-center text-xs text-red-600">Couldn't load the queue: {(queue.error as Error).message}</li>
           ) : visible.length === 0 ? (
-            <li className="px-3 py-10 text-center text-xs text-muted-foreground">
+            scriptItems.length > 0 ? null : <li className="px-3 py-10 text-center text-xs text-muted-foreground">
               {items.length === 0 ? (tab === "review" ? "Nothing is waiting for review." : "Nothing here.") : "No posts match these filters."}
             </li>
           ) : (
             visible.map((s) => {
-              const due = dueText(s, tab);
+              const due = dueText(s, postTab);
               const current = selected?.id === s.id;
               return (
                 <li key={s.id}>
@@ -1293,8 +1424,20 @@ export default function ContentScreenerPage() {
         </ul>
       </section>
 
-      {/* ===== The post and the review panel ===== */}
-      {selected ? (
+      {/* ===== The post (or script) and the review panel ===== */}
+      {onScripts ? (
+        selectedScript ? (
+          <ScriptReviewWorkspace key={selectedScript.id} submissionId={selectedScript.id} isReviewer={isReviewer} />
+        ) : (
+          <div className="grid flex-1 place-items-center p-10 text-center">
+            <div>
+              <FileText className="mx-auto w-9 h-9 text-muted-foreground" />
+              <p className="mt-2 text-sm font-semibold text-foreground">{scripts.isLoading ? "Loading..." : "No scripts to review"}</p>
+              <p className="text-xs text-muted-foreground">Video scripts show up here when creators send them, before filming.</p>
+            </div>
+          </div>
+        )
+      ) : selected ? (
         <Workspace key={`${selected.id}-${selected.current_version}`} s={selected} labels={labels} canReview={isReviewer && Boolean(selected.can_review)} />
       ) : (
         <div className="grid flex-1 place-items-center p-10 text-center">
