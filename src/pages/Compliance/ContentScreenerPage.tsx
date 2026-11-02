@@ -74,6 +74,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { scriptService } from "@/services/scriptService";
 import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
+import UploadScriptDialog from "@/components/script/UploadScriptDialog";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { ScriptQueueItem } from "@/types/script";
 import type { QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
@@ -1156,6 +1157,7 @@ export default function ContentScreenerPage() {
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
   );
   const [selectedScriptId, setSelectedScriptId] = useState<string | null>(() => params.get("script"));
+  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
 
   const scripts = useQuery({
     queryKey: ["script-queue", tab],
@@ -1306,10 +1308,15 @@ export default function ContentScreenerPage() {
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground">Content screener</h1>
             <div className="flex items-center gap-1.5">
-              <Button asChild size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs font-semibold">
-                <Link to="/submissions/new?type=VIDEO" title="Add a new video script to check and review">
-                  <Plus className="w-3.5 h-3.5 text-blue-600" /> Script
-                </Link>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1 px-2.5 text-xs font-semibold text-foreground hover:bg-muted"
+                onClick={() => setScriptDialogOpen(true)}
+                title="Upload a new video script to check and review"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1355,11 +1362,12 @@ export default function ContentScreenerPage() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=VIDEO" className="flex items-center gap-2 cursor-pointer text-xs font-medium text-blue-700 dark:text-blue-400">
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>New Script Draft</span>
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={() => setScriptDialogOpen(true)}
+                    className="flex items-center gap-2 cursor-pointer text-xs font-medium text-blue-700 dark:text-blue-400"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Upload the script</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1578,10 +1586,20 @@ export default function ContentScreenerPage() {
           <ScriptReviewWorkspace key={selectedScript.id} submissionId={selectedScript.id} isReviewer={isReviewer} />
         ) : (
           <div className="grid flex-1 place-items-center p-10 text-center">
-            <div>
-              <FileText className="mx-auto w-9 h-9 text-muted-foreground" />
-              <p className="mt-2 text-sm font-semibold text-foreground">{scripts.isLoading ? "Loading..." : "No scripts to review"}</p>
-              <p className="text-xs text-muted-foreground">Video scripts show up here when creators send them, before filming.</p>
+            <div className="max-w-md space-y-3">
+              <FileText className="mx-auto w-10 h-10 text-blue-600/70" />
+              <p className="text-base font-semibold text-foreground">{scripts.isLoading ? "Loading..." : "No scripts to review"}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Video posts start with the script. Upload it (PDF, Word or .txt) and send it for review. It's checked against the rulebook, and you can add the video once a reviewer approves it.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-2 h-8 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
+                onClick={() => setScriptDialogOpen(true)}
+              >
+                <FileText className="w-3.5 h-3.5" /> Upload the script
+              </Button>
             </div>
           </div>
         )
@@ -1589,13 +1607,31 @@ export default function ContentScreenerPage() {
         <Workspace key={`${selected.id}-${selected.current_version}`} s={selected} labels={labels} canReview={isReviewer && Boolean(selected.can_review)} />
       ) : (
         <div className="grid flex-1 place-items-center p-10 text-center">
-          <div>
-            <CheckCircle2 className="mx-auto w-9 h-9 text-emerald-500" />
-            <p className="mt-2 text-sm font-semibold text-foreground">{queue.isLoading ? "Loading..." : "Nothing to show"}</p>
-            <p className="text-xs text-muted-foreground">Pick a post from the queue to review it.</p>
+          <div className="max-w-md space-y-3">
+            <CheckCircle2 className="mx-auto w-10 h-10 text-emerald-500" />
+            <p className="text-base font-semibold text-foreground">{queue.isLoading ? "Loading..." : "Nothing to show"}</p>
+            <p className="text-xs text-muted-foreground">Pick a post from the queue to review it, or upload a new script to start a video compliance check.</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-2 h-8 gap-1.5 text-xs font-semibold"
+              onClick={() => setScriptDialogOpen(true)}
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload the script
+            </Button>
           </div>
         </div>
       )}
+
+      <UploadScriptDialog
+        open={scriptDialogOpen}
+        onOpenChange={setScriptDialogOpen}
+        onSuccess={(id) => {
+          setSelectedScriptId(id);
+          setTab("review");
+        }}
+      />
     </div>
   );
 }
