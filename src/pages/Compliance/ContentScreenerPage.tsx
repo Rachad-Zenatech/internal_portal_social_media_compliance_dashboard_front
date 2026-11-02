@@ -35,6 +35,16 @@ import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import {
+  ContextNote,
+  FINDING_META,
+  FINDING_ORDER,
+  FindingGroup,
+  StatusPill,
+  groupFindings,
+  isWarning,
+  statusOf,
+} from "@/components/submissions/FindingStatus";
+import {
   ANALYSING_REFETCH_MS,
   AnalysisProgressPanel,
   authedFileUrl,
@@ -725,8 +735,14 @@ function ReviewPanel({
   const moodDecision = overallPostDecision(mood);
   const check = s.latest_check;
   const score = scoreOf(s);
-  const open = flags.filter((f) => !dismissed.has(f.v.rule_id));
-  const openCritical = open.filter((f) => f.critical).length;
+  // Open: still needs attention. Cleared triggers don't; violations cost points, the rest are warnings.
+  const open = flags.filter((f) => !dismissed.has(f.v.rule_id) && statusOf(f.v) !== "CLEARED");
+  const openViolations = open.filter((f) => statusOf(f.v) === "VIOLATION");
+  const toCheck = open.filter((f) => statusOf(f.v) === "NEEDS_REVIEW").length;
+  const needSource = open.filter((f) => statusOf(f.v) === "EVIDENCE_REQUIRED").length;
+  const cleared = flags.filter((f) => statusOf(f.v) === "CLEARED").length;
+  const grouped = groupFindings(flags, (f) => statusOf(f.v));
+  const openCritical = openViolations.filter((f) => f.critical).length;
   const manual = check?.manual_review_rules ?? [];
   const transcript = [...(s.video?.transcript ?? [])].sort((a, b) => a.start_sec - b.start_sec);
 
@@ -735,8 +751,10 @@ function ReviewPanel({
       ? { text: "Still checking", tone: "text-muted-foreground", ring: "border-muted" }
       : openCritical
       ? { text: "Needs changes", tone: "text-red-700 dark:text-red-400", ring: "border-red-300 dark:border-red-500/50" }
-      : open.length
+      : openViolations.length
       ? { text: "Review suggested", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
+      : open.length
+      ? { text: "Check before publishing", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
       : { text: "Ready to approve", tone: "text-emerald-700 dark:text-emerald-400", ring: "border-emerald-300 dark:border-emerald-500/50" };
 
   const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
@@ -768,9 +786,12 @@ function ReviewPanel({
             <AnalysisProgressPanel progress={s.analysis_progress} className="mt-1" />
           ) : (
             <p className="text-sm text-muted-foreground">
-              {open.length} open flag{open.length === 1 ? "" : "s"}
+              {openViolations.length} open flag{openViolations.length === 1 ? "" : "s"}
               {openCritical > 0 && ` · ${openCritical} critical`}
-              {flags.length > open.length && ` · ${flags.length - open.length} dismissed`}
+              {toCheck > 0 && ` · ${toCheck} to check`}
+              {needSource > 0 && ` · ${needSource} need${needSource === 1 ? "s" : ""} a source`}
+              {flags.length - open.length - cleared > 0 && ` · ${flags.length - open.length - cleared} dismissed`}
+              {cleared > 0 && ` · ${cleared} cleared by context`}
             </p>
           )}
           {check?.rules_checked != null && (
@@ -850,7 +871,9 @@ function ReviewPanel({
             </div>
           ) : (
             <>
-              {flags.map((f) => {
+              {FINDING_ORDER.map((status) => (
+                <FindingGroup key={status} status={status} count={grouped[status].length}>
+              {grouped[status].map((f) => {
                 const isDismissed = dismissed.has(f.v.rule_id);
                 const selected = f.at != null && Math.abs(now - f.at) < 0.75;
                 const jump = () => f.at != null && seek(f.at);
@@ -874,21 +897,11 @@ function ReviewPanel({
                         ? "ring-2 ring-blue-500/50"
                         : ""
                     } ${
-                      f.critical
-                        ? "border-red-500/30 bg-red-500/5 hover:border-red-500/60"
-                        : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60"
+                      f.critical ? "border-red-500/30 bg-red-500/5 hover:border-red-500/60" : FINDING_META[statusOf(f.v)].card
                     } ${isDismissed ? "opacity-60" : ""}`}
                   >
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          f.critical
-                            ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-                        }`}
-                      >
-                        {f.critical ? "Critical" : "Needs review"}
-                      </span>
+                      <StatusPill status={statusOf(f.v)} critical={f.critical} />
                       {f.at != null && (
                         <span className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] text-foreground">
                           <Clock className="w-3 h-3 text-muted-foreground" />
@@ -905,26 +918,31 @@ function ReviewPanel({
                         {f.v.flagged_terms.map((t) => `“${t}”`).join(", ")}
                       </p>
                     )}
-                    {f.v.kind === "MISSING_DISCLAIMER" && f.v.missing_disclaimers?.[0] && (
+                    <ContextNote v={f.v} />
+                    {f.v.kind === "MISSING_DISCLAIMER" && f.v.missing_disclaimers?.[0] && statusOf(f.v) !== "CLEARED" && (
                       <p className="text-[13px] text-foreground/80">
                         <span className="font-semibold">Needs:</span> “{f.v.missing_disclaimers[0]}”
                       </p>
                     )}
-                    {f.v.remediation_guidance && (
+                    {f.v.remediation_guidance && statusOf(f.v) !== "CLEARED" && (
                       <p className="text-[13px] text-foreground/80">
-                        <span className="font-semibold">Suggested fix:</span> {f.v.remediation_guidance}
+                        <span className="font-semibold">{isWarning(f.v) ? "What to check:" : "Suggested fix:"}</span> {f.v.remediation_guidance}
                       </p>
                     )}
-                    <FlagReviewControl
-                      submissionId={s.id}
-                      currentVersion={s.current_version}
-                      ruleId={f.v.rule_id}
-                      ruleNumber={f.v.rule_number}
-                      canDismiss={canReview}
-                    />
+                    {statusOf(f.v) !== "CLEARED" && (
+                      <FlagReviewControl
+                        submissionId={s.id}
+                        currentVersion={s.current_version}
+                        ruleId={f.v.rule_id}
+                        ruleNumber={f.v.rule_number}
+                        canDismiss={canReview}
+                      />
+                    )}
                   </article>
                 );
               })}
+                </FindingGroup>
+              ))}
             </>
           ))}
         {tab === "flags" && manual.length > 0 && (

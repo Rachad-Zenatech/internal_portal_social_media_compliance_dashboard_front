@@ -32,6 +32,9 @@ export interface ComplianceRule {
   is_active: boolean;
   is_custom: boolean;
   sort_order: number;
+  /** How a match is judged (see EvaluationMode), and what the judge must decide for a CONTEXT rule. */
+  evaluation_mode?: EvaluationMode;
+  evaluation_guidance?: string | null;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -60,7 +63,12 @@ export interface ComplianceRuleCreate {
   platforms?: string[];
   is_active?: boolean;
   sort_order?: number;
+  evaluation_mode?: EvaluationMode;
+  evaluation_guidance?: string;
 }
+
+/** RULE: a match is a finding. CONTEXT: a match is a candidate the AI judges from its sentence. */
+export type EvaluationMode = 'RULE' | 'CONTEXT';
 
 export interface ComplianceRuleUpdate {
   rule_number?: string;
@@ -84,6 +92,8 @@ export interface ComplianceRuleUpdate {
   platforms?: string[];
   is_active?: boolean;
   sort_order?: number;
+  evaluation_mode?: EvaluationMode;
+  evaluation_guidance?: string;
 }
 
 export interface ComplianceViolation {
@@ -104,6 +114,32 @@ export interface ComplianceViolation {
   penalty?: number;
   /** Set when its words were already counted for a stricter rule; it then costs 0. */
   counted_with?: string | null;
+  /** What it amounts to once read in context (missing on checks saved before statuses: a violation). */
+  status?: FindingStatus;
+  /** How the AI read it in context (rules judged in context only). */
+  evaluation?: ContextEvaluation | null;
+}
+
+/**
+ * VIOLATION breaks a rule (costs points; a critical one blocks). NEEDS_REVIEW depends on something the text can't show,
+ * such as the final footage. EVIDENCE_REQUIRED is a claim that needs a source. CLEARED is a trigger the context shows
+ * isn't a breach. Only violations cost points or block; the rest are warnings.
+ */
+export type FindingStatus = 'VIOLATION' | 'NEEDS_REVIEW' | 'EVIDENCE_REQUIRED' | 'CLEARED';
+
+export interface ContextEvaluation {
+  decision: FindingStatus;
+  matched_text?: string | null;
+  /** Who or what the statement is about. */
+  subject?: string | null;
+  reasoning: string;
+  confidence: number;
+  recommended_action?: string | null;
+  /** What the rule match alone would have said. */
+  rule_decision: FindingStatus;
+  /** AI judged it; ADJUSTED means a safeguard changed the answer; UNAVAILABLE means no model could judge it. */
+  source: 'AI' | 'ADJUSTED' | 'UNAVAILABLE';
+  model?: string | null;
 }
 
 export interface ComplianceCheckResponse {
@@ -117,7 +153,13 @@ export interface ComplianceCheckResponse {
   raw_score?: number;
   /** The rulebook as of this check. */
   rulebook_version?: string | null;
+  /** Findings that are violations: what costs points and counts as "to fix". */
   violations_count: number;
+  /** Warnings that cost nothing and don't block (missing on older checks). */
+  review_count?: number;
+  evidence_count?: number;
+  cleared_count?: number;
+  /** Every finding, whatever its status. */
   violations: ComplianceViolation[];
   recommendations: string[];
   /** How many active rules applied to the content's scope (missing on checks saved before scoping). */

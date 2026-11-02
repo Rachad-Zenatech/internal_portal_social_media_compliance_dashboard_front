@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, RotateCcw, ShieldOff } from "lucide-react";
+import { Loader2, RotateCcw, ShieldOff, ThumbsUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,8 +36,9 @@ export default function FlagReviewControl({
   /** A reviewer looking at the version in review. */
   canDismiss: boolean;
 }) {
-  const { forCurrent, dismiss, restore } = useFlagReviews(submissionId, currentVersion);
+  const { forCurrent, dismiss, restore, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
   const review = forCurrent.get(ruleId);
+  const right = confirmed.get(ruleId);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<FlagDismissReason>("NEGATED");
   const [note, setNote] = useState("");
@@ -64,28 +65,63 @@ export default function FlagReviewControl({
       </div>
     );
   }
-  if (!canDismiss) return null;
+  if (!canDismiss && !right) return null;
   return (
     <>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setReason("NEGATED");
-          setNote("");
-          setOpen(true);
-        }}
-        className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ShieldOff className="w-3.5 h-3.5" /> Dismiss as false alarm
-      </button>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5" onClick={(e) => e.stopPropagation()}>
+        {right ? (
+          <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <ThumbsUp className="w-3.5 h-3.5" />
+            <span>
+              <span className="font-semibold">Marked as right</span> by {right.decided_by_name ?? "a reviewer"} ·{" "}
+              {formatDistanceToNow(new Date(right.decided_at), { addSuffix: true })}
+            </span>
+            {canDismiss && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300"
+                disabled={unconfirm.isPending}
+                onClick={() => unconfirm.mutate(ruleId)}
+              >
+                <RotateCcw className="w-3 h-3" /> Undo
+              </button>
+            )}
+          </span>
+        ) : (
+          canDismiss && (
+            <button
+              type="button"
+              disabled={confirm.isPending}
+              onClick={() => confirm.mutate({ ruleId })}
+              title="This flag is right. It is kept as an example of what the rule should catch."
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-60"
+            >
+              {confirm.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />} Flag is right
+            </button>
+          )
+        )}
+        {canDismiss && (
+          <button
+            type="button"
+            onClick={() => {
+              setReason("NEGATED");
+              setNote("");
+              setOpen(true);
+            }}
+            title="This flag is a false alarm. It is kept as an example of what the rule should not catch."
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ShieldOff className="w-3.5 h-3.5" /> Dismiss as false alarm
+          </button>
+        )}
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle className="text-base">Dismiss the {ruleNumber} flag?</DialogTitle>
             <DialogDescription className="text-xs">
-              The score stays as the rulebook found it; your call is recorded beside it with the reason, and counts toward how
-              noisy this rule is.
+              The score stays as the rulebook found it; your call is recorded beside it with the reason, counts toward how noisy
+              this rule is, and is kept as an example so the check learns what this rule should not catch.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

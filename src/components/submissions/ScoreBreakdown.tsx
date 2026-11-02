@@ -13,7 +13,8 @@ export default function ScoreBreakdown({
   check: Pick<ComplianceCheckResponse, "score" | "violations" | "blocked" | "score_cap" | "raw_score">;
   className?: string;
 }) {
-  const scored = check.violations.filter((v) => v.penalty != null);
+  // Only violations cost points; warnings and cleared triggers are listed elsewhere.
+  const scored = check.violations.filter((v) => v.penalty != null && (v.status ?? "VIOLATION") === "VIOLATION");
   if (!check.blocked && scored.length === 0) return null;
   return (
     <div className={`space-y-1.5 text-[11px] ${className}`}>

@@ -288,8 +288,9 @@ const INITIAL_QUEUE: VideoQueueItem[] = [
 /** Mark each script segment red/yellow/green from the violations whose terms it contains. */
 export function applySegmentRisk(segments: TimestampedSegment[], violations: ComplianceViolation[]): TimestampedSegment[] {
   return segments.map((seg) => {
+    // A trigger the context cleared isn't a flag on the timeline.
     const segViolations = violations.filter((v) =>
-      v.flagged_terms.some((term) => seg.text.toLowerCase().includes(term.toLowerCase()))
+      v.status !== 'CLEARED' && v.flagged_terms.some((term) => seg.text.toLowerCase().includes(term.toLowerCase()))
     );
     const risk: TimestampedSegment['risk'] = segViolations.some((v) => v.traffic_light === 'RED')
       ? 'RED'

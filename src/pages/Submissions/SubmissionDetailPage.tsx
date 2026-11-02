@@ -42,6 +42,7 @@ import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submis
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
+import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
@@ -166,9 +167,9 @@ function JobCard({ job }: { job: ReviewJob }) {
           {job.decision_notes && <p className="mt-0.5 whitespace-pre-wrap">"{job.decision_notes}"</p>}
         </div>
       )}
-      {check && check.violations.length > 0 && (
+      {check && check.violations.some((v) => statusOf(v) === "VIOLATION") && (
         <ul className="space-y-1">
-          {check.violations.map((v) => (
+          {check.violations.filter((v) => statusOf(v) === "VIOLATION").map((v) => (
             <li key={v.rule_id} className="text-[11px] flex items-start gap-1.5">
               {v.traffic_light === "RED" ? (
                 <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0 mt-px" />
@@ -182,11 +183,12 @@ function JobCard({ job }: { job: ReviewJob }) {
           ))}
         </ul>
       )}
-      {check && check.violations.length === 0 && (
+      {check && !check.violations.some((v) => statusOf(v) === "VIOLATION") && (
         <p className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Automated check found no issues in the text.
+          <CheckCircle2 className="w-3.5 h-3.5" /> Automated check found no rule breaches in the text.
         </p>
       )}
+      {check && <OtherFindings violations={check.violations} />}
       {check && <CheckCoverage check={check} />}
       {job.manual_checks && job.manual_checks.length > 0 && (
         <p className="text-[11px] text-muted-foreground">

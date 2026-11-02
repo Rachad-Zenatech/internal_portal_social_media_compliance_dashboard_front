@@ -1,13 +1,15 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { usePublicMood } from "@/hooks/usePublicMood";
+import { ContextNote, FINDING_ORDER, FindingGroup, StatusPill, groupFindings, isWarning, statusOf } from "@/components/submissions/FindingStatus";
 import { useLiveScriptCheck, useScriptActions, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
@@ -101,7 +103,7 @@ function Editor({
   const [needNote, setNeedNote] = useState(false);
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
   const [focusId, setFocusId] = useState<number | null>(null);
-  const textRef = useRef<HTMLTextAreaElement | null>(null);
+  const editorRef = useRef<ScriptEditorHandle | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
   const { decide } = useScriptActions(submissionId);
   const { mood } = usePublicMood(submissionId, true);
@@ -117,7 +119,10 @@ function Editor({
   const checking = hasEdits && (live.isFetching || !live.data);
   const verdict = scriptVerdict(check);
   const violations = check?.violations ?? [];
-  const terms = violations.flatMap((v) => (v.kind === "MISSING_DISCLAIMER" ? [] : v.flagged_terms));
+  // What still needs attention: cleared triggers aren't marked in the script or counted.
+  const active = violations.filter((v) => statusOf(v) !== "CLEARED");
+  const grouped = groupFindings(violations, statusOf);
+  const terms = active.flatMap((v) => (v.kind === "MISSING_DISCLAIMER" ? [] : v.flagged_terms));
 
   const parts = useMemo(
     () => (compare === "previous" && previous ? diffWords(previous.body, sent.body) : diffWords(sent.body, draft)),
@@ -126,28 +131,12 @@ function Editor({
   const changes = useMemo(() => changesOf(parts), [parts]);
   const myChangeCount = useMemo(() => (hasEdits ? changesOf(diffWords(sent.body, draft)).length : 0), [hasEdits, sent.body, draft]);
 
-  // The edit box grows with its text, so the script reads like a page rather than a scrolling box.
-  useLayoutEffect(() => {
-    const t = textRef.current;
-    if (!t) return;
-    t.style.height = "auto";
-    t.style.height = `${t.scrollHeight + 4}px`;
-  }, [draft, mode]);
-
   /** Open the editor with the flagged wording selected, so the reviewer can type over it. */
   const findInScript = (term: string) => {
     setMode("edit");
     setCompare("mine");
-    window.setTimeout(() => {
-      const t = textRef.current;
-      if (!t) return;
-      const at = t.value.toLowerCase().indexOf(term.toLowerCase());
-      t.focus();
-      if (at < 0) return;
-      t.setSelectionRange(at, at + term.length);
-      const box = scrollRef.current;
-      if (box) box.scrollTop = Math.max(0, t.offsetTop + (at / Math.max(1, t.value.length)) * t.scrollHeight - 160);
-    }, 30);
+    // The editor is shown on the next render.
+    window.setTimeout(() => editorRef.current?.find(term), 60);
   };
   const addDisclaimer = (text: string) => {
     setDraft((d) => `${d.replace(/\s+$/, "")}\n\n${text}\n`);
@@ -166,7 +155,7 @@ function Editor({
   const approve = () => decide.mutate({ decision: "APPROVE", note: note.trim() || undefined });
 
   const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
-    { value: "flags", label: "Flags", count: violations.length, alert: verdict.critical > 0 },
+    { value: "flags", label: "Flags", count: active.length, alert: verdict.critical > 0 },
     {
       value: "sentiment",
       label: "Sentiment",
@@ -269,17 +258,10 @@ function Editor({
 
         <div className="px-4 py-5 sm:px-6">
           {mode === "edit" ? (
-            <div className="mx-auto max-w-[760px]">
-              <Textarea
-                ref={textRef}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                aria-label="Script"
-                spellCheck
-                className="min-h-[420px] resize-none overflow-hidden rounded-xl border-blue-500/60 bg-card px-8 py-7 text-[15px] leading-[1.85] shadow-xs focus-visible:ring-blue-500/30"
-              />
+            <div className="mx-auto max-w-[1000px]">
+              <ScriptEditor ref={editorRef} value={draft} onChange={setDraft} />
               <p className="mt-2 text-xs text-muted-foreground">
-                Type straight into the script. Switch to Read to see your changes marked against the creator's version.
+                Edit it like a document. Switch to Read to see your changes marked against the creator's version.
               </p>
             </div>
           ) : (
@@ -325,8 +307,11 @@ function Editor({
             <p className="text-xs text-muted-foreground">Script check · {hasEdits ? "with your changes" : "as sent"}</p>
             <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
             <p className="text-sm text-muted-foreground">
-              {violations.length} flag{violations.length === 1 ? "" : "s"}
+              {grouped.VIOLATION.length} flag{grouped.VIOLATION.length === 1 ? "" : "s"}
               {verdict.critical > 0 && ` · ${verdict.critical} critical`}
+              {grouped.NEEDS_REVIEW.length > 0 && ` · ${grouped.NEEDS_REVIEW.length} to check`}
+              {grouped.EVIDENCE_REQUIRED.length > 0 && ` · ${grouped.EVIDENCE_REQUIRED.length} need${grouped.EVIDENCE_REQUIRED.length === 1 ? "s" : ""} a source`}
+              {grouped.CLEARED.length > 0 && ` · ${grouped.CLEARED.length} cleared`}
               {hasEdits && sent.check?.score != null && check?.score != null && !checking && ` · was ${sent.check.score}`}
             </p>
           </div>
@@ -398,8 +383,12 @@ function Editor({
                 <p className="text-xs text-muted-foreground">Nothing in this script broke a rule.</p>
               </div>
             ) : (
-              violations.map((v) => (
-                <FlagCard key={v.rule_id} v={v} canEdit={canReview} onFind={findInScript} onAddDisclaimer={addDisclaimer} />
+              FINDING_ORDER.map((status) => (
+                <FindingGroup key={status} status={status} count={grouped[status].length}>
+                  {grouped[status].map((v) => (
+                    <FlagCard key={v.rule_id} v={v} canEdit={canReview} onFind={findInScript} onAddDisclaimer={addDisclaimer} />
+                  ))}
+                </FindingGroup>
               ))
             ))}
 
@@ -466,6 +455,14 @@ function Editor({
                 ? "There's a critical flag. Edit the script, send it back, or say in the note why it's fine."
                 : "You can approve the script as written."}
             </p>
+            {grouped.NEEDS_REVIEW.length + grouped.EVIDENCE_REQUIRED.length > 0 && (
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                {grouped.NEEDS_REVIEW.length > 0 && `${grouped.NEEDS_REVIEW.length} to check (see Flags)`}
+                {grouped.NEEDS_REVIEW.length > 0 && grouped.EVIDENCE_REQUIRED.length > 0 && " · "}
+                {grouped.EVIDENCE_REQUIRED.length > 0 && `${grouped.EVIDENCE_REQUIRED.length} claim${grouped.EVIDENCE_REQUIRED.length === 1 ? "" : "s"} need a source`}
+                . They don't stop you approving.
+              </p>
+            )}
             <div className="flex gap-2">
               <Button
                 variant={hasEdits ? "default" : "outline"}
@@ -512,24 +509,19 @@ function FlagCard({
 }) {
   const critical = v.traffic_light === "RED";
   const missing = v.kind === "MISSING_DISCLAIMER";
+  const cleared = statusOf(v) === "CLEARED";
   return (
-    <article className="flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3">
+    <article className={`flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 ${cleared ? "opacity-80" : ""}`}>
       <div className="flex items-center gap-2">
-        <span
-          className={`rounded-full px-2 text-[11px] font-semibold ${
-            critical ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-          }`}
-        >
-          {critical ? "Critical" : "Needs review"}
-        </span>
+        <StatusPill status={statusOf(v)} critical={critical} />
         <span className="text-xs text-muted-foreground">{missing ? "Missing disclaimer" : "In the script"}</span>
       </div>
       <div>
         <p className="text-xs text-muted-foreground">{v.rule_number}</p>
         <p className="text-sm font-semibold text-foreground">{v.title}</p>
       </div>
-      <p className="text-[13px] text-foreground/80">{v.explanation}</p>
-      {!missing && v.flagged_terms.length > 0 && (
+      {v.evaluation ? <ContextNote v={v} /> : <p className="text-[13px] text-foreground/80">{v.explanation}</p>}
+      {!missing && !cleared && v.flagged_terms.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {v.flagged_terms.map((t) => (
             <button
@@ -545,12 +537,12 @@ function FlagCard({
           ))}
         </div>
       )}
-      {v.remediation_guidance && (
+      {v.remediation_guidance && !cleared && (
         <p className="text-[13px] text-foreground/80">
-          <span className="font-semibold">How to fix:</span> {v.remediation_guidance}
+          <span className="font-semibold">{isWarning(v) ? "What to check:" : "How to fix:"}</span> {v.remediation_guidance}
         </p>
       )}
-      {missing && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
+      {missing && !cleared && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
         <div className="flex flex-col gap-1.5">
           <p className="rounded-lg bg-muted px-2.5 py-1.5 text-xs text-foreground/80">“{v.missing_disclaimers![0]}”</p>
           <Button size="sm" variant="outline" className="h-7 self-start text-xs" onClick={() => onAddDisclaimer(v.missing_disclaimers![0])}>

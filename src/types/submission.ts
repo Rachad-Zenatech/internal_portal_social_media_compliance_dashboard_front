@@ -436,6 +436,19 @@ export interface FlagReview {
   decided_at: string;
 }
 
+/** A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm. */
+export interface FlagVerdict {
+  rule_id: string;
+  rule_number: string;
+  version_number: number;
+  verdict: "CORRECT" | "OVER_FLAGGED";
+  reason?: FlagDismissReason | null;
+  reason_label?: string | null;
+  note?: string | null;
+  decided_by_name?: string | null;
+  decided_at: string;
+}
+
 /** Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed. */
 export interface RuleFlagStats {
   rule_number: string;

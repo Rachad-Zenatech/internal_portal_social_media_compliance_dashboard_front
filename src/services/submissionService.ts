@@ -14,6 +14,7 @@ import type {
   ContentType,
   DashboardSummary,
   FlagDismissReason,
+  FlagVerdict,
   FlagReview,
   QueueTab,
   ReviewComment,
@@ -102,6 +103,12 @@ export const submissionService = {
   dismissFlag: (id: string, ruleId: string, data: { reason: FlagDismissReason; note: string | null }) =>
     apiClient.put<FlagReview>(`/api/submissions/${id}/flags/${ruleId}`, data, quiet),
   restoreFlag: (id: string, ruleId: string) => apiClient.delete<null>(`/api/submissions/${id}/flags/${ruleId}`, quiet),
+  /** Reviewers' calls on the flags (right, or a false alarm), on every version. */
+  flagVerdicts: (id: string) => apiClient.get<FlagVerdict[]>(`/api/submissions/${id}/flag-verdicts`, quiet),
+  /** Say a flag is right: kept as an example of wording the rule should catch. */
+  confirmFlag: (id: string, ruleId: string, note: string | null) =>
+    apiClient.put<FlagVerdict>(`/api/submissions/${id}/flags/${ruleId}/confirm`, { note }, quiet),
+  unconfirmFlag: (id: string, ruleId: string) => apiClient.delete<null>(`/api/submissions/${id}/flags/${ruleId}/confirm`, quiet),
 
   addComment: (id: string, data: ReviewCommentCreate) =>
     apiClient.post<ReviewComment>(`/api/submissions/${id}/comments`, data, quiet),

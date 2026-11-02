@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ContextNote, StatusPill } from '@/components/submissions/FindingStatus';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -228,6 +229,8 @@ export default function ComplianceRulesPage() {
   const [formAllowedExamples, setFormAllowedExamples] = useState('');
   const [formProhibitedExamples, setFormProhibitedExamples] = useState('');
   const [formRemediation, setFormRemediation] = useState('');
+  const [formEvalMode, setFormEvalMode] = useState<'RULE' | 'CONTEXT'>('RULE');
+  const [formEvalGuidance, setFormEvalGuidance] = useState('');
   const [formScope, setFormScope] = useState<RuleScope>(EMPTY_SCOPE);
   const [formActive, setFormActive] = useState(true);
 
@@ -374,6 +377,8 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples(rule.allowed_examples || '');
     setFormProhibitedExamples(rule.prohibited_examples || '');
     setFormRemediation(rule.remediation_guidance || '');
+    setFormEvalMode(rule.evaluation_mode ?? 'RULE');
+    setFormEvalGuidance(rule.evaluation_guidance || '');
     setFormScope({
       rule_sets: rule.rule_sets ?? [],
       brands: rule.brands ?? [],
@@ -398,6 +403,8 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples('');
     setFormProhibitedExamples('');
     setFormRemediation('');
+    setFormEvalMode('RULE');
+    setFormEvalGuidance('');
     setFormScope(EMPTY_SCOPE);
     setFormActive(true);
   };
@@ -445,6 +452,8 @@ export default function ComplianceRulesPage() {
           allowed_examples: formAllowedExamples.trim(),
           prohibited_examples: formProhibitedExamples.trim(),
           remediation_guidance: formRemediation.trim(),
+          evaluation_mode: formEvalMode,
+          evaluation_guidance: formEvalGuidance.trim(),
           ...formScope,
           is_active: formActive,
         },
@@ -464,6 +473,8 @@ export default function ComplianceRulesPage() {
         allowed_examples: formAllowedExamples.trim() || undefined,
         prohibited_examples: formProhibitedExamples.trim() || undefined,
         remediation_guidance: formRemediation.trim() || undefined,
+        evaluation_mode: formEvalMode,
+        evaluation_guidance: formEvalGuidance.trim() || undefined,
         ...formScope,
         is_active: formActive,
       });
@@ -1016,13 +1027,13 @@ export default function ComplianceRulesPage() {
                   </div>
                 ))}
 
-                {checkResult.violations.length > 0 && (
+                {checkResult.violations.some((v) => (v.status ?? 'VIOLATION') !== 'CLEARED') && (
                   <div className="space-y-3 pt-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Violations & Actionable Remediation:
                     </span>
                     <div className="space-y-2">
-                      {checkResult.violations.map((v, i) => (
+                      {checkResult.violations.filter((v) => (v.status ?? 'VIOLATION') !== 'CLEARED').map((v, i) => (
                         <div
                           key={i}
                           className="p-4 rounded-lg bg-card border border-border space-y-2 text-xs shadow-xs"
@@ -1034,15 +1045,19 @@ export default function ComplianceRulesPage() {
                               </Badge>
                               {v.title}
                             </span>
-                            <Badge
-                              className={`text-[9px] uppercase font-bold ${
-                                v.traffic_light === 'RED' ? 'bg-red-600 text-white' : 'bg-amber-600 text-white'
-                              }`}
-                            >
-                              {v.severity}
-                            </Badge>
+                            <span className="flex items-center gap-1.5">
+                              {(v.status ?? 'VIOLATION') !== 'VIOLATION' && <StatusPill status={v.status ?? 'VIOLATION'} />}
+                              <Badge
+                                className={`text-[9px] uppercase font-bold ${
+                                  v.traffic_light === 'RED' ? 'bg-red-600 text-white' : 'bg-amber-600 text-white'
+                                }`}
+                              >
+                                {v.severity}
+                              </Badge>
+                            </span>
                           </div>
                           <p className="text-muted-foreground leading-relaxed">{v.explanation}</p>
+                          <ContextNote v={v} />
                           {v.remediation_guidance && (
                             <div className="p-2.5 rounded bg-muted/40 border border-border/60 text-[11px] text-foreground/90 space-y-1">
                               <strong className="text-primary flex items-center gap-1">
@@ -1295,6 +1310,58 @@ export default function ComplianceRulesPage() {
                 onChange={(e) => setFormRemediation(e.target.value)}
                 className="text-xs"
               />
+            </div>
+
+            <div className="rounded-lg border border-border/80 p-4 space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-foreground">How a match is judged</p>
+                <p className="text-[11px] text-muted-foreground">
+                  A hard rule flags its words every time: use it for bans and required disclaimers. A context rule treats a
+                  match as a candidate; the AI reads the sentence around it and decides whether it is a violation, needs a
+                  person to check something, needs a source, or isn't a breach (history, opinion, another subject).
+                </p>
+              </div>
+              <div className="flex gap-2" role="radiogroup" aria-label="How a match is judged">
+                {([
+                  ['RULE', 'Hard rule'],
+                  ['CONTEXT', 'Judge in context'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={formEvalMode === value}
+                    onClick={() => setFormEvalMode(value)}
+                    className={`h-8 rounded-md border px-3 text-xs font-medium ${
+                      formEvalMode === value
+                        ? 'border-primary bg-primary/10 text-foreground'
+                        : 'border-border text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {formEvalMode === 'CONTEXT' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="eval-guidance" className="text-xs font-semibold">
+                    What the judge must decide
+                  </Label>
+                  <Textarea
+                    id="eval-guidance"
+                    rows={4}
+                    placeholder="Say when it is a violation, when it needs review, when it needs evidence and when it is fine. For example: a historical reference or a clearly framed opinion is fine; a present-tense claim about our own product is a violation."
+                    value={formEvalGuidance}
+                    onChange={(e) => setFormEvalGuidance(e.target.value)}
+                    className="text-xs"
+                  />
+                  {!formEvalGuidance.trim() && (
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                      Without guidance the AI judges from the rule summary and examples alone.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="rounded-lg border border-border/80 p-4 space-y-4">

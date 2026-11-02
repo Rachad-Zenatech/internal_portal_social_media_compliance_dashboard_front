@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { submissionService } from "@/services/submissionService";
-import type { FlagDismissReason, FlagReview, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
+import type { FlagVerdict, FlagDismissReason, FlagReview, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
 
 /** Everything that shows a submission's status or review state. */
 function invalidateSubmission(queryClient: ReturnType<typeof useQueryClient>, id: string) {
@@ -54,8 +54,15 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
   const forCurrent = new Map<string, FlagReview>(
     (query.data ?? []).filter((r) => r.version_number === currentVersion).map((r) => [r.rule_id, r])
   );
+  const verdictKey = ["flag-verdicts", submissionId];
+  const verdicts = useQuery({ queryKey: verdictKey, queryFn: () => submissionService.flagVerdicts(submissionId), staleTime: 0 });
+  // The flags a reviewer has confirmed as right on this version.
+  const confirmed = new Map<string, FlagVerdict>(
+    (verdicts.data ?? []).filter((v) => v.version_number === currentVersion && v.verdict === "CORRECT").map((v): [string, FlagVerdict] => [v.rule_id, v])
+  );
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: key });
+    queryClient.invalidateQueries({ queryKey: verdictKey });
     // Open critical flags decide whether it can be approved.
     invalidateSubmission(queryClient, submissionId);
     queryClient.invalidateQueries({ queryKey: ["compliance-rules"] });
@@ -77,7 +84,23 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
     },
     onError: (err) => toast.error(`Couldn't restore the flag: ${(err as Error).message}`),
   });
-  return { reviews: query.data ?? [], forCurrent, dismiss, restore };
+  const confirm = useMutation({
+    mutationFn: (v: { ruleId: string; note?: string | null }) => submissionService.confirmFlag(submissionId, v.ruleId, v.note ?? null),
+    onSuccess: (r) => {
+      refresh();
+      toast.success(`${r.rule_number} flag marked as right. It is kept as an example for the check.`);
+    },
+    onError: (err) => toast.error(`Couldn't save that: ${(err as Error).message}`),
+  });
+  const unconfirm = useMutation({
+    mutationFn: (ruleId: string) => submissionService.unconfirmFlag(submissionId, ruleId),
+    onSuccess: () => {
+      refresh();
+      toast.success("Confirmation removed.");
+    },
+    onError: (err) => toast.error(`Couldn't remove it: ${(err as Error).message}`),
+  });
+  return { reviews: query.data ?? [], forCurrent, dismiss, restore, confirmed, confirm, unconfirm };
 }
 
 export function useReviewDecision(submissionId: string, referenceCode: string) {

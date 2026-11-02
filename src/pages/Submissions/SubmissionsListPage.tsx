@@ -56,6 +56,7 @@ import {
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { CoverThumb } from "@/components/submissions/PostPreview";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
@@ -461,7 +462,11 @@ function ComplianceView({ sub }: { sub: Submission }) {
           ) : (
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           )}
-          {check.is_compliant ? "No issues found in the text" : `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`}
+          {check.is_compliant
+            ? "No issues found in the text"
+            : check.violations_count > 0
+            ? `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`
+            : "No rule breaches found; some things need a look"}
         </span>
         {isAnalysing(check) ? <UnderReviewBadge progress={sub.analysis_progress} /> : <span className="tabular-nums">{check.score}/100</span>}
       </div>
@@ -475,10 +480,11 @@ function ComplianceView({ sub }: { sub: Submission }) {
         </p>
       )}
       <ScoreBreakdown check={check} />
+      <OtherFindings violations={check.violations} />
       {/* Reviewers make their call on each flag: a false alarm is dismissed with a reason (the score stays). */}
-      {canReview && check.violations.some((v) => v.rule_id) && (
+      {canReview && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
         <div className="space-y-2 border-t border-border/60 pt-3">
-          {check.violations.map((v) => (
+          {check.violations.filter((v) => statusOf(v) !== "CLEARED").map((v) => (
             <div key={v.rule_id} className="space-y-1 text-xs">
               <p className="font-semibold text-foreground">
                 {v.rule_number} · {v.flagged_terms.map((t) => `"${t}"`).join(", ") || "missing disclaimer"}
@@ -496,7 +502,7 @@ function ComplianceView({ sub }: { sub: Submission }) {
       )}
       {/* Checks saved before penalties were recorded have no breakdown; list what they flagged. */}
       {!check.violations.some((v) => v.penalty != null) &&
-        check.violations.map((v) => (
+        check.violations.filter((v) => statusOf(v) === "VIOLATION").map((v) => (
           <div key={v.rule_id} className="text-xs border-t border-border/60 pt-2.5">
             <p className="font-semibold text-foreground">
               {v.rule_number} · {v.title}

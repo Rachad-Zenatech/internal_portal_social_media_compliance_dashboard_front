@@ -2623,8 +2623,8 @@ export default function VideoComplianceScannerPage() {
               </div>
               <div className="p-2.5 space-y-2.5 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
                 {scanResult && <ScoreBreakdown check={scanResult} />}
-                {scanResult && scanResult.violations.length > 0 ? (
-                  scanResult.violations.map((v, i) => {
+                {scanResult && scanResult.violations.some((v) => v.status !== "CLEARED") ? (
+                  scanResult.violations.filter((v) => v.status !== "CLEARED").map((v, i) => {
                     const seg = segmentForViolation(v);
                     const isRed = v.traffic_light === "RED";
                     return (
