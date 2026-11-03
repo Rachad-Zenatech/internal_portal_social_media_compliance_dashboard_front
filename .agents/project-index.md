@@ -117,7 +117,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (676 lines) - post performance page (pages  performance)
-- src/pages/SocialMedia/SocialMediaPage.tsx (842 lines) - social media page (pages  social media)
+- src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - src/pages/Submissions/NewSubmissionPage.tsx (1898 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (340 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (642 lines) - submission detail page (pages  submissions)

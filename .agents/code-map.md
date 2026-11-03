@@ -1045,7 +1045,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `posts` (fn)
     - `top` (fn)
 
-## src/pages/SocialMedia/SocialMediaPage.tsx (842 lines) - social media page (pages  social media)
+## src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - `SocialPlatformConfig` (export interface)
 - `OrganicPost` (interface)
 - `SocialMediaPage` (export function)
