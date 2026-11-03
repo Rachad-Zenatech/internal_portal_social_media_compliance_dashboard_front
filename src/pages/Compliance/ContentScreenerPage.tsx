@@ -1181,15 +1181,14 @@ export default function ContentScreenerPage() {
     queryKey: ["script-queue", tab],
     queryFn: () => scriptService.queue(tab),
     staleTime: 0,
-    refetchInterval: 60_000,
   });
 
   const queue = useQuery({
     queryKey: ["review-queue", postTab, scope],
     queryFn: () => submissionService.reviewQueue(postTab, undefined, scope),
     staleTime: 0,
-    // Quickly while a post is still being read (so its score shows up soon after it's ready), otherwise each minute.
-    refetchInterval: (q) => (q.state.data?.some((s) => isAnalysing(s.latest_check)) ? ANALYSING_REFETCH_MS : 60_000),
+    // Poll while a post is still being analysed so its score shows up soon after it's ready.
+    refetchInterval: (q) => (q.state.data?.some((s) => isAnalysing(s.latest_check)) ? ANALYSING_REFETCH_MS : false),
   });
   const counts = useQuery({
     queryKey: ["review-queue", "counts", scope],

@@ -452,9 +452,9 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
         // with their review actions, after switching to the creator view).
         placeholderData: (previous: ReviewQueueItem[] | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
           previousQuery?.queryKey[3] === queueScope ? previous : undefined,
-        // Check back quickly while a post is still being read (its video, images or script), otherwise once a minute.
+        // Check back while a post is still being read (its video, images or script), otherwise idle.
         refetchInterval: (query: { state: { data?: ReviewQueueItem[] } }) =>
-          query.state.data?.some((s) => isAnalysing(s.latest_check)) ? 5_000 : 60_000,
+          query.state.data?.some((s) => isAnalysing(s.latest_check)) ? 5_000 : false,
       };
     }),
   });
@@ -463,7 +463,7 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
     queryFn: () => submissionService.reviewQueueCounts(queueScope),
     enabled: Boolean(user),
     staleTime: 0,
-    refetchInterval: 60_000,
+    refetchInterval: false,
   });
   const [reviewRows, sentBackRows, doneRows] = tabQueries.map((q) => q.data);
   const serverItems = useMemo(() => {

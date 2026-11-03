@@ -792,6 +792,7 @@ export default function SentimentPanel({
 
       {SHOW_TOPIC_TRENDS && submissionId && version == null && (
         <TopicTrend
+          submissionId={submissionId}
           mood={topics.mood}
           isLoading={topics.isLoading}
           canEdit={canRunProp}
@@ -852,8 +853,26 @@ export default function SentimentPanel({
           )}
         </div>
       ) : analysis.status === "FAILED" ? (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5 text-xs text-red-700 dark:text-red-300">
-          Sentiment analysis failed: {analysis.error || "unknown error"}
+        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5 text-xs text-red-700 dark:text-red-300 space-y-2">
+          <div>
+            <span className="font-semibold">Sentiment analysis failed:</span>{" "}
+            {analysis.error?.includes("504") || analysis.error?.toLowerCase().includes("deadline")
+              ? "The AI model took longer than expected to respond (504 Deadline Exceeded)."
+              : analysis.error || "unknown error"}
+          </div>
+          {canRun && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-[11px] gap-1.5 border-red-500/40 hover:bg-red-500/10 text-red-800 dark:text-red-200"
+              disabled={run.isPending}
+              onClick={() => run.mutate()}
+            >
+              {run.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+              Retry sentiment analysis
+            </Button>
+          )}
         </div>
       ) : result ? (
         <>

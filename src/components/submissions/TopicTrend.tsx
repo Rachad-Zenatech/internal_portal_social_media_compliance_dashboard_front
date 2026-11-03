@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { ChevronDown, Flame, Globe2, Loader2, ShieldAlert, TrendingDown, TrendingUp, Undo2, X } from "lucide-react";
+import { ChevronDown, Flame, Globe2, Loader2, RefreshCw, ShieldAlert, TrendingDown, TrendingUp, Undo2, X } from "lucide-react";
 
 import { SpikeBadge } from "@/components/submissions/MoodVisuals";
-import { useMarketTrends } from "@/hooks/usePublicMood";
+import { useMarketTrends, useScrapeTwitter } from "@/hooks/usePublicMood";
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import type { MatchedTopic, PublicMood, PublishingRecommendation, XTrendOpportunity } from "@/types/publicMood";
 
 const POST_TONE: Record<string, string> = {
@@ -245,6 +246,7 @@ function MarketTrendRow({ t }: { t: XTrendOpportunity }) {
  * and what is trending across the industry right now.
  */
 export default function TopicTrend({
+  submissionId,
   mood,
   isLoading,
   canEdit = false,
@@ -252,6 +254,7 @@ export default function TopicTrend({
   onDismiss,
   onRestore,
 }: {
+  submissionId?: string | null;
   mood?: PublicMood | null;
   isLoading: boolean;
   /** Can say a topic isn't what the post is about (and put it back). */
@@ -262,6 +265,17 @@ export default function TopicTrend({
 }) {
   const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(true);
   const [showAllTrends, setShowAllTrends] = useState(false);
+  const scrapeTwitter = useScrapeTwitter(submissionId);
+  const { addJob } = useGlobalProgress();
+
+  const handleScrape = () => {
+    const promise = scrapeTwitter.mutateAsync();
+    addJob("Scrape X (Twitter) & News", promise, {
+      description: "Scraping live X posts & VADER sentiment...",
+      type: "upload",
+      link_url: submissionId ? `/submissions/new?id=${submissionId}` : undefined,
+    });
+  };
 
   const oldest = mood?.topics
     .map((t) => t.snapshot?.fetched_at)
@@ -283,14 +297,26 @@ export default function TopicTrend({
               {mood.is_mock ? "Sample data" : mood.source}
             </span>
           )}
-          {decision && (
-            <span
-              className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[decision.recommendation].cls}`}
-              title={decision.reason}
+          <div className="ml-auto flex items-center gap-1.5">
+            {decision && (
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[decision.recommendation].cls}`}
+                title={decision.reason}
+              >
+                Recommend: {decision.recommendation}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleScrape}
+              disabled={scrapeTwitter.isPending}
+              title="Scrape public X (Twitter) posts & live market news sentiment now (calls background scraper / API)"
+              className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-800 dark:text-sky-200 px-2 py-0.5 text-[10px] font-medium transition-colors disabled:opacity-50"
             >
-              Recommend: {decision.recommendation}
-            </span>
-          )}
+              <RefreshCw className={`w-2.5 h-2.5 ${scrapeTwitter.isPending ? "animate-spin" : ""}`} />
+              <span>{scrapeTwitter.isPending ? "Scraping X..." : "Scrape X"}</span>
+            </button>
+          </div>
         </p>
         <p className="text-[10px] text-muted-foreground">
           VADER sentiment on scraped news & X posts over the last week

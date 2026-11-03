@@ -6,6 +6,7 @@ export type OAuthProvider =
   | 'META_ADS'
   | 'LINKEDIN_ADS'
   | 'LINKEDIN_PAGE'
+  | 'LINKEDIN_PROFILE'
   | 'X_TWITTER'
   | 'FACEBOOK_PAGE'
   | 'INSTAGRAM'

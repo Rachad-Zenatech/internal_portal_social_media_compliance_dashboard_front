@@ -397,16 +397,6 @@ export default function SocialMediaPage() {
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            {canManageIntegrations && (
-              <Button
-                size="sm"
-                onClick={() => navigate("/configurations/integrations?tab=social")}
-                className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Plus className="h-4 w-4" />
-                Connect Social Account
-              </Button>
-            )}
           </div>
         }
       />

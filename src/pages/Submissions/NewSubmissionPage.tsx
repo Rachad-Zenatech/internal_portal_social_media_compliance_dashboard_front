@@ -1716,7 +1716,7 @@ export default function NewSubmissionPage() {
                   </div>
                 </div>
 
-                <TopicTrend mood={mood} isLoading={moodLoading} canEdit={false} />
+                <TopicTrend submissionId={submissionId} mood={mood} isLoading={moodLoading} canEdit={false} />
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
