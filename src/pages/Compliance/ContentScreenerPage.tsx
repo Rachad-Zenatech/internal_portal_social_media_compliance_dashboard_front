@@ -59,6 +59,7 @@ import {
   statusOf,
 } from "@/components/submissions/FindingStatus";
 import {
+  AI_UNAVAILABLE_MESSAGE,
   ANALYSING_REFETCH_MS,
   AnalysisProgressPanel,
   authedFileUrl,
@@ -160,7 +161,7 @@ const CHECK_LABELS: Record<CheckFilter, string> = {
 };
 
 const platformName = (p: string) => PLATFORM_LABELS[p as SocialPlatform] ?? p;
-const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending ? null : s.latest_check?.score ?? null);
+const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending || s.latest_check?.ai_unavailable ? null : s.latest_check?.score ?? null);
 const isFailing = (s: ReviewQueueItem) => {
   const score = scoreOf(s);
   return s.latest_check?.traffic_light === "RED" || (score != null && score < 60);
@@ -786,7 +787,9 @@ function ReviewPanel({
   const transcript = [...(s.video?.transcript ?? [])].sort((a, b) => a.start_sec - b.start_sec);
 
   const verdict =
-    score == null
+    check?.ai_unavailable
+      ? { text: "No score yet", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
+      : score == null
       ? { text: "Still checking", tone: "text-muted-foreground", ring: "border-muted" }
       : openCritical
       ? { text: "Needs changes", tone: "text-red-700 dark:text-red-400", ring: "border-red-300 dark:border-red-500/50" }
@@ -820,7 +823,9 @@ function ReviewPanel({
         </div>
         <div className="min-w-0 flex-1">
           <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
-          {score == null && s.analysis_progress ? (
+          {check?.ai_unavailable ? (
+            <p className="text-sm text-muted-foreground">{AI_UNAVAILABLE_MESSAGE}</p>
+          ) : score == null && s.analysis_progress ? (
             // Still reading the post: what's left and how long, instead of a flag count that isn't final yet.
             <AnalysisProgressPanel progress={s.analysis_progress} className="mt-1" />
           ) : (

@@ -124,7 +124,7 @@ function PostRow({ s }: { s: SubmissionSummary }) {
       </td>
       <td className="px-3 py-3">
         <div className="flex flex-col gap-0.5">
-          <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} />
+          <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} />
           {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
         </div>
       </td>

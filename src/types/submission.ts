@@ -97,6 +97,8 @@ export type StoredCheck = ComplianceCheckResponse & {
   /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
   transcript_pending?: boolean;
   segment_flags?: SegmentFlag[];
+  /** The AI couldn't read part of the post (out of credits, quota, down): no score is shown. */
+  ai_unavailable?: boolean;
   /** How closely the video's speech follows the approved script (once both are read); null before then. */
   script_match?: ScriptMatch | null;
   /** The post's images: how many, whose text was read, still being read (re-checked when done), unreadable. */
@@ -220,6 +222,8 @@ export interface SubmissionSummary {
   /** How many rulebook issues the latest check found; null while it's still being analysed. */
   issue_count?: number | null;
   analysis_pending?: boolean;
+  /** The AI review couldn't run for this post: no score, a message instead. */
+  ai_unavailable?: boolean;
   /** While analysis_pending: what's still being read and when the score is expected. */
   analysis_progress?: AnalysisProgress | null;
   file_count: number;

@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CoverThumb } from "@/components/submissions/PostPreview";
-import { UnderReviewBadge } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, UnderReviewBadge } from "@/components/submissions/submissionUi";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import type { AnalysisProgress, DashboardSummary, SubmissionSummary } from "@/types/submission";
 
@@ -166,8 +166,9 @@ export const initials = (name?: string | null) =>
 export const avatarTone = (key: string) => AVATAR_TONES[[...key].reduce((sum, c) => sum + c.charCodeAt(0), 0) % AVATAR_TONES.length];
 
 /** A compliance score the way the Content Screener shows it. */
-export function Score({ score, pending = false, progress }: { score?: number | null; pending?: boolean; progress?: AnalysisProgress | null }) {
+export function Score({ score, pending = false, progress, unavailable = false }: { score?: number | null; pending?: boolean; progress?: AnalysisProgress | null; unavailable?: boolean }) {
   if (pending) return <UnderReviewBadge progress={progress} />;
+  if (unavailable) return <AiUnavailableBadge />;
   if (score == null) return <span className="text-xs text-muted-foreground">Not checked</span>;
   const [tone, Icon] =
     score >= 80

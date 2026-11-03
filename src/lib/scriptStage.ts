@@ -15,6 +15,7 @@ export function scriptVerdict(check?: StoredCheck | null) {
   const warnings = all.filter((x) => x.status === "NEEDS_REVIEW" || x.status === "EVIDENCE_REQUIRED").length;
   const critical = v.filter((x) => x.traffic_light === "RED").length;
   if (!check) return { text: "Not checked", tone: "text-muted-foreground", ring: "border-muted", critical, open: 0 };
+  if (check.ai_unavailable) return { text: "No score yet", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50", critical, open: 0 };
   if (critical) return { text: "Needs changes", tone: "text-red-700 dark:text-red-400", ring: "border-red-300 dark:border-red-500/50", critical, open: v.length };
   if (v.length) return { text: "Review suggested", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50", critical, open: v.length };
   if (warnings) return { text: "Check before approving", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50", critical, open: 0 };

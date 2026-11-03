@@ -14,6 +14,7 @@ import { ContextNote, FINDING_ORDER, FindingGroup, StatusPill, groupFindings, is
 import { useLiveScriptCheck, useScriptActions, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
+import { AI_UNAVAILABLE_SHORT } from "@/components/submissions/submissionUi";
 import { changesOf, diffWords } from "@/lib/wordDiff";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { ScriptVersion } from "@/types/script";
@@ -333,7 +334,7 @@ function Editor({
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             ) : (
               <span className="text-center leading-none">
-                <span className="block text-xl font-bold tabular-nums text-foreground">{check?.score ?? "–"}</span>
+                <span className="block text-xl font-bold tabular-nums text-foreground">{check?.ai_unavailable ? "–" : check?.score ?? "–"}</span>
                 <span className="text-[10px] text-muted-foreground">/100</span>
               </span>
             )}
@@ -341,6 +342,9 @@ function Editor({
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">Script check · {hasEdits ? "with your changes" : "as sent"}</p>
             <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
+            {check?.ai_unavailable ? (
+              <p className="text-sm text-muted-foreground">{AI_UNAVAILABLE_SHORT}</p>
+            ) : (
             <p className="text-sm text-muted-foreground">
               {grouped.VIOLATION.length} flag{grouped.VIOLATION.length === 1 ? "" : "s"}
               {verdict.critical > 0 && ` · ${verdict.critical} critical`}
@@ -349,6 +353,7 @@ function Editor({
               {grouped.CLEARED.length > 0 && ` · ${grouped.CLEARED.length} cleared`}
               {hasEdits && sent.check?.score != null && check?.score != null && !checking && ` · was ${sent.check.score}`}
             </p>
+            )}
           </div>
         </div>
 

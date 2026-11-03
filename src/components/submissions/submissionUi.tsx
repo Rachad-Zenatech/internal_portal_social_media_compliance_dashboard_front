@@ -15,6 +15,7 @@ import {
   Clock,
   Hourglass,
   Eye,
+  CloudOff,
 } from "lucide-react";
 import { InlineDiff } from "@/components/script/ScriptDiff";
 import {
@@ -37,6 +38,24 @@ import type { AnalysisProgress, StoredCheck, SubmissionFile, SubmissionStatus } 
 /** Whether the post is still being read (video transcript, text in images): no score is shown until it has. */
 export const isAnalysing = (check?: StoredCheck | null) =>
   Boolean(check && (check.analysis_pending ?? (check.transcript_pending || (check.images_pending ?? 0) > 0)));
+
+/** The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post. */
+export const isAiUnavailable = (check?: StoredCheck | null) => Boolean(check?.ai_unavailable);
+
+export const AI_UNAVAILABLE_MESSAGE =
+  "The AI review couldn't run (the Gemini key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
+export const AI_UNAVAILABLE_SHORT = "No score: the AI review couldn't run (out of credits or the service is down).";
+
+export function AiUnavailableBadge({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 ${className}`}
+      title={AI_UNAVAILABLE_MESSAGE}
+    >
+      <CloudOff className="w-3 h-3" /> AI review unavailable
+    </span>
+  );
+}
 
 /** Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready. */
 export const ANALYSING_REFETCH_MS = 5_000;
