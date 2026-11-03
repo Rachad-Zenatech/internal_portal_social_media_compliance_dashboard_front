@@ -27,6 +27,7 @@ export function Highlighted({ text, terms }: { text: string; terms: string[] }) 
 }
 
 const REMOVED = "rounded-sm bg-red-100 px-0.5 text-red-800 line-through decoration-red-500/70 dark:bg-red-500/20 dark:text-red-300";
+const REMOVED_SIDE = "rounded-sm bg-red-100 px-0.5 text-red-800 dark:bg-red-500/20 dark:text-red-300";
 const ADDED = "rounded-sm bg-emerald-100 px-0.5 text-emerald-900 no-underline dark:bg-emerald-500/20 dark:text-emerald-200";
 
 /** One version with the other's changes marked in place: removed wording struck through, added wording in green. */
@@ -91,19 +92,24 @@ const ORDERED_LINE = /^\s*(\d+)[.)] /;
 /** Whether any of the visible text uses those marks. */
 export function isStructured(parts: DiffPart[]): boolean {
   const text = parts.map((p) => (p.kind === "same" ? p.after : p.added)).join("");
-  return /^(--- Page \d+ ---|#{1,3} |\|.*\||\s*[-\u2022] |\s*\d+[.)] )/m.test(text) || /(^|\s)_\S[^_\n]*\S_(?=$|[\s.,;:!?])/m.test(text);
+  return (
+    /^(--- Page \d+ ---|#{1,3} |\|.*\||\s*[-\u2022] |\s*\d+[.)] )/m.test(text) ||
+    /(^|\s)_\S[^_\n]*\S_(?=$|[\s.,;:!?])/m.test(text) ||
+    /\*\*[^*\n]+\*\*/.test(text)
+  );
 }
 
 interface Seg {
   text: string;
-  kind: "same" | "del" | "ins";
+  /** rem: removed wording in the "before" column of a side by side (shown highlighted, not struck through). */
+  kind: "same" | "del" | "ins" | "rem";
   changeId?: number;
   /** The change's number, shown after this piece. */
   number?: number;
 }
 
 /** The parts as lines of pieces: newlines in kept and added wording start a line; removed wording stays inline. */
-function toLines(parts: DiffPart[], showChanges: boolean, numbered: boolean): Seg[][] {
+function toLines(parts: DiffPart[], showChanges: boolean, numbered: boolean, side?: "before" | "after"): Seg[][] {
   const lines: Seg[][] = [[]];
   const add = (text: string, kind: Seg["kind"], changeId?: number): Seg | null => {
     let last: Seg | null = null;
@@ -120,7 +126,11 @@ function toLines(parts: DiffPart[], showChanges: boolean, numbered: boolean): Se
     return last;
   };
   for (const p of parts) {
-    if (p.kind === "same") {
+    if (side) {
+      // One column of a side by side: this version's wording, with its own changes marked.
+      if (p.kind === "same") add(side === "before" ? p.before : p.after, "same");
+      else add(side === "before" ? p.removed : p.added, side === "before" ? "rem" : "ins", p.id);
+    } else if (p.kind === "same") {
       add(p.after, "same");
     } else if (!showChanges) {
       add(p.added, "same");
@@ -252,6 +262,7 @@ function StructuredDiff({
   onPick,
   numbered,
   showChanges,
+  side,
 }: {
   parts: DiffPart[];
   terms: string[];
@@ -259,8 +270,10 @@ function StructuredDiff({
   onPick?: (id: number) => void;
   numbered: boolean;
   showChanges: boolean;
+  /** Set for one column of a side by side. */
+  side?: "before" | "after";
 }) {
-  const sheets = toSheets(toLines(parts, showChanges, numbered));
+  const sheets = toSheets(toLines(parts, showChanges, numbered, side));
   const seen = new Set<number>();
 
   /** One line's pieces, with **bold** toggling as it goes and changes marked in place. */
@@ -272,6 +285,7 @@ function StructuredDiff({
         if (!chunk) return null;
         const body = s.kind === "del" ? chunk : italics(chunk, terms);
         const weighted = bold || forceBold ? <strong className="font-semibold">{body}</strong> : body;
+        if (s.kind === "rem") return <span key={c} className={REMOVED_SIDE}>{weighted}</span>;
         if (s.kind === "del") return <del key={c} className={REMOVED}>{weighted}</del>;
         if (s.kind === "ins") return <ins key={c} className={ADDED}>{weighted}</ins>;
         return <span key={c}>{weighted}</span>;
@@ -283,7 +297,7 @@ function StructuredDiff({
       return (
         <span
           key={i}
-          id={first ? `change-${s.changeId}` : undefined}
+          id={first && side !== "before" ? `change-${s.changeId}` : undefined}
           onClick={onPick ? () => onPick(s.changeId!) : undefined}
           className={`scroll-mt-24 rounded-sm ${ring} ${onPick ? "cursor-pointer" : ""}`}
         >
@@ -320,15 +334,17 @@ function StructuredDiff({
       );
     }
     const [head, ...body] = b.rows;
+    // A row can have more cells than the header (a cell added in an edit): every column is shown.
+    const columns = Array.from({ length: Math.max(...b.rows.map((r) => r.length)) }, (_, c) => c);
     const narrow = (col: number) => b.rows.every((r) => visible(r[col] ?? []).replace(/\*\*/g, "").trim().length <= 8);
     return (
       <div key={key} className="my-3 overflow-x-auto rounded-lg border border-border">
         <table className="w-full border-collapse text-[13px] leading-snug">
           <thead>
             <tr className="bg-slate-800 text-white dark:bg-slate-700">
-              {head.map((cell, c) => (
+              {columns.map((c) => (
                 <th key={c} className={`px-3 py-2 text-left align-top font-semibold ${narrow(c) ? "whitespace-nowrap" : ""}`}>
-                  {inline(cell, true)}
+                  {inline(head[c] ?? [], true)}
                 </th>
               ))}
             </tr>
@@ -336,7 +352,7 @@ function StructuredDiff({
           <tbody>
             {body.map((row, r) => (
               <tr key={r} className={r % 2 ? "bg-muted/40" : ""}>
-                {head.map((_, c) => (
+                {columns.map((c) => (
                   <td key={c} className={`border-t border-border px-3 py-2 align-top ${narrow(c) ? "whitespace-nowrap text-muted-foreground" : ""}`}>
                     {inline(row[c] ?? [])}
                   </td>
@@ -357,7 +373,7 @@ function StructuredDiff({
         <section
           key={i}
           aria-label={sheet.number != null ? `Page ${sheet.number}` : "Script"}
-          className={paged ? "rounded-xl border border-border bg-card px-6 py-6 shadow-xs sm:px-8" : ""}
+          className="rounded-xl border border-border bg-card px-6 py-6 shadow-xs sm:px-8"
         >
           {sheet.blocks.map(render)}
           {paged && sheet.number != null && (
@@ -400,19 +416,27 @@ export function SideBySide({
         </span>
       );
     });
-  const pane = (head: { title: string; sub?: string }, body: ReactNode, tint: string) => (
+  const structured = isStructured(parts);
+  const pane = (head: { title: string; sub?: string }, side: "before" | "after", tint: string) => (
     <article className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
       <header className={`flex flex-wrap items-baseline gap-x-2 border-b border-border px-4 py-2.5 ${tint}`}>
         <span className="text-sm font-semibold text-foreground">{head.title}</span>
         {head.sub && <span className="text-xs text-muted-foreground">{head.sub}</span>}
       </header>
-      <div className="whitespace-pre-wrap break-words px-5 py-4 text-[14px] leading-[1.8] text-foreground">{body}</div>
+      {structured ? (
+        // Scripts read from Word or PDF keep their pages, headings and tables in each column.
+        <div className="max-h-[75vh] overflow-y-auto bg-muted/30 p-3">
+          <StructuredDiff parts={parts} terms={[]} focusId={focusId} onPick={onPick} numbered={false} showChanges side={side} />
+        </div>
+      ) : (
+        <div className="whitespace-pre-wrap break-words px-5 py-4 text-[14px] leading-[1.8] text-foreground">{column(side)}</div>
+      )}
     </article>
   );
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      {pane(left, column("before"), "bg-muted/40")}
-      {pane(right, column("after"), "bg-emerald-50/60 dark:bg-emerald-500/5")}
+      {pane(left, "before", "bg-muted/40")}
+      {pane(right, "after", "bg-emerald-50/60 dark:bg-emerald-500/5")}
     </div>
   );
 }

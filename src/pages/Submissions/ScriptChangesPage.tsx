@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle2, Download, Loader2, PencilLine, Upload } from "
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ScriptEditor from "@/components/script/ScriptEditor";
+import { displayText } from "@/lib/scriptDoc";
 import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
@@ -266,10 +267,10 @@ function Changes({ stage }: { stage: ScriptStage }) {
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                     {c.number}
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">{c.before ? `after “…${c.before}”` : "at the start of a line"}</span>
+                  <span className="truncate text-xs text-muted-foreground">{displayText(c.before) ? `after “…${displayText(c.before)}”` : "at the start of a line"}</span>
                 </span>
-                {c.removed && <span className="rounded bg-red-100 px-1.5 py-0.5 text-[13px] text-red-800 line-through dark:bg-red-500/20 dark:text-red-300">{c.removed}</span>}
-                {c.added && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[13px] text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200">{c.added}</span>}
+                {c.removed && <span className="rounded bg-red-100 px-1.5 py-0.5 text-[13px] text-red-800 line-through dark:bg-red-500/20 dark:text-red-300">{displayText(c.removed) || "(formatting)"}</span>}
+                {c.added && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[13px] text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200">{displayText(c.added) || "(formatting)"}</span>}
               </button>
             ))
           ) : (
@@ -296,7 +297,18 @@ function Changes({ stage }: { stage: ScriptStage }) {
                 <Button
                   className="h-10 flex-1"
                   disabled={revise.isPending || !text.trim()}
-                  onClick={() => revise.mutate({ text, note: note.trim() || undefined }, { onSuccess: () => setEditing(false) })}
+                  onClick={() =>
+                    revise.mutate(
+                      { text, note: note.trim() || undefined },
+                      {
+                        onSuccess: () => {
+                          setEditing(false);
+                          // Sent back to the reviewer: back to My posts to follow it from there.
+                          navigate("/submissions");
+                        },
+                      }
+                    )
+                  }
                 >
                   {revise.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Send to reviewer
                 </Button>
