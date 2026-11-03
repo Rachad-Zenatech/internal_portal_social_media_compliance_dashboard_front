@@ -78,6 +78,18 @@ export interface SegmentFlag {
   rule_numbers: string[];
 }
 
+/** The video's speech against the approved script: said but not approved (added), approved but not said (missing). */
+export type ScriptMatch = {
+  status: "MATCH" | "PARTIAL" | "MISMATCH";
+  similarity: number;
+  script_words: number;
+  spoken_words: number;
+  added: string[];
+  missing: string[];
+  added_more: number;
+  missing_more: number;
+};
+
 /** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
   checked_at?: string;
@@ -85,6 +97,8 @@ export type StoredCheck = ComplianceCheckResponse & {
   /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
   transcript_pending?: boolean;
   segment_flags?: SegmentFlag[];
+  /** How closely the video's speech follows the approved script (once both are read); null before then. */
+  script_match?: ScriptMatch | null;
   /** The post's images: how many, whose text was read, still being read (re-checked when done), unreadable. */
   images_total?: number;
   images_read?: number;

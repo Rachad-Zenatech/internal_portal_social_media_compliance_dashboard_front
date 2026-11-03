@@ -87,7 +87,7 @@ function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }
         variant={changes ? "default" : "outline"}
         className={`h-9 shrink-0 rounded-lg px-4 text-sm font-medium ${changes ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
       >
-        {scriptChanges ? "Review changes" : changes ? "Fix issues" : "Continue draft"}
+        {scriptChanges ? "Review changes" : changes ? "Fix issues" : s.script_status === "APPROVED" ? "Upload video" : "Continue draft"}
       </Button>
     </li>
   );

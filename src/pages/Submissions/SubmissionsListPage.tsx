@@ -26,6 +26,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Trash2,
+  Upload,
   User as UserIcon,
   X,
   XCircle,
@@ -439,7 +440,7 @@ function GalleryCard({
               className={`h-9 w-full rounded-lg font-medium ${fix ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
               onClick={() => onContinue(s)}
             >
-              {fix ? "Fix issues" : "Continue draft"}
+              {fix ? "Fix issues" : s.script_status === "APPROVED" ? "Upload video" : "Continue draft"}
             </Button>
           </div>
         )
@@ -721,6 +722,17 @@ function ReviewCard({
       <div className="flex flex-wrap justify-end gap-2">
         <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/${summary.id}/script`)}>
           <FileText className="w-3.5 h-3.5" /> {back ? "Review changes" : "Review script"}
+        </Button>
+      </div>
+    );
+  } else if (summary.status === "DRAFT" && summary.script_status === "APPROVED" && mine && !sub?.files?.some((f) => f.kind === "MAIN")) {
+    // The script is approved and there's no video yet: the video is what's left to add, so it comes before sending.
+    footerTitle = "Script approved";
+    footerNote = "Film from the approved script, then upload the video.";
+    actions = (
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/new?id=${summary.id}`)}>
+          <Upload className="w-3.5 h-3.5" /> Upload the video
         </Button>
       </div>
     );
