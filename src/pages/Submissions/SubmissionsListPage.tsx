@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Clock,
   FilePen,
+  FileText,
   History,
   Info,
   Loader2,
@@ -73,7 +74,7 @@ import {
   isAnalysing,
   refetchWhileAnalysing,
 } from "@/components/submissions/submissionUi";
-import { QUICK_CREATE, Score, issuesText, scriptPillOf } from "@/components/dashboard/dashboardParts";
+import { QUICK_CREATE, Score, issuesText, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
@@ -417,10 +418,17 @@ function GalleryCard({
           <p className={`text-sm ${line.tone}`}>{line.text}</p>
         </div>
       </button>
-      {stage === "DRAFT" && s.script_status === "EDITS_PROPOSED" ? (
+      {scriptNeedsChanges(s) ? (
         <div className="px-4 pb-4">
           <Button asChild className="h-9 w-full rounded-lg bg-blue-700 font-medium text-white hover:bg-blue-800">
-            <Link to={`/submissions/${s.id}/script`}>Review script changes</Link>
+            <Link to={`/submissions/${s.id}/script`}>Review changes</Link>
+          </Button>
+        </div>
+      ) : stage === "DRAFT" && s.script_status === "IN_REVIEW" ? (
+        // Already sent: nothing left to do on the draft, so it's just there to look at.
+        <div className="px-4 pb-4">
+          <Button asChild variant="outline" className="h-9 w-full rounded-lg font-medium">
+            <Link to={`/submissions/${s.id}/script`}>View script</Link>
           </Button>
         </div>
       ) : (
@@ -699,6 +707,22 @@ function ReviewCard({
           manual_rules: sub.latest_check?.manual_review_rules,
         }}
       />
+    );
+  } else if (summary.status === "DRAFT" && (summary.script_status === "IN_REVIEW" || scriptNeedsChanges(summary)) && mine) {
+    // The script is with a reviewer, or back from one: the draft itself has nothing to edit or send, the script page does.
+    const back = scriptNeedsChanges(summary);
+    footerTitle = back ? "Your next step" : "Script in review";
+    footerNote = back
+      ? summary.script_status === "EDITS_PROPOSED"
+        ? "Your reviewer edited the script. Accept the changes or edit it and send it again."
+        : "Your reviewer asked for changes to the script. Make them and send it again."
+      : "Your script is with a reviewer. You'll be notified when it's decided.";
+    actions = (
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/${summary.id}/script`)}>
+          <FileText className="w-3.5 h-3.5" /> {back ? "Review changes" : "Review script"}
+        </Button>
+      </div>
     );
   } else if (SUBMITTABLE.has(summary.status) && mine) {
     footerTitle = "Your next step";
