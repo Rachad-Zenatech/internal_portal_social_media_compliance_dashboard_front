@@ -130,7 +130,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/services/contextService.ts (10 lines) - context service (services)
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
-- src/services/oauthService.ts (164 lines) - oauth service (services)
+- src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/scriptService.ts (31 lines) - The script stage of video posts (see the backend's script_review_service).
 - src/services/submissionService.ts (230 lines) - submission service (services)

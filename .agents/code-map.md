@@ -1239,7 +1239,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SESSION_EXPIRED_EVENT` (export const) - Fired on window when the server says the sign-in is no longer valid (e.g.
 - `handleResponse` (export function)
 
-## src/services/oauthService.ts (164 lines) - oauth service (services)
+## src/services/oauthService.ts (165 lines) - oauth service (services)
 - `OAuthProvider` (export type)
 - `ConnectionStatus` (export type)
 - `Organization` (export interface)
