@@ -6,15 +6,15 @@ How to use: find the function you need here, then read only that line range
 (e.g. offset=LINE, limit=80) instead of opening the whole file. Line numbers are
 exact as of the last regeneration; if a symbol has moved, search for its name.
 
-## src/App.tsx (166 lines)
-- L79 `PrefixRedirect` (function)
-- L85 `PostsListRoute` (function) - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
-- L90 `NotFoundAlert` (function)
-- L108 `App` (function)
+## src/App.tsx (169 lines)
+- L80 `PrefixRedirect` (function)
+- L86 `PostsListRoute` (function) - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
+- L91 `NotFoundAlert` (function)
+- L109 `App` (function)
 
-## src/components/AppShell/AppShell.tsx (59 lines)
-- L8 `Props` (interface)
-- L15 `AppShell` (export function)
+## src/components/AppShell/AppShell.tsx (61 lines)
+- L9 `Props` (interface)
+- L16 `AppShell` (export function)
 
 ## src/components/AppShell/Breadcrumbs.tsx (155 lines)
 - L7 `BreadcrumbItem` (export interface)
@@ -24,6 +24,9 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L23 `IntegratedService` (export interface)
 - L34 `IntegrationStatusResponse` (export interface)
 - L39 `ConnectionStatusLight` (export function)
+
+## src/components/AppShell/GlobalProgressOverlay.tsx (191 lines)
+- L10 `GlobalProgressOverlay` (export function)
 
 ## src/components/AppShell/Navigation.tsx (130 lines)
 - L15 `NavigationSubItem` (export interface)
@@ -166,13 +169,14 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L548 `FlagCard` (function)
 - L613 `VersionHistory` (export function) - Every version of the script, newest first, with the reviewer's call and note on each.
 
-## src/components/script/ScriptStageCard.tsx (217 lines)
-- L14 `ScriptStageCard` (export function) - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
-- L76 `Body` (function)
-- L143 `DraftBody` (function) - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
+## src/components/script/ScriptStageCard.tsx (344 lines)
+- L16 `ScriptStageCard` (export function) - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
+- L112 `ScriptPreviewBox` (function)
+- L160 `Body` (function)
+- L258 `DraftBody` (function) - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
 
-## src/components/script/UploadScriptDialog.tsx (291 lines)
-- L32 `UploadScriptDialog` (export function)
+## src/components/script/UploadScriptDialog.tsx (187 lines)
+- L22 `UploadScriptDialog` (export function)
 
 ## src/components/submissions/ApprovalActions.tsx (157 lines)
 - L15 `ApprovalTarget` (export interface) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -180,11 +184,11 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L27 `toLocalInput` (const)
 - L33 `ApprovalActions` (export function) - What can still happen to approved content before it goes out: its creator withdraws it for a late fix, or a  reviewer reschedules it or r...
 
-## src/components/submissions/CanvaImportDialog.tsx (236 lines)
-- L20 `designFits` (export const)
-- L23 `CANVA_PURPLE` (export const) - Canva's purple, for the Canva buttons and marks.
-- L25 `CanvaMark` (export function)
-- L37 `CanvaImportDialog` (export function) - Pick a Canva design and import it as the submission's main file.
+## src/components/submissions/CanvaImportDialog.tsx (246 lines)
+- L21 `designFits` (export const)
+- L24 `CANVA_PURPLE` (export const) - Canva's purple, for the Canva buttons and marks.
+- L26 `CanvaMark` (export function)
+- L38 `CanvaImportDialog` (export function) - Pick a Canva design and import it as the submission's main file.
 
 ## src/components/submissions/CanvaReimportBar.tsx (80 lines)
 - L14 `CanvaReimportBar` (export function) - For content imported from Canva: which design and revision it is, and a one-click way to bring in the latest  version after editing it in...
@@ -296,30 +300,30 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L168 `MarketTrendRow` (function)
 - L247 `TopicTrend` (export function) - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
 
-## src/components/submissions/submissionUi.tsx (332 lines)
-- L29 `isAnalysing` (export const) - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
-- L33 `ANALYSING_REFETCH_MS` (export const) - Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready.
-- L36 `refetchWhileAnalysing` (export const) - refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all.
-- L39 `AnalysisCountdown` (export interface)
-- L51 `subscribeClock` (function)
-- L68 `noSubscription` (const)
-- L69 `readClock` (const)
-- L73 `useAnalysisCountdown` (export function) - A live countdown to when the post's score is expected.
-- L87 `countdownText` (export function) - about 35 s left", "about 2 min left", "almost done", "taking longer than usual".
-- L97 `progressSteps` (export const) - What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images".
-- L101 `UnderReviewBadge` (export function) - Shown in place of a score while the post is still being analysed, with time left when it's known.
-- L119 `AnalysisProgressPanel` (export function) - The fuller version for a review screen: each step still running, a progress bar and the time left.
-- L139 `FILE_KIND_LABELS` (export const)
-- L147 `MISSING_LABELS` (export const) - How the submit endpoint's `missing` field names read in messages.
-- L164 `formatBytes` (export function)
-- L171 `formatDuration` (function)
-- L181 `authedFileUrl` (export function) - URL a <video>/<img> can load directly.
-- L193 `SubmissionStatusBadge` (export function)
-- L202 `hoursUntil` (const)
-- L205 `dueInfo` (export function) - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
-- L220 `DueBadge` (export function) - Deadline for the next step: red when overdue, amber when it's close.
-- L240 `isReadDocument` (function) - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
-- L244 `SubmissionFileRow` (export function)
+## src/components/submissions/submissionUi.tsx (399 lines)
+- L38 `isAnalysing` (export const) - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
+- L42 `ANALYSING_REFETCH_MS` (export const) - Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready.
+- L45 `refetchWhileAnalysing` (export const) - refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all.
+- L48 `AnalysisCountdown` (export interface)
+- L60 `subscribeClock` (function)
+- L77 `noSubscription` (const)
+- L78 `readClock` (const)
+- L82 `useAnalysisCountdown` (export function) - A live countdown to when the post's score is expected.
+- L96 `countdownText` (export function) - about 35 s left", "about 2 min left", "almost done", "taking longer than usual".
+- L106 `progressSteps` (export const) - What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images".
+- L110 `UnderReviewBadge` (export function) - Shown in place of a score while the post is still being analysed, with time left when it's known.
+- L128 `AnalysisProgressPanel` (export function) - The fuller version for a review screen: each step still running, a progress bar and the time left.
+- L148 `FILE_KIND_LABELS` (export const)
+- L156 `MISSING_LABELS` (export const) - How the submit endpoint's `missing` field names read in messages.
+- L173 `formatBytes` (export function)
+- L180 `formatDuration` (function)
+- L190 `authedFileUrl` (export function) - URL a <video>/<img> can load directly.
+- L202 `SubmissionStatusBadge` (export function)
+- L211 `hoursUntil` (const)
+- L214 `dueInfo` (export function) - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
+- L229 `DueBadge` (export function) - Deadline for the next step: red when overdue, amber when it's close.
+- L249 `isReadDocument` (function) - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
+- L253 `SubmissionFileRow` (export function)
 
 ## src/components/submissions/topicTrendSignals.ts (22 lines)
 - L5 `trendSignals` (export function) - Plain-language signals from the topic numbers, for the perception check.
@@ -491,42 +495,42 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
     - L115 `handleFilePicked` (fn)
     - L123 `handleAddSampleDemo` (fn)
 
-## src/context/VideoUploadQueueContext.tsx (791 lines)
-- L19 `tabOf` (const)
-- L22 `TargetPlatform` (export type)
-- L32 `PosterVariant` (export type)
-- L34 `ScoreStatus` (export type) - analysing': checked, but the video or images are still being read, so there's no score yet.
-- L35 `VideoQueueStatus` (export type)
-- L37 `TimestampedSegment` (export interface)
-- L48 `VideoQueueItem` (export interface)
-- L113 `VideoUploadQueueContextType` (interface)
-- L148 `VideoUploadQueueContext` (const)
-- L289 `applySegmentRisk` (export function) - Mark each script segment red/yellow/green from the violations whose terms it contains.
-- L305 `SCREENER_PLATFORMS` (export const) - Every platform a post can target; a submitted post is screened for the ones it was submitted for.
-- L312 `versionQueueItem` (export function) - An earlier version of a submitted item, as it was, for the Screener's version picker.
-    - L315 `status` (fn)
-- L345 `toQueueItem` (function)
-    - L354 `raw` (fn) - The backend transcribes the video's speech after upload; until it's done the script is empty.
-- L422 `VideoUploadQueueProvider` (export function)
-    - L441 `tabQueries` (fn) - Each tab is its own list on the server, so decided content can't crowd out what's waiting.
-    - L459 `countsQuery` (fn)
-    - L467 `serverItems` (fn)
-    - L480 `setShowDemo` (fn)
-    - L489 `queue` (fn)
-    - L494 `activeVideo` (fn)
-    - L498 `activeUploadCount` (fn)
-    - L502 `totalQueueCount` (fn)
-    - L508 `checksInFlight` (fn) - aren't scored (they're scored when shown), and nothing runs until the real queue has loaded.
-    - L547 `recordScanResult` (fn)
-    - L562 `openQueueDrawer` (fn)
-    - L563 `closeQueueDrawer` (fn)
-    - L648 `addToQueue` (fn)
-    - L704 `removeFromQueue` (fn)
-    - L709 `retryItem` (fn)
-    - L728 `clearCompleted` (fn)
-    - L733 `simulateAdvanceActive` (fn)
-- L784 `useVideoUploadQueue` (export function)
-    - L785 `context` (fn)
+## src/context/VideoUploadQueueContext.tsx (802 lines)
+- L20 `tabOf` (const)
+- L23 `TargetPlatform` (export type)
+- L33 `PosterVariant` (export type)
+- L35 `ScoreStatus` (export type) - analysing': checked, but the video or images are still being read, so there's no score yet.
+- L36 `VideoQueueStatus` (export type)
+- L38 `TimestampedSegment` (export interface)
+- L49 `VideoQueueItem` (export interface)
+- L114 `VideoUploadQueueContextType` (interface)
+- L149 `VideoUploadQueueContext` (const)
+- L290 `applySegmentRisk` (export function) - Mark each script segment red/yellow/green from the violations whose terms it contains.
+- L306 `SCREENER_PLATFORMS` (export const) - Every platform a post can target; a submitted post is screened for the ones it was submitted for.
+- L313 `versionQueueItem` (export function) - An earlier version of a submitted item, as it was, for the Screener's version picker.
+    - L316 `status` (fn)
+- L346 `toQueueItem` (function)
+    - L355 `raw` (fn) - The backend transcribes the video's speech after upload; until it's done the script is empty.
+- L423 `VideoUploadQueueProvider` (export function)
+    - L443 `tabQueries` (fn) - Each tab is its own list on the server, so decided content can't crowd out what's waiting.
+    - L461 `countsQuery` (fn)
+    - L469 `serverItems` (fn)
+    - L482 `setShowDemo` (fn)
+    - L491 `queue` (fn)
+    - L496 `activeVideo` (fn)
+    - L500 `activeUploadCount` (fn)
+    - L504 `totalQueueCount` (fn)
+    - L510 `checksInFlight` (fn) - aren't scored (they're scored when shown), and nothing runs until the real queue has loaded.
+    - L549 `recordScanResult` (fn)
+    - L564 `openQueueDrawer` (fn)
+    - L565 `closeQueueDrawer` (fn)
+    - L650 `addToQueue` (fn)
+    - L715 `removeFromQueue` (fn)
+    - L720 `retryItem` (fn)
+    - L739 `clearCompleted` (fn)
+    - L744 `simulateAdvanceActive` (fn)
+- L795 `useVideoUploadQueue` (export function)
+    - L796 `context` (fn)
 
 ## src/hooks/useCaptionSuggestions.ts (26 lines)
 - L7 `useCaptionSuggestions` (export function) - Caption suggestions for a draft, and how many are left today.
@@ -581,6 +585,14 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L84 `AuthContext` (const)
 - L86 `AuthProvider` (export function)
 - L311 `useAuth` (export function)
+
+## src/lib/GlobalProgressContext.tsx (139 lines)
+- L3 `JobType` (export type)
+- L5 `GlobalProgressJob` (export type)
+- L17 `GlobalProgressContextType` (type)
+- L33 `GlobalProgressContext` (const)
+- L35 `GlobalProgressProvider` (export function)
+- L132 `useGlobalProgress` (export function)
 
 ## src/lib/contentCalendar.ts (351 lines)
 - L15 `PUBLISH_INFO` (export const) - What publishing creates on each platform.
@@ -1047,54 +1059,54 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
     - L334 `handleMqttSync` (fn)
     - L347 `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (1882 lines)
-- L121 `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- L160 `SaveState` (type)
-- L167 `timeOptions` (const)
-- L170 `timeLabel` (function) - 17:00" -> "5:00 PM".
-- L176 `withTime` (function) - A copy of the date at the given "HH:mm" time.
-- L187 `Section` (function)
-- L204 `Field` (function)
-- L218 `MultiSelect` (function) - Select-style box that holds removable chips; options open in a popover.
-    - L237 `toggle` (fn)
-- L305 `SummaryRow` (function)
-- L319 `NewSubmissionPage` (export function)
-    - L320 `navigate` (fn)
-    - L324 `queryClient` (fn)
-    - L326 `optionsQuery` (fn)
-    - L386 `markEdited` (fn)
-    - L392 `accounts` (fn)
-    - L393 `selectedAccounts` (fn)
-    - L397 `brandAccounts` (fn)
-    - L412 `scriptStage` (fn) - the script stage (required: false) work as they always did.
-    - L415 `refreshScript` (fn)
-    - L446 `applyServer` (fn) - ----- Load an existing draft (S08 resume) -----
-    - L509 `buildPayload` (fn) - ----- Saving (S01, S02-S04, S06, S08) -----
-    - L535 `save` (fn) - Create the draft if needed, then save the current fields.
-    - L577 `handler` (fn)
-    - L584 `saveNow` (fn)
-    - L594 `suggestRouting` (fn) - ----- Routing suggestions, applied when the user changes brand/audience/account -----
-    - L613 `onBrandChange` (fn)
-    - L622 `onAccountsChange` (fn)
-    - L635 `onAudienceChange` (fn)
-    - L642 `uploadFiles` (fn) - ----- Files (S05, S07) -----
-    - L699 `removeFile` (fn)
-    - L715 `replaceMain` (fn) - Swap the main file for a new one (the revision workspace's "Replace video").
-    - L739 `onCanvaImported` (fn)
-    - L747 `reimportCanva` (fn) - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - L766 `atApprovalTime` (fn) - Need approval by": the picked day at the chosen time, never after the publish time.
-    - L767 `pickApproval` (fn)
-    - L789 `isMissing` (fn)
-    - L791 `errorFor` (fn)
-    - L796 `submit` (fn)
-    - L877 `exec` (fn) - ----- Caption editor -----
-    - L885 `insertHashtag` (fn) - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - L897 `text` (fn)
-    - L902 `typedTail` (fn) - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - L909 `removeHashtag` (fn) - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - L933 `applySuggestedCaption` (fn) - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - L948 `charLimit` (fn)
-    - L953 `hashtagLibrary` (fn)
+## src/pages/Submissions/NewSubmissionPage.tsx (1898 lines)
+- L122 `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- L161 `SaveState` (type)
+- L168 `timeOptions` (const)
+- L171 `timeLabel` (function) - 17:00" -> "5:00 PM".
+- L177 `withTime` (function) - A copy of the date at the given "HH:mm" time.
+- L188 `Section` (function)
+- L205 `Field` (function)
+- L219 `MultiSelect` (function) - Select-style box that holds removable chips; options open in a popover.
+    - L238 `toggle` (fn)
+- L306 `SummaryRow` (function)
+- L320 `NewSubmissionPage` (export function)
+    - L321 `navigate` (fn)
+    - L326 `queryClient` (fn)
+    - L328 `optionsQuery` (fn)
+    - L388 `markEdited` (fn)
+    - L394 `accounts` (fn)
+    - L395 `selectedAccounts` (fn)
+    - L399 `brandAccounts` (fn)
+    - L414 `scriptStage` (fn) - the script stage (required: false) work as they always did.
+    - L417 `refreshScript` (fn)
+    - L448 `applyServer` (fn) - ----- Load an existing draft (S08 resume) -----
+    - L511 `buildPayload` (fn) - ----- Saving (S01, S02-S04, S06, S08) -----
+    - L537 `save` (fn) - Create the draft if needed, then save the current fields.
+    - L579 `handler` (fn)
+    - L586 `saveNow` (fn)
+    - L596 `suggestRouting` (fn) - ----- Routing suggestions, applied when the user changes brand/audience/account -----
+    - L615 `onBrandChange` (fn)
+    - L624 `onAccountsChange` (fn)
+    - L637 `onAudienceChange` (fn)
+    - L644 `uploadFiles` (fn) - ----- Files (S05, S07) -----
+    - L708 `removeFile` (fn)
+    - L724 `replaceMain` (fn) - Swap the main file for a new one (the revision workspace's "Replace video").
+    - L748 `onCanvaImported` (fn)
+    - L756 `reimportCanva` (fn) - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - L782 `atApprovalTime` (fn) - Need approval by": the picked day at the chosen time, never after the publish time.
+    - L783 `pickApproval` (fn)
+    - L805 `isMissing` (fn)
+    - L807 `errorFor` (fn)
+    - L812 `submit` (fn)
+    - L893 `exec` (fn) - ----- Caption editor -----
+    - L901 `insertHashtag` (fn) - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - L913 `text` (fn)
+    - L918 `typedTail` (fn) - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - L925 `removeHashtag` (fn) - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - L949 `applySuggestedCaption` (fn) - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - L964 `charLimit` (fn)
+    - L969 `hashtagLibrary` (fn)
 
 ## src/pages/Submissions/ScriptChangesPage.tsx (340 lines)
 - L16 `View` (type)
@@ -1104,24 +1116,24 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L52 `ScriptChangesPage` (export function) - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
 - L68 `Changes` (function)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (633 lines)
-- L74 `Panel` (function)
-- L88 `LightBadge` (function)
-- L104 `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
-- L139 `DetailRow` (function)
-- L148 `JobCard` (function)
-- L208 `VersionRow` (function)
-- L246 `PreviewVideo` (function) - Main video preview, using the most representative frame as its poster.
-- L251 `SubmissionDetailPage` (export function)
-    - L253 `navigate` (fn)
-    - L254 `queryClient` (fn)
-    - L258 `submissionQuery` (fn)
-    - L259 `optionsQuery` (fn)
-    - L260 `historyQuery` (fn)
-    - L263 `scriptStage` (fn)
-    - L283 `refresh` (fn)
-    - L290 `handleScriptUpload` (fn)
-    - L306 `withdrawMutation` (fn)
+## src/pages/Submissions/SubmissionDetailPage.tsx (642 lines)
+- L75 `Panel` (function)
+- L89 `LightBadge` (function)
+- L105 `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
+- L140 `DetailRow` (function)
+- L149 `JobCard` (function)
+- L209 `VersionRow` (function)
+- L247 `PreviewVideo` (function) - Main video preview, using the most representative frame as its poster.
+- L252 `SubmissionDetailPage` (export function)
+    - L254 `navigate` (fn)
+    - L255 `queryClient` (fn)
+    - L260 `submissionQuery` (fn)
+    - L261 `optionsQuery` (fn)
+    - L262 `historyQuery` (fn)
+    - L265 `scriptStage` (fn)
+    - L285 `refresh` (fn)
+    - L292 `handleScriptUpload` (fn)
+    - L315 `withdrawMutation` (fn)
 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines)
 - L4 `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
@@ -1316,11 +1328,11 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L128 `MatchTestResult` (export interface)
 - L133 `XTrendOpportunity` (export interface)
 
-## src/types/script.ts (59 lines)
+## src/types/script.ts (61 lines)
 - L5 `ScriptStatus` (export type) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...
 - L7 `ScriptVersion` (export interface)
 - L24 `ScriptStage` (export interface)
-- L40 `ScriptQueueItem` (export interface)
+- L42 `ScriptQueueItem` (export interface)
 
 ## src/types/sentiment.ts (161 lines)
 - L3 `SentimentLevel` (export type)
@@ -1337,7 +1349,7 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L148 `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - L160 `AiUsage` (export type)
 
-## src/types/submission.ts (495 lines)
+## src/types/submission.ts (496 lines)
 - L5 `ContentType` (export type) - AD: paid social ad.
 - L6 `SubmissionFileKind` (export type)
 - L7 `SubmissionStatus` (export type)
@@ -1348,29 +1360,29 @@ exact as of the last regeneration; if a symbol has moved, search for its name.
 - L39 `TranscriptStatus` (export type)
 - L41 `TranscriptSegment` (export interface)
 - L49 `SubmissionFile` (export interface)
-- L73 `SegmentFlag` (export interface) - Which transcript segments contain flagged wording (same matcher as the check).
-- L81 `StoredCheck` (export type) - The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images.
-- L105 `AnalysisStep` (export interface) - One part of the post still being read before the rulebook check can score it.
-- L117 `AnalysisProgress` (export interface) - While the check is still reading the post: what's left and when the score is expected.
-- L127 `Submission` (export interface)
-- L187 `SubmissionSummary` (export interface)
-- L246 `SubmissionUpdate` (export interface)
-- L263 `SubmissionVersion` (export interface)
-- L285 `ReviewJob` (export interface)
-- L303 `ReviewDecisionType` (export type)
-- L305 `ReviewDecisionRequest` (export interface)
-- L319 `ReviewCommentCategory` (export type)
-- L321 `ReviewComment` (export interface)
-- L339 `ReviewCommentCreate` (export interface)
-- L346 `SubmissionEvent` (export interface)
-- L355 `SubmissionHistory` (export interface)
-- L361 `ReviewQueueItem` (export interface)
-- L406 `VersionView` (export interface) - One submitted version as it was: what was sent, its video, its automated check and its decision.
-- L423 `FlagDismissReason` (export type)
-- L426 `FlagReview` (export interface) - A reviewer's dismissal of an automated compliance flag on one version.
-- L440 `FlagVerdict` (export interface) - A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm.
-- L453 `RuleFlagStats` (export interface) - Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed.
-- L463 `QueueTab` (export type) - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
-- L466 `ReviewQueueCounts` (export type) - Posts in each Screener tab, plus scripts waiting for a reviewer.
-- L469 `DashboardSummary` (export interface) - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
-- L491 `SubmitResult` (export interface)
+- L74 `SegmentFlag` (export interface) - Which transcript segments contain flagged wording (same matcher as the check).
+- L82 `StoredCheck` (export type) - The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images.
+- L106 `AnalysisStep` (export interface) - One part of the post still being read before the rulebook check can score it.
+- L118 `AnalysisProgress` (export interface) - While the check is still reading the post: what's left and when the score is expected.
+- L128 `Submission` (export interface)
+- L188 `SubmissionSummary` (export interface)
+- L247 `SubmissionUpdate` (export interface)
+- L264 `SubmissionVersion` (export interface)
+- L286 `ReviewJob` (export interface)
+- L304 `ReviewDecisionType` (export type)
+- L306 `ReviewDecisionRequest` (export interface)
+- L320 `ReviewCommentCategory` (export type)
+- L322 `ReviewComment` (export interface)
+- L340 `ReviewCommentCreate` (export interface)
+- L347 `SubmissionEvent` (export interface)
+- L356 `SubmissionHistory` (export interface)
+- L362 `ReviewQueueItem` (export interface)
+- L407 `VersionView` (export interface) - One submitted version as it was: what was sent, its video, its automated check and its decision.
+- L424 `FlagDismissReason` (export type)
+- L427 `FlagReview` (export interface) - A reviewer's dismissal of an automated compliance flag on one version.
+- L441 `FlagVerdict` (export interface) - A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm.
+- L454 `RuleFlagStats` (export interface) - Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed.
+- L464 `QueueTab` (export type) - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
+- L467 `ReviewQueueCounts` (export type) - Posts in each Screener tab, plus scripts waiting for a reviewer.
+- L470 `DashboardSummary` (export interface) - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
+- L492 `SubmitResult` (export interface)

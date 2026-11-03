@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import Breadcrumbs from "./Breadcrumbs";
+import { GlobalProgressOverlay } from "./GlobalProgressOverlay";
 
 interface Props {
   children: ReactNode;
@@ -53,6 +54,7 @@ export default function AppShell({ children }: Props) {
           </div>
         </main>
       </div>
+      <GlobalProgressOverlay />
     </div>
   );
 }

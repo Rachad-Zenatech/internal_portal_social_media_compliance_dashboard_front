@@ -14,7 +14,16 @@ import {
   CheckCircle2,
   Clock,
   Hourglass,
+  Eye,
 } from "lucide-react";
+import { InlineDiff } from "@/components/script/ScriptDiff";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,6 +264,9 @@ export function SubmissionFileRow({
   const src = authedFileUrl(file.url);
   // Most representative frame rather than the first one, which is often black.
   const { dataUrl: videoThumb, duration } = useVideoThumbnail(isVideo ? src : null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const docText = file.doc_text?.trim() || null;
+  const canPreviewText = isReadDocument(file) && Boolean(docText);
   const DocIcon = /\.(zip|rar|7z)$/i.test(file.original_name)
     ? FileArchive
     : /\.(xlsx?|csv)$/i.test(file.original_name)
@@ -262,70 +274,125 @@ export function SubmissionFileRow({
     : FileText;
 
   return (
-    <div className={`flex items-center gap-3 rounded-lg border border-border/70 bg-card p-2 ${removing ? "opacity-50" : ""}`}>
-      <a
-        href={src}
-        target="_blank"
-        rel="noreferrer"
-        title="Open preview"
-        className={`${isVideo ? "w-20 h-12" : "w-10 h-10"} rounded-md overflow-hidden bg-muted flex items-center justify-center shrink-0`}
-      >
-        {isVideo ? (
-          videoThumb ? (
-            <img src={videoThumb} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          )
-        ) : isImage ? (
-          <img src={src} alt="" className="w-full h-full object-cover" />
+    <>
+      <div className={`flex items-center gap-3 rounded-lg border border-border/70 bg-card p-2 ${removing ? "opacity-50" : ""}`}>
+        {canPreviewText ? (
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            title="Preview script"
+            className="w-10 h-10 rounded-md overflow-hidden bg-muted hover:bg-muted/80 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+          >
+            <DocIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </button>
         ) : (
-          <DocIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            title="Open preview"
+            className={`${isVideo ? "w-20 h-12" : "w-10 h-10"} rounded-md overflow-hidden bg-muted flex items-center justify-center shrink-0`}
+          >
+            {isVideo ? (
+              videoThumb ? (
+                <img src={videoThumb} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              )
+            ) : isImage ? (
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <DocIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            )}
+          </a>
         )}
-      </a>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-foreground truncate" title={file.original_name}>
-          {file.original_name}
-        </p>
-        <p className="text-[11px] text-muted-foreground">
-          {FILE_KIND_LABELS[file.kind]} · {formatBytes(file.size_bytes)}
-          {duration && Number.isFinite(duration) ? ` · ${formatDuration(duration)}` : ""}
-          {isReadDocument(file) && file.doc_text_status === "COMPLETED" && " · Text read for the check"}
-        </p>
-        {isReadDocument(file) && (file.doc_text_status == null || file.doc_text_status === "PROCESSING") && (
-          <p className="flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300">
-            <Loader2 className="w-3 h-3 animate-spin" /> Reading the text for the check...
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-foreground truncate" title={file.original_name}>
+            {file.original_name}
           </p>
-        )}
-        {isReadDocument(file) && file.doc_text_status === "FAILED" && (
-          <p className="text-[11px] text-amber-700 dark:text-amber-300" title={file.doc_text_error ?? undefined}>
-            Not checked: {file.doc_text_error ?? "the text couldn't be read."}
+          <p className="text-[11px] text-muted-foreground">
+            {FILE_KIND_LABELS[file.kind]} ? {formatBytes(file.size_bytes)}
+            {duration && Number.isFinite(duration) ? ` ? ${formatDuration(duration)}` : ""}
+            {isReadDocument(file) && file.doc_text_status === "COMPLETED" && " ? Text read for the check"}
           </p>
-        )}
-      </div>
-      {removing ? (
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />
-      ) : (
-        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" title="File options">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild className="text-xs gap-2">
-            <a href={src} target="_blank" rel="noreferrer">
-              <ExternalLink className="w-3.5 h-3.5" /> Open preview
-            </a>
-          </DropdownMenuItem>
-          {onRemove && (
-            <DropdownMenuItem variant="destructive" onClick={onRemove} className="text-xs gap-2">
-              <Trash2 className="w-3.5 h-3.5" /> Remove file
-            </DropdownMenuItem>
+          {isReadDocument(file) && (file.doc_text_status == null || file.doc_text_status === "PROCESSING") && (
+            <p className="flex items-center gap-1 text-[11px] text-blue-700 dark:text-blue-300">
+              <Loader2 className="w-3 h-3 animate-spin" /> Reading the text for the check...
+            </p>
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          {isReadDocument(file) && file.doc_text_status === "FAILED" && (
+            <p className="text-[11px] text-amber-700 dark:text-amber-300" title={file.doc_text_error ?? undefined}>
+              Not checked: {file.doc_text_error ?? "the text couldn't be read."}
+            </p>
+          )}
+        </div>
+        {canPreviewText && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1 px-2 text-[11px] shrink-0"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye className="w-3 h-3" /> Preview
+          </Button>
+        )}
+        {removing ? (
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />
+        ) : (
+          <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" title="File options">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {canPreviewText && (
+              <DropdownMenuItem onClick={() => setPreviewOpen(true)} className="text-xs gap-2">
+                <Eye className="w-3.5 h-3.5" /> Preview text
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild className="text-xs gap-2">
+              <a href={src} target="_blank" rel="noreferrer">
+                <ExternalLink className="w-3.5 h-3.5" /> Open original file
+              </a>
+            </DropdownMenuItem>
+            {onRemove && (
+              <DropdownMenuItem variant="destructive" onClick={onRemove} className="text-xs gap-2">
+                <Trash2 className="w-3.5 h-3.5" /> Remove file
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {canPreviewText && docText && (
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col overflow-hidden p-6">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                {file.original_name}
+              </DialogTitle>
+              <DialogDescription className="flex items-center justify-between">
+                <span>{FILE_KIND_LABELS[file.kind]} ? {formatBytes(file.size_bytes)}</span>
+                <a
+                  href={src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  <ExternalLink className="w-3 h-3" /> Open original file
+                </a>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-muted/20 p-4">
+              <InlineDiff parts={[{ kind: "same", before: docText, after: docText }]} showChanges={false} numbered={false} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }

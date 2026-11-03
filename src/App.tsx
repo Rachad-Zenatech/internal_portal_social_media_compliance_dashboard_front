@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "./components/ui/button";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import { GlobalProgressProvider } from "./lib/GlobalProgressContext";
 import { VideoUploadQueueProvider } from "./context/VideoUploadQueueContext";
 import { VideoUploadQueueDrawer } from "./components/video/VideoUploadQueueDrawer";
 
@@ -108,6 +109,7 @@ function NotFoundAlert() {
 function App() {
   return (
     <AuthProvider>
+      <GlobalProgressProvider>
       <VideoUploadQueueProvider>
         <BrowserRouter>
           <VideoUploadQueueDrawer />
@@ -158,6 +160,7 @@ function App() {
           </Suspense>
         </BrowserRouter>
       </VideoUploadQueueProvider>
+      </GlobalProgressProvider>
     </AuthProvider>
   );
 }

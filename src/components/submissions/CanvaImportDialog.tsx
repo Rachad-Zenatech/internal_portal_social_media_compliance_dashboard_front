@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { canvaService } from "@/services/canvaService";
 import type { CanvaDesign } from "@/types/canva";
 import type { ContentType, Submission } from "@/types/submission";
@@ -49,6 +50,7 @@ export default function CanvaImportDialog({
   onImported: (submission: Submission) => void;
 }) {
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
   const [selected, setSelected] = useState<string | null>(null);
 
   const connection = useQuery({ queryKey: ["canva-connection"], queryFn: canvaService.connection, enabled: open });
@@ -84,7 +86,15 @@ export default function CanvaImportDialog({
     mutationFn: async (designId: string) => {
       const id = await ensureSubmissionId();
       if (!id) throw new Error("Couldn't create the draft");
-      return canvaService.importDesign(id, designId);
+      const design = designs.data?.find((d) => d.id === designId);
+      const importPromise = canvaService.importDesign(id, designId);
+      addJob(design?.title || "Canva Design", importPromise, {
+        description: "Importing design from Canva...",
+        type: "upload",
+        submissionId: id,
+        link_url: `/submissions/new?id=${id}`,
+      });
+      return importPromise;
     },
     onSuccess: (submission) => {
       const design = designs.data?.find((d) => d.id === selected);

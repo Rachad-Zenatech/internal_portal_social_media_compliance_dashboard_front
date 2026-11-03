@@ -32,6 +32,8 @@ export interface ScriptStage {
   file_name?: string | null;
   file_status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | null;
   file_error?: string | null;
+  file_text?: string | null;
+  file_url?: string | null;
   can_submit: boolean;
   can_review: boolean;
   can_respond: boolean;

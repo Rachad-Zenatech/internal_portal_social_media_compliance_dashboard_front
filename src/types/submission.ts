@@ -59,6 +59,7 @@ export interface SubmissionFile {
   transcript?: TranscriptSegment[] | null;
   transcript_error?: string | null;
   /** Scripts and article files: their text is read in the background so the check screens it. Null = not read yet. */
+  doc_text?: string | null;
   doc_text_status?: "PROCESSING" | "COMPLETED" | "FAILED" | null;
   /** Why it couldn't be read, in words the creator can act on. */
   doc_text_error?: string | null;

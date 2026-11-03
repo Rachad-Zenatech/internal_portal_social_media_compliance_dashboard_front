@@ -65,6 +65,7 @@ import { usePublicMood } from "@/hooks/usePublicMood";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
 import { canvaService } from "@/services/canvaService";
 import { submissionService } from "@/services/submissionService";
@@ -321,6 +322,7 @@ export default function NewSubmissionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const routeId = searchParams.get("id");
   const { setActiveVideoId } = useVideoUploadQueue();
+  const { addJob } = useGlobalProgress();
   const queryClient = useQueryClient();
 
   const optionsQuery = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 60_000 });
@@ -432,7 +434,7 @@ export default function NewSubmissionPage() {
         setFiles((prev) =>
           prev.map((f) => {
             const n = byId.get(f.id);
-            return n ? { ...f, doc_text_status: n.doc_text_status, doc_text_error: n.doc_text_error } : f;
+            return n ? { ...f, doc_text: n.doc_text, doc_text_status: n.doc_text_status, doc_text_error: n.doc_text_error } : f;
           })
         );
       } catch {
@@ -683,7 +685,14 @@ export default function NewSubmissionPage() {
     setUploading((prev) => [...prev, ...batch.map(({ file, key, kind }) => ({ key, name: file.name, kind }))]);
     for (const { file, key, kind } of batch) {
       try {
-        const saved = await submissionService.uploadFile(id, kind, file);
+        const uploadPromise = submissionService.uploadFile(id, kind, file);
+        addJob(file.name, uploadPromise, {
+          description: kind === "SCRIPT" ? "Uploading & reading script..." : "Uploading content file...",
+          type: kind === "SCRIPT" ? "document" : "upload",
+          submissionId: id,
+          link_url: `/submissions/new?id=${id}`,
+        });
+        const saved = await uploadPromise;
         // The server keeps one script: the new one replaces any earlier one.
         setFiles((prev) => [...(kind === "SCRIPT" ? prev.filter((f) => f.kind !== "SCRIPT") : prev), saved]);
       } catch (err) {
@@ -749,7 +758,14 @@ export default function NewSubmissionPage() {
     try {
       const id = await save({ force: true });
       if (!id) return;
-      const s = await canvaService.reimport(id);
+      const reimportPromise = canvaService.reimport(id);
+      addJob("Reimport from Canva", reimportPromise, {
+        description: "Importing latest Canva revision...",
+        type: "upload",
+        submissionId: id,
+        link_url: `/submissions/new?id=${id}`,
+      });
+      const s = await reimportPromise;
       applyServer(s);
       const f = s.files.find((x) => x.kind === "MAIN" && x.source === "CANVA");
       toast.success(`Reimported revision ${f?.canva_revision ?? ""} from Canva.`);

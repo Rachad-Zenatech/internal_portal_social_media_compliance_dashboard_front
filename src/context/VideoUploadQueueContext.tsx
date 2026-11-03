@@ -5,6 +5,7 @@ import { complianceService, type ComplianceViolation } from '@/services/complian
 import { submissionService } from '@/services/submissionService';
 import { authedFileUrl, isAnalysing } from '@/components/submissions/submissionUi';
 import { useAuth } from '@/lib/AuthContext';
+import { useGlobalProgress } from '@/lib/GlobalProgressContext';
 import type {
   QueueTab,
   ReviewQueueCounts,
@@ -434,6 +435,7 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
   });
 
   const { user, creatorView } = useAuth();
+  const { addJob } = useGlobalProgress();
   // A super admin viewing the app as a creator sees only their own content, as its creator.
   const queueScope = creatorView ? 'mine' : 'all';
   const [doneSearch, setDoneSearch] = useState('');
@@ -695,10 +697,19 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
 
       setQueue((prev) => [newItem, ...prev]);
       setActiveVideoId(newItem.id);
+      addJob(
+        actualFilename,
+        new Promise((resolve) => setTimeout(resolve, 18000)),
+        {
+          description: 'Uploading & scanning video...',
+          type: 'upload',
+          link_url: '/compliance/scanner',
+        }
+      );
       toast.success(`Added "${actualTitle}" to video upload queue! Early chunks are available for review.`);
       return newItem;
     },
-    []
+    [addJob]
   );
 
   const removeFromQueue = useCallback((id: string) => {

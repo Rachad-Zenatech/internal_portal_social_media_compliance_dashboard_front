@@ -45,6 +45,7 @@ import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
 import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
@@ -252,6 +253,7 @@ export default function SubmissionDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
   const scriptInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingScript, setUploadingScript] = useState(false);
 
@@ -293,7 +295,14 @@ export default function SubmissionDetailPage() {
     if (!selected || !id) return;
     setUploadingScript(true);
     try {
-      await submissionService.uploadFile(id, "SCRIPT", selected);
+      const uploadPromise = submissionService.uploadFile(id, "SCRIPT", selected);
+      addJob(selected.name, uploadPromise, {
+        description: "Uploading & reading script...",
+        type: "document",
+        submissionId: id,
+        link_url: `/submissions/${id}`,
+      });
+      await uploadPromise;
       refresh();
       toast.success(`Uploaded ${selected.name} to ${s?.reference_code ?? "post"}.`);
     } catch (err) {
