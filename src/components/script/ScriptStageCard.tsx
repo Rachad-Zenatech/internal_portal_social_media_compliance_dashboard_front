@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, CheckCircle2, FileText, Loader2, Send } from "lucide-react";
 
@@ -171,6 +171,7 @@ function DraftBody({
   reviewer: string | null;
 }) {
   const { submit } = useScriptActions(submissionId ?? "");
+  const navigate = useNavigate();
   const hasFile = Boolean(stage?.file_name);
   const failed = stage?.file_status === "FAILED";
   return (
@@ -215,7 +216,7 @@ function DraftBody({
           <FileText className="w-3.5 h-3.5" /> {hasFile ? "Replace the script" : "Upload the script"}
         </Button>
         {hasFile && stage?.can_submit && (
-          <Button type="button" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => submit.mutate()} disabled={reading || failed || submit.isPending}>
+          <Button type="button" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => submit.mutate(undefined, { onSuccess: () => navigate("/submissions") })} disabled={reading || failed || submit.isPending}>
             {submit.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send script for review
           </Button>
         )}

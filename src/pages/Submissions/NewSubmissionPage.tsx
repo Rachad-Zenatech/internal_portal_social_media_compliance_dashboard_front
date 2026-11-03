@@ -850,6 +850,7 @@ export default function NewSubmissionPage() {
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
         queryClient.invalidateQueries({ queryKey: ["submissions"] });
         toast.success("Script sent for review. Add the video and caption once it's approved.");
+        navigate("/submissions");
       } catch (err) {
         toast.error(`Couldn't send the script: ${(err as Error).message}`);
       } finally {
@@ -873,7 +874,8 @@ export default function NewSubmissionPage() {
       toast.success(
         `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
-      navigate(`/submissions/${result.submission.id}`);
+      // Sent: the submission page is done, so the creator goes back to My posts to follow it from there.
+      navigate("/submissions");
     } catch (err) {
       if (err instanceof ApiError && err.status === 422 && err.detail && typeof err.detail === "object" && "missing" in err.detail) {
         const missing = (err.detail as { missing: string[] }).missing;

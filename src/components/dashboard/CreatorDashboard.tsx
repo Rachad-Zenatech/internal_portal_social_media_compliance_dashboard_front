@@ -11,6 +11,7 @@ import {
   ActivityList,
   Empty,
   Loading,
+  scriptNeedsChanges,
   statusPillOf,
   Score,
   Section,
@@ -57,10 +58,13 @@ const FILTERS: { v: PostFilter; label: string }[] = [
 
 /** One thing waiting on the creator: what it is, what's wrong, when it's due, and one button. */
 function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
-  const changes = s.status === "CHANGES_REQUESTED";
+  const scriptChanges = scriptNeedsChanges(s);
+  const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
   const status = statusPillOf(s);
-  const due = changes ? dueLabel(s.due_kind === "REVISION" ? s.due_at : null) : null;
-  const details = changes
+  const due = changes && !scriptChanges ? dueLabel(s.due_kind === "REVISION" ? s.due_at : null) : null;
+  const details = scriptChanges
+    ? [s.script_status === "EDITS_PROPOSED" ? "Your reviewer edited the script" : "Your reviewer asked for changes to the script"]
+    : changes
     ? [issuesText(s.issue_count) ?? "A reviewer asked for changes"]
     : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`];
   return (
@@ -83,7 +87,7 @@ function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }
         variant={changes ? "default" : "outline"}
         className={`h-9 shrink-0 rounded-lg px-4 text-sm font-medium ${changes ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
       >
-        {changes ? "Fix issues" : "Continue draft"}
+        {scriptChanges ? "Review changes" : changes ? "Fix issues" : s.script_status === "APPROVED" ? "Upload video" : "Continue draft"}
       </Button>
     </li>
   );
@@ -161,7 +165,8 @@ export default function CreatorDashboard() {
     const due = (s: SubmissionSummary) => (s.due_at ? new Date(s.due_at).getTime() : Infinity);
     return [
       ...mine.filter((s) => s.status === "CHANGES_REQUESTED").sort((a, b) => due(a) - due(b)),
-      ...mine.filter((s) => s.status === "DRAFT").sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+      // A draft whose script is already with a reviewer is waiting on them, not on the creator.
+      ...mine.filter((s) => s.status === "DRAFT" && s.script_status !== "IN_REVIEW").sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     ];
   }, [mine]);
 
@@ -290,7 +295,7 @@ export default function CreatorDashboard() {
             ) : (
               <ul>
                 {nextSteps.slice(0, NEXT_STEP_LIMIT).map((s) => (
-                  <NextStepRow key={s.id} s={s} onOpen={() => navigate(`/submissions/new?id=${s.id}`)} />
+                  <NextStepRow key={s.id} s={s} onOpen={() => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`)} />
                 ))}
               </ul>
             )}

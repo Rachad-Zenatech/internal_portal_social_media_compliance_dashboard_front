@@ -18,6 +18,30 @@ const ORDERED_LINE = /^\s*(\d+)[.)] (.*)$/;
 
 type Mark = { type: "bold" } | { type: "italic" };
 
+/**
+ * A piece of a script for showing in a list (what changed): the wording alone, without the page, heading, bold, italic,
+ * list or table marks. A change can start or end part-way through a table row, so stray bars are dropped too.
+ */
+export function displayText(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !PAGE_LINE.test(line))
+    .map((line) =>
+      line
+        .replace(/^#{1,3}\s+/, "")
+        .replace(/^(?:[-\u2022]|\d+[.)])\s+/, "")
+        .replace(/\*\*/g, "")
+        .replace(ITALIC, (_m, lead: string, inner: string) => lead + inner)
+        .replace(/\|/g, " \u00b7 ")
+    )
+    .join(" ")
+    .replace(/(?:\s*\u00b7\s*)+/g, " \u00b7 ")
+    .replace(/^\s*\u00b7\s*|\s*\u00b7\s*$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // --- Text to document -------------------------------------------------------------------------------------------------
 
 /** Italic runs: _word_ where the underscores sit at the edges of words, so snake_case_names are left alone. */

@@ -133,6 +133,10 @@ const AVATAR_TONES = [
   "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
 ];
 
+/** A draft whose script a reviewer sent back (asking for changes, or with edits): the next step is on the script page. */
+export const scriptNeedsChanges = (s: { status: string; script_status?: string | null }) =>
+  s.status === "DRAFT" && (s.script_status === "CHANGES_REQUESTED" || s.script_status === "EDITS_PROPOSED");
+
 /** A video draft whose script has been sent or reviewed says so instead of plain "Draft". */
 export function scriptPillOf(s: { status: string; script_status?: string | null }): { label: string; pill: string } | null {
   if (s.status !== "DRAFT" || !s.script_status || s.script_status === "DRAFT") return null;
