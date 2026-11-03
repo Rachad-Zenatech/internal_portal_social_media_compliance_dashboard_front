@@ -5,6 +5,8 @@ import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Se
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ResizablePanel } from "@/components/ui/ResizeHandle";
+import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
@@ -129,6 +131,8 @@ function Editor({
   const [focusId, setFocusId] = useState<number | null>(null);
   const editorRef = useRef<ScriptEditorHandle | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
+  const textRef = useRef<HighlightableHandle | null>(null);
+  const locateCount = useRef<Record<string, number>>({});
   const { decide } = useScriptActions(submissionId);
   const { mood } = usePublicMood(submissionId, true);
   const moodDecision = overallPostDecision(mood);
@@ -161,6 +165,22 @@ function Editor({
     setCompare("mine");
     // The editor is shown on the next render.
     window.setTimeout(() => editorRef.current?.find(term), 60);
+  };
+  /** A flag card was clicked: take the reviewer to its wording in the script (the next place each time). */
+  const goToFlag = (v: ComplianceViolation) => {
+    const missing = v.kind === "MISSING_DISCLAIMER";
+    const terms = missing ? [] : v.flagged_terms;
+    if (mode === "edit") {
+      if (terms[0]) findInScript(terms[0]);
+      return;
+    }
+    if (compare !== "mine") setCompare("mine");
+    const n = locateCount.current[v.rule_id] ?? 0;
+    locateCount.current[v.rule_id] = n + 1;
+    // The script may need a render first when the view just changed.
+    window.setTimeout(() => {
+      if (terms.length === 0 || textRef.current?.locate(terms, n) === 0) textRef.current?.toEnd();
+    }, compare !== "mine" ? 60 : 0);
   };
   const addDisclaimer = (text: string) => {
     setDraft((d) => `${d.replace(/\s+$/, "")}\n\n${text}\n`);
@@ -316,16 +336,29 @@ function Editor({
                   <DiffLegend />
                 </div>
               )}
-              <InlineDiff parts={parts} terms={compare === "mine" ? terms : []} showChanges={showChanges} focusId={focusId} onPick={setFocusId} />
+              <HighlightableText
+                ref={textRef}
+                storageKey={`scriptReview.highlights.${submissionId}.${sent.version_number}`}
+                enabled={canReview}
+                layoutKey={`${compare}|${showChanges}|${draft.length}`}
+              >
+                <InlineDiff parts={parts} terms={compare === "mine" ? terms : []} showChanges={showChanges} focusId={focusId} onPick={setFocusId} />
+              </HighlightableText>
             </article>
           )}
         </div>
       </section>
 
       {/* ===== Check, sentiment, history and the decision ===== */}
-      <aside
-        aria-label="Your review"
-        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:w-[400px] lg:border-l lg:border-t-0 2xl:w-[440px] min-[112.5rem]:w-[500px]"
+      <ResizablePanel
+        as="aside"
+        label="Your review"
+        storageKey="review"
+        edge="left"
+        min={320}
+        max={900}
+        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
+        defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <div className="flex items-center gap-4 border-b border-border/70 px-5 py-4">
           <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
@@ -421,7 +454,7 @@ function Editor({
               FINDING_ORDER.map((status) => (
                 <FindingGroup key={status} status={status} count={grouped[status].length}>
                   {grouped[status].map((v) => (
-                    <FlagCard key={v.rule_id} v={v} canEdit={canReview} onFind={findInScript} onAddDisclaimer={addDisclaimer} />
+                    <FlagCard key={v.rule_id} v={v} canEdit={canReview} onFind={findInScript} onGo={() => goToFlag(v)} onAddDisclaimer={addDisclaimer} />
                   ))}
                 </FindingGroup>
               ))
@@ -540,7 +573,7 @@ function Editor({
             {status === "IN_REVIEW" ? "You can't review your own script." : "This script isn't waiting for a review."}
           </p>
         )}
-      </aside>
+      </ResizablePanel>
     </>
   );
 }
@@ -549,18 +582,33 @@ function FlagCard({
   v,
   canEdit,
   onFind,
+  onGo,
   onAddDisclaimer,
 }: {
   v: ComplianceViolation;
   canEdit: boolean;
   onFind: (term: string) => void;
+  /** Go to this flag's wording in the script. */
+  onGo: () => void;
   onAddDisclaimer: (text: string) => void;
 }) {
   const critical = v.traffic_light === "RED";
   const missing = v.kind === "MISSING_DISCLAIMER";
   const cleared = statusOf(v) === "CLEARED";
   return (
-    <article className={`flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 ${cleared ? "opacity-80" : ""}`}>
+    <article
+      role="button"
+      tabIndex={0}
+      title="Show in the script"
+      onClick={onGo}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onGo();
+        }
+      }}
+      className={`flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors hover:border-sky-400/70 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${cleared ? "opacity-80" : ""}`}
+    >
       <div className="flex items-center gap-2">
         <StatusPill status={statusOf(v)} critical={critical} />
         <span className="text-xs text-muted-foreground">{missing ? "Missing disclaimer" : "In the script"}</span>
@@ -576,7 +624,10 @@ function FlagCard({
             <button
               key={t}
               type="button"
-              onClick={() => onFind(t)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFind(t);
+              }}
               disabled={!canEdit}
               className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200 disabled:cursor-default disabled:hover:bg-amber-100 dark:bg-amber-500/15 dark:text-amber-200"
               title={canEdit ? "Find it in the script and edit it" : undefined}
@@ -594,7 +645,10 @@ function FlagCard({
       {missing && !cleared && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
         <div className="flex flex-col gap-1.5">
           <p className="rounded-lg bg-muted px-2.5 py-1.5 text-xs text-foreground/80">“{v.missing_disclaimers![0]}”</p>
-          <Button size="sm" variant="outline" className="h-7 self-start text-xs" onClick={() => onAddDisclaimer(v.missing_disclaimers![0])}>
+          <Button size="sm" variant="outline" className="h-7 self-start text-xs" onClick={(e) => {
+              e.stopPropagation();
+              onAddDisclaimer(v.missing_disclaimers![0]);
+            }}>
             Add it to the end of the script
           </Button>
         </div>

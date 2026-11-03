@@ -75,6 +75,7 @@ import { submissionService } from "@/services/submissionService";
 import { scriptService } from "@/services/scriptService";
 import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
 import UploadScriptDialog from "@/components/script/UploadScriptDialog";
+import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { ScriptQueueItem } from "@/types/script";
 import type { QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
@@ -1144,12 +1145,18 @@ function Workspace({
           onUploadScript={onUploadScript}
         />
       </section>
-      <aside
-        aria-label="Your review"
-        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:w-[400px] lg:border-l lg:border-t-0 2xl:w-[440px] min-[112.5rem]:w-[500px]"
+      <ResizablePanel
+        as="aside"
+        label="Your review"
+        storageKey="review"
+        edge="left"
+        min={320}
+        max={900}
+        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
+        defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <ReviewPanel s={s} flags={flags} dismissed={dismissed} canReview={canReview} now={now} hasVideo={Boolean(s.video)} seek={seek} />
-      </aside>
+      </ResizablePanel>
     </>
   );
 }
@@ -1328,9 +1335,15 @@ export default function ContentScreenerPage() {
       )}
 
       {/* ===== Queue ===== */}
-      <section
-        aria-label="Review queue"
-        className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:w-[300px] lg:border-b-0 lg:border-r min-[112.5rem]:w-[360px] ${queueCollapsed ? "lg:hidden" : ""}`}
+      <ResizablePanel
+        as="section"
+        label="Review queue"
+        storageKey="queue"
+        edge="right"
+        min={240}
+        max={560}
+        className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:border-b-0 lg:border-r ${queueCollapsed ? "lg:hidden" : ""}`}
+        defaultWidth="lg:w-[300px] min-[112.5rem]:w-[360px]"
       >
         <div className="flex flex-col gap-2.5 border-b border-border/70 p-4">
           <div className="flex items-center justify-between gap-2">
@@ -1607,7 +1620,7 @@ export default function ContentScreenerPage() {
             })
           )}
         </ul>
-      </section>
+      </ResizablePanel>
 
       {/* ===== The post (or script) and the review panel ===== */}
       {onScripts ? (

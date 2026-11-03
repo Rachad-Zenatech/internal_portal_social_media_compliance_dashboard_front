@@ -22,9 +22,10 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - src/components/dashboard/dashboardParts.tsx (374 lines) - Pieces shared by the reviewer and creator dashboards.
+- src/components/script/HighlightableText.tsx (499 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - src/components/script/ScriptDiff.tsx (464 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptEditor.tsx (242 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptReviewWorkspace.tsx (643 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (697 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (226 lines) - script stage card (components script)
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -49,6 +50,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/submissionUi.tsx (399 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
+- src/components/ui/ResizeHandle.tsx (182 lines) - A panel's width, remembered per browser.
 - src/components/ui/alert-dialog.tsx (198 lines) - alert dialog (components ui)
 - src/components/ui/badge.tsx (50 lines) - badge (components ui)
 - src/components/ui/button.tsx (68 lines) - button (components ui)
@@ -99,7 +101,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Auth/Login.tsx (188 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1690 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1703 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (412 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2892 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
