@@ -15,7 +15,7 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
     refetchInterval: (q) => {
       const d = q.state.data;
       const s = d?.file_status;
-      return (d?.file_name && s == null) || s === "PENDING" || s === "PROCESSING" ? 1500 : 30_000;
+      return (d?.file_name && s == null) || s === "PENDING" || s === "PROCESSING" ? 1500 : false;
     },
   });
 }

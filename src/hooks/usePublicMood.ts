@@ -72,3 +72,24 @@ export function useMarketTrends(enabled = true) {
     staleTime: 5 * 60_000,
   });
 }
+
+/** Trigger live scraping of X / Twitter & news trends and refresh listening queries. */
+export function useScrapeTwitter(submissionId?: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => submissionService.triggerScrapeTwitter(),
+    onSuccess: (res) => {
+      toast.success(res?.message || "Started live X scrape & sentiment analysis.");
+      // Invalidate both current submission mood and global market trends
+      queryClient.invalidateQueries({ queryKey: ["listening-trends"] });
+      queryClient.invalidateQueries({ queryKey: ["listening-topics"] });
+      if (submissionId) {
+        queryClient.invalidateQueries({ queryKey: ["public-mood", submissionId] });
+      }
+    },
+    onError: (err) => {
+      toast.error(`Couldn't trigger Twitter scraper: ${(err as Error).message}`);
+    },
+  });
+}

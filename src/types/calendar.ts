@@ -1,45 +1,48 @@
 import type { PosterVariant } from "@/context/VideoUploadQueueContext";
 import type { AccountOption, ContentType, SubmissionFile } from "@/types/submission";
 
+/**
+ * Publishing calendar types: scheduled and approved content across channels,
+ * publish modes (scheduled vs immediate vs draft), and platform records.
+ */
+
 /** Approved content placed on the publishing calendar. */
 export interface CalendarItem {
   id: string;
-  /** "sample" items are mock data until real approvals and platform APIs are in place. */
-  source: "sample" | "submission";
-  referenceCode: string;
+  /** "sample" items are mock examples shown when there are no real items yet. */
+  is_sample?: boolean;
+  reference_code: string;
   title: string;
-  caption: string;
-  contentType: ContentType;
-  platforms: string[];
-  account: AccountOption | null;
-  publishAt: string;
-  /** Brand code, from the same brands list as New Submission (e.g. "ZENATECH"). */
-  brand: string;
-  score: number | null;
-  approvedBy?: string | null;
-  /** Illustration for sample items with no real media. */
-  poster?: PosterVariant;
-  media?: SubmissionFile | null;
-  submissionId?: string;
+  brand_code: string;
+  scheduled_for: string;
+  publish_mode: PublishMode;
+  account_id?: string | null;
+  account?: AccountOption | null;
+  primary_file?: SubmissionFile | null;
+  content_type: ContentType;
+  primary_platform: string;
+  poster_variant?: PosterVariant;
 }
 
 /** What a platform's API lets us create from an approved post. */
-export type PublishMode = "DRAFT" | "PRIVATE_UPLOAD" | "SCHEDULED" | "HANDOFF";
+export type PublishMode = "PUBLISH_NOW" | "SCHEDULED" | "DRAFT_ON_PLATFORM";
 
 export interface PlatformPublishInfo {
-  mode: PublishMode;
-  /** Button text, e.g. "Create LinkedIn draft". */
-  action: string;
-  /** What exists once it's done. */
-  result: string;
-  /** Why it works this way on this platform. */
-  note: string;
-  captionLimit: number;
+  platform: string;
+  allowed_modes: PublishMode[];
+  requires_media: boolean;
+  max_characters?: number;
 }
 
 export interface PublishRecord {
+  id: string;
+  submission_id: string;
+  platform: string;
   mode: PublishMode;
-  at: string;
-  /** Mock reference for the created draft or package. */
-  ref: string;
+  status: "PENDING" | "SCHEDULED" | "PUBLISHED" | "FAILED";
+  remote_post_id?: string;
+  scheduled_for?: string;
+  published_at?: string;
+  error?: string;
+  created_at: string;
 }

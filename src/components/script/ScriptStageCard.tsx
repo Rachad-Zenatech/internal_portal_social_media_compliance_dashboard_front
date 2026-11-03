@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Eye, FileText, Loader2, Send } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, Loader2, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { InlineDiff, StageSteps } from "@/components/script/ScriptDiff";
-import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { StageSteps } from "@/components/script/ScriptDiff";
 import { useScriptActions } from "@/hooks/useScript";
 import type { ScriptStage } from "@/types/script";
 
@@ -32,46 +30,26 @@ export default function ScriptStageCard({
     stage?.file_status === "PROCESSING" ||
     (Boolean(stage?.file_name) && stage?.file_status == null);
   const scriptLink = submissionId ? `/submissions/${submissionId}/script` : "#";
-  const previewText = stage?.file_text?.trim() || latest?.body?.trim() || null;
-  const [showPreview, setShowPreview] = useState(true);
 
   if (status === "APPROVED") {
     return (
-      <div className="mb-3 flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="flex items-center gap-2 text-[13px] font-medium text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 className="w-4 h-4" /> Script approved. Add your video below; it's checked against the approved script.
-          </p>
-          <div className="flex items-center gap-2">
-            {previewText && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 gap-1.5 text-xs"
-                onClick={() => setShowPreview((v) => !v)}
-              >
-                <Eye className="w-3.5 h-3.5" /> {showPreview ? "Hide preview" : "Preview script"}
-              </Button>
-            )}
-            {canEdit && (
-              <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onAddScript}>
-                <FileText className="w-3.5 h-3.5" /> Replace script
-              </Button>
-            )}
-            <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-              <Link to={scriptLink}>View the script</Link>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+        <p className="flex items-center gap-2 text-[13px] font-medium text-emerald-800 dark:text-emerald-300">
+          <CheckCircle2 className="w-4 h-4" /> Script approved. Add your video below; it's checked against the approved script.
+        </p>
+        <Button asChild size="sm" variant="outline" className="h-7 text-xs">
+          <Link to={scriptLink}>View the script</Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onAddScript}>
+              <FileText className="w-3.5 h-3.5" /> Replace script
             </Button>
-          </div>
+          )}
+          <Button asChild size="sm" variant="outline" className="h-7 text-xs">
+            <Link to={scriptLink}>View the script</Link>
+          </Button>
         </div>
-        {previewText && showPreview && (
-          <ScriptPreviewBox
-            text={previewText}
-            fileName={stage?.file_name ?? latest?.file_name}
-            fileUrl={stage?.file_url}
-            onToggle={() => setShowPreview(false)}
-          />
-        )}
       </div>
     );
   }
@@ -93,66 +71,7 @@ export default function ScriptStageCard({
         sentAt={latest?.created_at}
         note={decided?.review_note ?? null}
         reviewer={decided?.reviewed_by_name ?? null}
-        previewText={previewText}
-        showPreview={showPreview}
-        onTogglePreview={() => setShowPreview((v) => !v)}
       />
-      {previewText && showPreview && (
-        <ScriptPreviewBox
-          text={previewText}
-          fileName={stage?.file_name ?? latest?.file_name}
-          fileUrl={stage?.file_url}
-          onToggle={() => setShowPreview(false)}
-        />
-      )}
-    </div>
-  );
-}
-
-function ScriptPreviewBox({
-  text,
-  fileName,
-  fileUrl,
-  onToggle,
-}: {
-  text: string;
-  fileName?: string | null;
-  fileUrl?: string | null;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-2xs">
-      <div className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/40 px-3.5 py-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-          <span className="text-xs font-semibold text-foreground">Script preview</span>
-          {fileName && (
-            <span className="truncate text-[11px] text-muted-foreground">· {fileName}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {fileUrl && (
-            <a
-              href={authedFileUrl(fileUrl)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            >
-              <ExternalLink className="w-3 h-3" /> Open file
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={onToggle}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <ChevronUp className="w-3.5 h-3.5" /> Collapse
-          </button>
-        </div>
-      </div>
-      <div className="max-h-[420px] overflow-y-auto px-4 py-3.5">
-        <InlineDiff parts={[{ kind: "same", before: text, after: text }]} showChanges={false} numbered={false} />
-      </div>
     </div>
   );
 }
@@ -168,9 +87,6 @@ function Body({
   sentAt,
   note,
   reviewer,
-  previewText,
-  showPreview,
-  onTogglePreview,
 }: {
   status: string;
   stage?: ScriptStage;
@@ -182,9 +98,6 @@ function Body({
   sentAt?: string;
   note: string | null;
   reviewer: string | null;
-  previewText: string | null;
-  showPreview: boolean;
-  onTogglePreview: () => void;
 }) {
   if (status === "IN_REVIEW") {
     return (
@@ -193,12 +106,10 @@ function Body({
           Your script is with a reviewer{sentAt ? ` (sent ${formatDistanceToNow(new Date(sentAt), { addSuffix: true })})` : ""}. Fill in the rest of the post
           while you wait.
         </p>
+        <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+          <Link to={scriptLink}>View the script</Link>
+        </Button>
         <div className="flex items-center gap-2">
-          {previewText && (
-            <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onTogglePreview}>
-              <Eye className="w-3.5 h-3.5" /> {showPreview ? "Hide preview" : "Preview script"}
-            </Button>
-          )}
           {canEdit && (
             <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript}>
               <FileText className="w-3.5 h-3.5" /> Replace the script
@@ -218,12 +129,10 @@ function Body({
           <span className="font-semibold text-foreground">{reviewer ?? "Your reviewer"} edited your script.</span> Compare the two versions, then accept the
           changes or edit them.
         </p>
+        <Button asChild size="sm" className="h-8 text-xs">
+          <Link to={scriptLink}>Review the changes</Link>
+        </Button>
         <div className="flex items-center gap-2">
-          {previewText && (
-            <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onTogglePreview}>
-              <Eye className="w-3.5 h-3.5" /> {showPreview ? "Hide preview" : "Preview script"}
-            </Button>
-          )}
           {canEdit && (
             <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript}>
               <FileText className="w-3.5 h-3.5" /> Replace the script
@@ -236,22 +145,7 @@ function Body({
       </div>
     );
   }
-  return (
-    <DraftBody
-      stage={stage}
-      submissionId={submissionId}
-      reading={reading}
-      onAddScript={onAddScript}
-      canEdit={canEdit}
-      scriptLink={scriptLink}
-      status={status}
-      note={note}
-      reviewer={reviewer}
-      previewText={previewText}
-      showPreview={showPreview}
-      onTogglePreview={onTogglePreview}
-    />
-  );
+  return <DraftBody stage={stage} submissionId={submissionId} reading={reading} onAddScript={onAddScript} canEdit={canEdit} scriptLink={scriptLink} status={status} note={note} reviewer={reviewer} />;
 }
 
 /** Not sent yet, or sent back with a note: upload (or replace) the script and send it. */
@@ -265,9 +159,6 @@ function DraftBody({
   status,
   note,
   reviewer,
-  previewText,
-  showPreview,
-  onTogglePreview,
 }: {
   stage?: ScriptStage;
   submissionId: string | null;
@@ -278,9 +169,6 @@ function DraftBody({
   status: string;
   note: string | null;
   reviewer: string | null;
-  previewText: string | null;
-  showPreview: boolean;
-  onTogglePreview: () => void;
 }) {
   const { submit } = useScriptActions(submissionId ?? "");
   const hasFile = Boolean(stage?.file_name);
@@ -326,12 +214,6 @@ function DraftBody({
         <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript} disabled={!canEdit}>
           <FileText className="w-3.5 h-3.5" /> {hasFile ? "Replace the script" : "Upload the script"}
         </Button>
-        {previewText && (
-          <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onTogglePreview}>
-            {showPreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            {showPreview ? "Hide preview" : "Preview script"}
-          </Button>
-        )}
         {hasFile && stage?.can_submit && (
           <Button type="button" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => submit.mutate()} disabled={reading || failed || submit.isPending}>
             {submit.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send script for review

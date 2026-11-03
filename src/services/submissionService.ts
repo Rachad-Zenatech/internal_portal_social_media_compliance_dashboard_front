@@ -148,6 +148,10 @@ export const submissionService = {
   listeningTrends: (refresh = false) =>
     apiClient.get<XTrendOpportunity[]>(`/api/listening/trends${refresh ? "?refresh=true" : ""}`, quiet),
 
+  /** Trigger live scraping of X (Twitter) & news sentiment with Playwright + VADER (or future API). */
+  triggerScrapeTwitter: () =>
+    apiClient.post<{ status: string; message: string; source: string }>("/api/listening/scrape", undefined, quiet),
+
   /** Write (or reuse) the AI reading of how this post may land given the current mood. */
   summarisePublicMood: (id: string) => apiClient.post<PublicMood>(`/api/submissions/${id}/public-mood/summary`, undefined, quiet),
 
