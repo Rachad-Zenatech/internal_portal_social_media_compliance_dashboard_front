@@ -110,6 +110,34 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ACTIVITY_STYLE` (export const) - Each kind of update on a post, with its own icon and colour (same on both dashboards).
 - `ScoreRing` (export function) - An average rulebook score as a ring.
 
+## src/components/script/HighlightableText.tsx (499 lines) - Scroll to the n-th place any of these phrases appears and flash it.
+- `Highlight` (export type)
+- `HighlightableHandle` (export type)
+- `HIGHLIGHT_COLORS` (export const)
+- `HighlightRegistry` (type)
+- `registry` (const)
+    - `css` (fn)
+- `makeHighlight` (const)
+- `colorName` (const)
+- `load` (function)
+- `textNodes` (function) - The text nodes under `root`, with where each starts in the root's text.
+- `rangeAt` (function)
+- `resolve` (function) - Where a stored highlight is now: its saved spot if the wording is still there, else the nearest copy of it.
+- `Draft` (type)
+- `Marker` (type) - One note icon per row: every highlight with a note on that row.
+- `HighlightableText` (const)
+    - `pickerOpen` (fn) - The colour picker is open: dragging inside it must not dismiss the toolbar.
+    - `supported` (fn)
+    - `save` (fn)
+    - `paint` (fn) - Paint the highlights, and place each note's marker on its row.
+    - `onSelect` (fn)
+    - `onUp` (fn) - Wait for the mouse button to come up, so the toolbar doesn't jump around while dragging.
+    - `onDown` (fn)
+    - `closeToolbar` (fn)
+    - `apply` (fn)
+    - `newId` (fn)
+    - `remove` (fn)
+
 ## src/components/script/ScriptDiff.tsx (464 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const)
 - `Highlighted` (export function) - Text with the given phrases marked (flagged wording).
@@ -146,7 +174,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Toolbar` (function)
 - `ScriptEditor` (export function) - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptReviewWorkspace.tsx (643 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (697 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -161,6 +189,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `changes` (fn)
     - `myChangeCount` (fn)
     - `findInScript` (fn) - Open the editor with the flagged wording selected, so the reviewer can type over it.
+    - `goToFlag` (fn) - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
     - `addDisclaimer` (fn)
     - `sendBack` (fn)
     - `approve` (fn)
@@ -331,6 +360,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
 - `HelpIconProps` (interface)
 - `HelpIcon` (export function)
+
+## src/components/ui/ResizeHandle.tsx (182 lines) - A panel's width, remembered per browser.
+- `readWidth` (const)
+- `usePanelWidth` (export function) - A panel's width, remembered per browser.
+- `ResizeHandle` (export function) - A draggable edge for a panel.
+- `ResizablePanel` (export function) - A side panel whose width the user can drag.
 
 ## src/components/ui/alert-dialog.tsx (198 lines) - alert dialog (components ui)
 - `AlertDialog` (function)
@@ -723,7 +758,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1690 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1703 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
