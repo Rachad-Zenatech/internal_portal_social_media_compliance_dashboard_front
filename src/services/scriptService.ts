@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type { ScriptQueueItem, ScriptStage } from "@/types/script";
+import type { ScriptHighlight } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
 const quiet = { skipGlobalLoading: true };
@@ -27,4 +28,16 @@ export const scriptService = {
 
   /** Check wording being edited, without saving it. */
   check: (id: string, text: string) => apiClient.post<StoredCheck>(`/api/submissions/${id}/script/check`, { text }, quiet),
+
+  /** The reviewer's highlights and notes on a script version (the creator sees them too). */
+  highlights: (id: string, version: number) =>
+    apiClient.get<ScriptHighlight[]>(`/api/submissions/${id}/script/highlights?version=${version}`, quiet),
+
+  /** Creator: mark the reviewer's highlights they fixed, with the wording as it reads now. */
+  resolveHighlights: (id: string, version: number, resolutions: { id: string; done: boolean; updated?: string | null }[]) =>
+    apiClient.post<ScriptHighlight[]>(`/api/submissions/${id}/script/highlights/resolve?version=${version}`, { resolutions }, quiet),
+
+  /** Reviewer: save the highlights and notes on a script version. */
+  saveHighlights: (id: string, version: number, highlights: ScriptHighlight[]) =>
+    apiClient.put<ScriptHighlight[]>(`/api/submissions/${id}/script/highlights?version=${version}`, { highlights }, quiet),
 };
