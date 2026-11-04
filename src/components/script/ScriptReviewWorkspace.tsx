@@ -5,6 +5,8 @@ import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Se
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
@@ -136,6 +138,8 @@ function Editor({
   const textRef = useRef<HighlightableHandle | null>(null);
   const locateCount = useRef<Record<string, number>>({});
   const { decide } = useScriptActions(submissionId);
+  const [confirming, setConfirming] = useState<"approve" | "send_back" | null>(null);
+  const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
   const { mood } = usePublicMood(submissionId, true);
   const moodDecision = overallPostDecision(mood);
 
@@ -196,9 +200,22 @@ function Editor({
       noteRef.current?.focus();
       return;
     }
-    decide.mutate({ decision: "SEND_BACK", text: hasEdits ? draft : undefined, note: note.trim() || undefined });
+    setTimeline(DEFAULT_TIMELINE);
+    setConfirming("send_back");
   };
-  const approve = () => decide.mutate({ decision: "APPROVE", note: note.trim() || undefined });
+  // Approving asks when the video is due (a week by default, or none).
+  const approve = () => {
+    setTimeline({ kind: "days", days: 5 });
+    setConfirming("approve");
+  };
+  const confirmDecision = () => {
+    const due = timelineFields(timeline);
+    const common = { note: note.trim() || undefined, due_days: due.days, due_at: due.at };
+    decide.mutate(
+      confirming === "approve" ? { decision: "APPROVE", ...common } : { decision: "SEND_BACK", text: hasEdits ? draft : undefined, ...common },
+      { onSuccess: () => setConfirming(null) }
+    );
+  };
 
   const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
     { value: "flags", label: "Flags", count: active.length, alert: verdict.critical > 0 },
@@ -559,6 +576,33 @@ function Editor({
                 Approve script
               </Button>
             </div>
+            <Dialog open={confirming !== null} onOpenChange={(open) => !open && !decide.isPending && setConfirming(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{confirming === "approve" ? "Approve the script" : hasEdits ? "Send the script back with your edits" : "Request changes to the script"}</DialogTitle>
+                  <DialogDescription>
+                    {confirming === "approve"
+                      ? "The creator is told it's approved and when the video is due."
+                      : "The creator is told what to change and when it's due, then sends it back to you."}
+                  </DialogDescription>
+                </DialogHeader>
+                <RevisionTimelinePicker
+                  value={timeline}
+                  onChange={setTimeline}
+                  label={confirming === "approve" ? "Video due by" : "Time to make the changes"}
+                  allowNone={confirming === "approve"}
+                />
+                <DialogFooter>
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setConfirming(null)} disabled={decide.isPending}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="text-xs gap-1.5" onClick={confirmDecision} disabled={decide.isPending || !timelineValid(timeline)}>
+                    {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {confirming === "approve" ? "Approve script" : hasEdits ? "Send back with edits" : "Request changes"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         ) : status === "APPROVED" ? (
           <div className="flex flex-col gap-2.5 border-t border-border/70 bg-emerald-50/50 p-4 dark:bg-emerald-500/10">

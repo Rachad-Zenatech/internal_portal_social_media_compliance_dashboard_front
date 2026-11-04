@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import RevisionTimelinePicker, { type RevisionDays } from "@/components/submissions/RevisionTimelinePicker";
+import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
 export interface ReviewTarget {
@@ -79,7 +79,7 @@ export default function ReviewDecisionPanel({
   const [notes, setNotes] = useState("");
   const [when, setWhen] = useState("");
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
-  const [revisionDays, setRevisionDays] = useState<RevisionDays>(1);
+  const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
 
   // Not a reviewer here, or a super admin viewing the app as a creator.
   if (!target.can_review || creatorView) return null;
@@ -91,7 +91,7 @@ export default function ReviewDecisionPanel({
     setNotes("");
     setWhen(toLocalInput(defaultPublishTime(planned)));
     setConfirmed(new Set());
-    setRevisionDays(1);
+    setTimeline(DEFAULT_TIMELINE);
     setMode(m);
   };
   const toggleConfirmed = (ruleNumber: string) =>
@@ -107,8 +107,9 @@ export default function ReviewDecisionPanel({
 
   const confirm = () => {
     if (mode === "changes") {
+      const due = timelineFields(timeline);
       decide.mutate(
-        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: revisionDays },
+        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: due.days, revision_due_at: due.at },
         { onSuccess: () => setMode(null) }
       );
     } else if (mode === "schedule" && whenDate) {
@@ -278,7 +279,7 @@ export default function ReviewDecisionPanel({
               />
             </div>
             {mode === "changes" && (
-              <RevisionTimelinePicker value={revisionDays} onChange={setRevisionDays} publishAt={target.publish_at} />
+              <RevisionTimelinePicker value={timeline} onChange={setTimeline} publishAt={target.publish_at} />
             )}
           </div>
 
@@ -292,6 +293,7 @@ export default function ReviewDecisionPanel({
               disabled={
                 decide.isPending ||
                 (mode === "changes" && !notes.trim() && openComments === 0) ||
+                (mode === "changes" && !timelineValid(timeline)) ||
                 (mode === "schedule" && (!whenDate || whenInPast)) ||
                 (mode !== "changes" && !allConfirmed)
               }
