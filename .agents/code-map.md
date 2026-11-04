@@ -187,7 +187,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Toolbar` (function)
 - `ScriptEditor` (export function) - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptReviewWorkspace.tsx (866 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (867 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -294,7 +294,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `CommentItem` (function)
 - `ReviewCommentsPanel` (export function) - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewDecisionPanel.tsx (345 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (346 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type)
 - `toLocalInput` (const)
@@ -309,6 +309,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+
+## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
+- `RuleNumberBadge` (export function) - A flag's rule number; hovering it shows the rule that was broken.
 
 ## src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
 - `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty, capped when a critical rule is broken.
@@ -597,6 +600,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) - Caption suggestions for a draft, and how many are left today.
 
+## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+- `useComplianceRules` (export function) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+
 ## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
@@ -793,7 +799,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1708 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1730 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -843,6 +849,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `items` (fn)
     - `visible` (fn)
     - `scriptItems` (fn)
+    - `rows` (fn) - when each was decided, newest first.
+    - `renderScriptRow` (fn)
+    - `renderPostRow` (fn)
     - `brands` (fn)
     - `platforms` (fn)
     - `activeFilters` (fn)
@@ -871,7 +880,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `open` (fn)
     - `scopeText` (fn)
 
-## src/pages/Compliance/VideoComplianceScannerPage.tsx (2892 lines) - video compliance scanner page (pages  compliance)
+## src/pages/Compliance/VideoComplianceScannerPage.tsx (2893 lines) - video compliance scanner page (pages  compliance)
 - `CommentCategory` (export type)
 - `ReviewerComment` (export interface)
 - `formatTime` (function) - Card thumbnail: the most representative frame of an uploaded video, or the demo illustration.
@@ -1130,7 +1139,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (1900 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (1924 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)

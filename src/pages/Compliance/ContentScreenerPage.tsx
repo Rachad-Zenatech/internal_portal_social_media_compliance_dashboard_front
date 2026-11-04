@@ -48,6 +48,7 @@ import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewC
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import {
   ContextNote,
   FINDING_META,
@@ -954,7 +955,7 @@ function ReviewPanel({
                           {f.end != null && f.end > f.at + 0.5 && ` - ${formatSec(f.end)}`}
                         </span>
                       )}
-                      <span className="text-[11px] text-muted-foreground">{f.v.rule_number}</span>
+                      <RuleNumberBadge v={f.v} />
                       <span className="ml-auto text-xs text-muted-foreground">{f.where}</span>
                     </div>
                     <p className="text-sm font-semibold text-foreground">{f.v.title}</p>
@@ -997,7 +998,7 @@ function ReviewPanel({
             <ul className="flex flex-col gap-1 text-[13px] text-foreground/80">
               {manual.map((r) => (
                 <li key={r.rule_number}>
-                  <span className="text-muted-foreground">{r.rule_number}</span> · {r.title}
+                  <RuleNumberBadge v={r} /> {r.title}
                 </li>
               ))}
             </ul>
@@ -1226,12 +1227,100 @@ export default function ContentScreenerPage() {
       ),
     [scripts.data, q]
   );
-  // One selection across posts and scripts: whatever was picked last, else the first post, else the first script.
+  // Scripts and posts in one list, by due date (soonest first, overdue at the top, no deadline last); the Done tab by
+  // when each was decided, newest first.
+  const rows = useMemo(() => {
+    const all: ({ kind: "script"; s: ScriptQueueItem; at: number | null } | { kind: "post"; s: ReviewQueueItem; at: number | null })[] = [
+      ...scriptItems.map((s) => ({
+        kind: "script" as const,
+        s,
+        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : s.approval_needed_by ? new Date(s.approval_needed_by).getTime() : null,
+      })),
+      ...visible.map((s) => ({
+        kind: "post" as const,
+        s,
+        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : deadlineOf(s)?.getTime() ?? null,
+      })),
+    ];
+    const sign = tab === "done" ? -1 : 1;
+    return all.sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)));
+  }, [scriptItems, visible, tab]);
+  // One selection across posts and scripts: whatever was picked last, else the first row of the list.
   const pickedScript = scriptItems.find((s) => s.id === selectedScriptId) ?? null;
-  const selected = pickedScript ? null : visible.find((s) => s.id === selectedId) ?? visible[0] ?? null;
-  const selectedScript = pickedScript ?? (selected ? null : scriptItems[0] ?? null);
+  const firstRow = rows[0];
+  const selected = pickedScript ? null : visible.find((s) => s.id === selectedId) ?? (firstRow?.kind === "post" ? firstRow.s : null);
+  const selectedScript = pickedScript ?? (selected ? null : firstRow?.kind === "script" ? firstRow.s : null);
   const onScripts = Boolean(selectedScript);
   const listCount = visible.length + scriptItems.length;
+  const renderScriptRow = (s: ScriptQueueItem) => {
+    const due = scriptDue(s);
+    const current = selectedScript?.id === s.id;
+    return (
+      <li key={s.id}>
+        <button
+          type="button"
+          onClick={() => pickScript(s.id)}
+          aria-current={current}
+          className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
+            current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
+          }`}
+        >
+          <ScriptThumb />
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
+            <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+              <span className="shrink-0 rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                Script
+              </span>
+              <span className="truncate">
+                v{s.version_number} · {s.creator_name ?? s.reference_code}
+                {s.platforms.length > 0 && ` · ${s.platforms.map(platformName).join(", ")}`}
+              </span>
+            </span>
+            <span className="mt-0.5 flex items-center justify-between gap-2">
+              <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
+              <ScriptScore s={s} />
+            </span>
+          </span>
+        </button>
+      </li>
+    );
+  };
+  const renderPostRow = (s: ReviewQueueItem) => {
+        const due = dueText(s, postTab);
+        const current = selected?.id === s.id;
+        return (
+          <li key={s.id}>
+            <button
+              type="button"
+              onClick={() => pick(s.id)}
+              aria-current={current}
+              className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
+                current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
+              }`}
+            >
+              <Thumb s={s} />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
+                <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                  {s.content_type && CONTENT_TYPE_BADGES[s.content_type] && (
+                    <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide ${CONTENT_TYPE_BADGES[s.content_type].cls}`}>
+                      {CONTENT_TYPE_BADGES[s.content_type].label}
+                    </span>
+                  )}
+                  <span className="truncate">
+                    {s.reference_code} · {s.platforms.map(platformName).join(", ") || "No platform"}
+                  </span>
+                </span>
+                <span className="mt-0.5 flex items-center justify-between gap-2">
+                  <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
+                  <ScoreBadge s={s} />
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+  };
 
   const brands = useMemo(() => [...new Set(items.map((s) => s.brand_code).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
@@ -1537,46 +1626,13 @@ export default function ContentScreenerPage() {
           )}
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
-          {queue.isLoading ? "Loading..." : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · scripts first, then soonest deadline"}`}
+          {queue.isLoading ? "Loading..." : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           {scripts.isError && (
             <li className="px-3 py-2 text-center text-xs text-red-600">Couldn't load the scripts: {(scripts.error as Error).message}</li>
           )}
-          {scriptItems.map((s) => {
-            const due = scriptDue(s);
-            const current = selectedScript?.id === s.id;
-            return (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  onClick={() => pickScript(s.id)}
-                  aria-current={current}
-                  className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
-                    current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
-                  }`}
-                >
-                  <ScriptThumb />
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
-                    <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                      <span className="shrink-0 rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                        Script
-                      </span>
-                      <span className="truncate">
-                        v{s.version_number} · {s.creator_name ?? s.reference_code}
-                        {s.platforms.length > 0 && ` · ${s.platforms.map(platformName).join(", ")}`}
-                      </span>
-                    </span>
-                    <span className="mt-0.5 flex items-center justify-between gap-2">
-                      <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
-                      <ScriptScore s={s} />
-                    </span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {rows.map((r) => (r.kind === "script" ? renderScriptRow(r.s) : renderPostRow(r.s)))}
           {queue.isLoading ? (
             <li className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading the queue...
@@ -1588,41 +1644,7 @@ export default function ContentScreenerPage() {
               {items.length === 0 ? (tab === "review" ? "Nothing is waiting for review." : "Nothing here.") : "No posts match these filters."}
             </li>
           ) : (
-            visible.map((s) => {
-              const due = dueText(s, postTab);
-              const current = selected?.id === s.id;
-              return (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => pick(s.id)}
-                    aria-current={current}
-                    className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
-                      current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
-                    }`}
-                  >
-                    <Thumb s={s} />
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
-                      <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                        {s.content_type && CONTENT_TYPE_BADGES[s.content_type] && (
-                          <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide ${CONTENT_TYPE_BADGES[s.content_type].cls}`}>
-                            {CONTENT_TYPE_BADGES[s.content_type].label}
-                          </span>
-                        )}
-                        <span className="truncate">
-                          {s.reference_code} · {s.platforms.map(platformName).join(", ") || "No platform"}
-                        </span>
-                      </span>
-                      <span className="mt-0.5 flex items-center justify-between gap-2">
-                        <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
-                        <ScoreBadge s={s} />
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })
+            null
           )}
         </ul>
       </ResizablePanel>

@@ -394,8 +394,8 @@ function Changes({ stage }: { stage: ScriptStage }) {
                       {
                         onSuccess: () => {
                           setEditing(false);
-                          // Sent back to the reviewer: back to the portal home, where the next steps are listed.
-                          navigate("/dashboard");
+                          // Sent back to the reviewer: back to My posts to follow it from there.
+                          navigate("/submissions");
                         },
                       }
                     );

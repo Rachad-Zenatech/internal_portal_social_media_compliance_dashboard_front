@@ -290,7 +290,7 @@ export default function TopicTrend({
   return (
     <div className="space-y-2.5">
       <div>
-        <p className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-foreground">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-foreground">
           <Globe2 className="w-3.5 h-3.5 text-sky-600" /> Public mood & live news sentiment
           {mood?.source && (
             <span className="rounded bg-sky-500/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-200">
@@ -317,7 +317,7 @@ export default function TopicTrend({
               <span>{scrapeTwitter.isPending ? "Scraping X..." : "Scrape X"}</span>
             </button>
           </div>
-        </p>
+        </div>
         <p className="text-[10px] text-muted-foreground">
           VADER sentiment on scraped news & X posts over the last week
           {oldest ? ` · updated ${formatDistanceToNow(new Date(oldest), { addSuffix: true })}` : ""}

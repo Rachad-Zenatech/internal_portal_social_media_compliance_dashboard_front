@@ -27,7 +27,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/NoteField.tsx (42 lines) - Called when the box becomes empty or gets text.
 - src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptEditor.tsx (242 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptReviewWorkspace.tsx (866 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (867 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (227 lines) - script stage card (components script)
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -43,9 +43,10 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PostPreview.tsx (336 lines) - post preview (components submissions)
 - src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
-- src/components/submissions/ReviewDecisionPanel.tsx (345 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+- src/components/submissions/ReviewDecisionPanel.tsx (346 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/RevisionTimelinePicker.tsx (80 lines) - Matches the server: resubmissions are due early enough before the planned publish time to be reviewed again.
 - src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
+- src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
 - src/components/submissions/SentimentPanel.tsx (1055 lines) - sentiment panel (components submissions)
 - src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
@@ -78,6 +79,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/video/VideoUploadQueueDrawer.tsx (515 lines) - video upload queue drawer (components video)
 - src/context/VideoUploadQueueContext.tsx (802 lines) - video upload queue context (context)
 - src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
+- src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
@@ -104,9 +106,9 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Auth/Login.tsx (188 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1708 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1730 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (412 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
-- src/pages/Compliance/VideoComplianceScannerPage.tsx (2892 lines) - video compliance scanner page (pages  compliance)
+- src/pages/Compliance/VideoComplianceScannerPage.tsx (2893 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - src/pages/Configurations/OAuthIntegrations.tsx (787 lines) - o auth integrations (pages  configurations)
@@ -123,7 +125,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (676 lines) - post performance page (pages  performance)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (1900 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (1924 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (443 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (648 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.

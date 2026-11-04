@@ -12,6 +12,7 @@ import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import RevisionTimelinePicker, { type RevisionDays } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
@@ -252,7 +253,7 @@ export default function ReviewDecisionPanel({
                       onChange={() => toggleConfirmed(r.rule_number)}
                     />
                     <span>
-                      <span className="font-semibold">{r.rule_number}</span> · {r.title}
+                      <RuleNumberBadge v={r} /> {r.title}
                     </span>
                   </label>
                 ))}
