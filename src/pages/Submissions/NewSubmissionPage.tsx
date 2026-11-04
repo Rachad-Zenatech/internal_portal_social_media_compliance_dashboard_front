@@ -850,7 +850,7 @@ export default function NewSubmissionPage() {
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
         queryClient.invalidateQueries({ queryKey: ["submissions"] });
         toast.success("Script sent for review. Add the video and caption once it's approved.");
-        navigate("/submissions");
+        navigate("/dashboard");
       } catch (err) {
         toast.error(`Couldn't send the script: ${(err as Error).message}`);
       } finally {
@@ -872,7 +872,7 @@ export default function NewSubmissionPage() {
       queryClient.removeQueries({ queryKey: ["submission-history", result.submission.id] });
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       toast.success(
-        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
+        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.automated_check?.ai_unavailable ? "no score, the AI review couldn't run" : result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
       // Sent: the submission page is done, so the creator goes back to My posts to follow it from there.
       navigate("/submissions");

@@ -47,7 +47,7 @@ import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import { DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -153,7 +153,13 @@ function JobCard({ job }: { job: ReviewJob }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-semibold text-foreground">Version {job.version_number}</span>
         <div className="flex items-center gap-1.5">
-          {isAnalysing(job.automated_check as StoredCheck | null) ? <UnderReviewBadge /> : <LightBadge light={job.traffic_light} score={job.score} />}
+          {isAnalysing(job.automated_check as StoredCheck | null) ? (
+            <UnderReviewBadge />
+          ) : job.automated_check?.ai_unavailable ? (
+            <AiUnavailableBadge />
+          ) : (
+            <LightBadge light={job.traffic_light} score={job.score} />
+          )}
           <Badge variant="outline" className="text-[11px]">
             {JOB_STATUS[job.status] ?? job.status}
           </Badge>
@@ -461,7 +467,7 @@ export default function SubmissionDetailPage() {
             open_critical_flags: s.open_critical_flags,
             approval_score: s.approval_score,
             min_approval_score: s.min_approval_score,
-            score: isAnalysing(s.latest_check) ? null : s.latest_check?.score ?? null,
+            score: isAnalysing(s.latest_check) || s.latest_check?.ai_unavailable ? null : s.latest_check?.score ?? null,
             manual_rules: s.latest_check?.manual_review_rules,
           }}
         />

@@ -10,7 +10,7 @@ export default function ScoreBreakdown({
   check,
   className = "",
 }: {
-  check: Pick<ComplianceCheckResponse, "score" | "violations" | "blocked" | "score_cap" | "raw_score">;
+  check: Pick<ComplianceCheckResponse, "score" | "violations" | "blocked" | "score_cap" | "raw_score"> & { ai_unavailable?: boolean };
   className?: string;
 }) {
   // Only violations cost points; warnings and cleared triggers are listed elsewhere.
@@ -52,7 +52,7 @@ export default function ScoreBreakdown({
                     v.traffic_light === "RED" ? "text-red-600 dark:text-red-400" : "text-amber-700 dark:text-amber-300"
                   }`}
                 >
-                  −{v.penalty}
+                  {v.extra_claims ? <span className="mr-1.5 font-normal text-muted-foreground">{v.extra_claims + 1} claims</span> : null}−{v.penalty}
                 </span>
               )}
             </li>
@@ -65,7 +65,7 @@ export default function ScoreBreakdown({
           )}
           <li className="flex items-center justify-between gap-3 px-2.5 py-1.5 font-semibold text-foreground">
             <span>Score</span>
-            <span className="tabular-nums">{check.score}/100</span>
+            <span className="tabular-nums">{check.ai_unavailable ? "No score" : `${check.score}/100`}</span>
           </li>
         </ul>
       )}

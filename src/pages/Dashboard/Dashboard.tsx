@@ -242,7 +242,7 @@ function ReviewerDashboard() {
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-0.5">
-                              <Score score={r.latest_score} pending={r.analysis_pending} progress={r.analysis_progress} />
+                              <Score score={r.latest_score} pending={r.analysis_pending} progress={r.analysis_progress} unavailable={r.ai_unavailable} />
                               {!r.analysis_pending && r.latest_score != null && (
                                 <span className="whitespace-nowrap text-xs text-muted-foreground">
                                   {issuesText(r.issue_count)?.replace("to fix", "found") ?? "No issues"}
