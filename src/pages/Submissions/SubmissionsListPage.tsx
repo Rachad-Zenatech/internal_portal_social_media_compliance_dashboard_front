@@ -1031,7 +1031,8 @@ export default function SubmissionsListPage() {
   const submit = useSubmitForReview();
   // Super admins, Content Managers and reviewers can switch to everyone's content.
   const { hasPermission, user, creatorView } = useAuth();
-  const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_APPROVE");
+  // Admins keep "Everyone's" even when viewing the app as a creator (the server allows them every post).
+  const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_APPROVE") || creatorView;
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   // Creators browse a gallery and open details in a side sheet; reviewers keep the list beside the review panel.
   const gallery = !isReviewer;

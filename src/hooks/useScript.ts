@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { scriptService } from "@/services/scriptService";
-import type { ScriptStage } from "@/types/script";
+import type { ScriptHighlight, ScriptStage } from "@/types/script";
 
 /** A post's script stage, refreshed while its file is still being read. */
 export function useScriptStage(submissionId?: string | null, enabled = true) {
@@ -107,4 +107,39 @@ export function useLiveScriptCheck(submissionId: string, text: string, saved: st
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+}
+
+/**
+ * The reviewer's highlights and notes on a script version. Reviewers (`canEdit`) change them, and each change is saved
+ * at once; the creator just sees them, refreshed every so often.
+ */
+export function useScriptHighlights(submissionId: string, version: number | undefined, canEdit: boolean) {
+  const queryClient = useQueryClient();
+  const key = ["script-highlights", submissionId, version];
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => scriptService.highlights(submissionId, version!),
+    enabled: version != null,
+    refetchInterval: canEdit ? false : 20_000,
+  });
+  const save = useMutation({
+    mutationFn: (next: ScriptHighlight[]) => scriptService.saveHighlights(submissionId, version!, next),
+    onMutate: (next) => {
+      queryClient.setQueryData(key, next);
+    },
+    onError: (err) => {
+      toast.error(`Couldn't save the highlight: ${(err as Error).message}`);
+      queryClient.invalidateQueries({ queryKey: key });
+    },
+  });
+  const resolve = useMutation({
+    mutationFn: (resolutions: { id: string; done: boolean; updated?: string | null }[]) =>
+      scriptService.resolveHighlights(submissionId, version!, resolutions),
+    onSuccess: (next) => queryClient.setQueryData(key, next),
+  });
+  return {
+    resolve,
+    highlights: query.data ?? [],
+    onChange: canEdit && version != null ? (next: ScriptHighlight[]) => save.mutate(next) : undefined,
+  };
 }

@@ -64,3 +64,15 @@ export interface ScriptQueueItem {
   decided_at?: string | null;
   can_review: boolean;
 }
+
+/** Wording the reviewer highlighted (with an optional note) in a script version. */
+export interface ScriptHighlight {
+  id: string;
+  start: number;
+  text: string;
+  color: string;
+  note: string;
+  /** The creator fixed this when they sent the next version, and the wording now reads `updated`. */
+  done?: boolean;
+  updated?: string | null;
+}

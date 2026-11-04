@@ -4,17 +4,19 @@ import { MessageSquarePlus, MessageSquareText, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Reviewer's highlights and margin notes on the script's wording, kept in this browser (per script version).
+ * Reviewer's highlights and margin notes on the script's wording (saved with the script version, so the creator sees them).
  *
  * Highlights are painted with the CSS Custom Highlight API, so the script's own markup is never touched; each one is
  * stored as the quoted wording plus where it started, and found again by its wording if the text moves.
  */
 
-export type Highlight = { id: string; start: number; text: string; color: string; note: string };
+export type Highlight = { id: string; start: number; text: string; color: string; note: string; done?: boolean; updated?: string | null };
 
 export type HighlightableHandle = {
   /** Scroll to the n-th place any of these phrases appears and flash it. Returns how many places there are. */
   locate: (terms: string[], nth: number) => number;
+  /** Scroll to one highlight and flash it. Returns false when its wording can't be found any more. */
+  goTo: (id: string) => boolean;
   /** Scroll to the end of the script. */
   toEnd: () => void;
 };
@@ -31,15 +33,6 @@ const registry = (): HighlightRegistry | null => {
 const makeHighlight = (ranges: Range[]) => new (globalThis as unknown as { Highlight: new (...r: Range[]) => unknown }).Highlight(...ranges);
 
 const colorName = (hex: string) => `hl-${hex.replace(/[^0-9a-f]/gi, "").toLowerCase()}`;
-
-function load(key: string): Highlight[] {
-  try {
-    const raw = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-    return Array.isArray(raw) ? raw.filter((h) => h && typeof h.text === "string" && typeof h.start === "number") : [];
-  } catch {
-    return [];
-  }
-}
 
 /** The text nodes under `root`, with where each starts in the root's text. */
 function textNodes(root: HTMLElement) {
@@ -80,40 +73,33 @@ type Marker = { key: string; top: number; ids: string[] };
 const HighlightableText = forwardRef<
   HighlightableHandle,
   {
-    storageKey: string;
-    enabled: boolean;
+    /** The highlights to show. */
+    value: Highlight[];
+    /** Reviewers pass this to add, recolour, comment on and remove highlights; without it they're read-only. */
+    onChange?: (next: Highlight[]) => void;
     /** Changes whenever the text shown changes, so highlights and notes are placed again. */
     layoutKey: unknown;
     children: ReactNode;
   }
->(function HighlightableText({ storageKey, enabled, layoutKey, children }, ref) {
+>(function HighlightableText({ value: items, onChange, layoutKey, children }, ref) {
+  const enabled = Boolean(onChange);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const [items, setItems] = useState<Highlight[]>(() => load(storageKey));
   const [draft, setDraft] = useState<Draft | null>(null);
   const [writing, setWriting] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [openNote, setOpenNote] = useState<string | null>(null);
   const flashTimer = useRef<number | null>(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   /** The colour picker is open: dragging inside it must not dismiss the toolbar. */
   const pickerOpen = useRef(false);
   /** A colour chosen in the custom picker, waiting for "Select". */
   const [custom, setCustom] = useState<string | null>(null);
   const supported = useMemo(() => registry() != null, []);
 
-  const save = useCallback(
-    (next: Highlight[]) => {
-      setItems(next);
-      try {
-        if (next.length) window.localStorage.setItem(storageKey, JSON.stringify(next));
-        else window.localStorage.removeItem(storageKey);
-      } catch {
-        /* the highlights just aren't remembered */
-      }
-    },
-    [storageKey]
-  );
+  const save = useCallback((next: Highlight[]) => onChange?.(next), [onChange]);
 
   // The colours the highlights use, as ::highlight() rules (the API can't take a colour directly).
   const styleRef = useRef<HTMLStyleElement | null>(null);
@@ -175,7 +161,7 @@ const HighlightableText = forwardRef<
 
   useLayoutEffect(() => {
     paint();
-  }, [paint, layoutKey, children]);
+  }, [paint, layoutKey]);
 
   useEffect(() => {
     const root = contentRef.current;
@@ -318,6 +304,16 @@ const HighlightableText = forwardRef<
     closeToolbar();
   };
 
+  /** Scroll a stretch of the script into view and flash it. */
+  const reveal = (r: Range) => {
+    r.startContainer.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const reg = registry();
+    if (!reg) return;
+    reg.set(colorName(FLASH), makeHighlight([r]));
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => reg.delete(colorName(FLASH)), 1800);
+  };
+
   useImperativeHandle(
     ref,
     () => ({
@@ -336,14 +332,19 @@ const HighlightableText = forwardRef<
         const hit = hits[((nth % hits.length) + hits.length) % hits.length];
         const r = rangeAt(nodes, hit.at, hit.at + hit.len);
         if (!r) return 0;
-        r.startContainer.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
-        const reg = registry();
-        if (reg) {
-          reg.set(colorName(FLASH), makeHighlight([r]));
-          if (flashTimer.current) window.clearTimeout(flashTimer.current);
-          flashTimer.current = window.setTimeout(() => reg.delete(colorName(FLASH)), 1800);
-        }
+        reveal(r);
         return hits.length;
+      },
+      goTo: (id) => {
+        const root = contentRef.current;
+        const h = itemsRef.current.find((x) => x.id === id);
+        if (!root || !h) return false;
+        const { nodes, text } = textNodes(root);
+        const at = resolve(text, h);
+        const r = at === -1 ? null : rangeAt(nodes, at, at + h.text.length);
+        if (!r) return false;
+        reveal(r);
+        return true;
       },
       toEnd: () => {
         contentRef.current?.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -394,9 +395,11 @@ const HighlightableText = forwardRef<
                 “{h.text.length > 36 ? `${h.text.slice(0, 36)}…` : h.text}”
               </span>
               <p className="mt-1.5 whitespace-pre-wrap text-foreground/90">{h.note}</p>
-              <button type="button" onClick={() => remove(h.id)} className="mt-1.5 inline-flex items-center gap-1 text-red-600 hover:underline dark:text-red-400">
-                <Trash2 className="h-3 w-3" /> Remove highlight
-              </button>
+              {enabled && (
+                <button type="button" onClick={() => remove(h.id)} className="mt-1.5 inline-flex items-center gap-1 text-red-600 hover:underline dark:text-red-400">
+                  <Trash2 className="h-3 w-3" /> Remove highlight
+                </button>
+              )}
             </div>
           ))}
         </div>
