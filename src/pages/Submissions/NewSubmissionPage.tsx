@@ -446,12 +446,12 @@ export default function NewSubmissionPage() {
   const accounts = useMemo(() => options?.accounts ?? [], [options]);
 
   const reviewersQuery = useQuery({
-    queryKey: ["submission-reviewers", brand],
-    queryFn: () => submissionService.reviewers(brand || undefined),
+    queryKey: ["submission-reviewers", [...brands].sort()],
+    queryFn: () => submissionService.reviewers(brands),
     staleTime: 60_000,
   });
   const reviewerOptions = useMemo(() => reviewersQuery.data ?? [], [reviewersQuery.data]);
-  // Picks who don't review the current brand (it changed) are dropped, once that brand's reviewers are known.
+  // Picks who review none of the post's brands (they changed) are dropped, once those brands' reviewers are known.
   const pickedReviewers = reviewersQuery.data
     ? reviewerIds.filter((id) => reviewerOptions.some((r) => r.id === id))
     : reviewerIds;
@@ -1429,7 +1429,7 @@ export default function NewSubmissionPage() {
                       isMissing("reviewer_ids") ? "border-red-500" : "border-input"
                     }`}
                   >
-                    No reviewers yet{brand ? " for this brand" : ""}
+                    No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
                   </div>
                 ) : (
                   <MultiSelect<string>
@@ -1460,7 +1460,7 @@ export default function NewSubmissionPage() {
                 <p className="text-[11px] text-muted-foreground">
                   {reviewersQuery.isSuccess && reviewerOptions.length === 0
                     ? "Add users and give them a reviewer role (System & Security) to send them content."
-                    : "Only the people you pick see this post and get its notifications. Final approvers for this brand are always included."}
+                    : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                 </p>
               </Field>
             </div>
