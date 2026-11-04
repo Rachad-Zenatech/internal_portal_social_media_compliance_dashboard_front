@@ -23,7 +23,9 @@ import {
 import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useAuth } from "@/lib/AuthContext";
+import { scriptService } from "@/services/scriptService";
 import { submissionService } from "@/services/submissionService";
+import type { ScriptQueueItem } from "@/types/script";
 import type { SubmissionSummary } from "@/types/submission";
 
 /** Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
@@ -39,6 +41,14 @@ const ACTIVITY_LIMIT = 5;
 const isFailing = (s: SubmissionSummary) =>
   !s.analysis_pending && (s.latest_traffic_light === "RED" || (s.latest_score != null && s.latest_score < 60));
 const isOverdue = (s: SubmissionSummary) => Boolean(s.due_at && isPast(new Date(s.due_at)));
+
+/** What waits for a reviewer: a post, or a video's script. They're counted and listed together. */
+type QueueRow = { kind: "post"; s: SubmissionSummary } | { kind: "script"; s: ScriptQueueItem };
+const rowDue = (r: QueueRow) => (r.kind === "post" ? r.s.due_at : r.s.approval_needed_by);
+const rowSent = (r: QueueRow) => (r.kind === "post" ? r.s.submitted_at ?? r.s.created_at : r.s.sent_at);
+const rowOverdue = (r: QueueRow) => Boolean(rowDue(r) && isPast(new Date(rowDue(r)!)));
+const rowFailing = (r: QueueRow) =>
+  r.kind === "post" ? isFailing(r.s) : !r.s.ai_unavailable && (r.s.traffic_light === "RED" || (r.s.score != null && r.s.score < 60));
 
 function ReviewerDashboard() {
   const { user } = useAuth();
@@ -59,26 +69,35 @@ function ReviewerDashboard() {
     queryFn: () => submissionService.dashboard("all"),
     staleTime: 60_000,
   });
+  // Scripts waiting for a review are part of the queue too.
+  const scripts = useQuery({
+    queryKey: ["script-queue", "review"],
+    queryFn: () => scriptService.queue("review"),
+    staleTime: 0,
+  });
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
   const audienceName = (code?: string | null) => (code ? options.data?.audiences[code] ?? code : "Not set");
 
   const all = useMemo(() => submissions.data ?? [], [submissions.data]);
-  const needsMyReview = useMemo(
+  const needsMyReview = useMemo<QueueRow[]>(
     () =>
-      all
-        .filter((s) => s.status === "IN_REVIEW" && s.can_review)
-        .sort(
-          (a, b) =>
-            (a.due_at ? new Date(a.due_at).getTime() : Infinity) - (b.due_at ? new Date(b.due_at).getTime() : Infinity) ||
-            new Date(a.submitted_at ?? a.created_at).getTime() - new Date(b.submitted_at ?? b.created_at).getTime()
-        ),
-    [all]
+      [
+        ...all.filter((s) => s.status === "IN_REVIEW" && s.can_review).map((s): QueueRow => ({ kind: "post", s })),
+        ...(scripts.data ?? []).filter((s) => s.can_review).map((s): QueueRow => ({ kind: "script", s })),
+      ].sort(
+        (a, b) =>
+          (rowDue(a) ? new Date(rowDue(a)!).getTime() : Infinity) - (rowDue(b) ? new Date(rowDue(b)!).getTime() : Infinity) ||
+          new Date(rowSent(a)).getTime() - new Date(rowSent(b)).getTime()
+      ),
+    [all, scripts.data]
   );
-  const overdue = needsMyReview.filter(isOverdue).length;
-  const failing = needsMyReview.filter(isFailing).length;
-  const soonest = needsMyReview.find((s) => s.due_at && !isOverdue(s));
-  const oldestSent = needsMyReview.reduce<Date | null>((oldest, s) => {
-    const at = s.submitted_at ? new Date(s.submitted_at) : null;
+  const waitingPosts = needsMyReview.filter((r) => r.kind === "post").length;
+  const waitingScripts = needsMyReview.length - waitingPosts;
+  const overdue = needsMyReview.filter(rowOverdue).length;
+  const failing = needsMyReview.filter(rowFailing).length;
+  const soonest = needsMyReview.find((r) => rowDue(r) && !rowOverdue(r));
+  const oldestSent = needsMyReview.reduce<Date | null>((oldest, r) => {
+    const at = rowSent(r) ? new Date(rowSent(r)) : null;
     return at && (!oldest || at < oldest) ? at : oldest;
   }, null);
 
@@ -86,6 +105,7 @@ function ReviewerDashboard() {
     setActiveVideoId(`sub-${id}`);
     navigate("/compliance/scanner");
   };
+  const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/compliance/scanner?script=${r.s.id}`) : openInScreener(r.s.id));
 
   // The review list shows five at a time; reviewed posts drop out, so keep the page in range.
   const [rawReviewPage, setReviewPage] = useState(0);
@@ -96,13 +116,18 @@ function ReviewerDashboard() {
   // The team's activity, minus the reviewer's own actions.
   const activity = (summary.data?.activity ?? []).filter((a) => a.actor_id !== user?.id).slice(0, ACTIVITY_LIMIT);
 
-  const loading = submissions.isLoading;
+  const loading = submissions.isLoading || scripts.isLoading;
   const waiting = needsMyReview.length;
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  // "4 posts and 3 scripts", or just the one kind when that's all there is.
+  const breakdown = [waitingPosts ? plural(waitingPosts, "post") : null, waitingScripts ? plural(waitingScripts, "script") : null]
+    .filter(Boolean)
+    .join(" and ");
   const headline = loading
     ? ""
     : waiting === 0
     ? "Nothing is waiting for your review."
-    : `${waiting} post${waiting === 1 ? " is" : "s are"} waiting for your review.${overdue ? ` ${overdue} ${overdue === 1 ? "is" : "are"} overdue.` : ""}`;
+    : `${breakdown} ${waiting === 1 ? "is" : "are"} waiting for your review.${overdue ? ` ${overdue} ${overdue === 1 ? "is" : "are"} overdue.` : ""}`;
 
   const s = summary.data;
   const decided = s ? s.approved + s.changes_requested : 0;
@@ -134,7 +159,7 @@ function ReviewerDashboard() {
           </Button>
           <Button
             className="h-10 rounded-lg bg-blue-700 px-4 font-medium text-white hover:bg-blue-800"
-            onClick={() => (needsMyReview[0] ? openInScreener(needsMyReview[0].id) : navigate("/compliance/scanner"))}
+            onClick={() => (needsMyReview[0] ? openRow(needsMyReview[0]) : navigate("/compliance/scanner"))}
           >
             {waiting ? "Start reviewing" : "Open Content screener"}
           </Button>
@@ -147,13 +172,18 @@ function ReviewerDashboard() {
           label="Waiting for you"
           value={loading ? "–" : waiting}
           note={
-            soonest?.due_at
-              ? `Next due ${format(new Date(soonest.due_at), "EEE, MMM d")}`
-              : oldestSent
-              ? `Oldest sent ${formatDistanceToNow(oldestSent)} ago`
-              : waiting
-              ? null
-              : "All caught up"
+            !waiting
+              ? "All caught up"
+              : [
+                  waitingPosts && waitingScripts ? `${plural(waitingPosts, "post")}, ${plural(waitingScripts, "script")}` : null,
+                  soonest && rowDue(soonest)
+                    ? `Next due ${format(new Date(rowDue(soonest)!), "EEE, MMM d")}`
+                    : oldestSent
+                    ? `Oldest sent ${formatDistanceToNow(oldestSent)} ago`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || null
           }
         />
         <StatCard
@@ -211,7 +241,58 @@ function ReviewerDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {reviewRows.map((r) => {
+                    {reviewRows.map((row) => {
+                      if (row.kind === "script") {
+                        const sc = row.s;
+                        const urgent = rowOverdue(row) && rowFailing(row);
+                        return (
+                          <tr
+                            key={`script-${sc.id}`}
+                            className={`border-t border-border/60 ${urgent ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-500/5 dark:hover:bg-red-500/10" : "hover:bg-muted/30"}`}
+                          >
+                            <td className="py-3 pl-4 pr-3">
+                              <div className="flex items-center gap-3">
+                                <span className="grid h-10 w-14 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                                  <FileText className="w-5 h-5" />
+                                </span>
+                                <div className="min-w-0">
+                                  <Link to={`/submissions/${sc.id}/script`} className="block max-w-[260px] truncate font-medium text-foreground hover:underline">
+                                    {sc.title}
+                                  </Link>
+                                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                                    <span className="rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                                      Script
+                                    </span>
+                                    <span>
+                                      by {sc.creator_name ?? "Unknown"}
+                                      {sc.version_number > 1 && ` · v${sc.version_number}`}
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(sc.audience)}</td>
+                            <td className="px-3 py-3 text-xs">
+                              <Deadline dueAt={sc.approval_needed_by} />
+                            </td>
+                            <td className="px-3 py-3">
+                              <Score score={sc.score} unavailable={sc.ai_unavailable} />
+                            </td>
+                            <td className="py-3 pl-3 pr-4">
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  className="h-8 rounded-lg bg-blue-700 px-3.5 text-xs font-medium text-white hover:bg-blue-800"
+                                  onClick={() => openRow(row)}
+                                >
+                                  Review
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
+                      const r = row.s;
                       // Only posts that are late AND failing get the red highlight, so they stand out.
                       const urgent = isOverdue(r) && isFailing(r);
                       return (

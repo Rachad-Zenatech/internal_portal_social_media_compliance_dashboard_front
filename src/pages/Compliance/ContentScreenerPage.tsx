@@ -634,6 +634,13 @@ function PostView({
                 <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
               </Button>
             )}
+            {s.script_status && s.script_status !== "DRAFT" && (
+              <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                <Link to={`/submissions/${s.id}/script`}>
+                  <FileText className="w-3.5 h-3.5" /> View script
+                </Link>
+              </Button>
+            )}
             <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
               <Link to={`/submissions/${s.id}`}>
                 <ExternalLink className="w-3.5 h-3.5" /> Full details & history
