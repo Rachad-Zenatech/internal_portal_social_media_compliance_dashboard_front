@@ -415,6 +415,8 @@ export default function NewSubmissionPage() {
   const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
+  // A video post with no script yet: the script goes in first, other files after.
+  const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
   // Live public mood & news sentiment for the post's topics.
@@ -851,7 +853,7 @@ export default function NewSubmissionPage() {
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
         queryClient.invalidateQueries({ queryKey: ["submissions"] });
         toast.success("Script sent for review. Add the video and caption once it's approved.");
-        navigate("/dashboard");
+        navigate("/submissions");
       } catch (err) {
         toast.error(`Couldn't send the script: ${(err as Error).message}`);
       } finally {
@@ -1401,8 +1403,8 @@ export default function NewSubmissionPage() {
             <div
               role="button"
               tabIndex={0}
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInputRef.current?.click()}
+              onClick={() => (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
               onDragOver={(e) => {
                 e.preventDefault();
                 setIsDraggingMain(true);
@@ -1411,6 +1413,10 @@ export default function NewSubmissionPage() {
               onDrop={(e) => {
                 e.preventDefault();
                 setIsDraggingMain(false);
+                if (needScriptFirst) {
+                  toast.info("Upload your script first. Once it's in, you can add other files.");
+                  return;
+                }
                 if (e.dataTransfer.files) uploadFiles(Array.from(e.dataTransfer.files));
               }}
               className={`min-h-[190px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-1.5 p-6 cursor-pointer transition-colors ${
@@ -1424,18 +1430,22 @@ export default function NewSubmissionPage() {
               <span className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
                 <Upload className="w-5 h-5" />
               </span>
-              <span className="text-sm font-semibold text-foreground">Drag & drop files here</span>
+              <span className="text-sm font-semibold text-foreground">{needScriptFirst ? "Upload your script first" : "Drag & drop files here"}</span>
               <span className="text-xs text-muted-foreground max-w-md">
-                {videoLocked
+                {needScriptFirst
+                  ? "Start by uploading the script (PDF, Word or .txt). Once it's in, you can add a cover image and other files here. Your video can go in once the script is approved."
+                  : videoLocked
                   ? "Add a cover image or supporting documents now. Your video can go in once the script is approved."
                   : `Add ${mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.`}
               </span>
               <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold shadow-2xs">
-                <CloudUpload className="w-3.5 h-3.5" /> Choose Files
+                <CloudUpload className="w-3.5 h-3.5" /> {needScriptFirst ? "Upload the script" : "Choose Files"}
               </span>
-              <span className="text-[11px] text-muted-foreground mt-1">
-                Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
-              </span>
+              {!needScriptFirst && (
+                <span className="text-[11px] text-muted-foreground mt-1">
+                  Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
+                </span>
+              )}
             </div>
             <button
               type="button"
