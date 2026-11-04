@@ -28,6 +28,7 @@ import type {
   SubmissionFileKind,
   SubmissionHistory,
   SubmissionOptions,
+  ReviewerOption,
   SubmissionSummary,
   SubmissionUpdate,
   SubmitResult,
@@ -37,6 +38,13 @@ const quiet = { skipGlobalLoading: true };
 
 export const submissionService = {
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
+
+  /** Reviewers and super admins the content can be sent to: on this brand, or everyone's when there's none yet. */
+  reviewers: (brand?: string) =>
+    apiClient.get<ReviewerOption[]>(
+      brand ? `/api/submissions/reviewers?brand_code=${encodeURIComponent(brand)}` : "/api/submissions/reviewers",
+      quiet
+    ),
 
   /** "all" = everyone's content (super admins and Content Managers only). */
   list: (status?: string, scope: "mine" | "all" = "mine") => {

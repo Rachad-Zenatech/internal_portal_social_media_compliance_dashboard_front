@@ -33,6 +33,14 @@ export interface SubmissionOptions {
   reviewer_routes: string[];
 }
 
+/** Someone a creator can send content to for review: a reviewer or a super admin. */
+export interface ReviewerOption {
+  id: string;
+  name: string;
+  email: string;
+  is_super_admin: boolean;
+}
+
 /** Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION). */
 export type DueKind = "REVIEW" | "REVISION";
 
@@ -168,6 +176,8 @@ export interface Submission {
   caption_text?: string | null;
   rule_sets: string[];
   reviewer_route: string[];
+  /** The reviewers it's sent to; empty means every reviewer on its brand. */
+  reviewer_ids?: string[];
   status: SubmissionStatus;
   current_version: number;
   latest_check?: StoredCheck | null;
@@ -276,6 +286,7 @@ export interface SubmissionUpdate {
   caption_text?: string;
   rule_sets?: string[];
   reviewer_route?: string[];
+  reviewer_ids?: string[];
   clear_fields?: ("account_id" | "publish_at" | "approval_needed_by" | "brand_code" | "audience" | "region")[];
 }
 

@@ -333,7 +333,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleScrape` (fn)
     - `otherTrends` (fn)
 
-## src/components/submissions/submissionUi.tsx (418 lines) - submission ui (components submissions)
+## src/components/submissions/submissionUi.tsx (419 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
 - `isAiUnavailable` (export const) - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
 - `AI_UNAVAILABLE_MESSAGE` (export const)
@@ -741,7 +741,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/main.tsx (51 lines) - Create a client
 
-## src/pages/Auth/Login.tsx (188 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+## src/pages/Auth/Login.tsx (225 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `readSignedOut` (function) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `safeReturnTo` (const) - Only same-app paths, so a crafted value can't send the user to another site after signing in.
 - `newNonce` (function)
@@ -773,7 +773,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1709 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1730 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -823,6 +823,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `items` (fn)
     - `visible` (fn)
     - `scriptItems` (fn)
+    - `rows` (fn) - when each was decided, newest first.
+    - `renderScriptRow` (fn)
+    - `renderPostRow` (fn)
     - `brands` (fn)
     - `platforms` (fn)
     - `activeFilters` (fn)
@@ -1110,7 +1113,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (1914 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2035 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1120,6 +1123,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Field` (function)
 - `MultiSelect` (function) - Select-style box that holds removable chips; options open in a popover.
     - `toggle` (fn)
+    - `toggleAll` (fn)
 - `SummaryRow` (function)
 - `NewSubmissionPage` (export function)
     - `navigate` (fn)
@@ -1127,6 +1131,8 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `optionsQuery` (fn)
     - `markEdited` (fn)
     - `accounts` (fn)
+    - `reviewersQuery` (fn)
+    - `reviewerOptions` (fn)
     - `selectedAccounts` (fn)
     - `brandAccounts` (fn)
     - `scriptStage` (fn) - the script stage (required: false) work as they always did.
@@ -1309,7 +1315,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptService.ts (31 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (230 lines) - submission service (services)
+## src/services/submissionService.ts (238 lines) - submission service (services)
 - `submissionService` (export const)
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -1400,13 +1406,14 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (514 lines) - AD: paid social ad.
+## src/types/submission.ts (525 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
 - `BrandOption` (export interface)
 - `AccountOption` (export interface)
 - `SubmissionOptions` (export interface)
+- `ReviewerOption` (export interface) - Someone a creator can send content to for review: a reviewer or a super admin.
 - `DueKind` (export type) - Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION).
 - `TranscriptStatus` (export type)
 - `TranscriptSegment` (export interface)
