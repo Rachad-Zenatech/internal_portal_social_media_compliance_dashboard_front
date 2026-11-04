@@ -2453,6 +2453,8 @@ export default function VideoComplianceScannerPage() {
                     publish_at: activeVideo.publishAt,
                     due_at: activeVideo.dueAt,
                     due_kind: activeVideo.dueKind,
+                    ai_unavailable: activeVideo.serverCheck?.ai_unavailable,
+                    analysis_pending: isAnalysing(activeVideo.serverCheck),
                     can_review: true,
                     can_approve: activeVideo.canApprove,
                     approver_names: activeVideo.approverNames,

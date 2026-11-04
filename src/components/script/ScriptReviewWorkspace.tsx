@@ -705,8 +705,18 @@ function Editor({
               <Button
                 variant={hasEdits ? "outline" : "default"}
                 className="h-10 flex-1"
-                disabled={decide.isPending || hasEdits || criticalNeedsNote || marked}
-                title={marked ? "You highlighted or commented on this version. Request changes instead" : hasEdits ? "You changed the script, so the creator accepts it first" : criticalNeedsNote ? "Say in the note why the critical flag is fine" : undefined}
+                disabled={decide.isPending || hasEdits || criticalNeedsNote || marked || Boolean(check?.ai_unavailable)}
+                title={
+                  check?.ai_unavailable
+                    ? "The AI review couldn't run, so there's no score yet. It's re-checked automatically."
+                    : marked
+                    ? "You highlighted or commented on this version. Request changes instead"
+                    : hasEdits
+                    ? "You changed the script, so the creator accepts it first"
+                    : criticalNeedsNote
+                    ? "Say in the note why the critical flag is fine"
+                    : undefined
+                }
                 onClick={approve}
               >
                 {decide.isPending && decide.variables?.decision === "APPROVE" && <Loader2 className="w-4 h-4 animate-spin" />}

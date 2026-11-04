@@ -468,6 +468,8 @@ export default function SubmissionDetailPage() {
             publish_at: s.publish_at,
             due_at: s.due_at,
             due_kind: s.due_kind,
+            ai_unavailable: s.latest_check?.ai_unavailable,
+            analysis_pending: isAnalysing(s.latest_check),
             can_review: s.can_review,
             can_approve: s.can_approve,
             approver_names: s.approver_names,

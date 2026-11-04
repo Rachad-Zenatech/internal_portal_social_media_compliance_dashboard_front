@@ -717,6 +717,8 @@ function ReviewCard({
           publish_at: sub.publish_at,
           due_at: sub.due_at,
           due_kind: sub.due_kind,
+          ai_unavailable: sub.latest_check?.ai_unavailable,
+          analysis_pending: isAnalysing(sub.latest_check),
           can_review: sub.can_review,
           can_approve: sub.can_approve,
           approver_names: sub.approver_names,

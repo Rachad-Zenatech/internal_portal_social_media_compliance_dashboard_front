@@ -1356,7 +1356,8 @@ export default function NewSubmissionPage() {
           </Section>
 
           <Section step={3} title="Upload Content" description="Upload your content and any supporting materials in one go.">
-            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. */}
+            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only. */}
+            {contentType === "VIDEO" && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
@@ -1369,6 +1370,7 @@ export default function NewSubmissionPage() {
                 </a>
               </Button>
             </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
