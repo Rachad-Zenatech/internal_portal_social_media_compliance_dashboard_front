@@ -138,7 +138,9 @@ export const scriptNeedsChanges = (s: { status: string; script_status?: string |
   s.status === "DRAFT" && (s.script_status === "CHANGES_REQUESTED" || s.script_status === "EDITS_PROPOSED");
 
 /** A video draft whose script has been sent or reviewed says so instead of plain "Draft". */
-export function scriptPillOf(s: { status: string; script_status?: string | null }): { label: string; pill: string } | null {
+export function scriptPillOf(s: { status: string; script_status?: string | null; script_send_status?: string | null }): { label: string; pill: string } | null {
+  if (s.status === "DRAFT" && s.script_send_status === "PROCESSING") return { label: "Sending script", pill: STATUS_PILL.IN_REVIEW.pill };
+  if (s.status === "DRAFT" && s.script_send_status === "FAILED") return { label: "Script not sent", pill: STATUS_PILL.CHANGES_REQUESTED.pill };
   if (s.status !== "DRAFT" || !s.script_status || s.script_status === "DRAFT") return null;
   if (s.script_status === "IN_REVIEW") return { label: "Script in review", pill: STATUS_PILL.IN_REVIEW.pill };
   return {
@@ -166,7 +168,26 @@ export const initials = (name?: string | null) =>
 export const avatarTone = (key: string) => AVATAR_TONES[[...key].reduce((sum, c) => sum + c.charCodeAt(0), 0) % AVATAR_TONES.length];
 
 /** A compliance score the way the Content Screener shows it. */
-export function Score({ score, pending = false, progress, unavailable = false }: { score?: number | null; pending?: boolean; progress?: AnalysisProgress | null; unavailable?: boolean }) {
+export function Score({
+  score,
+  pending = false,
+  progress,
+  unavailable = false,
+  calculating = false,
+}: {
+  score?: number | null;
+  pending?: boolean;
+  progress?: AnalysisProgress | null;
+  unavailable?: boolean;
+  /** A sent script is being read and scored: no score yet. */
+  calculating?: boolean;
+}) {
+  if (calculating)
+    return (
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-blue-700 dark:text-blue-300">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Calculating…
+      </span>
+    );
   if (pending) return <UnderReviewBadge progress={progress} />;
   if (unavailable) return <AiUnavailableBadge />;
   if (score == null) return <span className="text-xs text-muted-foreground">Not checked</span>;

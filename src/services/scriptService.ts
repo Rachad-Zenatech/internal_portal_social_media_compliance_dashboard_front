@@ -15,7 +15,7 @@ export const scriptService = {
   submit: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/submit`, undefined, quiet),
 
   /** Reviewer: approve, or send back with a note and/or their edited version (text). */
-  decide: (id: string, data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string }) =>
+  decide: (id: string, data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
     apiClient.post<ScriptStage>(`/api/submissions/${id}/script/decision`, data, quiet),
 
   /** Creator: accept the reviewer's edits. */

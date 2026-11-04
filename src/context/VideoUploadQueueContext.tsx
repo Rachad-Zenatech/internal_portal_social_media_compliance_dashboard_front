@@ -91,7 +91,7 @@ export interface VideoQueueItem {
   publishAt?: string | null;
   /** Deadline for the next step (reviewer or creator). */
   dueAt?: string | null;
-  dueKind?: 'REVIEW' | 'REVISION' | null;
+  dueKind?: 'REVIEW' | 'REVISION' | 'VIDEO' | null;
   /** The viewer is a reviewer who may decide on it. */
   canReview?: boolean;
   /** Which Screener tab it belongs to; demo items count as "review". */

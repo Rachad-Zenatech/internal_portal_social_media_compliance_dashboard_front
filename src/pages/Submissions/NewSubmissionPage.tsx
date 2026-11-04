@@ -851,10 +851,10 @@ export default function NewSubmissionPage() {
         queryClient.invalidateQueries({ queryKey: ["script-queue"] });
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
         queryClient.invalidateQueries({ queryKey: ["submissions"] });
-        toast.success("Script sent for review. Add the video and caption once it's approved.");
+        toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
         navigate("/submissions");
       } catch (err) {
-        toast.error(`Couldn't send the script: ${(err as Error).message}`);
+        toast.error(`Error sending the script: ${(err as Error).message}`);
       } finally {
         setSubmitting(false);
       }
@@ -1382,6 +1382,8 @@ export default function NewSubmissionPage() {
                 stage={scriptStage.data}
                 canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
                 onAddScript={() => scriptInputRef.current?.click()}
+                onSend={submit}
+                sending={submitting}
               />
             )}
             {/* Two ways to add content: upload files, or import a Canva design. */}

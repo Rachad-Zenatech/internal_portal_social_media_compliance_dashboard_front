@@ -34,7 +34,7 @@ export interface SubmissionOptions {
 }
 
 /** Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION). */
-export type DueKind = "REVIEW" | "REVISION";
+export type DueKind = "REVIEW" | "REVISION" | "VIDEO";
 
 export type TranscriptStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
@@ -224,6 +224,9 @@ export interface SubmissionSummary {
   analysis_pending?: boolean;
   /** The AI review couldn't run for this post: no score, a message instead. */
   ai_unavailable?: boolean;
+  /** A sent script still being read and scored (PROCESSING), or one that couldn't be sent (FAILED, with why). */
+  script_send_status?: "PROCESSING" | "FAILED" | null;
+  script_send_error?: string | null;
   /** While analysis_pending: what's still being read and when the score is expected. */
   analysis_progress?: AnalysisProgress | null;
   file_count: number;
@@ -331,8 +334,10 @@ export interface ReviewDecisionRequest {
   publish_now?: boolean;
   /** Approve: the rules (by number) the reviewer confirmed by hand; must cover the check's manual_review_rules. */
   confirmed_rules?: string[];
-  /** Request changes: working days the creator has to resubmit. */
+  /** Request changes: working days the creator has to resubmit... */
   revision_days?: 1 | 2 | 3 | 5;
+  /** ...or the exact date and time (ISO) the reviewer picked. */
+  revision_due_at?: string;
 }
 
 export type ReviewCommentCategory = "LEGAL" | "EDITORIAL" | "COMPLIANCE" | "BRAND" | "NOTE";
@@ -378,6 +383,8 @@ export interface SubmissionHistory {
 }
 
 export interface ReviewQueueItem {
+  /** Video posts with a script stage: where the script is (to link to it). */
+  script_status?: ScriptStatus | null;
   id: string;
   reference_code: string;
   title: string;

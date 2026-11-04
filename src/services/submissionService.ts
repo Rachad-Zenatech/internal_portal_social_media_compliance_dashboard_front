@@ -83,8 +83,8 @@ export const submissionService = {
   withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
 
   /** Reviewer takes back an approval and sends it to the creator as changes requested. */
-  reopen: (id: string, notes: string, revisionDays?: 1 | 2 | 3 | 5) =>
-    apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes, revision_days: revisionDays }, quiet),
+  reopen: (id: string, notes: string, due: { revision_days?: 1 | 2 | 3 | 5; revision_due_at?: string } = {}) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes, ...due }, quiet),
 
   /** Reviewer moves approved content to a new publish time. */
   reschedule: (id: string, publishAt: string) =>

@@ -69,7 +69,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
                 ? `The video follows the approved script (${match.similarity}% alike).`
                 : match.status === "PARTIAL"
                   ? `The video differs from the approved script (${match.similarity}% alike).`
-                  : `The video doesn't match the approved script (${match.similarity}% alike).`}
+                  : `The video doesn't match the approved script (${match.similarity}% alike). Check the right video was uploaded.`}
             </span>
           </p>
           {match.added.length > 0 && (

@@ -378,6 +378,13 @@ export default function SubmissionDetailPage() {
                 <ArrowLeft className="w-3.5 h-3.5" /> {backTo.label}
               </Link>
             </Button>
+            {s.script_status && s.script_status !== "DRAFT" && (
+              <Button size="sm" variant="outline" asChild className="text-xs gap-1.5 font-semibold">
+                <Link to={`/submissions/${s.id}/script`}>
+                  <FileText className="w-3.5 h-3.5" /> View script
+                </Link>
+              </Button>
+            )}
             {s.content_type === "VIDEO" && s.can_edit && (
               <Button
                 type="button"

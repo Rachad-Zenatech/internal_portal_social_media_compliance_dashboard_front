@@ -61,7 +61,8 @@ function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }
   const scriptChanges = scriptNeedsChanges(s);
   const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
   const status = statusPillOf(s);
-  const due = changes && !scriptChanges ? dueLabel(s.due_kind === "REVISION" ? s.due_at : null) : null;
+  // Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
+  const due = (changes && s.due_kind === "REVISION") || (s.script_status === "APPROVED" && s.due_kind === "VIDEO") ? dueLabel(s.due_at) : null;
   const details = scriptChanges
     ? [s.script_status === "EDITS_PROPOSED" ? "Your reviewer edited the script" : "Your reviewer asked for changes to the script"]
     : changes
@@ -124,7 +125,7 @@ function PostRow({ s }: { s: SubmissionSummary }) {
       </td>
       <td className="px-3 py-3">
         <div className="flex flex-col gap-0.5">
-          <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} />
+          <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} calculating={s.script_send_status === "PROCESSING"} />
           {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
         </div>
       </td>

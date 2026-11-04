@@ -210,7 +210,7 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 function DueLine({ dueAt, kind, className = "" }: { dueAt?: string | null; kind?: SubmissionSummary["due_kind"]; className?: string }) {
   const due = dueInfo(dueAt, kind);
   if (!due) return null;
-  const tone = due.overdue ? "text-red-600 dark:text-red-400" : kind === "REVISION" ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300";
+  const tone = due.overdue ? "text-red-600 dark:text-red-400" : kind === "REVISION" || kind === "VIDEO" ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300";
   return (
     <span className={`inline-flex items-center gap-1.5 ${tone} ${className}`} title={`Due ${due.exact}`}>
       <Clock className="w-3.5 h-3.5" /> {due.text}
@@ -337,13 +337,21 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
   const muted = "text-muted-foreground";
   const stage = stageOf(s);
   const due = s.due_at ? new Date(s.due_at) : null;
+  // A sent script is read and scored in the background: say so, or say why it couldn't be sent.
+  if (s.script_send_status === "PROCESSING") return { text: "Processing script · calculating compliance score", tone: "font-medium text-blue-700 dark:text-blue-300" };
+  if (s.script_send_status === "FAILED") return { text: s.script_send_error ?? "The script couldn't be sent", tone: "font-semibold text-red-600 dark:text-red-400" };
   // Video drafts in the script stage: where the script is comes first.
   if (stage === "DRAFT" && s.script_status && s.script_status !== "DRAFT") {
     const amber = "font-semibold text-amber-700 dark:text-amber-400";
     if (s.script_status === "IN_REVIEW") return { text: "Script with a reviewer", tone: muted };
     if (s.script_status === "EDITS_PROPOSED") return { text: "Reviewer edited your script · review the changes", tone: amber };
     if (s.script_status === "CHANGES_REQUESTED") return { text: "Script needs changes", tone: amber };
-    if (s.script_status === "APPROVED") return { text: "Script approved · add the video", tone: "font-medium text-emerald-700 dark:text-emerald-400" };
+    if (s.script_status === "APPROVED") {
+      const videoDue = s.due_kind === "VIDEO" && s.due_at ? new Date(s.due_at) : null;
+      if (videoDue && isPast(videoDue)) return { text: `Script approved · video overdue by ${formatDistanceToNow(videoDue)}`, tone: "font-semibold text-red-600 dark:text-red-400" };
+      if (videoDue) return { text: `Script approved · video due ${format(videoDue, "EEE, MMM d")}`, tone: "font-medium text-emerald-700 dark:text-emerald-400" };
+      return { text: "Script approved · add the video", tone: "font-medium text-emerald-700 dark:text-emerald-400" };
+    }
   }
   if (stage === "DRAFT") return { text: `Draft · edited ${format(new Date(s.updated_at), "MMM d")}`, tone: muted };
   if (stage === "CHANGES_REQUESTED") {
@@ -385,7 +393,7 @@ function GalleryCard({
   // "to fix" only where the creator can act on it (a draft, or changes requested); otherwise just "found".
   const issueWords = issuesText(s.issue_count);
   const issues =
-    s.analysis_pending || s.latest_score == null
+    s.analysis_pending || s.script_send_status === "PROCESSING" || s.latest_score == null
       ? null
       : !issueWords
       ? "No issues"
@@ -415,7 +423,7 @@ function GalleryCard({
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <StagePill stage={stage} small script={s.script_status} />
-            <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} />
+            <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} calculating={s.script_send_status === "PROCESSING"} />
             {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
           </div>
           <p className={`text-sm ${line.tone}`}>{line.text}</p>
@@ -854,6 +862,11 @@ function ReviewCard({
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <span>{media ? (mediaIsVideo ? "Video" : "Image") : CONTENT_TYPE_LABELS[summary.content_type] ?? "Content"}</span>
+            {summary.script_status && summary.script_status !== "DRAFT" && (
+              <Link to={`/submissions/${summary.id}/script`} className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                <FileText className="w-3.5 h-3.5" /> View script
+              </Link>
+            )}
             {showScreener && (
               <button type="button" onClick={openInScreener} className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline dark:text-blue-300">
                 <ScanEye className="w-3.5 h-3.5" /> Open in Content Screener
@@ -891,19 +904,33 @@ function ReviewCard({
             icon={ShieldCheck}
             title="Compliance Check"
             status={
-              check && isAnalysing(check)
+              summary.script_send_status === "PROCESSING"
+                ? "Calculating the compliance score…"
+                : check && isAnalysing(check)
                 ? "Under review: still reading the post"
                 : check?.ai_unavailable
                 ? "No score: the AI review couldn't run"
                 : check
                 ? `${check.score}/100 · ${check.blocked ? "Blocked" : check.is_compliant ? "No issues" : `${check.violations_count} issue${check.violations_count === 1 ? "" : "s"}`}`
+                : summary.script_status
+                ? "Runs automatically when the script is sent"
                 : "No results yet"
             }
             statusTone={
-              !check ? undefined : check.traffic_light === "RED" ? "text-red-600 dark:text-red-400" : check.traffic_light === "YELLOW" ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"
+              summary.script_send_status === "PROCESSING" || !check ? undefined : check.traffic_light === "RED" ? "text-red-600 dark:text-red-400" : check.traffic_light === "YELLOW" ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"
             }
             description="Check regulatory, legal and brand messaging rules, audience, region and product-development stage."
-            action={check ? (openCheck === "compliance" ? "Hide results" : "View results") : canRunCheck ? "Run compliance check" : null}
+            action={
+              summary.script_send_status === "PROCESSING"
+                ? null
+                : check
+                ? openCheck === "compliance"
+                  ? "Hide results"
+                  : "View results"
+                : canRunCheck && !summary.script_status
+                ? "Run compliance check"
+                : null
+            }
             busy={runCheck.isPending}
             onAction={() => (check ? setOpenCheck((o) => (o === "compliance" ? null : "compliance")) : runCheck.mutate())}
           />

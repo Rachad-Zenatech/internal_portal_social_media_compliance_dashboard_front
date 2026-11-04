@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -7,7 +7,8 @@ import type { ScriptStage } from "@/types/script";
 
 /** A post's script stage, refreshed while its file is still being read. */
 export function useScriptStage(submissionId?: string | null, enabled = true) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: ["script", submissionId],
     queryFn: () => scriptService.get(submissionId!),
     enabled: Boolean(submissionId) && enabled,
@@ -15,9 +16,24 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
     refetchInterval: (q) => {
       const d = q.state.data;
       const s = d?.file_status;
+      if (d?.processing) return 2000;
       return (d?.file_name && s == null) || s === "PENDING" || s === "PROCESSING" ? 1500 : false;
     },
   });
+  // When a send that was processing in the background finishes, refresh the lists and say how it went.
+  const wasProcessing = useRef(false);
+  const processing = Boolean(query.data?.processing);
+  useEffect(() => {
+    if (wasProcessing.current && !processing && query.data) {
+      queryClient.invalidateQueries({ queryKey: ["submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
+      queryClient.invalidateQueries({ queryKey: ["script-queue"] });
+      if (query.data.send_error) toast.error(query.data.send_error);
+      else toast.success("Script sent for review. Reviewers have been notified.");
+    }
+    wasProcessing.current = processing;
+  }, [processing, query.data, queryClient, submissionId]);
+  return query;
 }
 
 /** The script stage's actions: send it, decide on it, accept or revise the reviewer's edits. */
@@ -36,12 +52,13 @@ export function useScriptActions(submissionId: string) {
     mutationFn: () => scriptService.submit(submissionId),
     onSuccess: (s) => {
       done(s);
-      toast.success("Script sent for review.");
+      toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
     },
-    onError: fail("send the script"),
+    onError: (err) => toast.error(`Error sending the script: ${(err as Error).message}`),
   });
   const decide = useMutation({
-    mutationFn: (data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string }) => scriptService.decide(submissionId, data),
+    mutationFn: (data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
+      scriptService.decide(submissionId, data),
     onSuccess: (s) => {
       done(s);
       toast.success(
