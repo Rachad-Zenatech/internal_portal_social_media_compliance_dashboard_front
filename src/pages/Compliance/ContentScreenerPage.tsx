@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +69,8 @@ import {
   isAnalysing,
   progressSteps,
   useAnalysisCountdown,
+  audienceCodes,
+  audienceNames,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { usePublicMood } from "@/hooks/usePublicMood";
@@ -140,12 +143,13 @@ const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
 type DueFilter = "any" | "overdue" | "today" | "week" | "none";
 type CheckFilter = "any" | "failing" | "critical" | "passing";
 interface Filters {
-  brand: string;
-  platform: string;
+  /** Brand codes and platforms to show; none picked means all. */
+  brands: string[];
+  platforms: string[];
   due: DueFilter;
   check: CheckFilter;
 }
-const NO_FILTERS: Filters = { brand: "all", platform: "all", due: "any", check: "any" };
+const NO_FILTERS: Filters = { brands: [], platforms: [], due: "any", check: "any" };
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
 const DUE_LABELS: Record<DueFilter, string> = {
@@ -176,8 +180,8 @@ function matches(s: ReviewQueueItem, f: Filters, q: string) {
   const due = deadlineOf(s);
   const now = new Date();
   return (
-    (f.brand === "all" || s.brand_code === f.brand) &&
-    (f.platform === "all" || s.platforms.includes(f.platform)) &&
+    (f.brands.length === 0 || (s.brand_code != null && f.brands.includes(s.brand_code))) &&
+    (f.platforms.length === 0 || s.platforms.some((p) => f.platforms.includes(p))) &&
     (f.due === "any" ||
       (f.due === "none" && !due) ||
       (f.due === "overdue" && Boolean(due && isPast(due))) ||
@@ -572,7 +576,7 @@ function PostView({
   s: ReviewQueueItem;
   flags: Flag[];
   dismissed: Set<string>;
-  labels: { brand: (c?: string | null) => string | null; audience: (c?: string | null) => string | null };
+  labels: { brand: (c?: string | null) => string | null; audience: (codes: string[]) => string | null };
   videoRef: RefObject<HTMLVideoElement | null>;
   now: number;
   duration: number;
@@ -656,7 +660,7 @@ function PostView({
             </span>
           ))}
           {labels.brand(s.brand_code) && <span className={chip}>{labels.brand(s.brand_code)}</span>}
-          {labels.audience(s.audience) && <span className={chip}>{labels.audience(s.audience)}</span>}
+          {labels.audience(audienceCodes(s)) && <span className={chip}>{labels.audience(audienceCodes(s))}</span>}
           {needBy && (
             <span
               className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
@@ -1123,7 +1127,7 @@ function Workspace({
   onUploadScript,
 }: {
   s: ReviewQueueItem;
-  labels: { brand: (c?: string | null) => string | null; audience: (c?: string | null) => string | null };
+  labels: { brand: (c?: string | null) => string | null; audience: (codes: string[]) => string | null };
   canReview: boolean;
   onUploadScript?: () => void;
 }) {
@@ -1221,7 +1225,7 @@ export default function ContentScreenerPage() {
   const labels = useMemo(
     () => ({
       brand: (code?: string | null) => (code ? options.data?.brands.find((b) => b.code === code)?.name ?? code : null),
-      audience: (code?: string | null) => (code ? options.data?.audiences[code] ?? code : null),
+      audience: (codes: string[]) => audienceNames(codes, options.data?.audiences),
     }),
     [options.data]
   );
@@ -1333,7 +1337,8 @@ export default function ContentScreenerPage() {
 
   const brands = useMemo(() => [...new Set(items.map((s) => s.brand_code).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
-  const activeFilters = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter((k) => filters[k] !== NO_FILTERS[k]).length;
+  // How many of the four filters are in use (brand and platform count once each, however many values they hold).
+  const activeFilters = [filters.brands.length > 0, filters.platforms.length > 0, filters.due !== "any", filters.check !== "any"].filter(Boolean).length;
 
   // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
@@ -1571,21 +1576,31 @@ export default function ContentScreenerPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-72 gap-3 p-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Brand</Label>
+                  <MultiSelectFilter
+                    options={brands.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                    value={filters.brands}
+                    onChange={(next) => setFilters((f) => ({ ...f, brands: next }))}
+                    allLabel="All brands"
+                    noun="brand"
+                    ariaLabel="Brand"
+                    className="h-8 w-full text-[13px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Platform</Label>
+                  <MultiSelectFilter
+                    options={platforms.map((p) => ({ value: p, label: platformName(p) }))}
+                    value={filters.platforms}
+                    onChange={(next) => setFilters((f) => ({ ...f, platforms: next }))}
+                    allLabel="All platforms"
+                    noun="platform"
+                    ariaLabel="Platform"
+                    className="h-8 w-full text-[13px]"
+                  />
+                </div>
                 {[
-                  {
-                    id: "f-brand",
-                    label: "Brand",
-                    value: filters.brand,
-                    set: (v: string) => setFilters((f) => ({ ...f, brand: v })),
-                    options: [["all", "All brands"], ...brands.map((b) => [b, labels.brand(b) ?? b])],
-                  },
-                  {
-                    id: "f-platform",
-                    label: "Platform",
-                    value: filters.platform,
-                    set: (v: string) => setFilters((f) => ({ ...f, platform: v })),
-                    options: [["all", "All platforms"], ...platforms.map((p) => [p, platformName(p)])],
-                  },
                   {
                     id: "f-due",
                     label: tab === "sent_back" ? "Creator's deadline" : "Deadline",
@@ -1627,8 +1642,12 @@ export default function ContentScreenerPage() {
           </div>
           {activeFilters > 0 && (
             <div className="flex flex-wrap gap-1">
-              {filters.brand !== "all" && <FilterChip text={labels.brand(filters.brand) ?? filters.brand} onClear={() => setFilters((f) => ({ ...f, brand: "all" }))} />}
-              {filters.platform !== "all" && <FilterChip text={platformName(filters.platform)} onClear={() => setFilters((f) => ({ ...f, platform: "all" }))} />}
+              {filters.brands.map((b) => (
+                <FilterChip key={`brand-${b}`} text={labels.brand(b) ?? b} onClear={() => setFilters((f) => ({ ...f, brands: f.brands.filter((x) => x !== b) }))} />
+              ))}
+              {filters.platforms.map((p) => (
+                <FilterChip key={`platform-${p}`} text={platformName(p)} onClear={() => setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) }))} />
+              ))}
               {filters.due !== "any" && <FilterChip text={DUE_LABELS[filters.due]} onClear={() => setFilters((f) => ({ ...f, due: "any" }))} />}
               {filters.check !== "any" && <FilterChip text={CHECK_LABELS[filters.check]} onClear={() => setFilters((f) => ({ ...f, check: "any" }))} />}
             </div>

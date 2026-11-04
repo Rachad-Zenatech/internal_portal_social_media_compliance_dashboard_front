@@ -131,10 +131,10 @@ export const submissionService = {
     apiClient.post<CaptionSuggestions>(`/api/submissions/${id}/caption-suggestions`, data, quiet),
 
   /** Hashtags and the company cashtag suited to a post, screened against the rules that apply to it. */
-  hashtagLibrary: (p: { brand?: string; audience?: string; region?: string; platforms: string[]; ruleSets: string[] }) => {
+  hashtagLibrary: (p: { brand?: string; audiences?: string[]; region?: string; platforms: string[]; ruleSets: string[] }) => {
     const q = new URLSearchParams();
     if (p.brand) q.set("brand_code", p.brand);
-    if (p.audience) q.set("audience", p.audience);
+    (p.audiences ?? []).forEach((a) => q.append("audiences", a));
     if (p.region) q.set("region", p.region);
     p.platforms.forEach((v) => q.append("platforms", v));
     p.ruleSets.forEach((v) => q.append("rule_sets", v));

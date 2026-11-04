@@ -150,6 +150,8 @@ export interface Submission {
   content_type: ContentType;
   brand_code?: string | null;
   audience?: string | null;
+  /** Every audience it targets, primary first (audience is the first). */
+  audiences?: string[];
   region?: string | null;
   platforms: string[];
   /** The primary (first) of account_ids / accounts. */
@@ -236,6 +238,8 @@ export interface SubmissionSummary {
   created_at: string;
   updated_at: string;
   audience?: string | null;
+  /** Every audience it targets, primary first (audience is the first). */
+  audiences?: string[];
   /** Primary publishing channel the post goes to (e.g. Shaun's LinkedIn). */
   account?: AccountOption | null;
   /** Every channel it posts through, primary first. */
@@ -270,6 +274,8 @@ export interface SubmissionUpdate {
   content_type?: ContentType;
   brand_code?: string;
   audience?: string;
+  /** Every audience it targets, primary first. audience alone still works. */
+  audiences?: string[];
   region?: string;
   platforms?: string[];
   account_ids?: string[];
@@ -416,6 +422,8 @@ export interface ReviewQueueItem {
   publish_at?: string | null;
   brand_code?: string | null;
   audience?: string | null;
+  /** Every audience it targets, primary first (audience is the first). */
+  audiences?: string[];
   /** When the creator needs it approved by. */
   approval_needed_by?: string | null;
   /** When the next step is due (see DueKind). */

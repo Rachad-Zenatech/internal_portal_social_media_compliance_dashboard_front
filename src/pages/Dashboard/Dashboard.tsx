@@ -20,7 +20,7 @@ import {
   greeting,
   issuesText,
 } from "@/components/dashboard/dashboardParts";
-import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
+import { audienceCodes, audienceNames, refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useAuth } from "@/lib/AuthContext";
 import { scriptService } from "@/services/scriptService";
@@ -76,7 +76,7 @@ function ReviewerDashboard() {
     staleTime: 0,
   });
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
-  const audienceName = (code?: string | null) => (code ? options.data?.audiences[code] ?? code : "Not set");
+  const audienceName = (x: { audience?: string | null; audiences?: string[] }) => audienceNames(audienceCodes(x), options.data?.audiences) ?? "Not set";
 
   const all = useMemo(() => submissions.data ?? [], [submissions.data]);
   const needsMyReview = useMemo<QueueRow[]>(
@@ -271,7 +271,7 @@ function ReviewerDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(sc.audience)}</td>
+                            <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(sc)}</td>
                             <td className="px-3 py-3 text-xs">
                               <Deadline dueAt={sc.approval_needed_by} />
                             </td>
@@ -317,7 +317,7 @@ function ReviewerDashboard() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(r.audience)}</td>
+                          <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(r)}</td>
                           <td className="px-3 py-3 text-xs">
                             <Deadline dueAt={r.due_at} />
                           </td>

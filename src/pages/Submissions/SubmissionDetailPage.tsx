@@ -47,7 +47,7 @@ import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import { AiUnavailableBadge, DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -555,7 +555,7 @@ export default function SubmissionDetailPage() {
                   </span>
                 )}
               </DetailRow>
-              <DetailRow label="Audience">{(s.audience && optionsQuery.data?.audiences[s.audience]) || s.audience}</DetailRow>
+              <DetailRow label="Audience(s)">{audienceNames(audienceCodes(s), optionsQuery.data?.audiences)}</DetailRow>
               <DetailRow label="Region">{s.region}</DetailRow>
               <DetailRow label="Publish date">{s.publish_at ? format(new Date(s.publish_at), "MMM d, yyyy h:mm a") : null}</DetailRow>
               <DetailRow label="Rule sets">{s.rule_sets.join(", ")}</DetailRow>

@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -76,6 +77,8 @@ import {
   dueInfo,
   isAnalysing,
   refetchWhileAnalysing,
+  audienceCodes,
+  audienceNames,
 } from "@/components/submissions/submissionUi";
 import { QUICK_CREATE, Score, issuesText, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
@@ -182,7 +185,7 @@ function useIsWide() {
 /** Names for brand and audience codes, from the same options New Submission uses. */
 interface Labels {
   brand: (code?: string | null) => string | null;
-  audience: (code?: string | null) => string | null;
+  audience: (codes: string[]) => string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -248,7 +251,7 @@ function SubmissionCard({
   const stage = stageOf(s);
   const when = whenText(s);
   const brand = labels.brand(s.brand_code);
-  const audience = labels.audience(s.audience);
+  const audience = labels.audience(audienceCodes(s));
   return (
     <div
       role="button"
@@ -693,7 +696,7 @@ function ReviewCard({
       "Platforms",
       summary.platforms.length ? `${platformName(summary.platforms[0])}${summary.platforms.length > 1 ? ` +${summary.platforms.length - 1}` : ""}` : null,
     ],
-    ["Audience", labels.audience(summary.audience)],
+    ["Audiences", labels.audience(audienceCodes(summary))],
     ["Submitted", summary.submitted_at ? format(new Date(summary.submitted_at), "MMM d, yyyy, h:mm a") : "Not yet"],
   ];
 
@@ -1022,8 +1025,8 @@ function ReviewCard({
 export default function SubmissionsListPage() {
   const [stage, setStage] = useState<"" | Stage>("");
   const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("all");
-  const [brand, setBrand] = useState("all");
+  const [platforms, setPlatforms] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<SubmissionSummary | null>(null);
@@ -1062,7 +1065,7 @@ export default function SubmissionsListPage() {
   const labels: Labels = useMemo(
     () => ({
       brand: (code) => (code ? options?.brands.find((b) => b.code === code)?.name ?? code : null),
-      audience: (code) => (code ? options?.audiences[code] ?? code : null),
+      audience: (codes) => audienceNames(codes, options?.audiences),
     }),
     [options]
   );
@@ -1104,8 +1107,8 @@ export default function SubmissionsListPage() {
     const filtered = inView.filter(
       (s) =>
         (!stage || stageOf(s) === stage) &&
-        (platform === "all" || s.platforms.includes(platform)) &&
-        (brand === "all" || s.brand_code === brand) &&
+        (platforms.length === 0 || s.platforms.some((p) => platforms.includes(p))) &&
+        (brands.length === 0 || (s.brand_code != null && brands.includes(s.brand_code))) &&
         (!q ||
           s.title.toLowerCase().includes(q) ||
           s.reference_code.toLowerCase().includes(q) ||
@@ -1114,18 +1117,18 @@ export default function SubmissionsListPage() {
           (s.created_by_name ?? "").toLowerCase().includes(q))
     );
     return sortItems(filtered, prefs.sort);
-  }, [inView, stage, platform, brand, search, prefs.sort]);
+  }, [inView, stage, platforms, brands, search, prefs.sort]);
 
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
   const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
 
-  const filtersActive = Boolean(stage || search || platform !== "all" || brand !== "all");
+  const filtersActive = Boolean(stage || search || platforms.length || brands.length);
   const clearFilters = () => {
     setStage("");
     setSearch("");
-    setPlatform("all");
-    setBrand("all");
+    setPlatforms([]);
+    setBrands([]);
   };
   const waitingForMe = creatorView ? 0 : data.filter((s) => s.can_review).length;
 
@@ -1284,32 +1287,24 @@ export default function SubmissionsListPage() {
                   className="h-9 rounded-lg bg-card pl-9 text-sm"
                 />
               </div>
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Platform">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                  {platformsInList.map((p) => (
-                    <SelectItem key={p} value={p} className="text-xs">
-                      {platformName(p)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Brand">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                  {brandsInList.map((b) => (
-                    <SelectItem key={b} value={b} className="text-xs">
-                      {labels.brand(b)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={platformsInList.map((p) => ({ value: p, label: platformName(p) }))}
+                value={platforms}
+                onChange={setPlatforms}
+                allLabel="All Platforms"
+                noun="platform"
+                ariaLabel="Platform"
+                className="w-[140px]"
+              />
+              <MultiSelectFilter
+                options={brandsInList.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                value={brands}
+                onChange={setBrands}
+                allLabel="All Brands"
+                noun="brand"
+                ariaLabel="Brand"
+                className="w-[140px]"
+              />
               <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
                 <SelectTrigger className="h-9 w-[160px] rounded-lg bg-card text-xs" aria-label="Sort by">
                   <SelectValue />
@@ -1437,32 +1432,24 @@ export default function SubmissionsListPage() {
                   />
                 </div>
                 <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
-                  <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                      {platformsInList.map((p) => (
-                        <SelectItem key={p} value={p} className="text-xs">
-                          {platformName(p)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={brand} onValueChange={setBrand}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Brand">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                      {brandsInList.map((b) => (
-                        <SelectItem key={b} value={b} className="text-xs">
-                          {labels.brand(b)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelectFilter
+                    options={platformsInList.map((p) => ({ value: p, label: platformName(p) }))}
+                    value={platforms}
+                    onChange={setPlatforms}
+                    allLabel="All Platforms"
+                    noun="platform"
+                    ariaLabel="Platform"
+                    className="w-full"
+                  />
+                  <MultiSelectFilter
+                    options={brandsInList.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                    value={brands}
+                    onChange={setBrands}
+                    allLabel="All Brands"
+                    noun="brand"
+                    ariaLabel="Brand"
+                    className="w-full"
+                  />
                   <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
                     <SelectTrigger className={`h-9 w-full rounded-lg text-xs ${isWide ? "col-span-2" : "col-span-2 sm:col-span-1"}`} aria-label="Sort by">
                       <SelectValue />

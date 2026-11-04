@@ -415,3 +415,13 @@ export function SubmissionFileRow({
     </>
   );
 }
+
+/** Every audience a post targets, primary first (older records only have the one). */
+export function audienceCodes(x: { audience?: string | null; audiences?: string[] }): string[] {
+  return x.audiences?.length ? x.audiences : x.audience ? [x.audience] : [];
+}
+
+/** Audience codes as names, comma separated; null when there are none. */
+export function audienceNames(codes: string[], names?: Record<string, string>): string | null {
+  return codes.length ? codes.map((c) => names?.[c] ?? c).join(", ") : null;
+}

@@ -52,7 +52,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
+import { MISSING_LABELS, SubmissionFileRow, audienceCodes, audienceNames, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
@@ -346,7 +346,7 @@ export default function NewSubmissionPage() {
   const [brand, setBrand] = useState("");
   // Publishing accounts, primary first.
   const [accountIds, setAccountIds] = useState<string[]>([]);
-  const [audience, setAudience] = useState("");
+  const [audiences, setAudiences] = useState<string[]>([]);
   const [region, setRegion] = useState("Global");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
@@ -406,7 +406,7 @@ export default function NewSubmissionPage() {
     (p) => !selectedAccounts.some((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS"))
   );
   const brandName = options?.brands.find((b) => b.code === brand)?.name;
-  const audienceLabel = audience ? options?.audiences[audience] : undefined;
+  const audienceLabel = audienceNames(audiences, options?.audiences) ?? undefined;
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
@@ -475,7 +475,7 @@ export default function NewSubmissionPage() {
         setTitle(s.title === "Untitled submission" ? "" : s.title);
         setBrand(s.brand_code || "");
         setAccountIds(s.account_ids?.length ? s.account_ids : s.account_id ? [s.account_id] : []);
-        setAudience(s.audience || "");
+        setAudiences(audienceCodes(s));
         setRegion(s.region || "Global");
         setPlatforms(s.platforms);
         setPublishDate(s.publish_at ? new Date(s.publish_at) : undefined);
@@ -517,12 +517,12 @@ export default function NewSubmissionPage() {
     if (!approvalBy) clear.push("approval_needed_by");
     if (!accountIds.length) clear.push("account_id");
     if (!brand) clear.push("brand_code");
-    if (!audience) clear.push("audience");
+    if (audiences.length === 0) clear.push("audience");
     return {
       title: title.trim() || "Untitled submission",
       content_type: contentType,
       ...(brand ? { brand_code: brand } : {}),
-      ...(audience ? { audience } : {}),
+      ...(audiences.length ? { audiences } : {}),
       ...(region ? { region } : {}),
       platforms,
       ...(accountIds.length ? { account_ids: accountIds } : {}),
@@ -596,16 +596,16 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
-  const suggestRouting = (next: { brand?: string; audience?: string; accounts?: AccountOption[] }) => {
+  const suggestRouting = (next: { brand?: string; audiences?: string[]; accounts?: AccountOption[] }) => {
     const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
     // The software brands are ZenaTech businesses, so ZenaTech's general rules apply to them too.
     if (next.brand === "ZENATECH" || next.brand === "SOFTWARE") rules.add("ZenaTech General");
-    if (next.brand === "ZENADRONE" || next.audience === "DEFENSE") {
+    if (next.brand === "ZENADRONE" || next.audiences?.includes("DEFENSE")) {
       rules.add("ZenaDrone Defense");
       route.add("Legal Review");
     }
-    if (next.audience === "INVESTORS") route.add("Investor Relations Review");
+    if (next.audiences?.includes("INVESTORS")) route.add("Investor Relations Review");
     if (next.brand === "CEO_THOUGHT_LEADERSHIP" || next.accounts?.some((a) => a.is_ceo)) {
       rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
@@ -620,7 +620,7 @@ export default function NewSubmissionPage() {
     // Drop accounts that belong to a different brand.
     const kept = selectedAccounts.filter((a) => !a.brand_code || a.brand_code === code);
     if (kept.length !== selectedAccounts.length) setAccountIds(kept.map((a) => a.id));
-    suggestRouting({ brand: code, audience, accounts: kept });
+    suggestRouting({ brand: code, audiences, accounts: kept });
     markEdited();
   };
 
@@ -633,13 +633,13 @@ export default function NewSubmissionPage() {
       .map((a) => a.platform)
       .filter((p, i, all) => all.indexOf(p) === i && !platforms.includes(p) && !(p === "YOUTUBE" && platforms.includes("YOUTUBE_SHORTS")));
     if (missing.length) setPlatforms((prev) => [...prev, ...missing]);
-    suggestRouting({ brand, audience, accounts: next });
+    suggestRouting({ brand, audiences, accounts: next });
     markEdited();
   };
 
-  const onAudienceChange = (value: string) => {
-    setAudience(value);
-    suggestRouting({ brand, audience: value, accounts: selectedAccounts });
+  const onAudiencesChange = (values: string[]) => {
+    setAudiences(values);
+    suggestRouting({ brand, audiences: values, accounts: selectedAccounts });
     markEdited();
   };
 
@@ -793,7 +793,7 @@ export default function NewSubmissionPage() {
     title: !title.trim(),
     brand_code: !brand,
     account_id: accountIds.length === 0,
-    audience: !audience,
+    audience: audiences.length === 0,
     region: !region,
     platforms: platforms.length === 0,
     // While the script is still being approved, the video and the caption aren't asked for yet.
@@ -971,7 +971,7 @@ export default function NewSubmissionPage() {
     return limits.length ? Math.min(...limits) : 2200;
   }, [platforms]);
 
-  const hashtagLibrary = useHashtagLibrary({ brand, audience, region, platforms, ruleSets });
+  const hashtagLibrary = useHashtagLibrary({ brand, audiences, region, platforms, ruleSets });
 
   const saveLabel =
     saveState === "saving"
@@ -1150,19 +1150,19 @@ export default function NewSubmissionPage() {
                   </p>
                 )}
               </Field>
-              <Field label="Target Audience" required error={errorFor("audience")} className="lg:col-span-2">
-                <Select value={audience} onValueChange={onAudienceChange} disabled={!options}>
-                  <SelectTrigger className={`w-full ${isMissing("audience") ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder="Select audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(options?.audiences ?? {}).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")} className="lg:col-span-2">
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={Object.keys(options.audiences)}
+                    value={audiences}
+                    onChange={onAudiencesChange}
+                    placeholder="Select audiences"
+                    getLabel={(code) => options.audiences[code] ?? code}
+                    invalid={isMissing("audience")}
+                  />
+                )}
               </Field>
               <Field label="Region" required error={errorFor("region")} className="md:col-span-2 lg:col-span-2">
                 <Select
