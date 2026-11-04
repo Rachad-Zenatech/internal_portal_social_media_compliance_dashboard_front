@@ -38,7 +38,7 @@ function stepsFor(platform: string, hasMedia: boolean) {
   return [
     `Connect to the ${name} account`,
     ...(hasMedia ? [`Upload media to ${name}`] : []),
-    info.mode === "HANDOFF" ? "Assemble the post package" : `Create the ${info.mode === "SCHEDULED" ? "scheduled post" : info.mode === "PRIVATE_UPLOAD" ? "private upload" : "draft"}`,
+    info.style === "HANDOFF" ? "Assemble the post package" : `Create the ${info.style === "SCHEDULED" ? "scheduled post" : info.style === "PRIVATE_UPLOAD" ? "private upload" : "draft"}`,
     "Save the result to the calendar",
   ];
 }
@@ -65,7 +65,7 @@ export default function PublishDraftPage() {
 
   const info = publishInfo(platform);
   const name = platformName(platform);
-  const steps = stepsFor(platform, Boolean(item?.media || item?.poster));
+  const steps = stepsFor(platform, Boolean(item?.primary_file || item?.poster_variant));
   const [running, setRunning] = useState(false);
   const [stepIndex, setStepIndex] = useState(-1);
   const timers = useRef<number[]>([]);
@@ -100,9 +100,9 @@ export default function PublishDraftPage() {
     );
   }
 
-  const publishAt = new Date(item.publishAt);
+  const publishAt = new Date(item.scheduled_for);
   const captionLength = item.caption.length;
-  const overLimit = captionLength > info.captionLimit;
+  const overLimit = captionLength > info.max_characters;
   const pastDate = isBefore(publishAt, new Date());
   const remaining = item.platforms.filter((p) => p !== platform && !published[publishKey(item.id, p)]);
 
@@ -117,10 +117,10 @@ export default function PublishDraftPage() {
           if (i < steps.length - 1) {
             setStepIndex(i + 1);
           } else {
-            recordPublish(item.id, platform, info.mode);
+            recordPublish(item.id, platform, info.style);
             setRunning(false);
             setStepIndex(-1);
-            toast.success(`${MODE_LABELS[info.mode]} created for ${name} (simulated).`);
+            toast.success(`${MODE_LABELS[info.style]} created for ${name} (simulated).`);
           }
         }, 650 * (i + 1))
       );
@@ -144,7 +144,7 @@ export default function PublishDraftPage() {
             Publish to {name}
           </span>
         }
-        subtitle={`${item.title} · ${item.referenceCode}`}
+        subtitle={`${item.title} · ${item.reference_code}`}
         actions={
           <Button size="sm" variant="outline" asChild className="text-xs gap-1.5">
             <Link to="/content-calendar">
@@ -158,7 +158,7 @@ export default function PublishDraftPage() {
         <FlaskConical className="w-4 h-4 shrink-0 mt-px" />
         <span>
           <strong>Simulated.</strong> Nothing is sent to {name} yet. When the {name} API is connected, this page makes the real calls and
-          links straight to the {MODE_LABELS[info.mode].toLowerCase()}.
+          links straight to the {MODE_LABELS[info.style].toLowerCase()}.
         </span>
       </div>
 
@@ -176,8 +176,8 @@ export default function PublishDraftPage() {
               account={item.account}
               title={item.title}
               caption={item.caption}
-              media={item.media}
-              mediaNode={item.poster ? <DemoPoster variant={item.poster} className="w-full h-full" /> : undefined}
+              media={item.primary_file}
+              mediaNode={item.poster_variant ? <DemoPoster variant={item.poster_variant} className="w-full h-full" /> : undefined}
               whenLabel={format(publishAt, "MMM d, h:mm a")}
             />
           </div>
@@ -190,7 +190,7 @@ export default function PublishDraftPage() {
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
-                  Approved{item.approvedBy ? ` by ${item.approvedBy}` : ""}
+                  Approved{item.approved_by ? ` by ${item.approved_by}` : ""}
                   {item.score != null && <span className="text-muted-foreground"> · rulebook check {item.score}/100</span>}
                 </span>
               </li>
@@ -211,7 +211,7 @@ export default function PublishDraftPage() {
               <li className="flex items-center gap-2">
                 {overLimit ? <XCircle className="w-4 h-4 text-red-600 shrink-0" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
                 <span>
-                  Caption {captionLength.toLocaleString()} / {info.captionLimit.toLocaleString()} characters
+                  Caption {captionLength.toLocaleString()} / {info.max_characters.toLocaleString()} characters
                   {overLimit && <span className="text-red-700 dark:text-red-300"> · too long for {name}</span>}
                 </span>
               </li>
@@ -232,14 +232,14 @@ export default function PublishDraftPage() {
                     <CheckCircle2 className="w-4 h-4" /> {MODE_LABELS[record.mode]} created (simulated)
                   </p>
                   <p className="text-muted-foreground">
-                    {format(new Date(record.at), "MMM d, h:mm a")} · reference <span className="font-mono">{record.ref}</span>
+                    {format(new Date(record.created_at), "MMM d, h:mm a")} · reference <span className="font-mono">{record.remote_post_id}</span>
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" className="text-xs gap-1" disabled title={`Links to the ${name} ${MODE_LABELS[record.mode].toLowerCase()} once the API is connected`}>
                     <ExternalLink className="w-3.5 h-3.5" /> Open on {name}
                   </Button>
-                  {info.mode === "HANDOFF" && (
+                  {info.style === "HANDOFF" && (
                     <Button size="sm" variant="outline" className="text-xs gap-1" onClick={copyCaption}>
                       <Copy className="w-3.5 h-3.5" /> Copy post text
                     </Button>
@@ -280,9 +280,9 @@ export default function PublishDraftPage() {
                 {overLimit && <p className="text-[11px] text-red-700 dark:text-red-300">Shorten the caption for {name} before publishing.</p>}
                 <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                  {info.mode === "SCHEDULED"
+                  {info.style === "SCHEDULED"
                     ? `This goes live automatically at the planned time; it can be edited or cancelled on ${name} until then.`
-                    : `Nothing goes live from here: the ${MODE_LABELS[info.mode].toLowerCase()} gets a final check before it's posted.`}
+                    : `Nothing goes live from here: the ${MODE_LABELS[info.style].toLowerCase()} gets a final check before it's posted.`}
                 </p>
               </div>
             )}
