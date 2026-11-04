@@ -86,6 +86,7 @@ import { DueBadge, UnderReviewBadge, isAnalysing } from "@/components/submission
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import type { QueueTab } from "@/types/submission";
 import { useReviewComments } from "@/hooks/useReview";
@@ -2655,7 +2656,7 @@ export default function VideoComplianceScannerPage() {
                                 {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
                               </Badge>
                             )}
-                            <span className="text-[10px] text-muted-foreground">{v.rule_number}</span>
+                            <RuleNumberBadge v={v} />
                           </div>
                           <p className="font-semibold text-foreground">{v.title}</p>
                           <p className="text-muted-foreground text-[11px] leading-relaxed">{v.explanation}</p>

@@ -48,6 +48,7 @@ import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewC
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import {
   ContextNote,
   FINDING_META,
@@ -949,7 +950,7 @@ function ReviewPanel({
                           {f.end != null && f.end > f.at + 0.5 && ` - ${formatSec(f.end)}`}
                         </span>
                       )}
-                      <span className="text-[11px] text-muted-foreground">{f.v.rule_number}</span>
+                      <RuleNumberBadge v={f.v} />
                       <span className="ml-auto text-xs text-muted-foreground">{f.where}</span>
                     </div>
                     <p className="text-sm font-semibold text-foreground">{f.v.title}</p>
@@ -992,7 +993,7 @@ function ReviewPanel({
             <ul className="flex flex-col gap-1 text-[13px] text-foreground/80">
               {manual.map((r) => (
                 <li key={r.rule_number}>
-                  <span className="text-muted-foreground">{r.rule_number}</span> · {r.title}
+                  <RuleNumberBadge v={r} /> {r.title}
                 </li>
               ))}
             </ul>

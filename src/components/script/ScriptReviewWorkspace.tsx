@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
@@ -614,8 +615,8 @@ function FlagCard({
         <span className="text-xs text-muted-foreground">{missing ? "Missing disclaimer" : "In the script"}</span>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">{v.rule_number}</p>
-        <p className="text-sm font-semibold text-foreground">{v.title}</p>
+        <RuleNumberBadge v={v} />
+        <p className="mt-1 text-sm font-semibold text-foreground">{v.title}</p>
       </div>
       {v.evaluation ? <ContextNote v={v} /> : <p className="text-[13px] text-foreground/80">{v.explanation}</p>}
       {!missing && !cleared && v.flagged_terms.length > 0 && (
