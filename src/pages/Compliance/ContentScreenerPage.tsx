@@ -1635,7 +1635,9 @@ export default function ContentScreenerPage() {
           )}
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
-          {queue.isLoading ? "Loading..." : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}`}
+          {queue.isLoading
+            ? "Loading..."
+            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}${scripts.isLoading ? " · loading scripts..." : ""}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           {scripts.isError && (
