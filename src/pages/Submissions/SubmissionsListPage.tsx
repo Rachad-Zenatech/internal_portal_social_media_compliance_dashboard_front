@@ -78,6 +78,7 @@ import {
   isAnalysing,
   refetchWhileAnalysing,
   audienceCodes,
+  brandCodes,
   audienceNames,
 } from "@/components/submissions/submissionUi";
 import { QUICK_CREATE, Score, issuesText, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
@@ -185,6 +186,7 @@ function useIsWide() {
 /** Names for brand and audience codes, from the same options New Submission uses. */
 interface Labels {
   brand: (code?: string | null) => string | null;
+  brands: (codes: string[]) => string | null;
   audience: (codes: string[]) => string | null;
 }
 
@@ -250,7 +252,7 @@ function SubmissionCard({
 }) {
   const stage = stageOf(s);
   const when = whenText(s);
-  const brand = labels.brand(s.brand_code);
+  const brand = labels.brands(brandCodes(s));
   const audience = labels.audience(audienceCodes(s));
   return (
     <div
@@ -691,7 +693,7 @@ function ReviewCard({
   const sentimentDone = analysis?.status === "COMPLETED";
   const sentimentRunning = isSentimentRunning(analysis);
   const facts: [string, React.ReactNode][] = [
-    ["Brand", labels.brand(summary.brand_code)],
+    ["Brands", labels.brands(brandCodes(summary))],
     [
       "Platforms",
       summary.platforms.length ? `${platformName(summary.platforms[0])}${summary.platforms.length > 1 ? ` +${summary.platforms.length - 1}` : ""}` : null,
@@ -1065,6 +1067,7 @@ export default function SubmissionsListPage() {
   const labels: Labels = useMemo(
     () => ({
       brand: (code) => (code ? options?.brands.find((b) => b.code === code)?.name ?? code : null),
+      brands: (codes) => (codes.length ? codes.map((c) => options?.brands.find((b) => b.code === c)?.name ?? c).join(", ") : null),
       audience: (codes) => audienceNames(codes, options?.audiences),
     }),
     [options]
@@ -1098,7 +1101,7 @@ export default function SubmissionsListPage() {
   // older content, so it can be found.
   const brandsInList = useMemo(() => {
     const managed = (options?.brands ?? []).map((b) => b.code);
-    const older = [...new Set(data.map((s) => s.brand_code).filter((c): c is string => Boolean(c) && !managed.includes(c!)))].sort();
+    const older = [...new Set(data.flatMap((s) => brandCodes(s)).filter((c): c is string => Boolean(c) && !managed.includes(c!)))].sort();
     return [...managed, ...older];
   }, [options, data]);
 
@@ -1108,7 +1111,7 @@ export default function SubmissionsListPage() {
       (s) =>
         (!stage || stageOf(s) === stage) &&
         (platforms.length === 0 || s.platforms.some((p) => platforms.includes(p))) &&
-        (brands.length === 0 || (s.brand_code != null && brands.includes(s.brand_code))) &&
+        (brands.length === 0 || brandCodes(s).some((c) => brands.includes(c))) &&
         (!q ||
           s.title.toLowerCase().includes(q) ||
           s.reference_code.toLowerCase().includes(q) ||

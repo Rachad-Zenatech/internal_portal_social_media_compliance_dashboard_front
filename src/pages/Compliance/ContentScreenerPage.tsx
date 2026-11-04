@@ -70,6 +70,7 @@ import {
   progressSteps,
   useAnalysisCountdown,
   audienceCodes,
+  brandCodes,
   audienceNames,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
@@ -180,7 +181,7 @@ function matches(s: ReviewQueueItem, f: Filters, q: string) {
   const due = deadlineOf(s);
   const now = new Date();
   return (
-    (f.brands.length === 0 || (s.brand_code != null && f.brands.includes(s.brand_code))) &&
+    (f.brands.length === 0 || brandCodes(s).some((c) => f.brands.includes(c))) &&
     (f.platforms.length === 0 || s.platforms.some((p) => f.platforms.includes(p))) &&
     (f.due === "any" ||
       (f.due === "none" && !due) ||
@@ -576,7 +577,7 @@ function PostView({
   s: ReviewQueueItem;
   flags: Flag[];
   dismissed: Set<string>;
-  labels: { brand: (c?: string | null) => string | null; audience: (codes: string[]) => string | null };
+  labels: { brand: (c?: string | null) => string | null; brands: (codes: string[]) => string | null; audience: (codes: string[]) => string | null };
   videoRef: RefObject<HTMLVideoElement | null>;
   now: number;
   duration: number;
@@ -659,7 +660,7 @@ function PostView({
               {p === s.platforms[0] && account?.handle ? ` · @${account.handle.replace(/^@/, "")}` : ""}
             </span>
           ))}
-          {labels.brand(s.brand_code) && <span className={chip}>{labels.brand(s.brand_code)}</span>}
+          {labels.brands(brandCodes(s)) && <span className={chip}>{labels.brands(brandCodes(s))}</span>}
           {labels.audience(audienceCodes(s)) && <span className={chip}>{labels.audience(audienceCodes(s))}</span>}
           {needBy && (
             <span
@@ -1127,7 +1128,7 @@ function Workspace({
   onUploadScript,
 }: {
   s: ReviewQueueItem;
-  labels: { brand: (c?: string | null) => string | null; audience: (codes: string[]) => string | null };
+  labels: { brand: (c?: string | null) => string | null; brands: (codes: string[]) => string | null; audience: (codes: string[]) => string | null };
   canReview: boolean;
   onUploadScript?: () => void;
 }) {
@@ -1225,6 +1226,7 @@ export default function ContentScreenerPage() {
   const labels = useMemo(
     () => ({
       brand: (code?: string | null) => (code ? options.data?.brands.find((b) => b.code === code)?.name ?? code : null),
+      brands: (codes: string[]) => (codes.length ? codes.map((c) => options.data?.brands.find((b) => b.code === c)?.name ?? c).join(", ") : null),
       audience: (codes: string[]) => audienceNames(codes, options.data?.audiences),
     }),
     [options.data]
@@ -1335,7 +1337,7 @@ export default function ContentScreenerPage() {
         );
   };
 
-  const brands = useMemo(() => [...new Set(items.map((s) => s.brand_code).filter((b): b is string => Boolean(b)))].sort(), [items]);
+  const brands = useMemo(() => [...new Set(items.flatMap((s) => brandCodes(s)).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
   // How many of the four filters are in use (brand and platform count once each, however many values they hold).
   const activeFilters = [filters.brands.length > 0, filters.platforms.length > 0, filters.due !== "any", filters.check !== "any"].filter(Boolean).length;

@@ -425,3 +425,8 @@ export function audienceCodes(x: { audience?: string | null; audiences?: string[
 export function audienceNames(codes: string[], names?: Record<string, string>): string | null {
   return codes.length ? codes.map((c) => names?.[c] ?? c).join(", ") : null;
 }
+
+/** Every brand a post is for, primary first (older records only have the one). */
+export function brandCodes(x: { brand_code?: string | null; brand_codes?: string[] }): string[] {
+  return x.brand_codes?.length ? x.brand_codes : x.brand_code ? [x.brand_code] : [];
+}

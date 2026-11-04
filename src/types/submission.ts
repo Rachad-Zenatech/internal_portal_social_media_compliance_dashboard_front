@@ -150,7 +150,8 @@ export interface Submission {
   content_type: ContentType;
   brand_code?: string | null;
   audience?: string | null;
-  /** Every audience it targets, primary first (audience is the first). */
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
   audiences?: string[];
   region?: string | null;
   platforms: string[];
@@ -238,7 +239,8 @@ export interface SubmissionSummary {
   created_at: string;
   updated_at: string;
   audience?: string | null;
-  /** Every audience it targets, primary first (audience is the first). */
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
   audiences?: string[];
   /** Primary publishing channel the post goes to (e.g. Shaun's LinkedIn). */
   account?: AccountOption | null;
@@ -274,7 +276,8 @@ export interface SubmissionUpdate {
   content_type?: ContentType;
   brand_code?: string;
   audience?: string;
-  /** Every audience it targets, primary first. audience alone still works. */
+  /** Every brand and audience, primary first. brand_code and audience alone still work. */
+  brand_codes?: string[];
   audiences?: string[];
   region?: string;
   platforms?: string[];
@@ -422,7 +425,8 @@ export interface ReviewQueueItem {
   publish_at?: string | null;
   brand_code?: string | null;
   audience?: string | null;
-  /** Every audience it targets, primary first (audience is the first). */
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
   audiences?: string[];
   /** When the creator needs it approved by. */
   approval_needed_by?: string | null;

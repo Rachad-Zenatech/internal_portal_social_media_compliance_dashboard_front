@@ -47,7 +47,7 @@ import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, brandCodes, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -532,7 +532,7 @@ export default function SubmissionDetailPage() {
           <Panel title="Details" icon={FilePen}>
             <div className="divide-y divide-border/50">
               <DetailRow label="Content type">{TYPE_LABELS[s.content_type]}</DetailRow>
-              <DetailRow label="Brand">{optionsQuery.data?.brands.find((b) => b.code === s.brand_code)?.name ?? s.brand_code}</DetailRow>
+              <DetailRow label="Brand(s)">{brandCodes(s).map((c) => optionsQuery.data?.brands.find((b) => b.code === c)?.name ?? c).join(", ")}</DetailRow>
               <DetailRow label={(s.accounts?.length ?? 0) > 1 ? "Publishing accounts" : "Publishing account"}>
                 {(s.accounts?.length || s.account) && (
                   <span className="flex flex-col gap-1">
