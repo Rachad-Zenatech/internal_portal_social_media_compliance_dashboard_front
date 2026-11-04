@@ -138,6 +138,21 @@ const PROVIDER_METADATA: Record<OAuthProvider, ProviderMeta> = {
       'Offline renewal support',
     ],
   },
+  LINKEDIN_PROFILE: {
+    name: 'LinkedIn Personal Profile',
+    category: 'SOCIAL_MEDIA',
+    description: 'An individual LinkedIn profile, such as the CEO profile: post publishing and engagement on their own posts',
+    iconBg: 'bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300',
+    iconChar: 'in',
+    defaultScope: 'openid,profile,w_member_social',
+    idLabel: 'Profile handle / Member ID',
+    idPlaceholder: 'e.g. shaun-ceo',
+    authPermissions: [
+      'Publish posts to that person\'s own LinkedIn profile',
+      'Needs that person\'s own sign-in consent',
+      'Read engagement on their posts',
+    ],
+  },
   X_TWITTER: {
     name: 'X (Twitter)',
     category: 'SOCIAL_MEDIA',

@@ -91,8 +91,8 @@ export const submissionService = {
   withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
 
   /** Reviewer takes back an approval and sends it to the creator as changes requested. */
-  reopen: (id: string, notes: string, revisionDays?: 1 | 2 | 3 | 5) =>
-    apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes, revision_days: revisionDays }, quiet),
+  reopen: (id: string, notes: string, due: { revision_days?: 1 | 2 | 3 | 5; revision_due_at?: string } = {}) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/reopen`, { notes, ...due }, quiet),
 
   /** Reviewer moves approved content to a new publish time. */
   reschedule: (id: string, publishAt: string) =>
@@ -139,10 +139,10 @@ export const submissionService = {
     apiClient.post<CaptionSuggestions>(`/api/submissions/${id}/caption-suggestions`, data, quiet),
 
   /** Hashtags and the company cashtag suited to a post, screened against the rules that apply to it. */
-  hashtagLibrary: (p: { brand?: string; audience?: string; region?: string; platforms: string[]; ruleSets: string[] }) => {
+  hashtagLibrary: (p: { brands?: string[]; audiences?: string[]; region?: string; platforms: string[]; ruleSets: string[] }) => {
     const q = new URLSearchParams();
-    if (p.brand) q.set("brand_code", p.brand);
-    if (p.audience) q.set("audience", p.audience);
+    (p.brands ?? []).forEach((b) => q.append("brand_codes", b));
+    (p.audiences ?? []).forEach((a) => q.append("audiences", a));
     if (p.region) q.set("region", p.region);
     p.platforms.forEach((v) => q.append("platforms", v));
     p.ruleSets.forEach((v) => q.append("rule_sets", v));

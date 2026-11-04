@@ -121,17 +121,17 @@ export function CoverThumb({
   }
   const text = caption?.trim();
   const scriptText = script?.trim();
-  // No video yet but a script: show it like a page of the document.
+  // No video yet but a script: a document icon, not the script's text (which reads as clutter at this size).
   if (scriptText) {
-    // Small thumbnails (list rows) only have room for the icon; the excerpt shows once there's space for it.
     return (
-      <div className={`@container w-full h-full bg-gradient-to-br from-primary/5 via-muted/60 to-muted p-1.5 @[8rem]:p-3 flex flex-col ${className}`}>
-        <div className="flex-1 min-h-0 overflow-hidden rounded-md bg-background/90 ring-1 ring-border shadow-sm p-1 @[8rem]:p-2.5 flex flex-col items-center justify-center @[8rem]:items-stretch @[8rem]:justify-start">
-          <FileText className="w-5 h-5 text-primary/70 @[8rem]:hidden" />
-          <p className="hidden @[8rem]:flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary/70 shrink-0">
-            <FileText className="w-3 h-3" /> Script
-          </p>
-          <p className="hidden @[8rem]:block mt-1.5 text-[11px] leading-snug text-foreground/80 whitespace-pre-line line-clamp-6">{scriptText}</p>
+      <div
+        className={`@container w-full h-full grid place-items-center bg-gradient-to-br from-blue-50 via-blue-50/60 to-muted dark:from-blue-500/10 dark:via-blue-500/5 dark:to-muted ${className}`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <span className="grid h-9 w-9 @[8rem]:h-14 @[8rem]:w-14 place-items-center rounded-xl bg-background/90 text-blue-700 shadow-sm ring-1 ring-border dark:text-blue-300">
+            <FileText className="w-5 h-5 @[8rem]:w-7 @[8rem]:h-7" />
+          </span>
+          <span className="hidden @[8rem]:block text-[11px] font-semibold uppercase tracking-wide text-blue-700/80 dark:text-blue-300/80">Script</span>
         </div>
       </div>
     );

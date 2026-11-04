@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import RevisionTimelinePicker, { type RevisionDays } from "@/components/submissions/RevisionTimelinePicker";
+import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
 export interface ReviewTarget {
@@ -38,6 +38,10 @@ export interface ReviewTarget {
   score?: number | null;
   /** Rules the automated check can't test from text; the reviewer confirms each one when approving. */
   manual_rules?: { rule_number: string; title: string }[];
+  /** The AI review couldn't run, so there's no score: approving waits until the check is re-run (it is, automatically). */
+  ai_unavailable?: boolean;
+  /** The post is still being read, so there's no score yet. */
+  analysis_pending?: boolean;
 }
 
 type Mode = "schedule" | "now" | "changes" | null;
@@ -69,7 +73,9 @@ export default function ReviewDecisionPanel({
   const approvalScore = target.approval_score ?? null;
   // Shown once critical flags are dealt with, since those come first (and cap the score anyway).
   const scoreTooLow = openCritical === 0 && approvalScore != null && approvalScore < minScore;
-  const mayApprove = target.can_approve !== false && openCritical === 0 && !scoreTooLow;
+  // A check that wasn't read in full has no score to hold to the minimum, so nothing is approved on it.
+  const checkNotReady = Boolean(target.ai_unavailable || target.analysis_pending);
+  const mayApprove = target.can_approve !== false && openCritical === 0 && !scoreTooLow && !checkNotReady;
   const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
   const { creatorView } = useAuth();
@@ -79,7 +85,7 @@ export default function ReviewDecisionPanel({
   const [notes, setNotes] = useState("");
   const [when, setWhen] = useState("");
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
-  const [revisionDays, setRevisionDays] = useState<RevisionDays>(1);
+  const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
 
   // Not a reviewer here, or a super admin viewing the app as a creator.
   if (!target.can_review || creatorView) return null;
@@ -91,7 +97,7 @@ export default function ReviewDecisionPanel({
     setNotes("");
     setWhen(toLocalInput(defaultPublishTime(planned)));
     setConfirmed(new Set());
-    setRevisionDays(1);
+    setTimeline(DEFAULT_TIMELINE);
     setMode(m);
   };
   const toggleConfirmed = (ruleNumber: string) =>
@@ -107,8 +113,9 @@ export default function ReviewDecisionPanel({
 
   const confirm = () => {
     if (mode === "changes") {
+      const due = timelineFields(timeline);
       decide.mutate(
-        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: revisionDays },
+        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: due.days, revision_due_at: due.at },
         { onSuccess: () => setMode(null) }
       );
     } else if (mode === "schedule" && whenDate) {
@@ -149,6 +156,13 @@ export default function ReviewDecisionPanel({
           </p>
           {target.due_kind === "REVIEW" && <DueBadge dueAt={target.due_at} kind="REVIEW" className="mt-1.5" />}
         </div>
+      )}
+      {checkNotReady && (
+        <p className="rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
+          {target.analysis_pending
+            ? "The post is still being read, so it has no compliance score yet. You can approve it once the check has finished."
+            : "The AI review couldn't run, so this has no compliance score and can't be approved yet. It's re-checked automatically once the AI is back. You can still request changes."}
+        </p>
       )}
       {openCritical > 0 && (
         <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
@@ -278,7 +292,7 @@ export default function ReviewDecisionPanel({
               />
             </div>
             {mode === "changes" && (
-              <RevisionTimelinePicker value={revisionDays} onChange={setRevisionDays} publishAt={target.publish_at} />
+              <RevisionTimelinePicker value={timeline} onChange={setTimeline} publishAt={target.publish_at} />
             )}
           </div>
 
@@ -292,6 +306,7 @@ export default function ReviewDecisionPanel({
               disabled={
                 decide.isPending ||
                 (mode === "changes" && !notes.trim() && openComments === 0) ||
+                (mode === "changes" && !timelineValid(timeline)) ||
                 (mode === "schedule" && (!whenDate || whenInPast)) ||
                 (mode !== "changes" && !allConfirmed)
               }

@@ -16,11 +16,16 @@ export default function ScriptStageCard({
   stage,
   onAddScript,
   canEdit,
+  onSend,
+  sending = false,
 }: {
   submissionId: string | null;
   stage?: ScriptStage;
   onAddScript: () => void;
   canEdit: boolean;
+  /** Where the page has required details to check first, it sends from here (and checks them) instead of the card. */
+  onSend?: () => void;
+  sending?: boolean;
 }) {
   const status = stage?.status ?? "DRAFT";
   const latest = stage?.versions.at(-1);
@@ -37,9 +42,6 @@ export default function ScriptStageCard({
         <p className="flex items-center gap-2 text-[13px] font-medium text-emerald-800 dark:text-emerald-300">
           <CheckCircle2 className="w-4 h-4" /> Script approved. Add your video below; it's checked against the approved script.
         </p>
-        <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-          <Link to={scriptLink}>View the script</Link>
-        </Button>
         <div className="flex items-center gap-2">
           {canEdit && (
             <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onAddScript}>
@@ -66,6 +68,8 @@ export default function ScriptStageCard({
         submissionId={submissionId}
         reading={reading}
         onAddScript={onAddScript}
+        onSend={onSend}
+        sending={sending}
         canEdit={canEdit}
         scriptLink={scriptLink}
         sentAt={latest?.created_at}
@@ -82,6 +86,8 @@ function Body({
   submissionId,
   reading,
   onAddScript,
+  onSend,
+  sending,
   canEdit,
   scriptLink,
   sentAt,
@@ -93,6 +99,8 @@ function Body({
   submissionId: string | null;
   reading: boolean;
   onAddScript: () => void;
+  onSend?: () => void;
+  sending?: boolean;
   canEdit: boolean;
   scriptLink: string;
   sentAt?: string;
@@ -106,9 +114,6 @@ function Body({
           Your script is with a reviewer{sentAt ? ` (sent ${formatDistanceToNow(new Date(sentAt), { addSuffix: true })})` : ""}. Fill in the rest of the post
           while you wait.
         </p>
-        <Button asChild size="sm" variant="outline" className="h-8 text-xs">
-          <Link to={scriptLink}>View the script</Link>
-        </Button>
         <div className="flex items-center gap-2">
           {canEdit && (
             <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript}>
@@ -145,7 +150,7 @@ function Body({
       </div>
     );
   }
-  return <DraftBody stage={stage} submissionId={submissionId} reading={reading} onAddScript={onAddScript} canEdit={canEdit} scriptLink={scriptLink} status={status} note={note} reviewer={reviewer} />;
+  return <DraftBody stage={stage} submissionId={submissionId} reading={reading} onAddScript={onAddScript} onSend={onSend} sending={sending} canEdit={canEdit} scriptLink={scriptLink} status={status} note={note} reviewer={reviewer} />;
 }
 
 /** Not sent yet, or sent back with a note: upload (or replace) the script and send it. */
@@ -154,6 +159,8 @@ function DraftBody({
   submissionId,
   reading,
   onAddScript,
+  onSend,
+  sending = false,
   canEdit,
   scriptLink,
   status,
@@ -164,6 +171,8 @@ function DraftBody({
   submissionId: string | null;
   reading: boolean;
   onAddScript: () => void;
+  onSend?: () => void;
+  sending?: boolean;
   canEdit: boolean;
   scriptLink: string;
   status: string;
@@ -206,9 +215,23 @@ function DraftBody({
             <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400">
               <AlertTriangle className="w-3.5 h-3.5" /> {stage?.file_error ?? "Couldn't read it. Try a .docx or PDF."}
             </span>
+          ) : stage?.processing ? (
+            <span className="text-blue-700 dark:text-blue-300">Sent</span>
           ) : (
             <span className="text-emerald-700 dark:text-emerald-400">Ready to send</span>
           )}
+        </p>
+      )}
+      {stage?.processing && (
+        <p className="flex items-start gap-2 rounded-md bg-blue-100/70 px-3 py-2 text-[13px] text-blue-900 dark:bg-blue-500/10 dark:text-blue-200">
+          <Loader2 className="mt-0.5 w-3.5 h-3.5 shrink-0 animate-spin" />
+          Processing your script and calculating its compliance score. It goes to the reviewers when that's done, and you can leave this page.
+        </p>
+      )}
+      {!stage?.processing && stage?.send_error && (
+        <p className="flex items-start gap-2 rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-800 dark:bg-red-500/10 dark:text-red-300">
+          <AlertTriangle className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+          <span>{stage.send_error} Fix it and send the script again.</span>
         </p>
       )}
       <div className="flex flex-wrap gap-2">
@@ -216,8 +239,14 @@ function DraftBody({
           <FileText className="w-3.5 h-3.5" /> {hasFile ? "Replace the script" : "Upload the script"}
         </Button>
         {hasFile && stage?.can_submit && (
-          <Button type="button" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => submit.mutate(undefined, { onSuccess: () => navigate("/submissions") })} disabled={reading || failed || submit.isPending}>
-            {submit.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send script for review
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => (onSend ? onSend() : submit.mutate(undefined, { onSuccess: () => navigate("/submissions") }))}
+            disabled={reading || failed || submit.isPending || sending}
+          >
+            {submit.isPending || sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send script for review
           </Button>
         )}
       </div>

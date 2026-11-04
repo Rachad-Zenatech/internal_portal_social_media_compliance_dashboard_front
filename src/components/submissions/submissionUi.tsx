@@ -61,8 +61,8 @@ export function AiUnavailableBadge({ className = "" }: { className?: string }) {
 export const ANALYSING_REFETCH_MS = 5_000;
 
 /** refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all. */
-export const refetchWhileAnalysing = (query: { state: { data?: { analysis_pending?: boolean }[] } }) =>
-  query.state.data?.some((s) => s.analysis_pending) ? ANALYSING_REFETCH_MS : false;
+export const refetchWhileAnalysing = (query: { state: { data?: { analysis_pending?: boolean; script_send_status?: string | null }[] } }) =>
+  query.state.data?.some((s) => s.analysis_pending || s.script_send_status === "PROCESSING") ? ANALYSING_REFETCH_MS : false;
 
 export interface AnalysisCountdown {
   /** Seconds until the score is expected (negative once it's late). */
@@ -234,7 +234,7 @@ const hoursUntil = (d: Date) => (d.getTime() - Date.now()) / 3_600_000;
 export function dueInfo(dueAt?: string | null, kind?: DueKind | null) {
   if (!dueAt || !kind) return null;
   const due = new Date(dueAt);
-  const what = kind === "REVIEW" ? "Review" : "Changes";
+  const what = kind === "REVIEW" ? "Review" : kind === "VIDEO" ? "Video" : "Changes";
   const overdue = isPast(due);
   return {
     due,
@@ -415,4 +415,19 @@ export function SubmissionFileRow({
       )}
     </>
   );
+}
+
+/** Every audience a post targets, primary first (older records only have the one). */
+export function audienceCodes(x: { audience?: string | null; audiences?: string[] }): string[] {
+  return x.audiences?.length ? x.audiences : x.audience ? [x.audience] : [];
+}
+
+/** Audience codes as names, comma separated; null when there are none. */
+export function audienceNames(codes: string[], names?: Record<string, string>): string | null {
+  return codes.length ? codes.map((c) => names?.[c] ?? c).join(", ") : null;
+}
+
+/** Every brand a post is for, primary first (older records only have the one). */
+export function brandCodes(x: { brand_code?: string | null; brand_codes?: string[] }): string[] {
+  return x.brand_codes?.length ? x.brand_codes : x.brand_code ? [x.brand_code] : [];
 }

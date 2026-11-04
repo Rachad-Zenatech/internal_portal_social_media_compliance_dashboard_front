@@ -68,7 +68,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ProtectedRouteProps` (interface)
 - `ProtectedRoute` (export function)
 
-## src/components/dashboard/CreatorDashboard.tsx (377 lines) - creator dashboard (components dashboard)
+## src/components/dashboard/CreatorDashboard.tsx (378 lines) - creator dashboard (components dashboard)
 - `dueLabel` (function) - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
 - `PostFilter` (type)
 - `NextStepRow` (function) - One thing waiting on the creator: what it is, what's wrong, when it's due, and one button.
@@ -82,7 +82,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `dayName` (const)
 - `DayAgenda` (export function) - One day of posts at a time, in time order, with arrows to step through days.
 
-## src/components/dashboard/dashboardParts.tsx (379 lines) - Pieces shared by the reviewer and creator dashboards.
+## src/components/dashboard/dashboardParts.tsx (400 lines) - Pieces shared by the reviewer and creator dashboards.
 - `UPCOMING_DAYS` (export const)
 - `greeting` (export function)
 - `issuesText` (export const)
@@ -111,7 +111,14 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ACTIVITY_STYLE` (export const) - Each kind of update on a post, with its own icon and colour (same on both dashboards).
 - `ScoreRing` (export function) - An average rulebook score as a ring.
 
-## src/components/script/HighlightableText.tsx (499 lines) - Scroll to the n-th place any of these phrases appears and flash it.
+## src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
+- `Quote` (function)
+- `Note` (function)
+- `byPosition` (const)
+- `HighlightCards` (export function) - The reviewer's highlights and notes as cards; clicking one takes you to that wording in the script.
+- `AddressedCards` (export function) - What the creator did about the reviewer's earlier highlights: the old wording, an arrow, and the new wording.
+
+## src/components/script/HighlightableText.tsx (502 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - `Highlight` (export type)
 - `HighlightableHandle` (export type)
 - `HIGHLIGHT_COLORS` (export const)
@@ -120,13 +127,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `css` (fn)
 - `makeHighlight` (const)
 - `colorName` (const)
-- `load` (function)
 - `textNodes` (function) - The text nodes under `root`, with where each starts in the root's text.
 - `rangeAt` (function)
 - `resolve` (function) - Where a stored highlight is now: its saved spot if the wording is still there, else the nearest copy of it.
 - `Draft` (type)
 - `Marker` (type) - One note icon per row: every highlight with a note on that row.
 - `HighlightableText` (const)
+    - `itemsRef` (fn)
     - `pickerOpen` (fn) - The colour picker is open: dragging inside it must not dismiss the toolbar.
     - `supported` (fn)
     - `save` (fn)
@@ -138,6 +145,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `apply` (fn)
     - `newId` (fn)
     - `remove` (fn)
+    - `reveal` (fn) - Scroll a stretch of the script into view and flash it.
+
+## src/components/script/NoteField.tsx (42 lines) - Called when the box becomes empty or gets text.
+- `NoteFieldBase` (function) - A comment box that keeps what is typed to itself.
+- `NoteField` (const)
 
 ## src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const)
@@ -175,7 +187,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Toolbar` (function)
 - `ScriptEditor` (export function) - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptReviewWorkspace.tsx (703 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (921 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -185,19 +197,27 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ScriptReviewWorkspace` (export function) - The reviewer's script workspace in the Content screener: the script in the middle (read with flagged wording  marked, or edited directly ...
     - `stage` (fn)
 - `Editor` (function)
+    - `noteValue` (fn) - The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
+    - `onNoteText` (fn)
+    - `shownHighlights` (fn)
+    - `openedResponse` (fn) - Open on the Highlighted tab the first time the creator's response arrives.
     - `live` (fn)
     - `parts` (fn)
     - `changes` (fn)
     - `myChangeCount` (fn)
     - `findInScript` (fn) - Open the editor with the flagged wording selected, so the reviewer can type over it.
     - `goToFlag` (fn) - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
+    - `goToHighlight` (fn) - A highlight card was clicked: take the reviewer to that wording.
+    - `goToAddressed` (fn) - An addressed card was clicked: go to the new wording (or the old, if it hasn't changed).
     - `addDisclaimer` (fn)
+    - `discardDisclaimer` (fn)
     - `sendBack` (fn)
-    - `approve` (fn)
+    - `approve` (fn) - Approving asks when the video is due (a week by default, or none).
+    - `confirmDecision` (fn)
 - `FlagCard` (function)
 - `VersionHistory` (export function) - Every version of the script, newest first, with the reviewer's call and note on each.
 
-## src/components/script/ScriptStageCard.tsx (227 lines) - script stage card (components script)
+## src/components/script/ScriptStageCard.tsx (256 lines) - script stage card (components script)
 - `ScriptStageCard` (export function) - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
 - `Body` (function)
 - `DraftBody` (function) - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
@@ -220,7 +240,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
 - `CanvaReimportBar` (export function) - For content imported from Canva: which design and revision it is, and a one-click way to bring in the latest  version after editing it in...
 
-## src/components/submissions/CaptionSignalsBar.tsx (71 lines) - caption signals bar (components submissions)
+## src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - `CaptionSignalsBar` (export function) - Live feedback under the caption: the hashtags, cashtags and mentions in it, whether there are more hashtags than  the platforms suit, and...
 
 ## src/components/submissions/CaptionSuggester.tsx (144 lines) - caption suggester (components submissions)
@@ -275,7 +295,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `CommentItem` (function)
 - `ReviewCommentsPanel` (export function) - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewDecisionPanel.tsx (346 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (361 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type)
 - `toLocalInput` (const)
@@ -283,10 +303,15 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ReviewDecisionPanel` (export function) - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
 - `ChangesRequestedBanner` (export function) - For the creator: the reviewer sent it back.
 
-## src/components/submissions/RevisionTimelinePicker.tsx (80 lines) - Matches the server: resubmissions are due early enough before the planned publish time to be reviewed again.
+## src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
 - `RevisionDays` (export type)
+- `Timeline` (export type) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
+- `DEFAULT_TIMELINE` (export const)
+- `timelineValid` (export const) - Whether the choice can be sent: a picked date has to be set and still ahead.
+- `timelineFields` (export const) - The choice as the fields the server takes: `days` or `at` (an ISO time), or neither for no deadline.
 - `revisionDueDate` (export function) - The resubmit-by time the server will set: this many working days from now (weekends skipped), pulled in if the  planned publish time is c...
-- `RevisionTimelinePicker` (export function) - How long the creator has to make the changes: a few quick choices in working days, not a date picker.
+- `pill` (const)
+- `RevisionTimelinePicker` (export function) - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
 ## src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
@@ -333,7 +358,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleScrape` (fn)
     - `otherTrends` (fn)
 
-## src/components/submissions/submissionUi.tsx (419 lines) - submission ui (components submissions)
+## src/components/submissions/submissionUi.tsx (434 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
 - `isAiUnavailable` (export const) - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
 - `AI_UNAVAILABLE_MESSAGE` (export const)
@@ -364,6 +389,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `DueBadge` (export function) - Deadline for the next step: red when overdue, amber when it's close.
 - `isReadDocument` (function) - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
 - `SubmissionFileRow` (export function)
+- `audienceCodes` (export function) - Every audience a post targets, primary first (older records only have the one).
+- `audienceNames` (export function) - Audience codes as names, comma separated; null when there are none.
+- `brandCodes` (export function) - Every brand a post is for, primary first (older records only have the one).
 
 ## src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - `trendSignals` (export function) - Plain-language signals from the topic numbers, for the perception check.
@@ -371,6 +399,10 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
 - `HelpIconProps` (interface)
 - `HelpIcon` (export function)
+
+## src/components/ui/MultiSelectFilter.tsx (98 lines) - multi select filter (components ui)
+- `FilterOption` (export interface)
+- `MultiSelectFilter` (export function) - A filter that takes several values at once: a dropdown of checkboxes.
 
 ## src/components/ui/ResizeHandle.tsx (182 lines) - A panel's width, remembered per browser.
 - `readWidth` (const)
@@ -610,11 +642,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `useReviewDecision` (export function)
 - `useApprovalActions` (export function) - Approved content: the creator withdraws it for a late fix; a reviewer reschedules it or reopens it.
 
-## src/hooks/useScript.ts (94 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (146 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) - A post's script stage, refreshed while its file is still being read.
 - `useScriptActions` (export function) - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
 - `useDebounced` (export function) - The value, once it has stopped changing for `ms`.
 - `useLiveScriptCheck` (export function) - The rulebook check of wording being edited (null while it matches the saved version, or before it settles).
+- `useScriptHighlights` (export function) - The reviewer's highlights and notes on a script version.
 
 ## src/hooks/useSentiment.ts (83 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - `isSentimentRunning` (export function)
@@ -624,7 +657,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SubmitTarget` (interface)
 - `useSubmitForReview` (export function) - Quick "send for review" for a draft (or resubmit after changes), outside the New Submission form.
 
-## src/lib/AuthContext.tsx (318 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
+## src/lib/AuthContext.tsx (332 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `SIGNED_OUT_KEY` (export const) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `clearStoredSession` (const)
 - `User` (export interface)
@@ -644,14 +677,18 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `GlobalProgressProvider` (export function)
 - `useGlobalProgress` (export function)
 
-## src/lib/contentCalendar.ts (351 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
-- `PUBLISH_INFO` (export const) - What publishing creates on each platform.
+## src/lib/contentCalendar.ts (427 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+- `MODE_OF_STYLE` (export const) - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
+- `PublishInfo` (export type) - A platform's publish info with its caption limit always set.
+- `PUBLISH_INFO` (export const)
 - `MODE_LABELS` (export const)
 - `publishInfo` (export function)
 - `account` (function)
 - `Sample` (type) - still upcoming.
 - `sampleItems` (export function)
 - `fromSubmission` (export function) - A real approved submission with a publish date, as a calendar item.
+- `LegacyRecord` (type) - Records saved by an older version of this page (mode, at, ref) are read as the current shape.
+- `upgrade` (function)
 - `read` (function)
 - `write` (function)
 - `subscribe` (function)
@@ -666,6 +703,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `useSentToSprout` (export function) - Posts sent to Sprout Social (simulated), by calendar item id.
 - `recordSproutSend` (export function)
 - `clearSproutSends` (export function)
+
+## src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
+- `Change` (type)
+- `plain` (const)
+- `escapeRe` (const)
+- `updatedWording` (export function) - What a highlighted stretch of wording reads now, given the changes between the version the reviewer read and the one  being sent.
 
 ## src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - `set` (function)
@@ -773,7 +816,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1730 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1762 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -828,7 +871,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `renderPostRow` (fn)
     - `brands` (fn)
     - `platforms` (fn)
-    - `activeFilters` (fn)
     - `setCollapsed` (fn)
     - `pick` (fn)
     - `pickScript` (fn)
@@ -854,7 +896,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `open` (fn)
     - `scopeText` (fn)
 
-## src/pages/Compliance/VideoComplianceScannerPage.tsx (2893 lines) - video compliance scanner page (pages  compliance)
+## src/pages/Compliance/VideoComplianceScannerPage.tsx (2895 lines) - video compliance scanner page (pages  compliance)
 - `CommentCategory` (export type)
 - `ReviewerComment` (export interface)
 - `formatTime` (function) - Card thumbnail: the most representative frame of an uploaded video, or the demo illustration.
@@ -912,7 +954,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function)
 
-## src/pages/Configurations/OAuthIntegrations.tsx (787 lines) - o auth integrations (pages  configurations)
+## src/pages/Configurations/OAuthIntegrations.tsx (802 lines) - o auth integrations (pages  configurations)
 - `isAdSyncProvider` (const)
 - `AdSyncModeBadge` (const)
 - `AdPlatformLastSynced` (const)
@@ -1052,11 +1094,28 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
 
-## src/pages/Dashboard/Dashboard.tsx (372 lines) - dashboard (pages  dashboard)
+## src/pages/Dashboard/Dashboard.tsx (453 lines) - dashboard (pages  dashboard)
 - `Dashboard` (export function) - Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own.
 - `isFailing` (const) - A check that would stop approval or clearly needs work: a red result, or a score under 60.
 - `isOverdue` (const)
+- `QueueRow` (type) - What waits for a reviewer: a post, or a video's script.
+- `rowDue` (const)
+- `rowSent` (const)
+- `rowOverdue` (const)
+- `rowFailing` (const)
 - `ReviewerDashboard` (function)
+    - `navigate` (fn)
+    - `now` (fn)
+    - `submissions` (fn) - Reviewers see everyone's content on their brands, as in the Content Screener.
+    - `summary` (fn)
+    - `scripts` (fn) - Scripts waiting for a review are part of the queue too.
+    - `options` (fn)
+    - `audienceName` (fn)
+    - `all` (fn)
+    - `openInScreener` (fn)
+    - `openRow` (fn)
+    - `activity` (fn) - The team's activity, minus the reviewer's own actions.
+    - `plural` (fn)
 
 ## src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - `AuditLog` (export function)
@@ -1113,7 +1172,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2035 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2041 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1143,9 +1202,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handler` (fn)
     - `saveNow` (fn)
     - `suggestRouting` (fn) - ----- Routing suggestions, applied when the user changes brand/audience/account -----
-    - `onBrandChange` (fn)
+    - `onBrandsChange` (fn)
     - `onAccountsChange` (fn)
-    - `onAudienceChange` (fn)
+    - `onAudiencesChange` (fn)
     - `uploadFiles` (fn) - ----- Files (S05, S07) -----
     - `removeFile` (fn)
     - `replaceMain` (fn) - Swap the main file for a new one (the revision workspace's "Replace video").
@@ -1165,15 +1224,24 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `charLimit` (fn)
     - `hashtagLibrary` (fn)
 
-## src/pages/Submissions/ScriptChangesPage.tsx (352 lines) - script changes page (pages  submissions)
+## src/pages/Submissions/ScriptChangesPage.tsx (443 lines) - script changes page (pages  submissions)
 - `View` (type)
 - `initials` (const)
 - `comparison` (function) - Which two versions to compare: what the creator sent and what came back (or the last round's change).
 - `downloadText` (function)
 - `ScriptChangesPage` (export function) - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
+    - `stage` (fn)
+- `noop` (const)
 - `Changes` (function)
+    - `navigate` (fn)
+    - `noteValue` (fn) - The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
+    - `parts` (fn)
+    - `changes` (fn)
+    - `toggleDone` (fn)
+    - `goToHighlight` (fn) - A highlight card was clicked: find that wording in the script and flash it.
+    - `pick` (fn)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (648 lines) - submission detail page (pages  submissions)
+## src/pages/Submissions/SubmissionDetailPage.tsx (657 lines) - submission detail page (pages  submissions)
 - `Panel` (function)
 - `LightBadge` (function)
 - `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
@@ -1195,7 +1263,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1587 lines) - submissions list page (pages  submissions)
+## src/pages/Submissions/SubmissionsListPage.tsx (1607 lines) - submissions list page (pages  submissions)
 - `Stage` (type) - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
 - `stageOf` (function)
 - `SortBy` (type)
@@ -1312,7 +1380,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - `performanceService` (export const)
 
-## src/services/scriptService.ts (31 lines) - The script stage of video posts (see the backend's script_review_service).
+## src/services/scriptService.ts (44 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
 ## src/services/submissionService.ts (238 lines) - submission service (services)
@@ -1335,9 +1403,10 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AuditLogItem` (export interface)
 - `LoginActivityItem` (export interface)
 
-## src/types/calendar.ts (49 lines) - Approved content placed on the publishing calendar.
+## src/types/calendar.ts (74 lines) - Approved content placed on the publishing calendar.
 - `CalendarItem` (export interface) - Approved content placed on the publishing calendar.
 - `PublishMode` (export type) - What a platform's API lets us create from an approved post.
+- `PublishStyle` (export type) - How the publish step is worded on screen.
 - `PlatformPublishInfo` (export interface)
 - `PublishRecord` (export interface)
 
@@ -1385,11 +1454,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `MatchTestResult` (export interface)
 - `XTrendOpportunity` (export interface)
 
-## src/types/script.ts (61 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
+## src/types/script.ts (81 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - `ScriptStatus` (export type) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...
 - `ScriptVersion` (export interface)
 - `ScriptStage` (export interface)
 - `ScriptQueueItem` (export interface)
+- `ScriptHighlight` (export interface) - Wording the reviewer highlighted (with an optional note) in a script version.
 
 ## src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type)
@@ -1406,7 +1476,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (525 lines) - AD: paid social ad.
+## src/types/submission.ts (544 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)

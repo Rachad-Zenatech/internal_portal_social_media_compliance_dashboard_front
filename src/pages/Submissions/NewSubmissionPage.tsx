@@ -53,7 +53,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
+import { MISSING_LABELS, SubmissionFileRow, audienceCodes, audienceNames, brandCodes, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
@@ -392,10 +392,10 @@ export default function NewSubmissionPage() {
     return CONTENT_TYPES.find((c) => c.value === picked)?.value ?? "VIDEO";
   });
   const [title, setTitle] = useState("");
-  const [brand, setBrand] = useState("");
+  const [brands, setBrands] = useState<string[]>([]);
   // Publishing accounts, primary first.
   const [accountIds, setAccountIds] = useState<string[]>([]);
-  const [audience, setAudience] = useState("");
+  const [audiences, setAudiences] = useState<string[]>([]);
   const [region, setRegion] = useState("Global");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
@@ -460,15 +460,15 @@ export default function NewSubmissionPage() {
     [accounts, accountIds]
   );
   const brandAccounts = useMemo(
-    () => accounts.filter((a) => !brand || !a.brand_code || a.brand_code === brand),
-    [accounts, brand]
+    () => accounts.filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
+    [accounts, brands]
   );
   // Selected platforms nobody is posting to yet (a YouTube account covers YouTube Shorts too).
   const platformsWithoutAccount = platforms.filter(
     (p) => !selectedAccounts.some((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS"))
   );
-  const brandName = options?.brands.find((b) => b.code === brand)?.name;
-  const audienceLabel = audience ? options?.audiences[audience] : undefined;
+  const brandName = brands.map((c) => options?.brands.find((b) => b.code === c)?.name ?? c).join(", ") || undefined;
+  const audienceLabel = audienceNames(audiences, options?.audiences) ?? undefined;
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
@@ -535,9 +535,9 @@ export default function NewSubmissionPage() {
         applyServer(s);
         setContentType(s.content_type);
         setTitle(s.title === "Untitled submission" ? "" : s.title);
-        setBrand(s.brand_code || "");
+        setBrands(brandCodes(s));
         setAccountIds(s.account_ids?.length ? s.account_ids : s.account_id ? [s.account_id] : []);
-        setAudience(s.audience || "");
+        setAudiences(audienceCodes(s));
         setRegion(s.region || "Global");
         setPlatforms(s.platforms);
         setPublishDate(s.publish_at ? new Date(s.publish_at) : undefined);
@@ -579,13 +579,13 @@ export default function NewSubmissionPage() {
     if (!publishDate) clear.push("publish_at");
     if (!approvalBy) clear.push("approval_needed_by");
     if (!accountIds.length) clear.push("account_id");
-    if (!brand) clear.push("brand_code");
-    if (!audience) clear.push("audience");
+    if (brands.length === 0) clear.push("brand_code");
+    if (audiences.length === 0) clear.push("audience");
     return {
       title: title.trim() || "Untitled submission",
       content_type: contentType,
-      ...(brand ? { brand_code: brand } : {}),
-      ...(audience ? { audience } : {}),
+      ...(brands.length ? { brand_codes: brands } : {}),
+      ...(audiences.length ? { audiences } : {}),
       ...(region ? { region } : {}),
       platforms,
       ...(accountIds.length ? { account_ids: accountIds } : {}),
@@ -603,7 +603,7 @@ export default function NewSubmissionPage() {
   /** Create the draft if needed, then save the current fields. Calls are queued so they never overlap. */
   const save = (opts: { force?: boolean } = {}): Promise<string | null> => {
     const payload = buildPayload();
-    const hasAnything = Boolean(title.trim() || payload.caption_text || brand || platforms.length || accountIds.length);
+    const hasAnything = Boolean(title.trim() || payload.caption_text || brands.length || platforms.length || accountIds.length);
     saveChain.current = saveChain.current
       .catch(() => null)
       .then(async () => {
@@ -660,17 +660,17 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
-  const suggestRouting = (next: { brand?: string; audience?: string; accounts?: AccountOption[] }) => {
+  const suggestRouting = (next: { brands?: string[]; audiences?: string[]; accounts?: AccountOption[] }) => {
     const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
     // The software brands are ZenaTech businesses, so ZenaTech's general rules apply to them too.
-    if (next.brand === "ZENATECH" || next.brand === "SOFTWARE") rules.add("ZenaTech General");
-    if (next.brand === "ZENADRONE" || next.audience === "DEFENSE") {
+    if (next.brands?.some((b) => b === "ZENATECH" || b === "SOFTWARE")) rules.add("ZenaTech General");
+    if (next.brands?.includes("ZENADRONE") || next.audiences?.includes("DEFENSE")) {
       rules.add("ZenaDrone Defense");
       route.add("Legal Review");
     }
-    if (next.audience === "INVESTORS") route.add("Investor Relations Review");
-    if (next.brand === "CEO_THOUGHT_LEADERSHIP" || next.accounts?.some((a) => a.is_ceo)) {
+    if (next.audiences?.includes("INVESTORS")) route.add("Investor Relations Review");
+    if (next.brands?.includes("CEO_THOUGHT_LEADERSHIP") || next.accounts?.some((a) => a.is_ceo)) {
       rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
       route.add("Executive Review");
@@ -679,12 +679,12 @@ export default function NewSubmissionPage() {
     setReviewers((prev) => Array.from(new Set([...prev, ...route])));
   };
 
-  const onBrandChange = (code: string) => {
-    setBrand(code);
-    // Drop accounts that belong to a different brand.
-    const kept = selectedAccounts.filter((a) => !a.brand_code || a.brand_code === code);
+  const onBrandsChange = (codes: string[]) => {
+    setBrands(codes);
+    // Drop accounts that belong to a brand that's no longer picked.
+    const kept = selectedAccounts.filter((a) => codes.length === 0 || !a.brand_code || codes.includes(a.brand_code));
     if (kept.length !== selectedAccounts.length) setAccountIds(kept.map((a) => a.id));
-    suggestRouting({ brand: code, audience, accounts: kept });
+    suggestRouting({ brands: codes, audiences, accounts: kept });
     markEdited();
   };
 
@@ -697,13 +697,13 @@ export default function NewSubmissionPage() {
       .map((a) => a.platform)
       .filter((p, i, all) => all.indexOf(p) === i && !platforms.includes(p) && !(p === "YOUTUBE" && platforms.includes("YOUTUBE_SHORTS")));
     if (missing.length) setPlatforms((prev) => [...prev, ...missing]);
-    suggestRouting({ brand, audience, accounts: next });
+    suggestRouting({ brands, audiences, accounts: next });
     markEdited();
   };
 
-  const onAudienceChange = (value: string) => {
-    setAudience(value);
-    suggestRouting({ brand, audience: value, accounts: selectedAccounts });
+  const onAudiencesChange = (values: string[]) => {
+    setAudiences(values);
+    suggestRouting({ brands, audiences: values, accounts: selectedAccounts });
     markEdited();
   };
 
@@ -855,9 +855,9 @@ export default function NewSubmissionPage() {
   const mainFiles = files.filter((f) => f.kind === "MAIN");
   const clientMissing = {
     title: !title.trim(),
-    brand_code: !brand,
+    brand_code: brands.length === 0,
     account_id: accountIds.length === 0,
-    audience: !audience,
+    audience: audiences.length === 0,
     region: !region,
     platforms: platforms.length === 0,
     // While the script is still being approved, the video and the caption aren't asked for yet.
@@ -917,10 +917,10 @@ export default function NewSubmissionPage() {
         queryClient.invalidateQueries({ queryKey: ["script-queue"] });
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
         queryClient.invalidateQueries({ queryKey: ["submissions"] });
-        toast.success("Script sent for review. Add the video and caption once it's approved.");
+        toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
         navigate("/submissions");
       } catch (err) {
-        toast.error(`Couldn't send the script: ${(err as Error).message}`);
+        toast.error(`Error sending the script: ${(err as Error).message}`);
       } finally {
         setSubmitting(false);
       }
@@ -1036,7 +1036,7 @@ export default function NewSubmissionPage() {
     return limits.length ? Math.min(...limits) : 2200;
   }, [platforms]);
 
-  const hashtagLibrary = useHashtagLibrary({ brand, audience, region, platforms, ruleSets });
+  const hashtagLibrary = useHashtagLibrary({ brands, audiences, region, platforms, ruleSets });
 
   const saveLabel =
     saveState === "saving"
@@ -1166,19 +1166,19 @@ export default function NewSubmissionPage() {
                   className={isMissing("title") ? "border-red-500" : ""}
                 />
               </Field>
-              <Field label="Brand" required error={errorFor("brand_code")} className="md:col-span-2 lg:col-span-3">
-                <Select value={brand} onValueChange={onBrandChange} disabled={!options}>
-                  <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder={options ? "Select brand" : "Loading brands..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {options?.brands.map((b) => (
-                      <SelectItem key={b.code} value={b.code}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label="Brand(s)" required error={errorFor("brand_code", "Choose at least one brand")} className="md:col-span-2 lg:col-span-3">
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={options.brands.map((b) => b.code)}
+                    value={brands}
+                    onChange={onBrandsChange}
+                    placeholder="Select brands"
+                    getLabel={(code) => options.brands.find((b) => b.code === code)?.name ?? code}
+                    invalid={isMissing("brand_code")}
+                  />
+                )}
               </Field>
 
               <Field
@@ -1211,23 +1211,23 @@ export default function NewSubmissionPage() {
                 )}
                 {options && brandAccounts.length === 0 && (
                   <p className="text-[11px] text-muted-foreground">
-                    No connected accounts{brand ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
+                    No connected accounts{brands.length ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
                   </p>
                 )}
               </Field>
-              <Field label="Target Audience" required error={errorFor("audience")} className="lg:col-span-2">
-                <Select value={audience} onValueChange={onAudienceChange} disabled={!options}>
-                  <SelectTrigger className={`w-full ${isMissing("audience") ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder="Select audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(options?.audiences ?? {}).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")} className="lg:col-span-2">
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={Object.keys(options.audiences)}
+                    value={audiences}
+                    onChange={onAudiencesChange}
+                    placeholder="Select audiences"
+                    getLabel={(code) => options.audiences[code] ?? code}
+                    invalid={isMissing("audience")}
+                  />
+                )}
               </Field>
               <Field label="Region" required error={errorFor("region")} className="md:col-span-2 lg:col-span-2">
                 <Select
@@ -1467,7 +1467,8 @@ export default function NewSubmissionPage() {
           </Section>
 
           <Section step={3} title="Upload Content" description="Upload your content and any supporting materials in one go.">
-            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. */}
+            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only. */}
+            {contentType === "VIDEO" && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
@@ -1480,6 +1481,7 @@ export default function NewSubmissionPage() {
                 </a>
               </Button>
             </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -1507,6 +1509,8 @@ export default function NewSubmissionPage() {
                 stage={scriptStage.data}
                 canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
                 onAddScript={() => scriptInputRef.current?.click()}
+                onSend={submit}
+                sending={submitting}
               />
             )}
             {/* Two ways to add content: upload files, or import a Canva design. */}
@@ -1739,7 +1743,7 @@ export default function NewSubmissionPage() {
                       library={hashtagLibrary.data}
                       loading={hashtagLibrary.isLoading}
                       caption={caption}
-                      hasBrand={Boolean(brand)}
+                      hasBrand={brands.length > 0}
                       onAdd={insertHashtag}
                       onRemove={removeHashtag}
                     />
@@ -1786,6 +1790,8 @@ export default function NewSubmissionPage() {
               maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
               maxReason={hashtagLibrary.data?.max_reason}
               ruleSets={ruleSets}
+              audiences={audiences}
+              onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
             />
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">

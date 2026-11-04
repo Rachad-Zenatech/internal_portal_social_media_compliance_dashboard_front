@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ArrowLeft, CheckCircle2, Download, Loader2, PencilLine, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import NoteField from "@/components/script/NoteField";
 import ScriptEditor from "@/components/script/ScriptEditor";
 import { displayText } from "@/lib/scriptDoc";
+import { updatedWording } from "@/lib/highlightChange";
+import HighlightCards from "@/components/script/HighlightCards";
+import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
 import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
-import { useScriptActions, useScriptStage } from "@/hooks/useScript";
+import { useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { changesOf, diffWords } from "@/lib/wordDiff";
 import type { ScriptStage, ScriptVersion } from "@/types/script";
 
@@ -66,6 +70,8 @@ export default function ScriptChangesPage() {
   return <Changes key={stage.data.versions.length} stage={stage.data} />;
 }
 
+const noop = () => undefined;
+
 function Changes({ stage }: { stage: ScriptStage }) {
   const navigate = useNavigate();
   const pair = comparison(stage);
@@ -73,7 +79,8 @@ function Changes({ stage }: { stage: ScriptStage }) {
   const [view, setView] = useState<View>("inline");
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(pair?.shown.body ?? "");
-  const [note, setNote] = useState("");
+  // The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
+  const noteValue = useRef("");
   const [focusId, setFocusId] = useState<number | null>(null);
   const { accept, revise } = useScriptActions(stage.submission_id);
 
@@ -82,6 +89,21 @@ function Changes({ stage }: { stage: ScriptStage }) {
   const parts = useMemo(() => (shown ? diffWords(base?.body ?? shown.body, shown.body) : []), [base, shown]);
   const changes = useMemo(() => changesOf(parts), [parts]);
   const fromReviewer = shown?.source === "REVIEWER_EDIT";
+  // The reviewer marked up the version they were reading: the one before their own edit, else the one shown.
+  const textRef = useRef<HighlightableHandle | null>(null);
+  // The reviewer's highlights the creator has checked off while editing.
+  const [doneIds, setDoneIds] = useState<Set<string>>(() => new Set());
+  const toggleDone = (id: string) =>
+    setDoneIds((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  const [tab, setTab] = useState<"request" | "history">("request");
+  const { highlights, resolve } = useScriptHighlights(stage.submission_id, fromReviewer ? base?.version_number : shown?.version_number, false);
+  // Every request from the reviewer must be checked off before the script can go back.
+  const unchecked = highlights.filter((h) => !doneIds.has(h.id)).length;
+  const allChecked = unchecked === 0;
   // The note the reviewer left on the version they decided on.
   const decided = [...stage.versions].reverse().find((v) => v.review_decision);
   const reviewer = fromReviewer ? shown?.created_by_name : decided?.reviewed_by_name;
@@ -93,6 +115,13 @@ function Changes({ stage }: { stage: ScriptStage }) {
       new CustomEvent("set-breadcrumb-title", { detail: { path: `/submissions/${stage.submission_id}`, title: stage.reference_code } })
     );
   }, [stage.submission_id, stage.reference_code]);
+
+  /** A highlight card was clicked: find that wording in the script and flash it. */
+  const goToHighlight = (id: string) => {
+    const switching = view === "side" && !editing;
+    if (switching) setView("inline");
+    window.setTimeout(() => textRef.current?.goTo(id), switching ? 80 : 0);
+  };
 
   const pick = (changeId: number) => {
     setFocusId(changeId);
@@ -213,7 +242,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
                 {fromReviewer ? `You're editing ${reviewer ?? "the reviewer"}'s version.` : "You're editing your script."} It's checked again and goes back to the
                 reviewer, who sees what you changed.
               </p>
-              <ScriptEditor value={text} onChange={setText} />
+              <HighlightableText ref={textRef} value={highlights} layoutKey={text.length}>
+                <ScriptEditor value={text} onChange={setText} />
+              </HighlightableText>
             </div>
           ) : base && view === "side" ? (
             <SideBySide
@@ -234,7 +265,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
                   : "mx-auto max-w-[760px] rounded-xl border border-border bg-card px-6 py-7 shadow-xs sm:px-10"
               }
             >
-              <InlineDiff parts={parts} focusId={focusId} onPick={setFocusId} />
+              <HighlightableText ref={textRef} value={highlights} layoutKey={`${base?.version_number}|${shown.version_number}`}>
+                <InlineDiff parts={parts} focusId={focusId} onPick={setFocusId} />
+              </HighlightableText>
             </article>
           )}
         </div>
@@ -242,18 +275,61 @@ function Changes({ stage }: { stage: ScriptStage }) {
 
       {/* ===== Changes and what to do ===== */}
       <aside aria-label="Changes" className="flex shrink-0 flex-col border-t border-border/70 lg:w-[380px] lg:border-l lg:border-t-0 min-[112.5rem]:w-[440px]">
-        <div className="border-b border-border/70 px-4 py-4">
-          <h2 className="text-[15px] font-semibold text-foreground">
-            {base ? `${changes.length} change${changes.length === 1 ? "" : "s"}${fromReviewer ? " from your reviewer" : ""}` : "Script history"}
-          </h2>
+        <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
+          {(
+            [
+              ["request", "Request changes", highlights.length + (base ? changes.length : 0)],
+              ["history", "Script history", stage.versions.length],
+            ] as const
+          ).map(([value, label, count]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={tab === value}
+              onClick={() => setTab(value)}
+              className={`-mb-px inline-flex h-9 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium transition-colors ${
+                tab === value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+              <span className="min-w-[18px] rounded-full bg-muted px-1.5 text-[11px] font-semibold text-foreground/70">{count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="border-b border-border/70 px-4 py-3">
           <p className="text-xs text-muted-foreground">
-            {base ? "Click one to find it in the script." : "Every version and the reviewer's notes."}
+            {tab === "history"
+              ? "Every version and the reviewer's notes."
+              : "What your reviewer marked and changed. Click one to find it in the script."}
             {base?.check?.score != null && shown.check?.score != null && ` Script check: ${base.check.score} → ${shown.check.score}.`}
             {!base && shown.check?.score != null && ` Script check: ${shown.check.score}/100 · ${verdict.text.toLowerCase()}.`}
           </p>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
-          {base ? (
+          {tab === "history" ? (
+            <VersionHistory versions={stage.versions} />
+          ) : (
+            <>
+              <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Highlighted and noted ({highlights.length})
+              </p>
+              <HighlightCards
+                highlights={highlights}
+                onPick={goToHighlight}
+                empty="Your reviewer hasn't highlighted or commented on this version."
+                done={editing ? doneIds : new Set(highlights.filter((h) => h.done).map((h) => h.id))}
+                onToggleDone={editing ? toggleDone : undefined}
+              />
+              {base && (
+                <p className="mt-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {changes.length} change{changes.length === 1 ? "" : "s"}
+                  {fromReviewer ? " from your reviewer" : ""}
+                </p>
+              )}
+            </>
+          )}
+          {tab === "request" && base &&
             changes.map((c) => (
               <button
                 key={c.id}
@@ -272,34 +348,49 @@ function Changes({ stage }: { stage: ScriptStage }) {
                 {c.removed && <span className="rounded bg-red-100 px-1.5 py-0.5 text-[13px] text-red-800 line-through dark:bg-red-500/20 dark:text-red-300">{displayText(c.removed) || "(formatting)"}</span>}
                 {c.added && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[13px] text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200">{displayText(c.added) || "(formatting)"}</span>}
               </button>
-            ))
-          ) : (
-            <VersionHistory versions={stage.versions} />
-          )}
-          {base && changes.length === 0 && <p className="px-1 py-6 text-center text-xs text-muted-foreground">The wording is the same.</p>}
+            ))}
+          {tab === "request" && base && changes.length === 0 && <p className="px-1 py-6 text-center text-xs text-muted-foreground">The wording is the same.</p>}
         </div>
 
         <div className="flex flex-col gap-2.5 border-t border-border/70 bg-muted/40 px-4 py-3.5">
           {editing ? (
             <>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+              <NoteField
+                valueRef={noteValue}
+                onHasText={noop}
                 rows={2}
                 placeholder="Note for the reviewer (optional): what you changed and why"
                 aria-label="Note for the reviewer"
                 className="min-h-0 resize-none bg-card text-[13px]"
               />
+              {!allChecked && (
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                  Check off {unchecked} more request{unchecked === 1 ? "" : "s"} in Request changes to send this back.
+                </p>
+              )}
               <div className="flex gap-2">
                 <Button variant="outline" className="h-10 flex-1" onClick={() => setEditing(false)} disabled={revise.isPending}>
                   Cancel
                 </Button>
                 <Button
                   className="h-10 flex-1"
-                  disabled={revise.isPending || !text.trim()}
-                  onClick={() =>
+                  disabled={revise.isPending || resolve.isPending || !text.trim() || !allChecked}
+                  title={allChecked ? undefined : "Check every request in Request changes first"}
+                  onClick={async () => {
+                    // Record what the checked highlights read now, so the reviewer sees old wording → new wording.
+                    const reviewed = fromReviewer ? base : shown;
+                    const checked = highlights.filter((h) => doneIds.has(h.id));
+                    if (reviewed && checked.length > 0) {
+                      const found = changesOf(diffWords(reviewed.body, text));
+                      try {
+                        await resolve.mutateAsync(checked.map((h) => ({ id: h.id, done: true, updated: updatedWording(h.text, found) })));
+                      } catch (err) {
+                        toast.error(`Couldn't save which highlights are done: ${(err as Error).message}`);
+                        return;
+                      }
+                    }
                     revise.mutate(
-                      { text, note: note.trim() || undefined },
+                      { text, note: noteValue.current.trim() || undefined },
                       {
                         onSuccess: () => {
                           setEditing(false);
@@ -307,10 +398,10 @@ function Changes({ stage }: { stage: ScriptStage }) {
                           navigate("/submissions");
                         },
                       }
-                    )
-                  }
+                    );
+                  }}
                 >
-                  {revise.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Send to reviewer
+                  {(revise.isPending || resolve.isPending) && <Loader2 className="w-4 h-4 animate-spin" />} Send to reviewer
                 </Button>
               </div>
             </>

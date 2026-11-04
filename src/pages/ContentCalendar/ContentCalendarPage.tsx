@@ -44,7 +44,7 @@ import type { CalendarItem } from "@/types/calendar";
 type SproutState = "NOT_SENT" | "SCHEDULED" | "PUBLISHED" | "MISSED";
 
 function stateOf(item: CalendarItem, sent: Record<string, SproutRecord>, now: Date): SproutState {
-  const due = new Date(item.publishAt) <= now;
+  const due = new Date(item.scheduled_for) <= now;
   if (sent[item.id]) return due ? "PUBLISHED" : "SCHEDULED";
   return due ? "MISSED" : "NOT_SENT";
 }
@@ -99,10 +99,10 @@ const profileLabel = (i: CalendarItem) => (i.account ? `${i.account.account_name
 function Thumb({ item, className = "" }: { item: CalendarItem; className?: string }) {
   return (
     <div className={`relative overflow-hidden rounded-md bg-muted ${className}`}>
-      {item.media ? (
-        <CoverThumb cover={item.media} contentType={item.contentType} caption={item.caption} showPlay={false} />
+      {item.primary_file ? (
+        <CoverThumb cover={item.primary_file} contentType={item.content_type} caption={item.caption} showPlay={false} />
       ) : (
-        <DemoPoster variant={item.poster ?? "dusk"} className="h-full w-full" />
+        <DemoPoster variant={item.poster_variant ?? "dusk"} className="h-full w-full" />
       )}
     </div>
   );
@@ -135,7 +135,7 @@ function PostCard({ item, state, selected, onSelect }: { item: CalendarItem; sta
       <span className="flex items-center justify-between gap-1.5">
         <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           <span className={`h-2 w-2 rounded-full ${st.dot}`} aria-hidden />
-          {format(new Date(item.publishAt), "h:mm a")}
+          {format(new Date(item.scheduled_for), "h:mm a")}
         </span>
         {item.score != null && <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${scoreTone(item.score)}`}>{item.score}</span>}
       </span>
@@ -217,9 +217,9 @@ export default function ContentCalendarPage() {
 
   const items = useMemo(() => {
     const real = submissions.map(fromSubmission).filter((i): i is CalendarItem => Boolean(i));
-    return [...real, ...sampleItems()].sort((a, b) => a.publishAt.localeCompare(b.publishAt));
+    return [...real, ...sampleItems()].sort((a, b) => a.scheduled_for.localeCompare(b.scheduled_for));
   }, [submissions]);
-  const hasSamples = items.some((i) => i.source === "sample");
+  const hasSamples = items.some((i) => i.is_sample);
 
   const profiles = useMemo(() => {
     const seen = new Map<string, string>();
@@ -231,7 +231,7 @@ export default function ContentCalendarPage() {
   const visible = items.filter(
     (i) =>
       (profile === "all" || profileKey(i) === profile) &&
-      (brand === "all" || i.brand === brand) &&
+      (brand === "all" || i.brand_code === brand) &&
       (platform === "all" || i.platforms.includes(platform)) &&
       (status === "all" || stateOf(i, sent, now) === status)
   );
@@ -242,7 +242,7 @@ export default function ContentCalendarPage() {
     view === "month"
       ? eachDayOfInterval({ start: startOfWeek(month, { weekStartsOn: 1 }), end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }) })
       : eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
-  const onDay = (day: Date) => visible.filter((i) => isSameDay(new Date(i.publishAt), day));
+  const onDay = (day: Date) => visible.filter((i) => isSameDay(new Date(i.scheduled_for), day));
   const inRange = days.flatMap(onDay);
 
   // The side panel shows the picked post, or the first one in view that still needs sending.
@@ -263,7 +263,7 @@ export default function ContentCalendarPage() {
     // Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
     setSelectedId(item.id);
     recordSproutSend(item.id);
-    toast.success(`${item.referenceCode} sent to Sprout Social (simulated) and scheduled for ${format(new Date(item.publishAt), "EEE, MMM d · h:mm a")}.`);
+    toast.success(`${item.reference_code} sent to Sprout Social (simulated) and scheduled for ${format(new Date(item.scheduled_for), "EEE, MMM d · h:mm a")}.`);
   };
 
   return (
@@ -455,7 +455,7 @@ export default function ContentCalendarPage() {
                                 title={`${i.title} · ${STATE[st].label}`}
                               >
                                 <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE[st].dot}`} aria-hidden />
-                                <span className="shrink-0 tabular-nums text-muted-foreground">{format(new Date(i.publishAt), "h:mma").toLowerCase()}</span>
+                                <span className="shrink-0 tabular-nums text-muted-foreground">{format(new Date(i.scheduled_for), "h:mma").toLowerCase()}</span>
                                 <span className="truncate font-medium text-foreground">{i.title}</span>
                               </button>
                             );
@@ -490,7 +490,7 @@ export default function ContentCalendarPage() {
                           onClick={() => setSelectedId(i.id)}
                           className={`flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/40 ${selected?.id === i.id ? "bg-blue-50/60 dark:bg-blue-500/10" : ""}`}
                         >
-                          <span className="w-16 shrink-0 text-xs font-semibold tabular-nums">{format(new Date(i.publishAt), "h:mm a")}</span>
+                          <span className="w-16 shrink-0 text-xs font-semibold tabular-nums">{format(new Date(i.scheduled_for), "h:mm a")}</span>
                           <Thumb item={i} className="aspect-video w-16 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium text-foreground">{i.title}</span>
@@ -517,7 +517,7 @@ export default function ContentCalendarPage() {
               item={selected}
               state={stateOf(selected, sent, now)}
               record={sent[selected.id]}
-              brand={brandName(selected.brand)}
+              brand={brandName(selected.brand_code)}
               onSend={() => send(selected)}
               onPublishDirect={() => navigate(`/content-calendar/publish/${selected.id}/${selected.platforms[0]}`)}
             />
@@ -546,7 +546,7 @@ function SelectedPost({
   onPublishDirect: () => void;
 }) {
   const st = STATE[state];
-  const when = new Date(item.publishAt);
+  const when = new Date(item.scheduled_for);
   const help =
     state === "NOT_SENT"
       ? `Approved here, not in Sprout yet. Sending creates the post in Sprout for each profile, scheduled for ${format(when, "EEE, MMM d")} at ${format(when, "h:mm a")}.`
@@ -562,9 +562,9 @@ function SelectedPost({
         <span className="text-xs text-muted-foreground">{format(when, "EEEE, MMM d · h:mm a")}</span>
         <h3 className="text-base font-semibold leading-snug text-foreground">{item.title}</h3>
         <span className="text-xs text-muted-foreground">
-          {item.referenceCode}
+          {item.reference_code}
           {brand && ` · ${brand}`}
-          {item.source === "sample" && " · Sample"}
+          {item.is_sample && " · Sample"}
         </span>
       </div>
       <div className="flex flex-col gap-3.5 p-4">
@@ -577,7 +577,7 @@ function SelectedPost({
           </div>
           <div className="rounded-lg border border-border/70 p-2.5">
             <p className="text-xs text-muted-foreground">Approved by</p>
-            <p className="mt-0.5 truncate font-semibold text-foreground">{item.approvedBy ?? "Reviewer"}</p>
+            <p className="mt-0.5 truncate font-semibold text-foreground">{item.approved_by ?? "Reviewer"}</p>
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -610,8 +610,8 @@ function SelectedPost({
           )}
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-          {item.submissionId && (
-            <Link to={`/submissions/${item.submissionId}`} className="font-medium text-blue-700 hover:underline dark:text-blue-300">
+          {item.submission_id && (
+            <Link to={`/submissions/${item.submission_id}`} className="font-medium text-blue-700 hover:underline dark:text-blue-300">
               Open details
             </Link>
           )}

@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import NoteField from "@/components/script/NoteField";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
-import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
+import HighlightCards, { AddressedCards } from "@/components/script/HighlightCards";
+import HighlightableText, { type Highlight, type HighlightableHandle } from "@/components/script/HighlightableText";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
@@ -14,7 +17,7 @@ import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTr
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { usePublicMood } from "@/hooks/usePublicMood";
 import { ContextNote, FINDING_ORDER, FindingGroup, StatusPill, groupFindings, isWarning, statusOf } from "@/components/submissions/FindingStatus";
-import { useLiveScriptCheck, useScriptActions, useScriptStage } from "@/hooks/useScript";
+import { useLiveScriptCheck, useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { AI_UNAVAILABLE_SHORT } from "@/components/submissions/submissionUi";
@@ -23,8 +26,11 @@ import type { ComplianceViolation } from "@/services/complianceService";
 import type { ScriptVersion } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
-type PanelTab = "flags" | "sentiment" | "history";
+type PanelTab = "flags" | "highlights" | "sentiment" | "history";
 type Compare = "mine" | "previous";
+
+/** Prefix of the display-only marks for what the creator fixed. */
+const ADDRESSED = "done-";
 
 const sameText = (a: string, b: string) => a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
 
@@ -127,15 +133,62 @@ function Editor({
   const [showChanges, setShowChanges] = useState(true);
   const [compare, setCompare] = useState<Compare>("mine");
   const [tab, setTab] = useState<PanelTab>("flags");
-  const [note, setNote] = useState("");
+  // The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
+  const noteValue = useRef("");
   const [needNote, setNeedNote] = useState(false);
+  const [hasNote, setHasNote] = useState(false);
+  const onNoteText = useCallback((has: boolean) => {
+    setHasNote(has);
+    if (has) setNeedNote(false);
+  }, []);
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
   const [focusId, setFocusId] = useState<number | null>(null);
   const editorRef = useRef<ScriptEditorHandle | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<HighlightableHandle | null>(null);
+  const { highlights, onChange: onHighlightsChange } = useScriptHighlights(submissionId, sent.version_number, canReview);
+  // What the creator did about the highlights from the review before this version (shown only once they responded).
+  const reviewedBefore = [...versions].reverse().find((v) => v.review_decision && v.version_number < sent.version_number);
+  const { highlights: earlier } = useScriptHighlights(submissionId, reviewedBefore?.version_number, false);
+  const responded = earlier.some((h) => h.done);
+  // The creator's fixes, marked in the script at the new wording with a note reading: old wording → new wording.
+  const addressedMarks = useMemo<Highlight[]>(
+    () =>
+      earlier
+        .filter((h) => h.done)
+        .flatMap((h) => {
+          const now = h.updated == null ? h.text : h.updated.trim();
+          if (!now) return []; // removed: nothing left to mark (the cards still list it)
+          const changed = now !== h.text.trim();
+          return [
+            {
+              id: `${ADDRESSED}${h.id}`,
+              start: h.start,
+              text: now,
+              color: "#34d399",
+              note: changed ? `“${h.text}” ➜ “${now}”` : `“${h.text}”: marked done, wording unchanged`,
+            },
+          ];
+        }),
+    [earlier]
+  );
+  const shownHighlights = useMemo(() => [...highlights, ...addressedMarks], [highlights, addressedMarks]);
+  // Those marks are display only: they are never saved as this version's highlights.
+  const saveHighlights = onHighlightsChange
+    ? (next: Highlight[]) => onHighlightsChange(next.filter((h) => !h.id.startsWith(ADDRESSED)))
+    : undefined;
+  // Open on the Highlighted tab the first time the creator's response arrives.
+  const openedResponse = useRef(false);
+  useEffect(() => {
+    if (responded && !openedResponse.current) {
+      openedResponse.current = true;
+      setTab("highlights");
+    }
+  }, [responded]);
   const locateCount = useRef<Record<string, number>>({});
   const { decide } = useScriptActions(submissionId);
+  const [confirming, setConfirming] = useState<"approve" | "send_back" | null>(null);
+  const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
   const { mood } = usePublicMood(submissionId, true);
   const moodDecision = overallPostDecision(mood);
 
@@ -184,24 +237,75 @@ function Editor({
       if (terms.length === 0 || textRef.current?.locate(terms, n) === 0) textRef.current?.toEnd();
     }, compare !== "mine" ? 60 : 0);
   };
-  const addDisclaimer = (text: string) => {
+  /** A highlight card was clicked: take the reviewer to that wording. */
+  const goToHighlight = (id: string) => {
+    const switching = compare !== "mine";
+    if (switching) setCompare("mine");
+    window.setTimeout(() => textRef.current?.goTo(id), switching ? 60 : 0);
+  };
+  /** An addressed card was clicked: go to the new wording (or the old, if it hasn't changed). */
+  const goToAddressed = (h: { text: string; updated?: string | null }) => {
+    const switching = compare !== "mine";
+    if (switching) setCompare("mine");
+    window.setTimeout(() => textRef.current?.locate([h.updated?.trim() || h.text], 0), switching ? 60 : 0);
+  };
+  // Disclaimers the reviewer added from a flag card. The check clears those flags, so the cards are kept here (struck
+  // through) with a way to take the addition back.
+  const [added, setAdded] = useState<Record<string, { v: ComplianceViolation; text: string }>>({});
+  const addDisclaimer = (v: ComplianceViolation, text: string) => {
     setDraft((d) => `${d.replace(/\s+$/, "")}\n\n${text}\n`);
+    setAdded((a) => ({ ...a, [v.rule_id]: { v, text } }));
     setCompare("mine");
   };
+  const discardDisclaimer = (ruleId: string) => {
+    const mine = added[ruleId];
+    if (!mine) return;
+    setDraft((d) => {
+      const block = `\n\n${mine.text}\n`;
+      let at = d.lastIndexOf(block);
+      let len = block.length;
+      if (at === -1) {
+        at = d.lastIndexOf(mine.text);
+        len = mine.text.length;
+      }
+      return at === -1 ? d : d.slice(0, at) + d.slice(at + len);
+    });
+    setAdded((a) => {
+      const next = { ...a };
+      delete next[ruleId];
+      return next;
+    });
+  };
 
-  const criticalNeedsNote = !hasEdits && verdict.critical > 0 && !note.trim();
+  // Anything highlighted or noted in this version is something to fix, so the script cannot be approved as it is.
+  const marked = highlights.length > 0;
+  const criticalNeedsNote = !hasEdits && verdict.critical > 0 && !hasNote;
   const sendBack = () => {
-    if (!hasEdits && !note.trim()) {
+    if (!hasEdits && !hasNote) {
       setNeedNote(true);
       noteRef.current?.focus();
       return;
     }
-    decide.mutate({ decision: "SEND_BACK", text: hasEdits ? draft : undefined, note: note.trim() || undefined });
+    setTimeline(DEFAULT_TIMELINE);
+    setConfirming("send_back");
   };
-  const approve = () => decide.mutate({ decision: "APPROVE", note: note.trim() || undefined });
+  // Approving asks when the video is due (a week by default, or none).
+  const approve = () => {
+    setTimeline({ kind: "days", days: 5 });
+    setConfirming("approve");
+  };
+  const confirmDecision = () => {
+    const due = timelineFields(timeline);
+    const common = { note: noteValue.current.trim() || undefined, due_days: due.days, due_at: due.at };
+    decide.mutate(
+      confirming === "approve" ? { decision: "APPROVE", ...common } : { decision: "SEND_BACK", text: hasEdits ? draft : undefined, ...common },
+      { onSuccess: () => setConfirming(null) }
+    );
+  };
 
   const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
     { value: "flags", label: "Flags", count: active.length, alert: verdict.critical > 0 },
+    { value: "highlights", label: "Highlighted", count: highlights.length },
     {
       value: "sentiment",
       label: "Sentiment",
@@ -316,7 +420,9 @@ function Editor({
         <div className="px-4 py-5 sm:px-6">
           {mode === "edit" ? (
             <div className="mx-auto max-w-[1000px]">
-              <ScriptEditor ref={editorRef} value={draft} onChange={setDraft} />
+              <HighlightableText ref={textRef} value={shownHighlights} layoutKey={draft.length}>
+                <ScriptEditor ref={editorRef} value={draft} onChange={setDraft} />
+              </HighlightableText>
               <p className="mt-2 text-xs text-muted-foreground">
                 Edit it like a document. Switch to Read to see your changes marked against the creator's version.
               </p>
@@ -340,8 +446,8 @@ function Editor({
               )}
               <HighlightableText
                 ref={textRef}
-                storageKey={`scriptReview.highlights.${submissionId}.${sent.version_number}`}
-                enabled={canReview}
+                value={shownHighlights}
+                onChange={saveHighlights}
                 layoutKey={`${compare}|${showChanges}|${draft.length}`}
               >
                 <InlineDiff parts={parts} terms={compare === "mine" ? terms : []} showChanges={showChanges} focusId={focusId} onPick={setFocusId} />
@@ -450,21 +556,70 @@ function Editor({
 
         <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
           {tab === "flags" &&
-            (violations.length === 0 ? (
+            (violations.length === 0 && Object.keys(added).length === 0 ? (
               <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
                 <CheckCircle2 className="mx-auto w-7 h-7 text-emerald-500" />
                 <p className="mt-2 text-sm font-semibold text-foreground">No rulebook flags</p>
                 <p className="text-xs text-muted-foreground">Nothing in this script broke a rule.</p>
               </div>
             ) : (
-              FINDING_ORDER.map((status) => (
-                <FindingGroup key={status} status={status} count={grouped[status].length}>
-                  {grouped[status].map((v) => (
-                    <FlagCard key={v.rule_id} v={v} canEdit={canReview} onFind={findInScript} onGo={() => goToFlag(v)} onAddDisclaimer={addDisclaimer} />
-                  ))}
-                </FindingGroup>
-              ))
+              <>
+                {Object.values(added).length > 0 && (
+                  <div className="flex flex-col gap-2.5">
+                    <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Added to the script ({Object.values(added).length})</p>
+                    {Object.values(added).map(({ v }) => (
+                      <FlagCard
+                        key={v.rule_id}
+                        v={v}
+                        canEdit={canReview}
+                        added
+                        onFind={findInScript}
+                        onGo={() => goToFlag(v)}
+                        onAddDisclaimer={(text) => addDisclaimer(v, text)}
+                        onDiscard={() => discardDisclaimer(v.rule_id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {FINDING_ORDER.map((status) => {
+                  const shown = grouped[status].filter((v) => !added[v.rule_id]);
+                  return (
+                    <FindingGroup key={status} status={status} count={shown.length}>
+                      {shown.map((v) => (
+                        <FlagCard
+                          key={v.rule_id}
+                          v={v}
+                          canEdit={canReview}
+                          onFind={findInScript}
+                          onGo={() => goToFlag(v)}
+                          onAddDisclaimer={(text) => addDisclaimer(v, text)}
+                          onDiscard={() => discardDisclaimer(v.rule_id)}
+                        />
+                      ))}
+                    </FindingGroup>
+                  );
+                })}
+              </>
             ))}
+
+          {tab === "highlights" && (
+            <>
+              {responded && (
+                <>
+                  <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    The creator's response to your last review ({earlier.filter((h) => h.done).length}/{earlier.length} done)
+                  </p>
+                  <AddressedCards highlights={earlier} onPick={goToAddressed} />
+                  <p className="mt-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">This version ({highlights.length})</p>
+                </>
+              )}
+              <HighlightCards
+                highlights={highlights}
+                onPick={goToHighlight}
+                empty="Select wording in the script to highlight it or leave a note. They show here, and the creator sees them too."
+              />
+            </>
+          )}
 
           {tab === "sentiment" && (
             <>
@@ -499,14 +654,11 @@ function Editor({
                 {hasEdits ? "Optional with your edits" : "Required to request changes"}
               </span>
             </label>
-            <Textarea
+            <NoteField
               id="script-note"
               ref={noteRef}
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                if (e.target.value.trim()) setNeedNote(false);
-              }}
+              valueRef={noteValue}
+              onHasText={onNoteText}
               rows={2}
               placeholder={hasEdits ? "Why you changed it (optional)" : "What needs to change? Required if you request changes"}
               aria-invalid={needNote}
@@ -527,6 +679,8 @@ function Editor({
                 ? `You changed ${myChangeCount} part${myChangeCount === 1 ? "" : "s"}. The creator sees both versions and accepts them before filming.`
                 : verdict.critical
                 ? "There's a critical flag. Edit the script, send it back, or say in the note why it's fine."
+                : marked
+                ? `You marked ${highlights.length} place${highlights.length === 1 ? "" : "s"} in this version. Request changes, or remove the highlights to approve.`
                 : "You can approve the script as written."}
             </p>
             {grouped.NEEDS_REVIEW.length + grouped.EVIDENCE_REQUIRED.length > 0 && (
@@ -542,7 +696,7 @@ function Editor({
                 variant={hasEdits ? "default" : "outline"}
                 className="h-10 flex-1"
                 disabled={decide.isPending}
-                title={!hasEdits && !note.trim() ? "A comment is required to request changes" : undefined}
+                title={!hasEdits && !hasNote ? "A comment is required to request changes" : undefined}
                 onClick={sendBack}
               >
                 {decide.isPending && decide.variables?.decision === "SEND_BACK" && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -551,14 +705,51 @@ function Editor({
               <Button
                 variant={hasEdits ? "outline" : "default"}
                 className="h-10 flex-1"
-                disabled={decide.isPending || hasEdits || criticalNeedsNote}
-                title={hasEdits ? "You changed the script, so the creator accepts it first" : criticalNeedsNote ? "Say in the note why the critical flag is fine" : undefined}
+                disabled={decide.isPending || hasEdits || criticalNeedsNote || marked || Boolean(check?.ai_unavailable)}
+                title={
+                  check?.ai_unavailable
+                    ? "The AI review couldn't run, so there's no score yet. It's re-checked automatically."
+                    : marked
+                    ? "You highlighted or commented on this version. Request changes instead"
+                    : hasEdits
+                    ? "You changed the script, so the creator accepts it first"
+                    : criticalNeedsNote
+                    ? "Say in the note why the critical flag is fine"
+                    : undefined
+                }
                 onClick={approve}
               >
                 {decide.isPending && decide.variables?.decision === "APPROVE" && <Loader2 className="w-4 h-4 animate-spin" />}
                 Approve script
               </Button>
             </div>
+            <Dialog open={confirming !== null} onOpenChange={(open) => !open && !decide.isPending && setConfirming(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{confirming === "approve" ? "Approve the script" : hasEdits ? "Send the script back with your edits" : "Request changes to the script"}</DialogTitle>
+                  <DialogDescription>
+                    {confirming === "approve"
+                      ? "The creator is told it's approved and when the video is due."
+                      : "The creator is told what to change and when it's due, then sends it back to you."}
+                  </DialogDescription>
+                </DialogHeader>
+                <RevisionTimelinePicker
+                  value={timeline}
+                  onChange={setTimeline}
+                  label={confirming === "approve" ? "Video due by" : "Time to make the changes"}
+                  allowNone={confirming === "approve"}
+                />
+                <DialogFooter>
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setConfirming(null)} disabled={decide.isPending}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="text-xs gap-1.5" onClick={confirmDecision} disabled={decide.isPending || !timelineValid(timeline)}>
+                    {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {confirming === "approve" ? "Approve script" : hasEdits ? "Send back with edits" : "Request changes"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         ) : status === "APPROVED" ? (
           <div className="flex flex-col gap-2.5 border-t border-border/70 bg-emerald-50/50 p-4 dark:bg-emerald-500/10">
@@ -590,9 +781,15 @@ function FlagCard({
   onFind,
   onGo,
   onAddDisclaimer,
+  onDiscard,
+  added = false,
 }: {
   v: ComplianceViolation;
   canEdit: boolean;
+  /** The reviewer added this flag disclaimer to the script: show the card struck through. */
+  added?: boolean;
+  /** Take that addition back. */
+  onDiscard: () => void;
   onFind: (term: string) => void;
   /** Go to this flag's wording in the script. */
   onGo: () => void;
@@ -601,6 +798,7 @@ function FlagCard({
   const critical = v.traffic_light === "RED";
   const missing = v.kind === "MISSING_DISCLAIMER";
   const cleared = statusOf(v) === "CLEARED";
+  const struck = added ? "line-through decoration-muted-foreground/70" : "";
   return (
     <article
       role="button"
@@ -613,7 +811,7 @@ function FlagCard({
           onGo();
         }
       }}
-      className={`flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors hover:border-sky-400/70 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${cleared ? "opacity-80" : ""}`}
+      className={`flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors hover:border-sky-400/70 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${cleared || added ? "opacity-80" : ""}`}
     >
       <div className="flex items-center gap-2">
         <StatusPill status={statusOf(v)} critical={critical} />
@@ -621,9 +819,9 @@ function FlagCard({
       </div>
       <div>
         <RuleNumberBadge v={v} />
-        <p className="mt-1 text-sm font-semibold text-foreground">{v.title}</p>
+        <p className={`mt-1 text-sm font-semibold text-foreground ${struck}`}>{v.title}</p>
       </div>
-      {v.evaluation ? <ContextNote v={v} /> : <p className="text-[13px] text-foreground/80">{v.explanation}</p>}
+      {v.evaluation ? <ContextNote v={v} /> : <p className={`text-[13px] text-foreground/80 ${struck}`}>{v.explanation}</p>}
       {!missing && !cleared && v.flagged_terms.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {v.flagged_terms.map((t) => (
@@ -644,19 +842,39 @@ function FlagCard({
         </div>
       )}
       {v.remediation_guidance && !cleared && (
-        <p className="text-[13px] text-foreground/80">
+        <p className={`text-[13px] text-foreground/80 ${struck}`}>
           <span className="font-semibold">{isWarning(v) ? "What to check:" : "How to fix:"}</span> {v.remediation_guidance}
         </p>
       )}
-      {missing && !cleared && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
+      {missing && (added || !cleared) && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
         <div className="flex flex-col gap-1.5">
-          <p className="rounded-lg bg-muted px-2.5 py-1.5 text-xs text-foreground/80">“{v.missing_disclaimers![0]}”</p>
-          <Button size="sm" variant="outline" className="h-7 self-start text-xs" onClick={(e) => {
-              e.stopPropagation();
-              onAddDisclaimer(v.missing_disclaimers![0]);
-            }}>
-            Add it to the end of the script
-          </Button>
+          <p className={`rounded-lg bg-muted px-2.5 py-1.5 text-xs text-foreground/80 ${struck}`}>“{v.missing_disclaimers![0]}”</p>
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              disabled={added}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddDisclaimer(v.missing_disclaimers![0]);
+              }}
+            >
+              {added ? "Added to the end of the script" : "Add it to the end of the script"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              disabled={!added}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDiscard();
+              }}
+            >
+              Discard changes
+            </Button>
+          </div>
         </div>
       )}
     </article>

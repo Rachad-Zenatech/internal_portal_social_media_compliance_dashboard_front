@@ -47,7 +47,7 @@ import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import { AiUnavailableBadge, DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, brandCodes, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -378,6 +378,13 @@ export default function SubmissionDetailPage() {
                 <ArrowLeft className="w-3.5 h-3.5" /> {backTo.label}
               </Link>
             </Button>
+            {s.script_status && s.script_status !== "DRAFT" && (
+              <Button size="sm" variant="outline" asChild className="text-xs gap-1.5 font-semibold">
+                <Link to={`/submissions/${s.id}/script`}>
+                  <FileText className="w-3.5 h-3.5" /> View script
+                </Link>
+              </Button>
+            )}
             {s.content_type === "VIDEO" && s.can_edit && (
               <Button
                 type="button"
@@ -461,6 +468,8 @@ export default function SubmissionDetailPage() {
             publish_at: s.publish_at,
             due_at: s.due_at,
             due_kind: s.due_kind,
+            ai_unavailable: s.latest_check?.ai_unavailable,
+            analysis_pending: isAnalysing(s.latest_check),
             can_review: s.can_review,
             can_approve: s.can_approve,
             approver_names: s.approver_names,
@@ -523,7 +532,7 @@ export default function SubmissionDetailPage() {
           <Panel title="Details" icon={FilePen}>
             <div className="divide-y divide-border/50">
               <DetailRow label="Content type">{TYPE_LABELS[s.content_type]}</DetailRow>
-              <DetailRow label="Brand">{optionsQuery.data?.brands.find((b) => b.code === s.brand_code)?.name ?? s.brand_code}</DetailRow>
+              <DetailRow label="Brand(s)">{brandCodes(s).map((c) => optionsQuery.data?.brands.find((b) => b.code === c)?.name ?? c).join(", ")}</DetailRow>
               <DetailRow label={(s.accounts?.length ?? 0) > 1 ? "Publishing accounts" : "Publishing account"}>
                 {(s.accounts?.length || s.account) && (
                   <span className="flex flex-col gap-1">
@@ -546,7 +555,7 @@ export default function SubmissionDetailPage() {
                   </span>
                 )}
               </DetailRow>
-              <DetailRow label="Audience">{(s.audience && optionsQuery.data?.audiences[s.audience]) || s.audience}</DetailRow>
+              <DetailRow label="Audience(s)">{audienceNames(audienceCodes(s), optionsQuery.data?.audiences)}</DetailRow>
               <DetailRow label="Region">{s.region}</DetailRow>
               <DetailRow label="Publish date">{s.publish_at ? format(new Date(s.publish_at), "MMM d, yyyy h:mm a") : null}</DetailRow>
               <DetailRow label="Rule sets">{s.rule_sets.join(", ")}</DetailRow>

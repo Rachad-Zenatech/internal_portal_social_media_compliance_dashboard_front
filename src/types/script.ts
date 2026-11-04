@@ -22,6 +22,10 @@ export interface ScriptVersion {
 }
 
 export interface ScriptStage {
+  /** Sent, and still being read and scored in the background (it reaches the reviewers when that's done). */
+  processing?: boolean;
+  /** Why the last send failed, and at which step. */
+  send_error?: string | null;
   submission_id: string;
   reference_code: string;
   title: string;
@@ -46,15 +50,31 @@ export interface ScriptQueueItem {
   platforms: string[];
   brand_code?: string | null;
   audience?: string | null;
+  brand_codes?: string[];
+  audiences?: string[];
   creator_name?: string | null;
   created_by?: string | null;
   version_number: number;
   sent_at: string;
   score?: number | null;
+  /** The AI review couldn't run for this script: no score, a message instead. */
+  ai_unavailable?: boolean;
   traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
   approval_needed_by?: string | null;
   script_status: "IN_REVIEW" | "CHANGES_REQUESTED" | "EDITS_PROPOSED" | "APPROVED";
   /** When the reviewer decided; null while it waits. */
   decided_at?: string | null;
   can_review: boolean;
+}
+
+/** Wording the reviewer highlighted (with an optional note) in a script version. */
+export interface ScriptHighlight {
+  id: string;
+  start: number;
+  text: string;
+  color: string;
+  note: string;
+  /** The creator fixed this when they sent the next version, and the wording now reads `updated`. */
+  done?: boolean;
+  updated?: string | null;
 }

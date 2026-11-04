@@ -14,11 +14,16 @@ export default function CaptionSignalsBar({
   maxHashtags,
   maxReason,
   ruleSets,
+  audiences,
+  onAddInvestors,
 }: {
   caption: string;
   maxHashtags: number | null;
   maxReason?: string | null;
   ruleSets: string[];
+  /** The post's target audiences; with the cashtag in the caption but no Investors, offers to add it. */
+  audiences: string[];
+  onAddInvestors: () => void;
 }) {
   const { cashtags, hashtags, mentions } = readSignals(caption);
   if (!cashtags.length && !hashtags.length && !mentions.length) return null;
@@ -57,6 +62,14 @@ export default function CaptionSignalsBar({
         <p className="text-muted-foreground">
           {cashtags.join(" ")} puts this post in front of investors, so investor-disclosure rules apply to everything it
           says{disclosureChosen ? "." : `: the check adds the ${DISCLOSURE_RULE_SET} rules automatically.`}
+        </p>
+      )}
+      {cashtags.length > 0 && !audiences.includes("INVESTORS") && (
+        <p className="text-muted-foreground">
+          Investors will read this post.{" "}
+          <button type="button" onClick={onAddInvestors} className="font-medium text-blue-700 underline-offset-2 hover:underline dark:text-blue-300">
+            Add Investors as a target audience
+          </button>
         </p>
       )}
       {mentions.length > 0 && (
