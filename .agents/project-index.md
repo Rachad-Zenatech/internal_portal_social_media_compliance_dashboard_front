@@ -21,11 +21,11 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/dashboard/CreatorDashboard.tsx (377 lines) - creator dashboard (components dashboard)
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
-- src/components/dashboard/dashboardParts.tsx (378 lines) - Pieces shared by the reviewer and creator dashboards.
+- src/components/dashboard/dashboardParts.tsx (379 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/HighlightableText.tsx (499 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptEditor.tsx (242 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptReviewWorkspace.tsx (698 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (703 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (227 lines) - script stage card (components script)
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -44,10 +44,11 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/ReviewDecisionPanel.tsx (346 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/RevisionTimelinePicker.tsx (80 lines) - Matches the server: resubmissions are due early enough before the planned publish time to be reviewed again.
 - src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
+- src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
 - src/components/submissions/SentimentPanel.tsx (1055 lines) - sentiment panel (components submissions)
 - src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
-- src/components/submissions/submissionUi.tsx (399 lines) - submission ui (components submissions)
+- src/components/submissions/submissionUi.tsx (418 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
 - src/components/ui/ResizeHandle.tsx (182 lines) - A panel's width, remembered per browser.
@@ -76,6 +77,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/video/VideoUploadQueueDrawer.tsx (515 lines) - video upload queue drawer (components video)
 - src/context/VideoUploadQueueContext.tsx (802 lines) - video upload queue context (context)
 - src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
+- src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
@@ -92,7 +94,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)
-- src/lib/scriptStage.ts (23 lines) - Score ring colours and the verdict line for a script check.
+- src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/utils.ts (7 lines) - utils (lib)
 - src/lib/videoThumbnail.ts (126 lines) - JPEG data URL of the most representative frame, or null if none could be read.
@@ -101,7 +103,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Auth/Login.tsx (188 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1704 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1709 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (412 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2893 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
@@ -120,15 +122,15 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (676 lines) - post performance page (pages  performance)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (1900 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (1914 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (352 lines) - script changes page (pages  submissions)
-- src/pages/Submissions/SubmissionDetailPage.tsx (642 lines) - submission detail page (pages  submissions)
+- src/pages/Submissions/SubmissionDetailPage.tsx (648 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1574 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1587 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
-- src/services/complianceService.ts (312 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (314 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (10 lines) - context service (services)
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
@@ -146,4 +148,4 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/types/publicMood.ts (151 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/script.ts (61 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
-- src/types/submission.ts (510 lines) - AD: paid social ad.
+- src/types/submission.ts (514 lines) - AD: paid social ad.

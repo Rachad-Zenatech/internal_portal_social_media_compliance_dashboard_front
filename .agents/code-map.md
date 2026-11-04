@@ -82,7 +82,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `dayName` (const)
 - `DayAgenda` (export function) - One day of posts at a time, in time order, with arrows to step through days.
 
-## src/components/dashboard/dashboardParts.tsx (378 lines) - Pieces shared by the reviewer and creator dashboards.
+## src/components/dashboard/dashboardParts.tsx (379 lines) - Pieces shared by the reviewer and creator dashboards.
 - `UPCOMING_DAYS` (export const)
 - `greeting` (export function)
 - `issuesText` (export const)
@@ -175,7 +175,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Toolbar` (function)
 - `ScriptEditor` (export function) - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptReviewWorkspace.tsx (698 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (703 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -291,6 +291,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
 
+## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
+- `RuleNumberBadge` (export function) - A flag's rule number; hovering it shows the rule that was broken.
+
 ## src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
 - `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty, capped when a critical rule is broken.
 
@@ -330,8 +333,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleScrape` (fn)
     - `otherTrends` (fn)
 
-## src/components/submissions/submissionUi.tsx (399 lines) - submission ui (components submissions)
+## src/components/submissions/submissionUi.tsx (418 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
+- `isAiUnavailable` (export const) - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
+- `AI_UNAVAILABLE_MESSAGE` (export const)
+- `AI_UNAVAILABLE_SHORT` (export const)
+- `AiUnavailableBadge` (export function)
 - `ANALYSING_REFETCH_MS` (export const) - Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready.
 - `refetchWhileAnalysing` (export const) - refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all.
 - `AnalysisCountdown` (export interface)
@@ -339,10 +346,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `noSubscription` (const)
 - `readClock` (const)
 - `useAnalysisCountdown` (export function) - A live countdown to when the post's score is expected.
+    - `now` (fn)
 - `countdownText` (export function) - about 35 s left", "about 2 min left", "almost done", "taking longer than usual".
 - `progressSteps` (export const) - What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images".
 - `UnderReviewBadge` (export function) - Shown in place of a score while the post is still being analysed, with time left when it's known.
+    - `countdown` (fn)
 - `AnalysisProgressPanel` (export function) - The fuller version for a review screen: each step still running, a progress bar and the time left.
+    - `countdown` (fn)
 - `FILE_KIND_LABELS` (export const)
 - `MISSING_LABELS` (export const) - How the submit endpoint's `missing` field names read in messages.
 - `formatBytes` (export function)
@@ -571,6 +581,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) - Caption suggestions for a draft, and how many are left today.
 
+## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+- `useComplianceRules` (export function) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+
 ## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
@@ -697,7 +710,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `cellText` (function)
 - `docToText` (export function) - A script's text for the editor's content.
 
-## src/lib/scriptStage.ts (23 lines) - Score ring colours and the verdict line for a script check.
+## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const)
 - `scriptVerdict` (export function) - Score ring colours and the verdict line for a script check.
 
@@ -760,7 +773,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1704 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1709 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -1097,7 +1110,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (1900 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (1914 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1154,7 +1167,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ScriptChangesPage` (export function) - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
 - `Changes` (function)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (642 lines) - submission detail page (pages  submissions)
+## src/pages/Submissions/SubmissionDetailPage.tsx (648 lines) - submission detail page (pages  submissions)
 - `Panel` (function)
 - `LightBadge` (function)
 - `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
@@ -1176,7 +1189,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1574 lines) - submissions list page (pages  submissions)
+## src/pages/Submissions/SubmissionsListPage.tsx (1587 lines) - submissions list page (pages  submissions)
 - `Stage` (type) - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
 - `stageOf` (function)
 - `SortBy` (type)
@@ -1238,7 +1251,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const)
 
-## src/services/complianceService.ts (312 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (314 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type)
 - `TrafficLight` (export type)
 - `ComplianceRule` (export interface)
@@ -1387,7 +1400,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (510 lines) - AD: paid social ad.
+## src/types/submission.ts (514 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
