@@ -1987,11 +1987,13 @@ export default function NewSubmissionPage() {
               </SummaryRow>
               <SummaryRow icon={Globe2} label="Market Sentiment">
                 {moodDecision ? (
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
-                    <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+                  <span className="flex min-w-0 flex-col items-start gap-1">
+                    <span className={`rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
                       {moodDecision.recommendation}
                     </span>
-                    <span className="truncate text-xs text-foreground/80">{moodDecision.reason}</span>
+                    <span className="text-xs leading-snug text-foreground/80" title={moodDecision.reason}>
+                      {moodDecision.reason}
+                    </span>
                   </span>
                 ) : (
                   <span className="text-muted-foreground text-xs">Unmonitored / Neutral</span>

@@ -230,11 +230,11 @@ const HighlightableText = forwardRef<
     // Wait for the mouse button to come up, so the toolbar doesn't jump around while dragging.
     const onUp = (e: Event) => {
       if (pickerOpen.current) return;
-      if (e.target instanceof Node && wrapRef.current?.querySelector('[role="toolbar"]')?.contains(e.target)) return;
+      if (e.target instanceof Node && wrapRef.current?.querySelector('[data-highlight-toolbar]')?.contains(e.target)) return;
       window.setTimeout(onSelect, 0);
     };
     const onDown = (e: MouseEvent) => {
-      if (e.target instanceof Node && wrapRef.current?.querySelector('[role="toolbar"]')?.contains(e.target)) return;
+      if (e.target instanceof Node && wrapRef.current?.querySelector('[data-highlight-toolbar]')?.contains(e.target)) return;
       // A click on the page itself (the picker popup is outside it) dismisses the toolbar and ends the picker guard.
       pickerOpen.current = false;
       setDraft(null);
@@ -410,6 +410,8 @@ const HighlightableText = forwardRef<
         <div
           role="toolbar"
           aria-label="Highlight"
+          // Found by this, not by role: the script editor has a toolbar of its own inside the same box.
+          data-highlight-toolbar=""
           onMouseDown={(e) => {
             // Keep the selection while using the toolbar (but let the note box take focus).
             if (!(e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement)) e.preventDefault();

@@ -25,7 +25,10 @@ export default function MultiSelectFilter({
   ariaLabel,
   className,
   align = "start",
+  title,
 }: {
+  /** A heading for the button: shows the title with the choice under it (as in the calendar's filter bar). */
+  title?: string;
   options: FilterOption[];
   value: string[];
   onChange: (next: string[]) => void;
@@ -61,7 +64,14 @@ export default function MultiSelectFilter({
             className
           )}
         >
-          <span className="truncate">{text}</span>
+          {title ? (
+            <span className="flex min-w-0 flex-col items-start leading-tight">
+              <span className="text-[13px] font-medium text-foreground">{title}</span>
+              <span className={`max-w-full truncate text-xs ${value.length > 0 ? "font-semibold text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}>{text}</span>
+            </span>
+          ) : (
+            <span className="truncate">{text}</span>
+          )}
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>

@@ -420,11 +420,12 @@ function Editor({
         <div className="px-4 py-5 sm:px-6">
           {mode === "edit" ? (
             <div className="mx-auto max-w-[1000px]">
-              <HighlightableText ref={textRef} value={shownHighlights} layoutKey={draft.length}>
+              <HighlightableText ref={textRef} value={shownHighlights} onChange={saveHighlights} layoutKey={draft.length}>
                 <ScriptEditor ref={editorRef} value={draft} onChange={setDraft} />
               </HighlightableText>
               <p className="mt-2 text-xs text-muted-foreground">
                 Edit it like a document. Switch to Read to see your changes marked against the creator's version.
+                {saveHighlights && " You can still select wording to highlight it or leave a comment, as in Read."}
               </p>
             </div>
           ) : (
