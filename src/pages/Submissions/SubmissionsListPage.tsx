@@ -393,10 +393,12 @@ function GalleryCard({
   s,
   onSelect,
   onContinue,
+  onDelete,
 }: {
   s: SubmissionSummary;
   onSelect: (s: SubmissionSummary) => void;
   onContinue: (s: SubmissionSummary) => void;
+  onDelete: (s: SubmissionSummary) => void;
 }) {
   const stage = stageOf(s);
   const line = statusLine(s);
@@ -472,6 +474,18 @@ function GalleryCard({
             </Button>
           </div>
         )
+      )}
+      {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
+      {s.can_delete && (
+        <div className="px-4 pb-3.5 -mt-1">
+          <button
+            type="button"
+            onClick={() => onDelete(s)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-red-600 dark:hover:text-red-400"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete draft
+          </button>
+        </div>
       )}
     </article>
   );
@@ -1387,6 +1401,7 @@ export default function SubmissionsListPage() {
                     s={s}
                     onSelect={(item) => setSelectedId(item.id)}
                     onContinue={(item) => navigate(`/submissions/new?id=${item.id}`)}
+                    onDelete={setDeleting}
                   />
                 ))}
               </div>
