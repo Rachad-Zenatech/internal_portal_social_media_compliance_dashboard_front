@@ -101,6 +101,19 @@ function stageOf(s: { status: string; publish_at?: string | null }): Stage {
   return s.status as Stage;
 }
 
+/**
+ * The tab a post is counted under. A script that has been sent isn't a draft: with a reviewer (or being sent) or
+ * approved it's with "In review", and sent back it's under "Changes requested". Only a script not yet sent, or one
+ * that failed to send, stays a draft.
+ */
+function tabOf(s: { status: string; publish_at?: string | null; script_status?: string | null; script_send_status?: string | null }): Stage {
+  const stage = stageOf(s);
+  if (stage !== "DRAFT") return stage;
+  if (s.script_send_status === "PROCESSING" || s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") return "IN_REVIEW";
+  if (s.script_status === "EDITS_PROPOSED" || s.script_status === "CHANGES_REQUESTED") return "CHANGES_REQUESTED";
+  return stage;
+}
+
 const STAGES: Record<Stage, { label: string; pill: string }> = {
   DRAFT: { label: "Draft", pill: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" },
   IN_REVIEW: { label: "In review", pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
@@ -1085,12 +1098,12 @@ export default function SubmissionsListPage() {
     const source = gallery ? inMonth : data;
     const counts: Record<string, number> = { "": source.length };
     for (const s of source) {
-      const st = stageOf(s);
+      const st = tabOf(s);
       counts[st] = (counts[st] ?? 0) + 1;
     }
     if (gallery) {
-      counts.DRAFT = data.filter((s) => stageOf(s) === "DRAFT").length;
-      counts.CHANGES_REQUESTED = data.filter((s) => stageOf(s) === "CHANGES_REQUESTED").length;
+      counts.DRAFT = data.filter((s) => tabOf(s) === "DRAFT").length;
+      counts.CHANGES_REQUESTED = data.filter((s) => tabOf(s) === "CHANGES_REQUESTED").length;
     }
     return counts;
   }, [data, inMonth, gallery]);
@@ -1109,7 +1122,7 @@ export default function SubmissionsListPage() {
     const q = search.trim().toLowerCase();
     const filtered = inView.filter(
       (s) =>
-        (!stage || stageOf(s) === stage) &&
+        (!stage || tabOf(s) === stage) &&
         (platforms.length === 0 || s.platforms.some((p) => platforms.includes(p))) &&
         (brands.length === 0 || brandCodes(s).some((c) => brands.includes(c))) &&
         (!q ||

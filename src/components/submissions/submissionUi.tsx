@@ -181,6 +181,7 @@ export const MISSING_LABELS: Record<string, string> = {
   account_id: "connected publishing account",
   rule_sets: "rule set",
   reviewer_route: "reviewer route",
+  script: "the script (upload it first)",
   main_file: "main content file",
   content: "content file or caption",
   caption: "caption",

@@ -57,6 +57,17 @@ const FILTERS: { v: PostFilter; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 /** One thing waiting on the creator: what it is, what's wrong, when it's due, and one button. */
+/** A reviewer asked for changes to the post, or sent its script back (with or without edits). */
+const needsChanges = (s: SubmissionSummary) => s.status === "CHANGES_REQUESTED" || scriptNeedsChanges(s);
+/** The script is approved and the video is the creator's next step. */
+const awaitingVideo = (s: SubmissionSummary) => s.status === "DRAFT" && s.script_status === "APPROVED";
+
+/** A post that's still a draft, but whose script has been sent to a reviewer. */
+const scriptSent = (s: SubmissionSummary) =>
+  s.status === "DRAFT" && ["IN_REVIEW", "EDITS_PROPOSED", "CHANGES_REQUESTED", "APPROVED"].includes(s.script_status ?? "");
+/** When it went to a reviewer: the post's submission, or (for a script) when it was last worked on. */
+const sentAt = (s: SubmissionSummary) => new Date((s.submitted_at ?? s.updated_at) as string);
+
 function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
   const scriptChanges = scriptNeedsChanges(s);
   const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
@@ -130,7 +141,7 @@ function PostRow({ s }: { s: SubmissionSummary }) {
         </div>
       </td>
       <td className="py-3 pl-3 pr-4 text-right text-sm text-muted-foreground whitespace-nowrap">
-        {s.submitted_at ? format(new Date(s.submitted_at), "MMM d") : "–"}
+        {s.submitted_at || scriptSent(s) ? format(sentAt(s), "MMM d") : "–"}
       </td>
     </tr>
   );
@@ -165,28 +176,35 @@ export default function CreatorDashboard() {
   const nextSteps = useMemo(() => {
     const due = (s: SubmissionSummary) => (s.due_at ? new Date(s.due_at).getTime() : Infinity);
     return [
-      ...mine.filter((s) => s.status === "CHANGES_REQUESTED").sort((a, b) => due(a) - due(b)),
+      ...mine.filter((s) => needsChanges(s) || awaitingVideo(s)).sort((a, b) => due(a) - due(b)),
       // A draft whose script is already with a reviewer is waiting on them, not on the creator.
-      ...mine.filter((s) => s.status === "DRAFT" && s.script_status !== "IN_REVIEW").sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
+      ...mine.filter((s) => s.status === "DRAFT" && s.script_status !== "IN_REVIEW" && !awaitingVideo(s)).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     ];
   }, [mine]);
 
-  const changes = mine.filter((s) => s.status === "CHANGES_REQUESTED");
-  const inReview = mine.filter((s) => s.status === "IN_REVIEW");
+  // Changes to make on the post, or on its script after a reviewer looked at it.
+  const changes = mine.filter(needsChanges);
+  // What to act on now: changes to make, and approved scripts waiting for their video. Soonest due first.
+  const actions = mine
+    .filter((s) => needsChanges(s) || awaitingVideo(s))
+    .sort((a, b) => (a.due_at ? new Date(a.due_at).getTime() : Infinity) - (b.due_at ? new Date(b.due_at).getTime() : Infinity));
+  // With a reviewer: the post, or a script sent for review (a draft until it's approved).
+  const inReview = mine.filter((s) => s.status === "IN_REVIEW" || (s.status === "DRAFT" && s.script_status === "IN_REVIEW"));
   const scheduled = mine.filter((s) => statusOf(s) === "SCHEDULED").length;
   const oldestInReview = inReview.reduce<Date | null>((oldest, s) => {
     const at = s.submitted_at ? new Date(s.submitted_at) : null;
     return at && (!oldest || at < oldest) ? at : oldest;
   }, null);
-  const soonestDue = dueLabel(changes[0]?.due_kind === "REVISION" ? changes[0]?.due_at : null);
+  const soonestDue = dueLabel(actions[0]?.due_kind === "REVISION" || actions[0]?.due_kind === "VIDEO" ? actions[0]?.due_at : null);
 
   const [filter, setFilter] = useState<PostFilter>("all");
   const sent = useMemo(
     () =>
       mine
-        .filter((s) => s.status !== "DRAFT" && s.submitted_at)
-        .filter((s) => filter === "all" || s.status === filter)
-        .sort((a, b) => new Date(b.submitted_at!).getTime() - new Date(a.submitted_at!).getTime()),
+        .filter((s) => (s.status !== "DRAFT" && s.submitted_at) || scriptSent(s))
+        // A script with a reviewer counts as in review; an approved script isn't an approved post.
+        .filter((s) => filter === "all" || s.status === filter || (filter === "IN_REVIEW" && s.script_status === "IN_REVIEW" && scriptSent(s)))
+        .sort((a, b) => sentAt(b).getTime() - sentAt(a).getTime()),
     [mine, filter]
   );
 
@@ -239,9 +257,9 @@ export default function CreatorDashboard() {
       {/* At a glance */}
       <section aria-label="Your posts at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
-          label="Needs your changes"
-          value={loading ? "–" : changes.length}
-          note={soonestDue?.text ?? (changes.length ? null : "All clear")}
+          label="Needs your action"
+          value={loading ? "–" : actions.length}
+          note={soonestDue?.text ?? (actions.length ? `${changes.length} to fix · ${actions.length - changes.length} to film` : "All clear")}
           noteTone={soonestDue?.urgent ? "red" : soonestDue ? "amber" : "muted"}
         />
         <StatCard

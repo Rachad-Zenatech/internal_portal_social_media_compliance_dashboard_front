@@ -18,7 +18,10 @@ export default function ScriptStageCard({
   canEdit,
   onSend,
   sending = false,
+  invalid = false,
 }: {
+  /** The script is missing and the creator tried to send: outline the card in red. */
+  invalid?: boolean;
   submissionId: string | null;
   stage?: ScriptStage;
   onAddScript: () => void;
@@ -57,9 +60,16 @@ export default function ScriptStageCard({
   }
 
   return (
-    <div className="mb-3 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-500/30 dark:bg-blue-500/5">
+    <div
+      className={`mb-3 flex flex-col gap-3 rounded-xl border p-4 ${
+        invalid ? "border-red-500 bg-red-50/40 dark:bg-red-500/5" : "border-blue-200 bg-blue-50/50 dark:border-blue-500/30 dark:bg-blue-500/5"
+      }`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-foreground">Script first</p>
+        <p className="text-sm font-semibold text-foreground">
+          Script first <span className="text-red-600" aria-label="required">*</span>
+          {invalid && <span className="ml-2 text-xs font-medium text-red-600">Upload the script to continue</span>}
+        </p>
         <StageSteps status={status} compact />
       </div>
       <Body

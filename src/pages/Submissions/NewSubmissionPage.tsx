@@ -796,6 +796,8 @@ export default function NewSubmissionPage() {
     audience: audiences.length === 0,
     region: !region,
     platforms: platforms.length === 0,
+    // A video post starts with its script: it has to be uploaded (and then approved) before anything else is sent.
+    script: scriptFirst && !scriptStage.isLoading && !scriptStage.data?.file_name && !(scriptStage.data?.versions.length ?? 0),
     // While the script is still being approved, the video and the caption aren't asked for yet.
     main_file: !videoLocked && MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
     // Every post needs a caption: the score and the sentiment analysis read it first.
@@ -1400,6 +1402,7 @@ export default function NewSubmissionPage() {
                 onAddScript={() => scriptInputRef.current?.click()}
                 onSend={submit}
                 sending={submitting}
+                invalid={isMissing("script")}
               />
             )}
             {/* Two ways to add content: upload files, or import a Canva design. */}
