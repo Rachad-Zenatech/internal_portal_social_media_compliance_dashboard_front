@@ -2685,6 +2685,7 @@ export default function VideoComplianceScannerPage() {
                               ruleNumber={v.rule_number}
                               currentVersion={activeVideo.currentVersion ?? 1}
                               canDismiss={Boolean(activeVideo.canReview) && !viewingOld}
+                              evidence={v.status === "EVIDENCE_REQUIRED"}
                             />
                           )}
                         </div>

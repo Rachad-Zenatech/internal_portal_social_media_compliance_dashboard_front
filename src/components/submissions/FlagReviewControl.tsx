@@ -14,6 +14,7 @@ const REASONS: { value: FlagDismissReason; label: string; hint: string }[] = [
   { value: "DIFFERENT_MEANING", label: "Different meaning", hint: 'e.g. "an army of volunteers"' },
   { value: "ACCEPTABLE_IN_CONTEXT", label: "Acceptable in context", hint: "The wording is fine here" },
   { value: "RULE_TOO_BROAD", label: "Rule is too broad", hint: "The phrase catches too much; the rule needs fixing" },
+  { value: "EVIDENCE_ON_FILE", label: "Evidence is on file", hint: "The claim is backed up; say where the evidence is below" },
   { value: "OTHER", label: "Other", hint: "Say why below" },
 ];
 
@@ -27,6 +28,7 @@ export default function FlagReviewControl({
   ruleNumber,
   currentVersion,
   canDismiss,
+  evidence = false,
 }: {
   submissionId: string;
   /** The version in review; dismissals belong to one version. */
@@ -35,12 +37,14 @@ export default function FlagReviewControl({
   ruleNumber: string;
   /** A reviewer looking at the version in review. */
   canDismiss: boolean;
+  /** The flag is a claim that needs a source: the way to clear it is to confirm the evidence is on file. */
+  evidence?: boolean;
 }) {
   const { forCurrent, dismiss, restore, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
   const review = forCurrent.get(ruleId);
   const right = confirmed.get(ruleId);
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<FlagDismissReason>("NEGATED");
+  const [reason, setReason] = useState<FlagDismissReason>(evidence ? "EVIDENCE_ON_FILE" : "NEGATED");
   const [note, setNote] = useState("");
 
   if (review) {
@@ -104,31 +108,36 @@ export default function FlagReviewControl({
           <button
             type="button"
             onClick={() => {
-              setReason("NEGATED");
+              setReason(evidence ? "EVIDENCE_ON_FILE" : "NEGATED");
               setNote("");
               setOpen(true);
             }}
-            title="This flag is a false alarm. It is kept as an example of what the rule should not catch."
+            title={
+              evidence
+                ? "The evidence for this claim is on file. The points it cost come back."
+                : "This flag is a false alarm. It is kept as an example of what the rule should not catch."
+            }
             className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
           >
-            <ShieldOff className="w-3.5 h-3.5" /> Dismiss as false alarm
+            <ShieldOff className="w-3.5 h-3.5" /> {evidence ? "Evidence is on file" : "Dismiss as false alarm"}
           </button>
         )}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle className="text-base">Dismiss the {ruleNumber} flag?</DialogTitle>
+            <DialogTitle className="text-base">{evidence ? `Is the evidence for the ${ruleNumber} claim on file?` : `Dismiss the ${ruleNumber} flag?`}</DialogTitle>
             <DialogDescription className="text-xs">
-              The score stays as the rulebook found it; your call is recorded beside it with the reason, counts toward how noisy
-              this rule is, and is kept as an example so the check learns what this rule should not catch.
+              {evidence
+                ? "The points this claim cost come back, and the note below is recorded so anyone can find the evidence."
+                : "The score stays as the rulebook found it; your call is recorded beside it with the reason, counts toward how noisy this rule is, and is kept as an example so the check learns what this rule should not catch."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Why doesn't it apply?</Label>
               <div className="space-y-1">
-                {REASONS.map((r) => (
+                {REASONS.filter((r) => r.value !== "EVIDENCE_ON_FILE" || evidence).map((r) => (
                   <label key={r.value} className="flex cursor-pointer items-start gap-2 rounded-md border border-border/70 px-2.5 py-1.5 text-xs has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/60 dark:has-[:checked]:bg-blue-500/10">
                     <input type="radio" name="dismiss-reason" className="mt-0.5 accent-current" checked={reason === r.value} onChange={() => setReason(r.value)} />
                     <span>
@@ -141,7 +150,7 @@ export default function FlagReviewControl({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dismiss-note" className="text-xs font-semibold">
-                Note {reason === "OTHER" ? "" : "(optional)"}
+                Note {reason === "OTHER" || reason === "EVIDENCE_ON_FILE" ? "" : "(optional)"}
               </Label>
               <Textarea id="dismiss-note" rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} className="text-xs" />
             </div>
@@ -153,7 +162,7 @@ export default function FlagReviewControl({
             <Button
               size="sm"
               className="text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white"
-              disabled={dismiss.isPending || (reason === "OTHER" && !note.trim())}
+              disabled={dismiss.isPending || ((reason === "OTHER" || reason === "EVIDENCE_ON_FILE") && !note.trim())}
               onClick={() => dismiss.mutate({ ruleId, reason, note: note.trim() || null }, { onSuccess: () => setOpen(false) })}
             >
               {dismiss.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Dismiss flag

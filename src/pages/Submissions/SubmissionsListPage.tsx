@@ -541,6 +541,7 @@ function ComplianceView({ sub }: { sub: Submission }) {
                 ruleNumber={v.rule_number}
                 currentVersion={sub.current_version}
                 canDismiss
+                evidence={v.status === "EVIDENCE_REQUIRED"}
               />
             </div>
           ))}

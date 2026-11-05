@@ -469,7 +469,7 @@ export interface VersionView {
   review_job?: ReviewJob | null;
 }
 
-export type FlagDismissReason = "NEGATED" | "DIFFERENT_MEANING" | "ACCEPTABLE_IN_CONTEXT" | "RULE_TOO_BROAD" | "OTHER";
+export type FlagDismissReason = "NEGATED" | "DIFFERENT_MEANING" | "ACCEPTABLE_IN_CONTEXT" | "RULE_TOO_BROAD" | "EVIDENCE_ON_FILE" | "OTHER";
 
 /** A reviewer's dismissal of an automated compliance flag on one version. */
 export interface FlagReview {

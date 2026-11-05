@@ -994,6 +994,7 @@ function ReviewPanel({
                         ruleId={f.v.rule_id}
                         ruleNumber={f.v.rule_number}
                         canDismiss={canReview}
+                        evidence={statusOf(f.v) === "EVIDENCE_REQUIRED"}
                       />
                     )}
                   </article>

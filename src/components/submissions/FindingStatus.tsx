@@ -38,7 +38,7 @@ export const FINDING_META: Record<FindingStatus, Meta> = {
   EVIDENCE_REQUIRED: {
     label: "Evidence required",
     group: "Evidence required",
-    hint: "A factual claim that needs a source before it goes out. Doesn't lower the score or stop approval.",
+    hint: "A factual claim that needs a source before it goes out. Costs a few points until a reviewer confirms the evidence is on file; doesn't stop approval.",
     pill: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
     card: "border-sky-500/30 bg-sky-500/5 hover:border-sky-500/60",
   },
@@ -157,7 +157,7 @@ export function OtherFindings({ violations, className = "" }: { violations: Comp
       {warnings.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-foreground">
-            Check before publishing <span className="font-normal text-muted-foreground">· doesn't lower the score or stop approval</span>
+            Check before publishing <span className="font-normal text-muted-foreground">· a claim that needs a source costs a few points until its evidence is confirmed</span>
           </p>
           <ul className="space-y-3">{warnings.map(row)}</ul>
         </div>
