@@ -1137,7 +1137,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleCopyJson` (fn)
     - `stats` (fn) - KPI Calculations
 
-## src/pages/Performance/PostPerformancePage.tsx (676 lines) - post performance page (pages  performance)
+## src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
+- `AppliedRange` (type)
+- `rangeDays` (const)
+- `rangeLabel` (const)
+- `CustomRangePicker` (function) - A pill that opens a two-month calendar to pick a start and end day; the range only applies on Apply.
 - `pct` (const)
 - `platformLabel` (const)
 - `metricName` (const) - The platform's own name for a metric (e.g.
@@ -1427,7 +1431,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ContextEntryInput` (export interface)
 - `ContextEntry` (export interface)
 
-## src/types/performance.ts (121 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
+## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - `PostHealth` (export type)
 - `CommentSample` (export interface)
 - `PostMetric` (export type) - A metric a platform's API can report for a post.

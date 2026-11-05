@@ -124,7 +124,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Dashboard/Dashboard.tsx (453 lines) - dashboard (pages  dashboard)
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
-- src/pages/Performance/PostPerformancePage.tsx (676 lines) - post performance page (pages  performance)
+- src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - src/pages/Submissions/NewSubmissionPage.tsx (2041 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (443 lines) - script changes page (pages  submissions)
@@ -148,7 +148,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/types/canva.ts (20 lines) - The user's Canva account.
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
 - src/types/context.ts (26 lines) - Kinds of Messaging Context the content analysis is given.
-- src/types/performance.ts (121 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
+- src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - src/types/publicMood.ts (151 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/script.ts (81 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
