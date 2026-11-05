@@ -28,6 +28,7 @@ import type {
   SubmissionFileKind,
   SubmissionHistory,
   SubmissionOptions,
+  ReviewerOption,
   SubmissionSummary,
   SubmissionUpdate,
   SubmitResult,
@@ -37,6 +38,13 @@ const quiet = { skipGlobalLoading: true };
 
 export const submissionService = {
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
+
+  /** Reviewers and super admins the content can be sent to: on any of these brands, or everyone when there are none. */
+  reviewers: (brands: string[] = []) => {
+    const q = new URLSearchParams();
+    brands.forEach((b) => q.append("brand_code", b));
+    return apiClient.get<ReviewerOption[]>(`/api/submissions/reviewers${brands.length ? `?${q.toString()}` : ""}`, quiet);
+  },
 
   /** "all" = everyone's content (super admins and Content Managers only). */
   list: (status?: string, scope: "mine" | "all" = "mine") => {

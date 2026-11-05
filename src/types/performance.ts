@@ -113,6 +113,9 @@ export interface PerformanceReport {
 
 export interface PerformanceFilters {
   days: number;
+  /** A custom range (both as yyyy-MM-dd, end included) replaces the last `days` days. */
+  start?: string;
+  end?: string;
   platform?: string;
   brand?: string;
   /** true: only your posts; false: the whole team's; undefined: the default for your role. */

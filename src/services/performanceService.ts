@@ -2,8 +2,8 @@ import { apiClient } from "@/services/apiClient";
 import type { PerformanceFilters, PerformanceReport } from "@/types/performance";
 
 export const performanceService = {
-  report: ({ days, platform, brand, mine }: PerformanceFilters) => {
-    const params = new URLSearchParams({ days: String(days) });
+  report: ({ days, start, end, platform, brand, mine }: PerformanceFilters) => {
+    const params = new URLSearchParams(start && end ? { start, end } : { days: String(days) });
     if (platform) params.set("platform", platform);
     if (brand) params.set("brand", brand);
     // Left out, the server picks: the team's posts for reviewers and managers, your own for creators.

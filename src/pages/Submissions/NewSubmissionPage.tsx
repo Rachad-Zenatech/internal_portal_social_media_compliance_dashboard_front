@@ -32,6 +32,7 @@ import {
   MessageSquareText,
   Redo2,
   Save,
+  Search,
   Send,
   Sparkles,
   Underline,
@@ -226,6 +227,9 @@ function MultiSelect<T extends string>({
   getLabel = (v) => v,
   invalid,
   compact,
+  searchable,
+  getSearchText,
+  selectAll,
 }: {
   options: T[];
   value: T[];
@@ -235,10 +239,23 @@ function MultiSelect<T extends string>({
   getLabel?: (v: T) => string;
   invalid?: boolean;
   compact?: boolean;
+  /** A search box over the options, for long lists; it matches the label and getSearchText (e.g. an email). */
+  searchable?: boolean;
+  getSearchText?: (v: T) => string;
+  /** A "Select all" row that picks (or clears) every option the search shows. */
+  selectAll?: boolean;
 }) {
+  const [query, setQuery] = useState("");
   const toggle = (opt: T) => onChange(value.includes(opt) ? value.filter((v) => v !== opt) : [...value, opt]);
+  const term = query.trim().toLowerCase();
+  const shown = term
+    ? options.filter((o) => `${getLabel(o)} ${getSearchText?.(o) ?? ""}`.toLowerCase().includes(term))
+    : options;
+  const allShownPicked = shown.length > 0 && shown.every((o) => value.includes(o));
+  const toggleAll = () =>
+    onChange(allShownPicked ? value.filter((v) => !shown.includes(v)) : [...value, ...shown.filter((o) => !value.includes(o))]);
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => !open && setQuery("")}>
       <PopoverTrigger asChild>
         <div
           role="button"
@@ -278,27 +295,59 @@ function MultiSelect<T extends string>({
         </div>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-56 p-1">
-        {options.map((opt) => {
-          const checked = value.includes(opt);
-          return (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => toggle(opt)}
-              className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted text-left"
+        {searchable && (
+          <div className="relative mb-1">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name or email"
+              className="h-8 pl-7 text-sm"
+              aria-label="Search options"
+            />
+          </div>
+        )}
+        {selectAll && shown.length > 1 && (
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm font-medium hover:bg-muted text-left border-b border-border mb-1"
+          >
+            <span
+              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                allShownPicked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
+              }`}
             >
-              <span
-                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                  checked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
-                }`}
+              {allShownPicked && <Check className="w-3 h-3" />}
+            </span>
+            {allShownPicked ? "Clear all" : term ? `Select all ${shown.length} shown` : "Select all"}
+          </button>
+        )}
+        <div className={searchable ? "max-h-64 overflow-y-auto" : undefined}>
+          {shown.map((opt) => {
+            const checked = value.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => toggle(opt)}
+                className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted text-left"
               >
-                {checked && <Check className="w-3 h-3" />}
-              </span>
-              {renderIcon?.(opt)}
-              {getLabel(opt)}
-            </button>
-          );
-        })}
+                <span
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                    checked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
+                  }`}
+                >
+                  {checked && <Check className="w-3 h-3" />}
+                </span>
+                {renderIcon?.(opt)}
+                {getLabel(opt)}
+              </button>
+            );
+          })}
+          {shown.length === 0 && <p className="px-2 py-3 text-center text-xs text-muted-foreground">No matches</p>}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -357,6 +406,8 @@ export default function NewSubmissionPage() {
   const [caption, setCaption] = useState("");
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
+  // The people it's sent to for review; none picked sends it to every reviewer on the brand.
+  const [reviewerIds, setReviewerIds] = useState<string[]>([]);
 
   // Files, checks and save status
   const [files, setFiles] = useState<SubmissionFile[]>([]);
@@ -393,6 +444,17 @@ export default function NewSubmissionPage() {
   };
 
   const accounts = useMemo(() => options?.accounts ?? [], [options]);
+
+  const reviewersQuery = useQuery({
+    queryKey: ["submission-reviewers", [...brands].sort()],
+    queryFn: () => submissionService.reviewers(brands),
+    staleTime: 60_000,
+  });
+  const reviewerOptions = useMemo(() => reviewersQuery.data ?? [], [reviewersQuery.data]);
+  // Picks who review none of the post's brands (they changed) are dropped, once those brands' reviewers are known.
+  const pickedReviewers = reviewersQuery.data
+    ? reviewerIds.filter((id) => reviewerOptions.some((r) => r.id === id))
+    : reviewerIds;
   const selectedAccounts = useMemo(
     () => accountIds.map((id) => accounts.find((a) => a.id === id)).filter((a): a is AccountOption => Boolean(a)),
     [accounts, accountIds]
@@ -483,6 +545,7 @@ export default function NewSubmissionPage() {
         setApprovalTime(s.approval_needed_by ? format(new Date(s.approval_needed_by), "HH:mm") : DEFAULT_APPROVAL_TIME);
         setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
+        setReviewerIds(s.reviewer_ids ?? []);
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
@@ -532,6 +595,7 @@ export default function NewSubmissionPage() {
       caption_text: editorRef.current?.innerText.trim() || "",
       rule_sets: ruleSets,
       reviewer_route: reviewers,
+      reviewer_ids: pickedReviewers,
       clear_fields: clear,
     };
   };
@@ -803,6 +867,7 @@ export default function NewSubmissionPage() {
     // Every post needs a caption: the score and the sentiment analysis read it first.
     caption: !videoLocked && !caption.trim(),
     rule_sets: ruleSets.length === 0,
+    reviewer_ids: pickedReviewers.length === 0,
     approval_needed_by: !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
@@ -1353,6 +1418,52 @@ export default function NewSubmissionPage() {
                     </div>
                   </PopoverContent>
                 </Popover>
+              </Field>
+              <Field
+                label="Send to reviewers"
+                required
+                error={errorFor("reviewer_ids", "Pick at least one reviewer")}
+                className="md:col-span-2 lg:col-span-6"
+              >
+                {reviewersQuery.isSuccess && reviewerOptions.length === 0 ? (
+                  <div
+                    className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${
+                      isMissing("reviewer_ids") ? "border-red-500" : "border-input"
+                    }`}
+                  >
+                    No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
+                  </div>
+                ) : (
+                  <MultiSelect<string>
+                    options={reviewerOptions.map((r) => r.id)}
+                    value={pickedReviewers}
+                    onChange={(ids) => {
+                      setReviewerIds(ids);
+                      markEdited();
+                    }}
+                    placeholder={
+                      reviewersQuery.isLoading
+                        ? "Loading reviewers..."
+                        : reviewersQuery.isError
+                        ? "Couldn't load reviewers"
+                        : "Pick reviewers"
+                    }
+                    getLabel={(id) => {
+                      const r = reviewerOptions.find((x) => x.id === id);
+                      return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
+                    }}
+                    getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
+                    renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
+                    invalid={isMissing("reviewer_ids")}
+                    searchable
+                    selectAll
+                  />
+                )}
+                <p className="text-[11px] text-muted-foreground">
+                  {reviewersQuery.isSuccess && reviewerOptions.length === 0
+                    ? "Add users and give them a reviewer role (System & Security) to send them content."
+                    : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
+                </p>
               </Field>
             </div>
           </Section>
