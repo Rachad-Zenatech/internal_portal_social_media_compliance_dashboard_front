@@ -160,6 +160,9 @@ const DUE_LABELS: Record<DueFilter, string> = {
   week: "Due this week",
   none: "No deadline",
 };
+// The list is ordered by when each item was sent for review (deadlines have their own filter).
+type SortOrder = "newest" | "oldest";
+const SORT_LABELS: Record<SortOrder, string> = { newest: "Newest first", oldest: "Oldest first" };
 const CHECK_LABELS: Record<CheckFilter, string> = {
   any: "Any result",
   failing: "Failing (red or under 60)",
@@ -1198,6 +1201,7 @@ export default function ContentScreenerPage() {
   const postTab: QueueTab = tab;
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [sort, setSort] = useState<SortOrder>("newest");
   // Opened from elsewhere: ?id=..., or the post another page picked for the screener.
   const [selectedId, setSelectedId] = useState<string | null>(
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
@@ -1243,24 +1247,16 @@ export default function ContentScreenerPage() {
       ),
     [scripts.data, q]
   );
-  // Scripts and posts in one list, by due date (soonest first, overdue at the top, no deadline last); the Done tab by
-  // when each was decided, newest first.
+  // Scripts and posts in one list, by when each was sent for review, newest or oldest first; rows without a date go last.
   const rows = useMemo(() => {
+    const time = (d?: string | null) => (d ? new Date(d).getTime() : null);
     const all: ({ kind: "script"; s: ScriptQueueItem; at: number | null } | { kind: "post"; s: ReviewQueueItem; at: number | null })[] = [
-      ...scriptItems.map((s) => ({
-        kind: "script" as const,
-        s,
-        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : s.approval_needed_by ? new Date(s.approval_needed_by).getTime() : null,
-      })),
-      ...visible.map((s) => ({
-        kind: "post" as const,
-        s,
-        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : deadlineOf(s)?.getTime() ?? null,
-      })),
+      ...scriptItems.map((s) => ({ kind: "script" as const, s, at: time(s.sent_at) })),
+      ...visible.map((s) => ({ kind: "post" as const, s, at: time(s.submitted_at) })),
     ];
-    const sign = tab === "done" ? -1 : 1;
+    const sign = sort === "newest" ? -1 : 1;
     return all.sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)));
-  }, [scriptItems, visible, tab]);
+  }, [scriptItems, visible, sort]);
   // One selection across posts and scripts: whatever was picked last, else the first row of the list.
   const pickedScript = scriptItems.find((s) => s.id === selectedScriptId) ?? null;
   const firstRow = rows[0];
@@ -1580,6 +1576,23 @@ export default function ContentScreenerPage() {
               </PopoverTrigger>
               <PopoverContent align="end" className="w-72 gap-3 p-3">
                 <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="f-sort" className="text-xs font-medium text-muted-foreground">
+                    Date sent
+                  </Label>
+                  <Select value={sort} onValueChange={(v) => setSort(v as SortOrder)}>
+                    <SelectTrigger id="f-sort" size="sm" className="h-8 w-full text-[13px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(["newest", "oldest"] as const).map((o) => (
+                        <SelectItem key={o} value={o} className="text-[13px]">
+                          {SORT_LABELS[o]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Brand</Label>
                   <MultiSelectFilter
                     options={brands.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
@@ -1659,7 +1672,9 @@ export default function ContentScreenerPage() {
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
             ? "Loading..."
-            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}${scripts.isLoading ? " · loading scripts..." : ""}`}
+            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : ""} · sent ${
+                sort === "newest" ? "newest" : "oldest"
+              } first${scripts.isLoading ? " · loading scripts..." : ""}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           {scripts.isError && (

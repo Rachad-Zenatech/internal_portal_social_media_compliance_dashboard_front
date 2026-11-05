@@ -6,7 +6,8 @@ Scan this index first to locate the right file and description without loading s
 For detailed function and route definitions, see `.agents/code-map.md`.
 
 - src/App.tsx (169 lines) - app
-- src/components/AppShell/AppShell.tsx (61 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
+- src/components/AppShell/AiStatusBanner.tsx (45 lines) - ai status banner (components  app shell)
+- src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - src/components/AppShell/Breadcrumbs.tsx (155 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
 - src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
@@ -18,17 +19,17 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
 - src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
-- src/components/dashboard/CreatorDashboard.tsx (378 lines) - creator dashboard (components dashboard)
+- src/components/dashboard/CreatorDashboard.tsx (396 lines) - creator dashboard (components dashboard)
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - src/components/dashboard/dashboardParts.tsx (400 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
-- src/components/script/HighlightableText.tsx (502 lines) - Scroll to the n-th place any of these phrases appears and flash it.
+- src/components/script/HighlightableText.tsx (504 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - src/components/script/NoteField.tsx (42 lines) - Called when the box becomes empty or gets text.
 - src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptEditor.tsx (242 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptReviewWorkspace.tsx (921 lines) - script review workspace (components script)
-- src/components/script/ScriptStageCard.tsx (256 lines) - script stage card (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (922 lines) - script review workspace (components script)
+- src/components/script/ScriptStageCard.tsx (266 lines) - The script is missing and the creator tried to send: outline the card in red.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
@@ -38,10 +39,10 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/CheckCoverage.tsx (152 lines) - check coverage (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
-- src/components/submissions/FlagReviewControl.tsx (167 lines) - flag review control (components submissions)
+- src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
-- src/components/submissions/PostPreview.tsx (336 lines) - post preview (components submissions)
+- src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
 - src/components/submissions/ReviewDecisionPanel.tsx (361 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
@@ -50,10 +51,10 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
 - src/components/submissions/SentimentPanel.tsx (1055 lines) - sentiment panel (components submissions)
 - src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
-- src/components/submissions/submissionUi.tsx (434 lines) - submission ui (components submissions)
+- src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
-- src/components/ui/MultiSelectFilter.tsx (98 lines) - multi select filter (components ui)
+- src/components/ui/MultiSelectFilter.tsx (108 lines) - multi select filter (components ui)
 - src/components/ui/ResizeHandle.tsx (182 lines) - A panel's width, remembered per browser.
 - src/components/ui/alert-dialog.tsx (198 lines) - alert dialog (components ui)
 - src/components/ui/badge.tsx (50 lines) - badge (components ui)
@@ -107,9 +108,9 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Auth/Login.tsx (225 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1762 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1778 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (412 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
-- src/pages/Compliance/VideoComplianceScannerPage.tsx (2895 lines) - video compliance scanner page (pages  compliance)
+- src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - src/pages/Configurations/OAuthIntegrations.tsx (802 lines) - o auth integrations (pages  configurations)
@@ -119,18 +120,18 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (626 lines) - content calendar page (pages  content calendar)
+- src/pages/ContentCalendar/ContentCalendarPage.tsx (621 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (295 lines) - publish draft page (pages  content calendar)
 - src/pages/Dashboard/Dashboard.tsx (453 lines) - dashboard (pages  dashboard)
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2041 lines) - new submission page (pages  submissions)
-- src/pages/Submissions/ScriptChangesPage.tsx (443 lines) - script changes page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2046 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/ScriptChangesPage.tsx (549 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (657 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1607 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1636 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
