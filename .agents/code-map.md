@@ -258,6 +258,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/CheckCoverage.tsx (152 lines) - check coverage (components submissions)
 - `CheckCoverage` (export function) - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
 
+## src/components/submissions/ComplianceView.tsx (105 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+- `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+
 ## src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - `DeleteDraftTarget` (export interface)
 - `DeleteDraftDialog` (export function) - Confirm and delete a draft.
@@ -1186,7 +1189,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2220 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2244 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1400,7 +1403,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptService.ts (44 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (238 lines) - submission service (services)
+## src/services/submissionService.ts (272 lines) - submission service (services)
 - `submissionService` (export const)
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -1493,7 +1496,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (544 lines) - AD: paid social ad.
+## src/types/submission.ts (559 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
@@ -1532,3 +1535,4 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ReviewQueueCounts` (export type) - Posts in each Screener tab, plus scripts waiting for a reviewer.
 - `DashboardSummary` (export interface) - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
 - `SubmitResult` (export interface)
+- `CheckAttempt` (export interface) - One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback).

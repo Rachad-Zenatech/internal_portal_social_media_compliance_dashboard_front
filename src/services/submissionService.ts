@@ -1,4 +1,5 @@
-import { apiClient } from "@/services/apiClient";
+import { BASE_URL, apiClient } from "@/services/apiClient";
+import { ApiError, handleResponse } from "@/services/helper";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
 import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
 import type {
@@ -11,6 +12,7 @@ import type {
   SentimentLevel,
 } from "@/types/sentiment";
 import type {
+  CheckAttempt,
   ContentType,
   DashboardSummary,
   FlagDismissReason,
@@ -80,6 +82,38 @@ export const submissionService = {
     apiClient.post<SubmissionFile>(`/api/submissions/${id}/files/${fileId}/transcribe`, undefined, quiet),
 
   runCheck: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/check`, undefined, quiet),
+
+  /** The same check, streamed: onAttempt hears each AI model call as it starts and ends (fallbacks included);
+   * resolves with the post and its new check once every step is done. */
+  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void): Promise<Submission> {
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/api/submissions/${id}/check/stream`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/x-ndjson", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    if (!res.ok || !res.body) await handleResponse<never>(res);
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffered = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      buffered += decoder.decode(value, { stream: !done });
+      const lines = buffered.split("\n");
+      buffered = done ? "" : lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const event = JSON.parse(line) as
+          | ({ event: "attempt" } & CheckAttempt)
+          | { event: "done"; submission: Submission }
+          | { event: "failed"; status: number; detail: unknown };
+        if (event.event === "attempt") onAttempt(event);
+        else if (event.event === "done") return event.submission;
+        else throw new ApiError(typeof event.detail === "string" ? event.detail : "The compliance check couldn't run", event.status, event.detail);
+      }
+      if (done) throw new Error("The compliance check stopped before it finished. Try again.");
+    }
+  },
 
   submit: (id: string) =>
     apiClient.post<SubmitResult>(`/api/submissions/${id}/submit`, undefined, {

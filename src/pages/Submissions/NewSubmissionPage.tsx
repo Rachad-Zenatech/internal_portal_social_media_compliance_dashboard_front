@@ -68,6 +68,7 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceView from "@/components/submissions/ComplianceView";
+import { CheckModelsUsed, CheckProgress } from "@/components/submissions/CheckProgress";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
@@ -89,6 +90,7 @@ import { submissionService } from "@/services/submissionService";
 import { ApiError } from "@/services/helper";
 import type {
   AccountOption,
+  CheckAttempt,
   ContentType,
   Submission,
   SubmissionFile,
@@ -447,6 +449,10 @@ export default function NewSubmissionPage() {
   const [checkedSub, setCheckedSub] = useState<Submission | null>(null);
   const [checking, setChecking] = useState(false);
   const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
+  // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
+  const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
+  const [checkStartedAt, setCheckStartedAt] = useState(0);
+  const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -907,12 +913,19 @@ export default function NewSubmissionPage() {
       toast.error("Add a title or caption before running the compliance check.");
       return;
     }
+    const started = Date.now();
     setChecking(true);
+    setCheckAttempts([]);
+    setCheckStartedAt(started);
     try {
       const id = await save({ force: true });
-      const updated = await submissionService.runCheck(id!);
+      // Each model call is shown as it happens (fallbacks too); the old result stays hidden until the new one is in.
+      const updated = await submissionService.runCheckStream(id!, (a) =>
+        setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a]))
+      );
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
+      setLastCheckMs(Date.now() - started);
     } catch (err) {
       toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
     } finally {
@@ -1966,16 +1979,27 @@ export default function NewSubmissionPage() {
                         {hasCheck ? "Check again" : "Run compliance check"}
                       </Button>
                     </div>
-                    {checkStale && (
-                      <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-                        You've edited the post since this check. Check again to see the score for your latest changes.
-                      </p>
-                    )}
-                    {checkedSub?.latest_check ? (
-                      <ComplianceView
-                        sub={checkedSub}
-                        outdatedText="The rulebook has changed since this check. Check again to use the current rules."
-                      />
+                    {checking ? (
+                      <CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />
+                    ) : checkedSub?.latest_check ? (
+                      <>
+                        {checkStale && (
+                          <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                            You've edited the post since this check. Check again to see the score for your latest changes.
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground">
+                          {lastCheckMs != null && !checkStale ? "New result" : "Last result"}
+                          {checkedSub.latest_check.checked_at
+                            ? ` · checked ${format(new Date(checkedSub.latest_check.checked_at), "MMM d, h:mm:ss a")}`
+                            : ""}
+                        </p>
+                        {lastCheckMs != null && <CheckModelsUsed attempts={checkAttempts} durationMs={lastCheckMs} />}
+                        <ComplianceView
+                          sub={checkedSub}
+                          outdatedText="The rulebook has changed since this check. Check again to use the current rules."
+                        />
+                      </>
                     ) : (
                       <p className="text-xs text-muted-foreground">
                         Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
