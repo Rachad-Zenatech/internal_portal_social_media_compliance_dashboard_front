@@ -51,6 +51,7 @@ import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, brandCodes,
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
+import SourceChecks from "@/components/submissions/SourceChecks";
 import type { ReviewJob, StoredCheck, Submission, SubmissionVersion } from "@/types/submission";
 
 const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
@@ -202,6 +203,7 @@ function JobCard({ job }: { job: ReviewJob }) {
       )}
       {check && <OtherFindings violations={check.violations} />}
       {check && <CheckCoverage check={check} />}
+      {check && <SourceChecks checks={check.source_checks} />}
       {job.manual_checks && job.manual_checks.length > 0 && (
         <p className="text-[11px] text-muted-foreground">
           <span className="font-semibold text-foreground">Confirmed by the reviewer:</span>{" "}

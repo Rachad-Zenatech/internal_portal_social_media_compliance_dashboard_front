@@ -4,6 +4,7 @@ import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import SourceChecks from "@/components/submissions/SourceChecks";
 import {
   AI_UNAVAILABLE_MESSAGE,
   AiUnavailableBadge,
@@ -60,6 +61,7 @@ export default function ComplianceView({
         <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">{AI_UNAVAILABLE_MESSAGE}</p>
       )}
       <CheckCoverage check={check} />
+      <SourceChecks checks={check.source_checks} />
       {sub.check_outdated && (
         <p className="rounded-md bg-muted/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
           {sub.status === "APPROVED" || sub.status === "REJECTED"

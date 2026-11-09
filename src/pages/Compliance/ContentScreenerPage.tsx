@@ -50,6 +50,7 @@ import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
+import SourceChecks from "@/components/submissions/SourceChecks";
 import {
   ContextNote,
   FINDING_META,
@@ -860,6 +861,7 @@ function ReviewPanel({
               {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
             </p>
           )}
+          <SourceChecks checks={check?.source_checks} />
         </div>
       </div>
 
