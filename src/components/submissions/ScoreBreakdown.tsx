@@ -3,7 +3,8 @@ import { Ban } from "lucide-react";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 
 /**
- * How the compliance score was reached: 100, minus each finding's penalty, capped when a critical rule is broken.
+ * How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and
+ * checks the AI thinks are likely breaches), capped when a critical rule is broken.
  * Renders nothing for a clean check, or for checks saved before penalties were recorded.
  */
 export default function ScoreBreakdown({
@@ -13,8 +14,18 @@ export default function ScoreBreakdown({
   check: Pick<ComplianceCheckResponse, "score" | "violations" | "blocked" | "score_cap" | "raw_score"> & { ai_unavailable?: boolean };
   className?: string;
 }) {
-  // Only violations cost points; warnings and cleared triggers are listed elsewhere.
-  const scored = check.violations.filter((v) => v.penalty != null && (v.status ?? "VIOLATION") === "VIOLATION");
+  // Violations always list here; a warning only when it cost points. Cleared triggers never do.
+  const scored = check.violations.filter((v) => {
+    const status = v.status ?? "VIOLATION";
+    if (v.penalty == null || status === "CLEARED") return false;
+    return status === "VIOLATION" || v.penalty > 0 || !!v.counted_with;
+  });
+  const why = (v: (typeof scored)[number]) => {
+    if (v.status === "EVIDENCE_REQUIRED") return "needs a source";
+    if (v.status !== "NEEDS_REVIEW") return null;
+    const sure = v.evaluation?.confidence;
+    return sure != null ? `to check · AI ${Math.round(sure * 100)}% sure it's a breach` : "to check";
+  };
   if (!check.blocked && scored.length === 0) return null;
   return (
     <div className={`space-y-1.5 text-[11px] ${className}`}>
@@ -38,6 +49,11 @@ export default function ScoreBreakdown({
               <span className="min-w-0">
                 <span className="font-semibold text-foreground">{v.rule_number}</span>
                 <span className="text-muted-foreground"> · {v.kind === "MISSING_DISCLAIMER" ? "Missing disclaimer" : v.title}</span>
+                {why(v) && (
+                  <span className="ml-1.5 rounded bg-amber-100 px-1 py-px text-[10px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+                    {why(v)}
+                  </span>
+                )}
                 {v.flagged_terms.length > 0 && (
                   <span className="block truncate text-muted-foreground">{v.flagged_terms.map((t) => `"${t}"`).join(", ")}</span>
                 )}

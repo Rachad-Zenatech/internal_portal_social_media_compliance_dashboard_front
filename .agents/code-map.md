@@ -258,6 +258,14 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/CheckCoverage.tsx (152 lines) - check coverage (components submissions)
 - `CheckCoverage` (export function) - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
 
+## src/components/submissions/CheckProgress.tsx (129 lines) - What each AI step of the check is, in the creator's words.
+- `stepLabel` (const)
+- `seconds` (const)
+- `Elapsed` (function)
+- `AttemptList` (function) - Each step's model attempts in the order they ran; a model tried after another failed is a fallback.
+- `CheckProgress` (export function) - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
+- `CheckModelsUsed` (export function) - After a check: which models answered, and how many fallbacks it took.
+
 ## src/components/submissions/ComplianceView.tsx (105 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 
@@ -331,8 +339,8 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) - A flag's rule number; hovering it shows the rule that was broken.
 
-## src/components/submissions/ScoreBreakdown.tsx (75 lines) - Only violations cost points; warnings and cleared triggers are listed elsewhere.
-- `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty, capped when a critical rule is broken.
+## src/components/submissions/ScoreBreakdown.tsx (91 lines) - Violations always list here; a warning only when it cost points.
+- `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...
 
 ## src/components/submissions/SentimentPanel.tsx (1055 lines) - sentiment panel (components submissions)
 - `titleCase` (const)

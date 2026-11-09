@@ -31,7 +31,7 @@ export const FINDING_META: Record<FindingStatus, Meta> = {
   NEEDS_REVIEW: {
     label: "Needs review",
     group: "Needs review",
-    hint: "Depends on something the text can't show, such as the final footage. Doesn't lower the score or stop approval.",
+    hint: "Depends on something the text can't show, such as the final footage. Doesn't block on its own, but costs points when the AI thinks it's likely a breach (half the rule's points at 80% sure or more, 5 points from 50%), until it's fixed or dismissed.",
     pill: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
     card: "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60",
   },
