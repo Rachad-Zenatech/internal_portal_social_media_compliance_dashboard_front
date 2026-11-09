@@ -12,6 +12,10 @@ import {
   Check,
   ChevronDown,
   ClipboardList,
+  ArrowDown,
+  BarChart3,
+  RefreshCw,
+  ShieldCheck,
   Clock,
   CloudUpload,
   Download,
@@ -53,7 +57,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { MISSING_LABELS, SubmissionFileRow, audienceCodes, audienceNames, brandCodes, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
+import {
+  ANALYSING_REFETCH_MS,
+  MISSING_LABELS,
+  SubmissionFileRow,
+  audienceCodes,
+  audienceNames,
+  brandCodes,
+  isAnalysing,
+  SubmissionStatusBadge,
+} from "@/components/submissions/submissionUi";
+import ComplianceView from "@/components/submissions/ComplianceView";
+import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
@@ -427,6 +442,11 @@ export default function NewSubmissionPage() {
   const [canvaOpen, setCanvaOpen] = useState(false);
   const [suggesterOpen, setSuggesterOpen] = useState(false);
   const [reimporting, setReimporting] = useState(false);
+  // The creator's own pre-send checks: the post as last saved (it carries the rulebook check), whether one is running,
+  // and the edit count when it last ran, to say when it's out of date.
+  const [checkedSub, setCheckedSub] = useState<Submission | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -436,6 +456,7 @@ export default function NewSubmissionPage() {
   const createdIdRef = useRef<string | null>(null);
   const pendingCaptionHtml = useRef<string | null>(null);
   const captionSectionRef = useRef<HTMLDivElement | null>(null);
+  const checkSectionRef = useRef<HTMLDivElement | null>(null);
 
   const markEdited = () => {
     setEditCounter((n) => n + 1);
@@ -517,6 +538,7 @@ export default function NewSubmissionPage() {
     setStatus(s.status);
     setDueAt(s.due_kind === "REVISION" ? s.due_at ?? null : null);
     setFiles(s.files);
+    setCheckedSub(s);
   }, []);
 
   useEffect(() => {
@@ -878,6 +900,43 @@ export default function NewSubmissionPage() {
 
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
+
+  /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again. */
+  const runComplianceCheck = async () => {
+    if (!title.trim() && !caption.trim()) {
+      toast.error("Add a title or caption before running the compliance check.");
+      return;
+    }
+    setChecking(true);
+    try {
+      const id = await save({ force: true });
+      const updated = await submissionService.runCheck(id!);
+      setCheckedSub(updated);
+      setCheckedAtEdit(editCounter);
+    } catch (err) {
+      toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  // Check back while the check is still reading the post (videos, documents), so the score shows up when it's ready.
+  const checkAnalysing = isAnalysing(checkedSub?.latest_check);
+  useEffect(() => {
+    if (!checkAnalysing || !submissionId) return;
+    const t = window.setInterval(async () => {
+      try {
+        setCheckedSub(await submissionService.get(submissionId));
+      } catch {
+        // Try again on the next tick.
+      }
+    }, ANALYSING_REFETCH_MS);
+    return () => window.clearInterval(t);
+  }, [checkAnalysing, submissionId]);
+
+  const hasCheck = Boolean(checkedSub?.latest_check);
+  // Edited since the last check (a check loaded with the draft counts as current until something changes).
+  const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
 
   const submit = async () => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -1419,52 +1478,6 @@ export default function NewSubmissionPage() {
                   </PopoverContent>
                 </Popover>
               </Field>
-              <Field
-                label="Send to reviewers"
-                required
-                error={errorFor("reviewer_ids", "Pick at least one reviewer")}
-                className="md:col-span-2 lg:col-span-6"
-              >
-                {reviewersQuery.isSuccess && reviewerOptions.length === 0 ? (
-                  <div
-                    className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${
-                      isMissing("reviewer_ids") ? "border-red-500" : "border-input"
-                    }`}
-                  >
-                    No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
-                  </div>
-                ) : (
-                  <MultiSelect<string>
-                    options={reviewerOptions.map((r) => r.id)}
-                    value={pickedReviewers}
-                    onChange={(ids) => {
-                      setReviewerIds(ids);
-                      markEdited();
-                    }}
-                    placeholder={
-                      reviewersQuery.isLoading
-                        ? "Loading reviewers..."
-                        : reviewersQuery.isError
-                        ? "Couldn't load reviewers"
-                        : "Pick reviewers"
-                    }
-                    getLabel={(id) => {
-                      const r = reviewerOptions.find((x) => x.id === id);
-                      return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
-                    }}
-                    getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
-                    renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
-                    invalid={isMissing("reviewer_ids")}
-                    searchable
-                    selectAll
-                  />
-                )}
-                <p className="text-[11px] text-muted-foreground">
-                  {reviewersQuery.isSuccess && reviewerOptions.length === 0
-                    ? "Add users and give them a reviewer role (System & Security) to send them content."
-                    : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
-                </p>
-              </Field>
             </div>
           </Section>
 
@@ -1907,6 +1920,168 @@ export default function NewSubmissionPage() {
             </p>
           </Section>
           )}
+
+          <div ref={checkSectionRef} className="scroll-mt-4">
+          <Section
+            step={7}
+            title="Check & Send for Review"
+            description="Check your post yourself before a reviewer sees it. Edit and check again as often as you like, then send it when you're confident."
+          >
+            <div className="flex flex-col gap-4">
+              {videoLocked ? (
+                <p className="flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+                  <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  Your script is checked first: open it from the script card above to see its compliance score. The
+                  compliance check and sentiment analysis of the video and caption open here once the script is approved.
+                </p>
+              ) : (
+                <>
+                  {/* Compliance: the same rulebook check the reviewer sees */}
+                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Compliance check</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Regulatory, legal and brand messaging rules for the selected rule sets, audience and region.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={hasCheck && !checkStale ? "outline" : "default"}
+                        className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                        onClick={() => void runComplianceCheck()}
+                        disabled={checking || uploading.length > 0}
+                      >
+                        {checking ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : hasCheck ? (
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        ) : (
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        )}
+                        {hasCheck ? "Check again" : "Run compliance check"}
+                      </Button>
+                    </div>
+                    {checkStale && (
+                      <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                        You've edited the post since this check. Check again to see the score for your latest changes.
+                      </p>
+                    )}
+                    {checkedSub?.latest_check ? (
+                      <ComplianceView
+                        sub={checkedSub}
+                        outdatedText="The rulebook has changed since this check. Check again to use the current rules."
+                      />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
+                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <BarChart3 className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">Sentiment analysis</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          How the tone and messaging may land with your audience. Recent mood on your topics is in Market
+                          &amp; News Sentiment above.
+                        </p>
+                      </div>
+                    </div>
+                    <SentimentPanel
+                      submissionId={submissionId}
+                      beforeAnalyse={async () => {
+                        try {
+                          await save({ force: true });
+                          return true;
+                        } catch (err) {
+                          toast.error(`Couldn't save the draft: ${(err as Error).message}`);
+                          return false;
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Who it goes to, and the send itself */}
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3">
+                <Field
+                  label="Send to reviewers"
+                  required
+                  error={errorFor("reviewer_ids", "Pick at least one reviewer")}
+                >
+                  {reviewersQuery.isSuccess && reviewerOptions.length === 0 ? (
+                    <div
+                      className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${
+                        isMissing("reviewer_ids") ? "border-red-500" : "border-input"
+                      }`}
+                    >
+                      No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
+                    </div>
+                  ) : (
+                    <MultiSelect<string>
+                      options={reviewerOptions.map((r) => r.id)}
+                      value={pickedReviewers}
+                      onChange={(ids) => {
+                        setReviewerIds(ids);
+                        markEdited();
+                      }}
+                      placeholder={
+                        reviewersQuery.isLoading
+                          ? "Loading reviewers..."
+                          : reviewersQuery.isError
+                          ? "Couldn't load reviewers"
+                          : "Pick reviewers"
+                      }
+                      getLabel={(id) => {
+                        const r = reviewerOptions.find((x) => x.id === id);
+                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
+                      }}
+                      getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
+                      renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
+                      invalid={isMissing("reviewer_ids")}
+                      searchable
+                      selectAll
+                    />
+                  )}
+                  <p className="text-[11px] text-muted-foreground">
+                    {reviewersQuery.isSuccess && reviewerOptions.length === 0
+                      ? "Add users and give them a reviewer role (System & Security) to send them content."
+                      : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
+                  </p>
+                </Field>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    {videoLocked
+                      ? "Sends your script to the reviewers you picked."
+                      : !hasCheck
+                      ? "You haven't run the compliance check yet. It also runs when you send."
+                      : checkStale
+                      ? "Edited since your last check. It runs again when you send."
+                      : "Ready when you are. The reviewer sees the same check and analysis."}
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={submit}
+                    disabled={submitting || checking || uploading.length > 0}
+                    className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Section>
+          </div>
         </div>
 
         {/* ---------------- Summary ---------------- */}
@@ -2028,11 +2203,10 @@ export default function NewSubmissionPage() {
             </Button>
             <Button
               type="button"
-              onClick={submit}
-              disabled={submitting || uploading.length > 0}
+              onClick={() => checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
               className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+              <ArrowDown className="w-3.5 h-3.5" /> Check &amp; Send
             </Button>
           </div>
           {optionsQuery.isError && (
