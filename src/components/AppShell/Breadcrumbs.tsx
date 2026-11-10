@@ -62,6 +62,7 @@ export default function Breadcrumbs() {
       new: "New post",
       submissions: "My posts",
       "content-calendar": "Content calendar",
+      delegations: "Delegations",
       performance: "Post performance",
       socials: "Social accounts",
     };

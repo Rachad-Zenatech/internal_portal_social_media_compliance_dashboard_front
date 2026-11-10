@@ -41,6 +41,7 @@ import ScriptStageCard from "@/components/script/ScriptStageCard";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submissions/ReviewDecisionPanel";
+import { DelegationTrail } from "@/components/submissions/DelegateReview";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
 import { useScriptStage } from "@/hooks/useScript";
@@ -468,6 +469,11 @@ export default function SubmissionDetailPage() {
             current_version: s.current_version,
             platforms: s.platforms,
             publish_at: s.publish_at,
+            can_delegate: s.can_delegate,
+            brand_code: s.brand_code,
+            brand_codes: s.brand_codes,
+            reviewer_ids: s.reviewer_ids,
+            created_by: s.created_by,
             due_at: s.due_at,
             due_kind: s.due_kind,
             ai_unavailable: s.latest_check?.ai_unavailable,
@@ -483,6 +489,7 @@ export default function SubmissionDetailPage() {
           }}
         />
       )}
+      {s.status !== "DRAFT" && <DelegationTrail submissionId={s.id} />}
       {s.status === "IN_REVIEW" && !canReview && (
         <p className="rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-xs text-blue-900 dark:text-blue-100">
           {isCreator

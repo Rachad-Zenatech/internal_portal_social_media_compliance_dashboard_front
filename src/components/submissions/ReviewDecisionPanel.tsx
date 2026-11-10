@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
+import { DelegateReviewButton } from "@/components/submissions/DelegateReview";
 import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
 
 /** The submission fields the review controls need (works for a full Submission or a queue item). */
@@ -42,6 +43,13 @@ export interface ReviewTarget {
   ai_unavailable?: boolean;
   /** The post is still being read, so there's no score yet. */
   analysis_pending?: boolean;
+  /** The viewer may hand it to another reviewer (they stay on it and can still decide). */
+  can_delegate?: boolean;
+  brand_code?: string | null;
+  brand_codes?: string[];
+  /** Who it was sent to, so the delegate picker leaves them out. */
+  reviewer_ids?: string[];
+  created_by?: string | null;
 }
 
 type Mode = "schedule" | "now" | "changes" | null;
@@ -226,6 +234,11 @@ export default function ReviewDecisionPanel({
           <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
         </Button>
       </div>
+      )}
+      {target.can_delegate && (
+        <div className={layout === "bar" ? "" : "flex justify-end"}>
+          <DelegateReviewButton target={target} className={layout === "bar" ? `w-full ${barOutline}` : layout === "inline" ? "h-9 text-xs font-semibold" : "text-xs"} />
+        </div>
       )}
 
       <Dialog open={mode !== null} onOpenChange={(o) => !o && setMode(null)}>
