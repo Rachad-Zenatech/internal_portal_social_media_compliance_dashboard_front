@@ -17,6 +17,7 @@ import {
   XCircle,
   Check,
   Layers,
+  Globe2,
 } from 'lucide-react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -58,6 +59,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PLATFORM_LABELS, type SocialPlatform } from '@/components/video/PlatformIcon';
 import { useAuth } from '@/lib/AuthContext';
 import ScoreBreakdown from '@/components/submissions/ScoreBreakdown';
+import PolicyRulesTab from '@/components/compliance/PolicyRulesTab';
 import type { RuleFlagStats } from '@/types/submission';
 import { submissionService } from '@/services/submissionService';
 import {
@@ -90,6 +92,8 @@ type ScopeKey = 'rule_sets' | 'brands' | 'audiences' | 'regions' | 'platforms';
 type RuleScope = Record<ScopeKey, string[]>;
 type ScopeOption = { value: string; label: string };
 
+// The category given to rules approved from platform policies (see PolicyRulesTab).
+const POLICY_CATEGORY = 'Social Media Content Policy';
 const EMPTY_SCOPE: RuleScope = { rule_sets: [], brands: [], audiences: [], regions: [], platforms: [] };
 
 const TRAFFIC_LIGHT_TONE: Record<TrafficLight, { badge: string; solid: string }> = {
@@ -242,7 +246,7 @@ export default function ComplianceRulesPage() {
   const [scannerRuleSets, setScannerRuleSets] = useState<string[]>([]);
 
   // Queries
-  const { data: rules = [], isLoading } = useQuery({
+  const { data: allRules = [], isLoading } = useQuery({
     queryKey: ['compliance-rules', selectedCategory, selectedTrafficLight, selectedRuleSet, search],
     queryFn: () =>
       complianceService.getRules({
@@ -252,6 +256,9 @@ export default function ComplianceRulesPage() {
         search: search.trim() || undefined,
       }),
   });
+
+  // Rules approved from the platforms' policies have their own tab (Social Media Content Policy).
+  const rules = useMemo(() => allRules.filter((r) => r.category !== POLICY_CATEGORY), [allRules]);
 
   // Rule sets, brands, audiences, regions and platforms come from the same list New Submission uses.
   const { data: options } = useQuery({
@@ -639,7 +646,7 @@ export default function ComplianceRulesPage() {
 
       {/* Main Tab View: Rules Management vs Interactive Scanner */}
       <Tabs defaultValue="rules" className="w-full space-y-6">
-        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex bg-muted/60 p-1 border border-border/60">
+        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex bg-muted/60 p-1 border border-border/60">
           <TabsTrigger value="rules" className="gap-2 text-xs font-medium">
             <FileText className="w-3.5 h-3.5" />
             <span className="sm:hidden">Rules ({rules.length})</span>
@@ -650,7 +657,17 @@ export default function ComplianceRulesPage() {
             <span className="sm:hidden">Claim Scanner</span>
             <span className="hidden sm:inline">Interactive Script & Claim Scanner</span>
           </TabsTrigger>
+          <TabsTrigger value="policy" className="gap-2 text-xs font-medium">
+            <Globe2 className="w-3.5 h-3.5 text-blue-600" />
+            <span className="sm:hidden">Platform Policy</span>
+            <span className="hidden sm:inline">Social Media Content Policy</span>
+          </TabsTrigger>
         </TabsList>
+
+        {/* TAB 3: Rules from the platforms' own policies, approved here before they join the rulebook */}
+        <TabsContent value="policy" className="space-y-4">
+          <PolicyRulesTab canManage={canManage} />
+        </TabsContent>
 
         {/* TAB 1: Rules Management */}
         <TabsContent value="rules" className="space-y-4">

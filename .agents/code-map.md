@@ -273,6 +273,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `DeleteDraftTarget` (export interface)
 - `DeleteDraftDialog` (export function) - Confirm and delete a draft.
 
+## src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
+- `day` (const)
+- `Ref` (function) - SUB-12 · Launch post (in review, sent Nov 3, 2026)
+- `Details` (function) - Each dropdown: what both posts share, and what only this post adds.
+- `DuplicateNotice` (export function) - Posts already sent for approval with the same content and caption as this one.
+
 ## src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `statusOf` (export const) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `isWarning` (export const)
@@ -818,7 +824,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - `PendingAccess` (export function)
 
-## src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
+## src/pages/Compliance/ComplianceRulesPage.tsx (1625 lines) - compliance rules page (pages  compliance)
 - `ScopeKey` (type)
 - `RuleScope` (type)
 - `ScopeOption` (type)
@@ -828,6 +834,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SelfTestNote` (function) - What a rule's own examples show: all handled, or which ones it misses or wrongly flags.
 - `ComplianceRulesPage` (export function)
     - `queryClient` (fn)
+    - `rules` (fn) - Rules approved from the platforms' policies have their own tab (Social Media Content Policy).
     - `scopeLabel` (fn)
     - `selfTestById` (fn)
     - `flagStatsByNumber` (fn)
