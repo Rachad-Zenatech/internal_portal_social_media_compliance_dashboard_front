@@ -68,6 +68,17 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceView from "@/components/submissions/ComplianceView";
+import DuplicateNotice from "@/components/submissions/DuplicateNotice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CheckModelsUsed, CheckProgress } from "@/components/submissions/CheckProgress";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
@@ -92,6 +103,8 @@ import type {
   AccountOption,
   CheckAttempt,
   ContentType,
+  DuplicateMatch,
+  DuplicateReport,
   Submission,
   SubmissionFile,
   SubmissionFileKind,
@@ -453,6 +466,8 @@ export default function NewSubmissionPage() {
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
+  // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
+  const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -504,6 +519,14 @@ export default function NewSubmissionPage() {
   const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
+  // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
+  const duplicatesQuery = useQuery({
+    queryKey: ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(",")],
+    queryFn: () => submissionService.duplicates(submissionId!),
+    enabled: !!submissionId && !videoLocked,
+    staleTime: 0,
+  });
+  const duplicates = duplicatesQuery.data;
   // A video post with no script yet: the script goes in first, other files after.
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
@@ -951,7 +974,7 @@ export default function NewSubmissionPage() {
   // Edited since the last check (a check loaded with the draft counts as current until something changes).
   const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
 
-  const submit = async () => {
+  const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
     const badDates: string[] = [];
     if (publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
@@ -1000,10 +1023,19 @@ export default function NewSubmissionPage() {
       }
       return;
     }
+    if (duplicates?.blocked) {
+      toast.error(`This is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
+      checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (duplicates?.repost && !confirmRepost) {
+      setRepostAsk(duplicates.repost);
+      return;
+    }
     setSubmitting(true);
     try {
       const id = await save({ force: true });
-      const result = await submissionService.submit(id!);
+      const result = await submissionService.submit(id!, confirmRepost);
       // Videos show up in the Content Screener from the server; open this one there next time.
       if (result.submission.files.some((f) => f.kind === "MAIN" && f.mime_type.startsWith("video/"))) {
         queryClient.invalidateQueries({ queryKey: ["review-queue"] });
@@ -1025,8 +1057,16 @@ export default function NewSubmissionPage() {
         setShowErrors(true);
         setShowAllDetails(true);
         toast.error(`Please add: ${missing.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
-      } else {
-        toast.error(`Couldn't submit: ${(err as Error).message}`);
+      } else if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
+        // The saved post repeats one already sent (the list on the page may have been a save behind).
+        const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
+        queryClient.setQueryData(
+          ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(",")],
+          detail.duplicates
+        );
+        duplicatesQuery.refetch();
+        if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) setRepostAsk(detail.duplicates.repost);
+        else toast.error(detail.message);
       }
     } finally {
       setSubmitting(false);
@@ -1169,7 +1209,7 @@ export default function NewSubmissionPage() {
             captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             window.setTimeout(() => editorRef.current?.focus(), 350);
           }}
-          onResubmit={submit}
+          onResubmit={() => submit()}
         />
       )}
       {resubmitting && canvaMain && (
@@ -1537,7 +1577,7 @@ export default function NewSubmissionPage() {
                 stage={scriptStage.data}
                 canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
                 onAddScript={() => scriptInputRef.current?.click()}
-                onSend={submit}
+                onSend={() => submit()}
                 sending={submitting}
                 invalid={isMissing("script")}
               />
@@ -2082,9 +2122,12 @@ export default function NewSubmissionPage() {
                       : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                   </p>
                 </Field>
+                {!videoLocked && duplicates && <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                   <p className="text-[11px] text-muted-foreground">
-                    {videoLocked
+                    {!videoLocked && duplicates?.blocked
+                      ? "Duplicate post: change the submission details above to send it."
+                      : videoLocked
                       ? "Sends your script to the reviewers you picked."
                       : !hasCheck
                       ? "You haven't run the compliance check yet. It also runs when you send."
@@ -2094,8 +2137,8 @@ export default function NewSubmissionPage() {
                   </p>
                   <Button
                     type="button"
-                    onClick={submit}
-                    disabled={submitting || checking || uploading.length > 0}
+                    onClick={() => submit()}
+                    disabled={submitting || checking || uploading.length > 0 || (!videoLocked && !!duplicates?.blocked)}
                     className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -2106,6 +2149,35 @@ export default function NewSubmissionPage() {
             </div>
           </Section>
           </div>
+          <AlertDialog open={!!repostAsk} onOpenChange={(open) => !open && setRepostAsk(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Send the same post again?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {repostAsk && (
+                    <>
+                      The same post had already been sent for approval
+                      {repostAsk.submitted_at ? ` on ${format(new Date(repostAsk.submitted_at), "MMM d, yyyy")}` : ""} as{" "}
+                      {repostAsk.reference_code}, for{" "}
+                      {repostAsk.publish_at ? format(new Date(repostAsk.publish_at), "MMM d, yyyy") : "no publish date"}. Do you
+                      want to continue for {publishDate ? format(publishDate, "MMM d, yyyy") : "no publish date"}?
+                    </>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Not now</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    setRepostAsk(null);
+                    submit(true);
+                  }}
+                >
+                  Continue for this date
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* ---------------- Summary ---------------- */}

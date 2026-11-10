@@ -556,3 +556,36 @@ export interface CheckAttempt {
   error?: string | null;
   duration_ms?: number;
 }
+
+/** One Submission Details dropdown compared with an earlier post that has the same content and caption. */
+export interface DuplicateDetail {
+  field: "brands" | "accounts" | "audiences" | "region" | "platforms";
+  label: string;
+  /** Values both posts have. */
+  shared: string[];
+  /** Values only this post has. */
+  new: string[];
+}
+
+/** A post already sent for approval with the same content and caption. */
+export interface DuplicateMatch {
+  submission_id: string;
+  reference_code: string;
+  title: string;
+  status: string;
+  submitted_at?: string | null;
+  publish_at?: string | null;
+  created_by_name?: string | null;
+  details: DuplicateDetail[];
+  /** Every dropdown shares a value. */
+  all_overlap: boolean;
+  same_date: boolean;
+}
+
+/** blocked: a match overlaps on every detail and the publish date. repost: the same on another date (confirm on send). */
+export interface DuplicateReport {
+  matches: DuplicateMatch[];
+  blocked: boolean;
+  blocking?: DuplicateMatch | null;
+  repost?: DuplicateMatch | null;
+}

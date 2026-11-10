@@ -13,6 +13,7 @@ import type {
 } from "@/types/sentiment";
 import type {
   CheckAttempt,
+  DuplicateReport,
   ContentType,
   DashboardSummary,
   FlagDismissReason,
@@ -115,8 +116,12 @@ export const submissionService = {
     }
   },
 
-  submit: (id: string) =>
-    apiClient.post<SubmitResult>(`/api/submissions/${id}/submit`, undefined, {
+  /** Posts already sent for approval with the same content and caption, and how their submission details overlap. */
+  duplicates: (id: string) => apiClient.get<DuplicateReport>(`/api/submissions/${id}/duplicates`, quiet),
+
+  /** confirmRepost: send the same post again for another publish date (the server asks with a 409 REPOST_CONFIRM). */
+  submit: (id: string, confirmRepost = false) =>
+    apiClient.post<SubmitResult>(`/api/submissions/${id}/submit`, confirmRepost ? { confirm_repost: true } : undefined, {
       actionLabel: "Submitting for review",
       actionSubtitle: "Checking required information and running the rulebook check...",
     }),

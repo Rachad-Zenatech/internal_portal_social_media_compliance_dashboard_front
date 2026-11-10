@@ -266,7 +266,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `CheckProgress` (export function) - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
 - `CheckModelsUsed` (export function) - After a check: which models answered, and how many fallbacks it took.
 
-## src/components/submissions/ComplianceView.tsx (105 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 
 ## src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
@@ -367,6 +367,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `topics` (fn) - The topics' current mood only means something for the current content, not an earlier version.
     - `analyseAll` (fn) - All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis.
 - `SaveTestCaseDialog` (function) - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
+
+## src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
+- `counts` (function)
+- `Row` (function)
+- `SourceChecks` (export function) - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
 ## src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const)
@@ -836,7 +841,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1778 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1780 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -1197,7 +1202,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2244 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2316 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1220,6 +1225,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `selectedAccounts` (fn)
     - `brandAccounts` (fn)
     - `scriptStage` (fn) - the script stage (required: false) work as they always did.
+    - `duplicatesQuery` (fn) - Posts already sent for approval with the same content and caption, looked up again after every save and upload.
     - `refreshScript` (fn)
     - `applyServer` (fn) - ----- Load an existing draft (S08 resume) -----
     - `buildPayload` (fn) - ----- Saving (S01, S02-S04, S06, S08) -----
@@ -1269,7 +1275,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `goToHighlight` (fn) - A highlight card was clicked: find that wording in the script and flash it.
     - `pick` (fn)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (657 lines) - submission detail page (pages  submissions)
+## src/pages/Submissions/SubmissionDetailPage.tsx (659 lines) - submission detail page (pages  submissions)
 - `Panel` (function)
 - `LightBadge` (function)
 - `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
@@ -1353,7 +1359,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const)
 
-## src/services/complianceService.ts (314 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (352 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type)
 - `TrafficLight` (export type)
 - `ComplianceRule` (export interface)
@@ -1364,6 +1370,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `FindingStatus` (export type) - VIOLATION breaks a rule (costs points; a critical one blocks).
 - `ContextEvaluation` (export interface)
 - `ComplianceCheckResponse` (export interface)
+- `SourceVerdict` (export type) - SUPPORTED: the source says it.
+- `SourceClaim` (export interface)
+- `SourceCheck` (export interface)
 - `CheckSignals` (export interface) - What the check read from the post's symbols, before its wording was matched against the rules.
 - `ManualReviewRule` (export interface) - An applicable rule the automated check can't test from text (e.g.
 - `RuleExampleResult` (export interface) - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
@@ -1411,7 +1420,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptService.ts (44 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (272 lines) - submission service (services)
+## src/services/submissionService.ts (277 lines) - submission service (services)
 - `submissionService` (export const)
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -1504,7 +1513,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (559 lines) - AD: paid social ad.
+## src/types/submission.ts (592 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
@@ -1544,3 +1553,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `DashboardSummary` (export interface) - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
 - `SubmitResult` (export interface)
 - `CheckAttempt` (export interface) - One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback).
+- `DuplicateDetail` (export interface) - One Submission Details dropdown compared with an earlier post that has the same content and caption.
+- `DuplicateMatch` (export interface) - A post already sent for approval with the same content and caption.
+- `DuplicateReport` (export interface) - blocked: a match overlaps on every detail and the publish date.
