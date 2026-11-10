@@ -66,7 +66,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - `ThemeSwitch` (export function)
 
-## src/components/AppShell/TopBar.tsx (596 lines) - top bar (components  app shell)
+## src/components/AppShell/TopBar.tsx (598 lines) - top bar (components  app shell)
 - `ViewModeToggle` (function) - Super admins only: switch between seeing the app as a reviewer and as a content creator.
 - `TopBarClock` (function)
 - `sendWindowsNotification` (function)
