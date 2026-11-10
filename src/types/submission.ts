@@ -33,6 +33,14 @@ export interface SubmissionOptions {
   reviewer_routes: string[];
 }
 
+/** Someone a creator can send content to for review: a reviewer or a super admin. */
+export interface ReviewerOption {
+  id: string;
+  name: string;
+  email: string;
+  is_super_admin: boolean;
+}
+
 /** Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION). */
 export type DueKind = "REVIEW" | "REVISION" | "VIDEO";
 
@@ -150,6 +158,9 @@ export interface Submission {
   content_type: ContentType;
   brand_code?: string | null;
   audience?: string | null;
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
+  audiences?: string[];
   region?: string | null;
   platforms: string[];
   /** The primary (first) of account_ids / accounts. */
@@ -168,6 +179,8 @@ export interface Submission {
   caption_text?: string | null;
   rule_sets: string[];
   reviewer_route: string[];
+  /** The reviewers it's sent to; empty means every reviewer on its brand. */
+  reviewer_ids?: string[];
   status: SubmissionStatus;
   current_version: number;
   latest_check?: StoredCheck | null;
@@ -236,6 +249,9 @@ export interface SubmissionSummary {
   created_at: string;
   updated_at: string;
   audience?: string | null;
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
+  audiences?: string[];
   /** Primary publishing channel the post goes to (e.g. Shaun's LinkedIn). */
   account?: AccountOption | null;
   /** Every channel it posts through, primary first. */
@@ -270,6 +286,9 @@ export interface SubmissionUpdate {
   content_type?: ContentType;
   brand_code?: string;
   audience?: string;
+  /** Every brand and audience, primary first. brand_code and audience alone still work. */
+  brand_codes?: string[];
+  audiences?: string[];
   region?: string;
   platforms?: string[];
   account_ids?: string[];
@@ -279,6 +298,7 @@ export interface SubmissionUpdate {
   caption_text?: string;
   rule_sets?: string[];
   reviewer_route?: string[];
+  reviewer_ids?: string[];
   clear_fields?: ("account_id" | "publish_at" | "approval_needed_by" | "brand_code" | "audience" | "region")[];
 }
 
@@ -416,6 +436,9 @@ export interface ReviewQueueItem {
   publish_at?: string | null;
   brand_code?: string | null;
   audience?: string | null;
+  /** Every brand it's for and audience it targets, primary first (brand_code and audience are the first). */
+  brand_codes?: string[];
+  audiences?: string[];
   /** When the creator needs it approved by. */
   approval_needed_by?: string | null;
   /** When the next step is due (see DueKind). */
@@ -446,7 +469,7 @@ export interface VersionView {
   review_job?: ReviewJob | null;
 }
 
-export type FlagDismissReason = "NEGATED" | "DIFFERENT_MEANING" | "ACCEPTABLE_IN_CONTEXT" | "RULE_TOO_BROAD" | "OTHER";
+export type FlagDismissReason = "NEGATED" | "DIFFERENT_MEANING" | "ACCEPTABLE_IN_CONTEXT" | "RULE_TOO_BROAD" | "EVIDENCE_ON_FILE" | "OTHER";
 
 /** A reviewer's dismissal of an automated compliance flag on one version. */
 export interface FlagReview {
@@ -517,4 +540,52 @@ export interface DashboardSummary {
 export interface SubmitResult {
   submission: Submission;
   review_job: ReviewJob;
+}
+
+/** One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback). */
+export interface CheckAttempt {
+  id: string;
+  status: "RUNNING" | "OK" | "FAILED";
+  model: string;
+  /** Which step of the check made the call, e.g. COMPLIANCE_CHECK or CONTEXT_EVAL. */
+  feature: string;
+  attempt?: number | null;
+  tier?: string | null;
+  /** Why it failed: MODEL (retired or unknown), BUSY, QUOTA, KEY or OTHER. */
+  error_kind?: string | null;
+  error?: string | null;
+  duration_ms?: number;
+}
+
+/** One Submission Details dropdown compared with an earlier post that has the same content and caption. */
+export interface DuplicateDetail {
+  field: "brands" | "accounts" | "audiences" | "region" | "platforms";
+  label: string;
+  /** Values both posts have. */
+  shared: string[];
+  /** Values only this post has. */
+  new: string[];
+}
+
+/** A post already sent for approval with the same content and caption. */
+export interface DuplicateMatch {
+  submission_id: string;
+  reference_code: string;
+  title: string;
+  status: string;
+  submitted_at?: string | null;
+  publish_at?: string | null;
+  created_by_name?: string | null;
+  details: DuplicateDetail[];
+  /** Every dropdown shares a value. */
+  all_overlap: boolean;
+  same_date: boolean;
+}
+
+/** blocked: a match overlaps on every detail and the publish date. repost: the same on another date (confirm on send). */
+export interface DuplicateReport {
+  matches: DuplicateMatch[];
+  blocked: boolean;
+  blocking?: DuplicateMatch | null;
+  repost?: DuplicateMatch | null;
 }

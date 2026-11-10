@@ -1,4 +1,5 @@
-import { apiClient } from "@/services/apiClient";
+import { BASE_URL, apiClient } from "@/services/apiClient";
+import { ApiError, handleResponse } from "@/services/helper";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
 import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
 import type {
@@ -11,6 +12,8 @@ import type {
   SentimentLevel,
 } from "@/types/sentiment";
 import type {
+  CheckAttempt,
+  DuplicateReport,
   ContentType,
   DashboardSummary,
   FlagDismissReason,
@@ -28,6 +31,7 @@ import type {
   SubmissionFileKind,
   SubmissionHistory,
   SubmissionOptions,
+  ReviewerOption,
   SubmissionSummary,
   SubmissionUpdate,
   SubmitResult,
@@ -37,6 +41,13 @@ const quiet = { skipGlobalLoading: true };
 
 export const submissionService = {
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
+
+  /** Reviewers and super admins the content can be sent to: on any of these brands, or everyone when there are none. */
+  reviewers: (brands: string[] = []) => {
+    const q = new URLSearchParams();
+    brands.forEach((b) => q.append("brand_code", b));
+    return apiClient.get<ReviewerOption[]>(`/api/submissions/reviewers${brands.length ? `?${q.toString()}` : ""}`, quiet);
+  },
 
   /** "all" = everyone's content (super admins and Content Managers only). */
   list: (status?: string, scope: "mine" | "all" = "mine") => {
@@ -73,8 +84,44 @@ export const submissionService = {
 
   runCheck: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/check`, undefined, quiet),
 
-  submit: (id: string) =>
-    apiClient.post<SubmitResult>(`/api/submissions/${id}/submit`, undefined, {
+  /** The same check, streamed: onAttempt hears each AI model call as it starts and ends (fallbacks included);
+   * resolves with the post and its new check once every step is done. */
+  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void): Promise<Submission> {
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/api/submissions/${id}/check/stream`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/x-ndjson", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    if (!res.ok || !res.body) await handleResponse<never>(res);
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffered = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      buffered += decoder.decode(value, { stream: !done });
+      const lines = buffered.split("\n");
+      buffered = done ? "" : lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const event = JSON.parse(line) as
+          | ({ event: "attempt" } & CheckAttempt)
+          | { event: "done"; submission: Submission }
+          | { event: "failed"; status: number; detail: unknown };
+        if (event.event === "attempt") onAttempt(event);
+        else if (event.event === "done") return event.submission;
+        else throw new ApiError(typeof event.detail === "string" ? event.detail : "The compliance check couldn't run", event.status, event.detail);
+      }
+      if (done) throw new Error("The compliance check stopped before it finished. Try again.");
+    }
+  },
+
+  /** Posts already sent for approval with the same content and caption, and how their submission details overlap. */
+  duplicates: (id: string) => apiClient.get<DuplicateReport>(`/api/submissions/${id}/duplicates`, quiet),
+
+  /** confirmRepost: send the same post again for another publish date (the server asks with a 409 REPOST_CONFIRM). */
+  submit: (id: string, confirmRepost = false) =>
+    apiClient.post<SubmitResult>(`/api/submissions/${id}/submit`, confirmRepost ? { confirm_repost: true } : undefined, {
       actionLabel: "Submitting for review",
       actionSubtitle: "Checking required information and running the rulebook check...",
     }),
@@ -131,10 +178,10 @@ export const submissionService = {
     apiClient.post<CaptionSuggestions>(`/api/submissions/${id}/caption-suggestions`, data, quiet),
 
   /** Hashtags and the company cashtag suited to a post, screened against the rules that apply to it. */
-  hashtagLibrary: (p: { brand?: string; audience?: string; region?: string; platforms: string[]; ruleSets: string[] }) => {
+  hashtagLibrary: (p: { brands?: string[]; audiences?: string[]; region?: string; platforms: string[]; ruleSets: string[] }) => {
     const q = new URLSearchParams();
-    if (p.brand) q.set("brand_code", p.brand);
-    if (p.audience) q.set("audience", p.audience);
+    (p.brands ?? []).forEach((b) => q.append("brand_codes", b));
+    (p.audiences ?? []).forEach((a) => q.append("audiences", a));
     if (p.region) q.set("region", p.region);
     p.platforms.forEach((v) => q.append("platforms", v));
     p.ruleSets.forEach((v) => q.append("rule_sets", v));

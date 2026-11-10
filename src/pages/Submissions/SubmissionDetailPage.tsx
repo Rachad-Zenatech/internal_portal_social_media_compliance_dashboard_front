@@ -47,10 +47,11 @@ import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import { AiUnavailableBadge, DueBadge, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { AiUnavailableBadge, DueBadge, audienceCodes, audienceNames, brandCodes, SubmissionFileRow, SubmissionStatusBadge, UnderReviewBadge, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { submissionService } from "@/services/submissionService";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
+import SourceChecks from "@/components/submissions/SourceChecks";
 import type { ReviewJob, StoredCheck, Submission, SubmissionVersion } from "@/types/submission";
 
 const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
@@ -202,6 +203,7 @@ function JobCard({ job }: { job: ReviewJob }) {
       )}
       {check && <OtherFindings violations={check.violations} />}
       {check && <CheckCoverage check={check} />}
+      {check && <SourceChecks checks={check.source_checks} />}
       {job.manual_checks && job.manual_checks.length > 0 && (
         <p className="text-[11px] text-muted-foreground">
           <span className="font-semibold text-foreground">Confirmed by the reviewer:</span>{" "}
@@ -532,7 +534,7 @@ export default function SubmissionDetailPage() {
           <Panel title="Details" icon={FilePen}>
             <div className="divide-y divide-border/50">
               <DetailRow label="Content type">{TYPE_LABELS[s.content_type]}</DetailRow>
-              <DetailRow label="Brand">{optionsQuery.data?.brands.find((b) => b.code === s.brand_code)?.name ?? s.brand_code}</DetailRow>
+              <DetailRow label="Brand(s)">{brandCodes(s).map((c) => optionsQuery.data?.brands.find((b) => b.code === c)?.name ?? c).join(", ")}</DetailRow>
               <DetailRow label={(s.accounts?.length ?? 0) > 1 ? "Publishing accounts" : "Publishing account"}>
                 {(s.accounts?.length || s.account) && (
                   <span className="flex flex-col gap-1">
@@ -555,7 +557,7 @@ export default function SubmissionDetailPage() {
                   </span>
                 )}
               </DetailRow>
-              <DetailRow label="Audience">{(s.audience && optionsQuery.data?.audiences[s.audience]) || s.audience}</DetailRow>
+              <DetailRow label="Audience(s)">{audienceNames(audienceCodes(s), optionsQuery.data?.audiences)}</DetailRow>
               <DetailRow label="Region">{s.region}</DetailRow>
               <DetailRow label="Publish date">{s.publish_at ? format(new Date(s.publish_at), "MMM d, yyyy h:mm a") : null}</DetailRow>
               <DetailRow label="Rule sets">{s.rule_sets.join(", ")}</DetailRow>

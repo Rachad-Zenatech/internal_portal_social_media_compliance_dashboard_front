@@ -3,10 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
 import {
-  AlertTriangle,
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -29,11 +27,11 @@ import {
   Upload,
   User as UserIcon,
   X,
-  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -58,24 +56,20 @@ import {
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { CoverThumb } from "@/components/submissions/PostPreview";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
-import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
-import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
-import CheckCoverage from "@/components/submissions/CheckCoverage";
-import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
+import ComplianceView from "@/components/submissions/ComplianceView";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import {
-  AI_UNAVAILABLE_MESSAGE,
   ANALYSING_REFETCH_MS,
-  AiUnavailableBadge,
-  AnalysisProgressPanel,
-  UnderReviewBadge,
   authedFileUrl,
   dueInfo,
   isAnalysing,
   refetchWhileAnalysing,
+  audienceCodes,
+  brandCodes,
+  audienceNames,
 } from "@/components/submissions/submissionUi";
 import { QUICK_CREATE, Score, issuesText, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
@@ -95,6 +89,19 @@ type Stage = "DRAFT" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "SCHEDUL
 function stageOf(s: { status: string; publish_at?: string | null }): Stage {
   if (s.status === "APPROVED" && s.publish_at && !isPast(new Date(s.publish_at))) return "SCHEDULED";
   return s.status as Stage;
+}
+
+/**
+ * The tab a post is counted under. A script that has been sent isn't a draft: with a reviewer (or being sent) or
+ * approved it's with "In review", and sent back it's under "Changes requested". Only a script not yet sent, or one
+ * that failed to send, stays a draft.
+ */
+function tabOf(s: { status: string; publish_at?: string | null; script_status?: string | null; script_send_status?: string | null }): Stage {
+  const stage = stageOf(s);
+  if (stage !== "DRAFT") return stage;
+  if (s.script_send_status === "PROCESSING" || s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") return "IN_REVIEW";
+  if (s.script_status === "EDITS_PROPOSED" || s.script_status === "CHANGES_REQUESTED") return "CHANGES_REQUESTED";
+  return stage;
 }
 
 const STAGES: Record<Stage, { label: string; pill: string }> = {
@@ -182,7 +189,8 @@ function useIsWide() {
 /** Names for brand and audience codes, from the same options New Submission uses. */
 interface Labels {
   brand: (code?: string | null) => string | null;
-  audience: (code?: string | null) => string | null;
+  brands: (codes: string[]) => string | null;
+  audience: (codes: string[]) => string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,8 +255,8 @@ function SubmissionCard({
 }) {
   const stage = stageOf(s);
   const when = whenText(s);
-  const brand = labels.brand(s.brand_code);
-  const audience = labels.audience(s.audience);
+  const brand = labels.brands(brandCodes(s));
+  const audience = labels.audience(audienceCodes(s));
   return (
     <div
       role="button"
@@ -375,10 +383,12 @@ function GalleryCard({
   s,
   onSelect,
   onContinue,
+  onDelete,
 }: {
   s: SubmissionSummary;
   onSelect: (s: SubmissionSummary) => void;
   onContinue: (s: SubmissionSummary) => void;
+  onDelete: (s: SubmissionSummary) => void;
 }) {
   const stage = stageOf(s);
   const line = statusLine(s);
@@ -455,6 +465,18 @@ function GalleryCard({
           </div>
         )
       )}
+      {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
+      {s.can_delete && (
+        <div className="px-4 pb-3.5 -mt-1">
+          <button
+            type="button"
+            onClick={() => onDelete(s)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-red-600 dark:hover:text-red-400"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete draft
+          </button>
+        </div>
+      )}
     </article>
   );
 }
@@ -462,85 +484,6 @@ function GalleryCard({
 // ---------------------------------------------------------------------------
 // Detail panel: media, tabs and the actions for whoever is looking
 // ---------------------------------------------------------------------------
-
-function ComplianceView({ sub }: { sub: Submission }) {
-  const { creatorView } = useAuth();
-  const canReview = Boolean(sub.can_review) && !creatorView;
-  const check = sub.latest_check;
-  if (!check) {
-    return <p className="text-xs text-muted-foreground">Not checked yet. The rulebook check runs when it's sent for review.</p>;
-  }
-  return (
-    <div className="rounded-xl border border-border/70 p-4 space-y-3">
-      <div className="flex items-center justify-between gap-2 text-sm font-semibold">
-        <span className="flex items-center gap-1.5">
-          {check.traffic_light === "RED" ? (
-            <XCircle className="w-4 h-4 text-red-600" />
-          ) : check.traffic_light === "YELLOW" ? (
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          )}
-          {check.is_compliant
-            ? "No issues found in the text"
-            : check.violations_count > 0
-            ? `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`
-            : "No rule breaches found; some things need a look"}
-        </span>
-        {isAnalysing(check) ? (
-          <UnderReviewBadge progress={sub.analysis_progress} />
-        ) : check.ai_unavailable ? (
-          <AiUnavailableBadge />
-        ) : (
-          <span className="tabular-nums">{check.score}/100</span>
-        )}
-      </div>
-      {isAnalysing(check) && <AnalysisProgressPanel progress={sub.analysis_progress} />}
-      {!isAnalysing(check) && check.ai_unavailable && (
-        <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">{AI_UNAVAILABLE_MESSAGE}</p>
-      )}
-      <CheckCoverage check={check} />
-      {sub.check_outdated && (
-        <p className="rounded-md bg-muted/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
-          {sub.status === "APPROVED" || sub.status === "REJECTED"
-            ? "Decided under an earlier version of the rulebook; rules have changed since."
-            : "The rulebook has changed since this check. It's checked again when it's next sent for review."}
-        </p>
-      )}
-      <ScoreBreakdown check={check} />
-      <OtherFindings violations={check.violations} />
-      {/* Reviewers make their call on each flag: a false alarm is dismissed with a reason (the score stays). */}
-      {canReview && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
-        <div className="space-y-2 border-t border-border/60 pt-3">
-          {check.violations.filter((v) => statusOf(v) !== "CLEARED").map((v) => (
-            <div key={v.rule_id} className="space-y-1 text-xs">
-              <p className="font-semibold text-foreground">
-                {v.rule_number} · {v.flagged_terms.map((t) => `"${t}"`).join(", ") || "missing disclaimer"}
-              </p>
-              <FlagReviewControl
-                submissionId={sub.id}
-                ruleId={v.rule_id}
-                ruleNumber={v.rule_number}
-                currentVersion={sub.current_version}
-                canDismiss
-              />
-            </div>
-          ))}
-        </div>
-      )}
-      {/* Checks saved before penalties were recorded have no breakdown; list what they flagged. */}
-      {!check.violations.some((v) => v.penalty != null) &&
-        check.violations.filter((v) => statusOf(v) === "VIOLATION").map((v) => (
-          <div key={v.rule_id} className="text-xs border-t border-border/60 pt-2.5">
-            <p className="font-semibold text-foreground">
-              {v.rule_number} · {v.title}
-            </p>
-            <p className="text-muted-foreground">Flagged: {v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>
-          </div>
-        ))}
-    </div>
-  );
-}
 
 function HistoryView({ id }: { id: string }) {
   const { data, isLoading } = useQuery({
@@ -688,12 +631,12 @@ function ReviewCard({
   const sentimentDone = analysis?.status === "COMPLETED";
   const sentimentRunning = isSentimentRunning(analysis);
   const facts: [string, React.ReactNode][] = [
-    ["Brand", labels.brand(summary.brand_code)],
+    ["Brands", labels.brands(brandCodes(summary))],
     [
       "Platforms",
       summary.platforms.length ? `${platformName(summary.platforms[0])}${summary.platforms.length > 1 ? ` +${summary.platforms.length - 1}` : ""}` : null,
     ],
-    ["Audience", labels.audience(summary.audience)],
+    ["Audiences", labels.audience(audienceCodes(summary))],
     ["Submitted", summary.submitted_at ? format(new Date(summary.submitted_at), "MMM d, yyyy, h:mm a") : "Not yet"],
   ];
 
@@ -1022,8 +965,8 @@ function ReviewCard({
 export default function SubmissionsListPage() {
   const [stage, setStage] = useState<"" | Stage>("");
   const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("all");
-  const [brand, setBrand] = useState("all");
+  const [platforms, setPlatforms] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<SubmissionSummary | null>(null);
@@ -1062,7 +1005,8 @@ export default function SubmissionsListPage() {
   const labels: Labels = useMemo(
     () => ({
       brand: (code) => (code ? options?.brands.find((b) => b.code === code)?.name ?? code : null),
-      audience: (code) => (code ? options?.audiences[code] ?? code : null),
+      brands: (codes) => (codes.length ? codes.map((c) => options?.brands.find((b) => b.code === c)?.name ?? c).join(", ") : null),
+      audience: (codes) => audienceNames(codes, options?.audiences),
     }),
     [options]
   );
@@ -1079,12 +1023,12 @@ export default function SubmissionsListPage() {
     const source = gallery ? inMonth : data;
     const counts: Record<string, number> = { "": source.length };
     for (const s of source) {
-      const st = stageOf(s);
+      const st = tabOf(s);
       counts[st] = (counts[st] ?? 0) + 1;
     }
     if (gallery) {
-      counts.DRAFT = data.filter((s) => stageOf(s) === "DRAFT").length;
-      counts.CHANGES_REQUESTED = data.filter((s) => stageOf(s) === "CHANGES_REQUESTED").length;
+      counts.DRAFT = data.filter((s) => tabOf(s) === "DRAFT").length;
+      counts.CHANGES_REQUESTED = data.filter((s) => tabOf(s) === "CHANGES_REQUESTED").length;
     }
     return counts;
   }, [data, inMonth, gallery]);
@@ -1095,7 +1039,7 @@ export default function SubmissionsListPage() {
   // older content, so it can be found.
   const brandsInList = useMemo(() => {
     const managed = (options?.brands ?? []).map((b) => b.code);
-    const older = [...new Set(data.map((s) => s.brand_code).filter((c): c is string => Boolean(c) && !managed.includes(c!)))].sort();
+    const older = [...new Set(data.flatMap((s) => brandCodes(s)).filter((c): c is string => Boolean(c) && !managed.includes(c!)))].sort();
     return [...managed, ...older];
   }, [options, data]);
 
@@ -1103,9 +1047,9 @@ export default function SubmissionsListPage() {
     const q = search.trim().toLowerCase();
     const filtered = inView.filter(
       (s) =>
-        (!stage || stageOf(s) === stage) &&
-        (platform === "all" || s.platforms.includes(platform)) &&
-        (brand === "all" || s.brand_code === brand) &&
+        (!stage || tabOf(s) === stage) &&
+        (platforms.length === 0 || s.platforms.some((p) => platforms.includes(p))) &&
+        (brands.length === 0 || brandCodes(s).some((c) => brands.includes(c))) &&
         (!q ||
           s.title.toLowerCase().includes(q) ||
           s.reference_code.toLowerCase().includes(q) ||
@@ -1114,18 +1058,18 @@ export default function SubmissionsListPage() {
           (s.created_by_name ?? "").toLowerCase().includes(q))
     );
     return sortItems(filtered, prefs.sort);
-  }, [inView, stage, platform, brand, search, prefs.sort]);
+  }, [inView, stage, platforms, brands, search, prefs.sort]);
 
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
   const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
 
-  const filtersActive = Boolean(stage || search || platform !== "all" || brand !== "all");
+  const filtersActive = Boolean(stage || search || platforms.length || brands.length);
   const clearFilters = () => {
     setStage("");
     setSearch("");
-    setPlatform("all");
-    setBrand("all");
+    setPlatforms([]);
+    setBrands([]);
   };
   const waitingForMe = creatorView ? 0 : data.filter((s) => s.can_review).length;
 
@@ -1284,32 +1228,24 @@ export default function SubmissionsListPage() {
                   className="h-9 rounded-lg bg-card pl-9 text-sm"
                 />
               </div>
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Platform">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                  {platformsInList.map((p) => (
-                    <SelectItem key={p} value={p} className="text-xs">
-                      {platformName(p)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="h-9 w-[140px] rounded-lg bg-card text-xs" aria-label="Brand">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                  {brandsInList.map((b) => (
-                    <SelectItem key={b} value={b} className="text-xs">
-                      {labels.brand(b)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                options={platformsInList.map((p) => ({ value: p, label: platformName(p) }))}
+                value={platforms}
+                onChange={setPlatforms}
+                allLabel="All Platforms"
+                noun="platform"
+                ariaLabel="Platform"
+                className="w-[140px]"
+              />
+              <MultiSelectFilter
+                options={brandsInList.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                value={brands}
+                onChange={setBrands}
+                allLabel="All Brands"
+                noun="brand"
+                ariaLabel="Brand"
+                className="w-[140px]"
+              />
               <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
                 <SelectTrigger className="h-9 w-[160px] rounded-lg bg-card text-xs" aria-label="Sort by">
                   <SelectValue />
@@ -1375,6 +1311,7 @@ export default function SubmissionsListPage() {
                     s={s}
                     onSelect={(item) => setSelectedId(item.id)}
                     onContinue={(item) => navigate(`/submissions/new?id=${item.id}`)}
+                    onDelete={setDeleting}
                   />
                 ))}
               </div>
@@ -1437,32 +1374,24 @@ export default function SubmissionsListPage() {
                   />
                 </div>
                 <div className={`grid gap-2 ${isWide ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
-                  <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Platform">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
-                      {platformsInList.map((p) => (
-                        <SelectItem key={p} value={p} className="text-xs">
-                          {platformName(p)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={brand} onValueChange={setBrand}>
-                    <SelectTrigger className="h-9 w-full rounded-lg text-xs" aria-label="Brand">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="text-xs">All Brands</SelectItem>
-                      {brandsInList.map((b) => (
-                        <SelectItem key={b} value={b} className="text-xs">
-                          {labels.brand(b)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelectFilter
+                    options={platformsInList.map((p) => ({ value: p, label: platformName(p) }))}
+                    value={platforms}
+                    onChange={setPlatforms}
+                    allLabel="All Platforms"
+                    noun="platform"
+                    ariaLabel="Platform"
+                    className="w-full"
+                  />
+                  <MultiSelectFilter
+                    options={brandsInList.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                    value={brands}
+                    onChange={setBrands}
+                    allLabel="All Brands"
+                    noun="brand"
+                    ariaLabel="Brand"
+                    className="w-full"
+                  />
                   <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
                     <SelectTrigger className={`h-9 w-full rounded-lg text-xs ${isWide ? "col-span-2" : "col-span-2 sm:col-span-1"}`} aria-label="Sort by">
                       <SelectValue />

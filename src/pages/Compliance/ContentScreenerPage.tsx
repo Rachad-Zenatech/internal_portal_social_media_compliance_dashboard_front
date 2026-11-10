@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,7 @@ import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
+import SourceChecks from "@/components/submissions/SourceChecks";
 import {
   ContextNote,
   FINDING_META,
@@ -68,6 +70,9 @@ import {
   isAnalysing,
   progressSteps,
   useAnalysisCountdown,
+  audienceCodes,
+  brandCodes,
+  audienceNames,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { usePublicMood } from "@/hooks/usePublicMood";
@@ -140,12 +145,13 @@ const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
 type DueFilter = "any" | "overdue" | "today" | "week" | "none";
 type CheckFilter = "any" | "failing" | "critical" | "passing";
 interface Filters {
-  brand: string;
-  platform: string;
+  /** Brand codes and platforms to show; none picked means all. */
+  brands: string[];
+  platforms: string[];
   due: DueFilter;
   check: CheckFilter;
 }
-const NO_FILTERS: Filters = { brand: "all", platform: "all", due: "any", check: "any" };
+const NO_FILTERS: Filters = { brands: [], platforms: [], due: "any", check: "any" };
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
 const DUE_LABELS: Record<DueFilter, string> = {
@@ -155,6 +161,9 @@ const DUE_LABELS: Record<DueFilter, string> = {
   week: "Due this week",
   none: "No deadline",
 };
+// The list is ordered by when each item was sent for review (deadlines have their own filter).
+type SortOrder = "newest" | "oldest";
+const SORT_LABELS: Record<SortOrder, string> = { newest: "Newest first", oldest: "Oldest first" };
 const CHECK_LABELS: Record<CheckFilter, string> = {
   any: "Any result",
   failing: "Failing (red or under 60)",
@@ -176,8 +185,8 @@ function matches(s: ReviewQueueItem, f: Filters, q: string) {
   const due = deadlineOf(s);
   const now = new Date();
   return (
-    (f.brand === "all" || s.brand_code === f.brand) &&
-    (f.platform === "all" || s.platforms.includes(f.platform)) &&
+    (f.brands.length === 0 || brandCodes(s).some((c) => f.brands.includes(c))) &&
+    (f.platforms.length === 0 || s.platforms.some((p) => f.platforms.includes(p))) &&
     (f.due === "any" ||
       (f.due === "none" && !due) ||
       (f.due === "overdue" && Boolean(due && isPast(due))) ||
@@ -572,7 +581,7 @@ function PostView({
   s: ReviewQueueItem;
   flags: Flag[];
   dismissed: Set<string>;
-  labels: { brand: (c?: string | null) => string | null; audience: (c?: string | null) => string | null };
+  labels: { brand: (c?: string | null) => string | null; brands: (codes: string[]) => string | null; audience: (codes: string[]) => string | null };
   videoRef: RefObject<HTMLVideoElement | null>;
   now: number;
   duration: number;
@@ -655,8 +664,8 @@ function PostView({
               {p === s.platforms[0] && account?.handle ? ` · @${account.handle.replace(/^@/, "")}` : ""}
             </span>
           ))}
-          {labels.brand(s.brand_code) && <span className={chip}>{labels.brand(s.brand_code)}</span>}
-          {labels.audience(s.audience) && <span className={chip}>{labels.audience(s.audience)}</span>}
+          {labels.brands(brandCodes(s)) && <span className={chip}>{labels.brands(brandCodes(s))}</span>}
+          {labels.audience(audienceCodes(s)) && <span className={chip}>{labels.audience(audienceCodes(s))}</span>}
           {needBy && (
             <span
               className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
@@ -852,6 +861,7 @@ function ReviewPanel({
               {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
             </p>
           )}
+          <SourceChecks checks={check?.source_checks} />
         </div>
       </div>
 
@@ -989,6 +999,7 @@ function ReviewPanel({
                         ruleId={f.v.rule_id}
                         ruleNumber={f.v.rule_number}
                         canDismiss={canReview}
+                        evidence={statusOf(f.v) === "EVIDENCE_REQUIRED"}
                       />
                     )}
                   </article>
@@ -1123,7 +1134,7 @@ function Workspace({
   onUploadScript,
 }: {
   s: ReviewQueueItem;
-  labels: { brand: (c?: string | null) => string | null; audience: (c?: string | null) => string | null };
+  labels: { brand: (c?: string | null) => string | null; brands: (codes: string[]) => string | null; audience: (codes: string[]) => string | null };
   canReview: boolean;
   onUploadScript?: () => void;
 }) {
@@ -1192,6 +1203,7 @@ export default function ContentScreenerPage() {
   const postTab: QueueTab = tab;
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [sort, setSort] = useState<SortOrder>("newest");
   // Opened from elsewhere: ?id=..., or the post another page picked for the screener.
   const [selectedId, setSelectedId] = useState<string | null>(
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
@@ -1221,7 +1233,8 @@ export default function ContentScreenerPage() {
   const labels = useMemo(
     () => ({
       brand: (code?: string | null) => (code ? options.data?.brands.find((b) => b.code === code)?.name ?? code : null),
-      audience: (code?: string | null) => (code ? options.data?.audiences[code] ?? code : null),
+      brands: (codes: string[]) => (codes.length ? codes.map((c) => options.data?.brands.find((b) => b.code === c)?.name ?? c).join(", ") : null),
+      audience: (codes: string[]) => audienceNames(codes, options.data?.audiences),
     }),
     [options.data]
   );
@@ -1236,24 +1249,16 @@ export default function ContentScreenerPage() {
       ),
     [scripts.data, q]
   );
-  // Scripts and posts in one list, by due date (soonest first, overdue at the top, no deadline last); the Done tab by
-  // when each was decided, newest first.
+  // Scripts and posts in one list, by when each was sent for review, newest or oldest first; rows without a date go last.
   const rows = useMemo(() => {
+    const time = (d?: string | null) => (d ? new Date(d).getTime() : null);
     const all: ({ kind: "script"; s: ScriptQueueItem; at: number | null } | { kind: "post"; s: ReviewQueueItem; at: number | null })[] = [
-      ...scriptItems.map((s) => ({
-        kind: "script" as const,
-        s,
-        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : s.approval_needed_by ? new Date(s.approval_needed_by).getTime() : null,
-      })),
-      ...visible.map((s) => ({
-        kind: "post" as const,
-        s,
-        at: tab === "done" ? (s.decided_at ? new Date(s.decided_at).getTime() : null) : deadlineOf(s)?.getTime() ?? null,
-      })),
+      ...scriptItems.map((s) => ({ kind: "script" as const, s, at: time(s.sent_at) })),
+      ...visible.map((s) => ({ kind: "post" as const, s, at: time(s.submitted_at) })),
     ];
-    const sign = tab === "done" ? -1 : 1;
+    const sign = sort === "newest" ? -1 : 1;
     return all.sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)));
-  }, [scriptItems, visible, tab]);
+  }, [scriptItems, visible, sort]);
   // One selection across posts and scripts: whatever was picked last, else the first row of the list.
   const pickedScript = scriptItems.find((s) => s.id === selectedScriptId) ?? null;
   const firstRow = rows[0];
@@ -1331,9 +1336,10 @@ export default function ContentScreenerPage() {
         );
   };
 
-  const brands = useMemo(() => [...new Set(items.map((s) => s.brand_code).filter((b): b is string => Boolean(b)))].sort(), [items]);
+  const brands = useMemo(() => [...new Set(items.flatMap((s) => brandCodes(s)).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
-  const activeFilters = (Object.keys(NO_FILTERS) as (keyof Filters)[]).filter((k) => filters[k] !== NO_FILTERS[k]).length;
+  // How many of the four filters are in use (brand and platform count once each, however many values they hold).
+  const activeFilters = [filters.brands.length > 0, filters.platforms.length > 0, filters.due !== "any", filters.check !== "any"].filter(Boolean).length;
 
   // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
@@ -1571,21 +1577,48 @@ export default function ContentScreenerPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-72 gap-3 p-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="f-sort" className="text-xs font-medium text-muted-foreground">
+                    Date sent
+                  </Label>
+                  <Select value={sort} onValueChange={(v) => setSort(v as SortOrder)}>
+                    <SelectTrigger id="f-sort" size="sm" className="h-8 w-full text-[13px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(["newest", "oldest"] as const).map((o) => (
+                        <SelectItem key={o} value={o} className="text-[13px]">
+                          {SORT_LABELS[o]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Brand</Label>
+                  <MultiSelectFilter
+                    options={brands.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
+                    value={filters.brands}
+                    onChange={(next) => setFilters((f) => ({ ...f, brands: next }))}
+                    allLabel="All brands"
+                    noun="brand"
+                    ariaLabel="Brand"
+                    className="h-8 w-full text-[13px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Platform</Label>
+                  <MultiSelectFilter
+                    options={platforms.map((p) => ({ value: p, label: platformName(p) }))}
+                    value={filters.platforms}
+                    onChange={(next) => setFilters((f) => ({ ...f, platforms: next }))}
+                    allLabel="All platforms"
+                    noun="platform"
+                    ariaLabel="Platform"
+                    className="h-8 w-full text-[13px]"
+                  />
+                </div>
                 {[
-                  {
-                    id: "f-brand",
-                    label: "Brand",
-                    value: filters.brand,
-                    set: (v: string) => setFilters((f) => ({ ...f, brand: v })),
-                    options: [["all", "All brands"], ...brands.map((b) => [b, labels.brand(b) ?? b])],
-                  },
-                  {
-                    id: "f-platform",
-                    label: "Platform",
-                    value: filters.platform,
-                    set: (v: string) => setFilters((f) => ({ ...f, platform: v })),
-                    options: [["all", "All platforms"], ...platforms.map((p) => [p, platformName(p)])],
-                  },
                   {
                     id: "f-due",
                     label: tab === "sent_back" ? "Creator's deadline" : "Deadline",
@@ -1627,15 +1660,23 @@ export default function ContentScreenerPage() {
           </div>
           {activeFilters > 0 && (
             <div className="flex flex-wrap gap-1">
-              {filters.brand !== "all" && <FilterChip text={labels.brand(filters.brand) ?? filters.brand} onClear={() => setFilters((f) => ({ ...f, brand: "all" }))} />}
-              {filters.platform !== "all" && <FilterChip text={platformName(filters.platform)} onClear={() => setFilters((f) => ({ ...f, platform: "all" }))} />}
+              {filters.brands.map((b) => (
+                <FilterChip key={`brand-${b}`} text={labels.brand(b) ?? b} onClear={() => setFilters((f) => ({ ...f, brands: f.brands.filter((x) => x !== b) }))} />
+              ))}
+              {filters.platforms.map((p) => (
+                <FilterChip key={`platform-${p}`} text={platformName(p)} onClear={() => setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) }))} />
+              ))}
               {filters.due !== "any" && <FilterChip text={DUE_LABELS[filters.due]} onClear={() => setFilters((f) => ({ ...f, due: "any" }))} />}
               {filters.check !== "any" && <FilterChip text={CHECK_LABELS[filters.check]} onClear={() => setFilters((f) => ({ ...f, check: "any" }))} />}
             </div>
           )}
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
-          {queue.isLoading ? "Loading..." : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : " · soonest deadline first"}`}
+          {queue.isLoading
+            ? "Loading..."
+            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : ""} · sent ${
+                sort === "newest" ? "newest" : "oldest"
+              } first${scripts.isLoading ? " · loading scripts..." : ""}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           {scripts.isError && (

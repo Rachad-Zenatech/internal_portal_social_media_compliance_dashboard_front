@@ -50,6 +50,8 @@ export interface ScriptQueueItem {
   platforms: string[];
   brand_code?: string | null;
   audience?: string | null;
+  brand_codes?: string[];
+  audiences?: string[];
   creator_name?: string | null;
   created_by?: string | null;
   version_number: number;

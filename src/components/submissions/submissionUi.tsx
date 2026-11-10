@@ -181,6 +181,8 @@ export const MISSING_LABELS: Record<string, string> = {
   account_id: "connected publishing account",
   rule_sets: "rule set",
   reviewer_route: "reviewer route",
+  script: "the script (upload it first)",
+  reviewer_ids: "reviewers to send it to",
   main_file: "main content file",
   content: "content file or caption",
   caption: "caption",
@@ -414,4 +416,19 @@ export function SubmissionFileRow({
       )}
     </>
   );
+}
+
+/** Every audience a post targets, primary first (older records only have the one). */
+export function audienceCodes(x: { audience?: string | null; audiences?: string[] }): string[] {
+  return x.audiences?.length ? x.audiences : x.audience ? [x.audience] : [];
+}
+
+/** Audience codes as names, comma separated; null when there are none. */
+export function audienceNames(codes: string[], names?: Record<string, string>): string | null {
+  return codes.length ? codes.map((c) => names?.[c] ?? c).join(", ") : null;
+}
+
+/** Every brand a post is for, primary first (older records only have the one). */
+export function brandCodes(x: { brand_code?: string | null; brand_codes?: string[] }): string[] {
+  return x.brand_codes?.length ? x.brand_codes : x.brand_code ? [x.brand_code] : [];
 }

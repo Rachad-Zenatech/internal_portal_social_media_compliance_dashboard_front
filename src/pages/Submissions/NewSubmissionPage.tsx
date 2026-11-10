@@ -12,6 +12,10 @@ import {
   Check,
   ChevronDown,
   ClipboardList,
+  ArrowDown,
+  BarChart3,
+  RefreshCw,
+  ShieldCheck,
   Clock,
   CloudUpload,
   Download,
@@ -32,6 +36,7 @@ import {
   MessageSquareText,
   Redo2,
   Save,
+  Search,
   Send,
   Sparkles,
   Underline,
@@ -52,7 +57,30 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { MISSING_LABELS, SubmissionFileRow, SubmissionStatusBadge } from "@/components/submissions/submissionUi";
+import {
+  ANALYSING_REFETCH_MS,
+  MISSING_LABELS,
+  SubmissionFileRow,
+  audienceCodes,
+  audienceNames,
+  brandCodes,
+  isAnalysing,
+  SubmissionStatusBadge,
+} from "@/components/submissions/submissionUi";
+import ComplianceView from "@/components/submissions/ComplianceView";
+import DuplicateNotice from "@/components/submissions/DuplicateNotice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CheckModelsUsed, CheckProgress } from "@/components/submissions/CheckProgress";
+import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
@@ -73,7 +101,10 @@ import { submissionService } from "@/services/submissionService";
 import { ApiError } from "@/services/helper";
 import type {
   AccountOption,
+  CheckAttempt,
   ContentType,
+  DuplicateMatch,
+  DuplicateReport,
   Submission,
   SubmissionFile,
   SubmissionFileKind,
@@ -226,6 +257,9 @@ function MultiSelect<T extends string>({
   getLabel = (v) => v,
   invalid,
   compact,
+  searchable,
+  getSearchText,
+  selectAll,
 }: {
   options: T[];
   value: T[];
@@ -235,10 +269,23 @@ function MultiSelect<T extends string>({
   getLabel?: (v: T) => string;
   invalid?: boolean;
   compact?: boolean;
+  /** A search box over the options, for long lists; it matches the label and getSearchText (e.g. an email). */
+  searchable?: boolean;
+  getSearchText?: (v: T) => string;
+  /** A "Select all" row that picks (or clears) every option the search shows. */
+  selectAll?: boolean;
 }) {
+  const [query, setQuery] = useState("");
   const toggle = (opt: T) => onChange(value.includes(opt) ? value.filter((v) => v !== opt) : [...value, opt]);
+  const term = query.trim().toLowerCase();
+  const shown = term
+    ? options.filter((o) => `${getLabel(o)} ${getSearchText?.(o) ?? ""}`.toLowerCase().includes(term))
+    : options;
+  const allShownPicked = shown.length > 0 && shown.every((o) => value.includes(o));
+  const toggleAll = () =>
+    onChange(allShownPicked ? value.filter((v) => !shown.includes(v)) : [...value, ...shown.filter((o) => !value.includes(o))]);
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => !open && setQuery("")}>
       <PopoverTrigger asChild>
         <div
           role="button"
@@ -278,27 +325,59 @@ function MultiSelect<T extends string>({
         </div>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-56 p-1">
-        {options.map((opt) => {
-          const checked = value.includes(opt);
-          return (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => toggle(opt)}
-              className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted text-left"
+        {searchable && (
+          <div className="relative mb-1">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name or email"
+              className="h-8 pl-7 text-sm"
+              aria-label="Search options"
+            />
+          </div>
+        )}
+        {selectAll && shown.length > 1 && (
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm font-medium hover:bg-muted text-left border-b border-border mb-1"
+          >
+            <span
+              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                allShownPicked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
+              }`}
             >
-              <span
-                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                  checked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
-                }`}
+              {allShownPicked && <Check className="w-3 h-3" />}
+            </span>
+            {allShownPicked ? "Clear all" : term ? `Select all ${shown.length} shown` : "Select all"}
+          </button>
+        )}
+        <div className={searchable ? "max-h-64 overflow-y-auto" : undefined}>
+          {shown.map((opt) => {
+            const checked = value.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => toggle(opt)}
+                className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted text-left"
               >
-                {checked && <Check className="w-3 h-3" />}
-              </span>
-              {renderIcon?.(opt)}
-              {getLabel(opt)}
-            </button>
-          );
-        })}
+                <span
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                    checked ? "bg-blue-600 border-blue-600 text-white" : "border-input"
+                  }`}
+                >
+                  {checked && <Check className="w-3 h-3" />}
+                </span>
+                {renderIcon?.(opt)}
+                {getLabel(opt)}
+              </button>
+            );
+          })}
+          {shown.length === 0 && <p className="px-2 py-3 text-center text-xs text-muted-foreground">No matches</p>}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -343,10 +422,10 @@ export default function NewSubmissionPage() {
     return CONTENT_TYPES.find((c) => c.value === picked)?.value ?? "VIDEO";
   });
   const [title, setTitle] = useState("");
-  const [brand, setBrand] = useState("");
+  const [brands, setBrands] = useState<string[]>([]);
   // Publishing accounts, primary first.
   const [accountIds, setAccountIds] = useState<string[]>([]);
-  const [audience, setAudience] = useState("");
+  const [audiences, setAudiences] = useState<string[]>([]);
   const [region, setRegion] = useState("Global");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
@@ -357,6 +436,8 @@ export default function NewSubmissionPage() {
   const [caption, setCaption] = useState("");
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
+  // The people it's sent to for review; none picked sends it to every reviewer on the brand.
+  const [reviewerIds, setReviewerIds] = useState<string[]>([]);
 
   // Files, checks and save status
   const [files, setFiles] = useState<SubmissionFile[]>([]);
@@ -376,6 +457,17 @@ export default function NewSubmissionPage() {
   const [canvaOpen, setCanvaOpen] = useState(false);
   const [suggesterOpen, setSuggesterOpen] = useState(false);
   const [reimporting, setReimporting] = useState(false);
+  // The creator's own pre-send checks: the post as last saved (it carries the rulebook check), whether one is running,
+  // and the edit count when it last ran, to say when it's out of date.
+  const [checkedSub, setCheckedSub] = useState<Submission | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
+  // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
+  const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
+  const [checkStartedAt, setCheckStartedAt] = useState(0);
+  const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
+  // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
+  const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -385,6 +477,7 @@ export default function NewSubmissionPage() {
   const createdIdRef = useRef<string | null>(null);
   const pendingCaptionHtml = useRef<string | null>(null);
   const captionSectionRef = useRef<HTMLDivElement | null>(null);
+  const checkSectionRef = useRef<HTMLDivElement | null>(null);
 
   const markEdited = () => {
     setEditCounter((n) => n + 1);
@@ -393,20 +486,31 @@ export default function NewSubmissionPage() {
   };
 
   const accounts = useMemo(() => options?.accounts ?? [], [options]);
+
+  const reviewersQuery = useQuery({
+    queryKey: ["submission-reviewers", [...brands].sort()],
+    queryFn: () => submissionService.reviewers(brands),
+    staleTime: 60_000,
+  });
+  const reviewerOptions = useMemo(() => reviewersQuery.data ?? [], [reviewersQuery.data]);
+  // Picks who review none of the post's brands (they changed) are dropped, once those brands' reviewers are known.
+  const pickedReviewers = reviewersQuery.data
+    ? reviewerIds.filter((id) => reviewerOptions.some((r) => r.id === id))
+    : reviewerIds;
   const selectedAccounts = useMemo(
     () => accountIds.map((id) => accounts.find((a) => a.id === id)).filter((a): a is AccountOption => Boolean(a)),
     [accounts, accountIds]
   );
   const brandAccounts = useMemo(
-    () => accounts.filter((a) => !brand || !a.brand_code || a.brand_code === brand),
-    [accounts, brand]
+    () => accounts.filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
+    [accounts, brands]
   );
   // Selected platforms nobody is posting to yet (a YouTube account covers YouTube Shorts too).
   const platformsWithoutAccount = platforms.filter(
     (p) => !selectedAccounts.some((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS"))
   );
-  const brandName = options?.brands.find((b) => b.code === brand)?.name;
-  const audienceLabel = audience ? options?.audiences[audience] : undefined;
+  const brandName = brands.map((c) => options?.brands.find((b) => b.code === c)?.name ?? c).join(", ") || undefined;
+  const audienceLabel = audienceNames(audiences, options?.audiences) ?? undefined;
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
@@ -415,6 +519,14 @@ export default function NewSubmissionPage() {
   const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
+  // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
+  const duplicatesQuery = useQuery({
+    queryKey: ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(",")],
+    queryFn: () => submissionService.duplicates(submissionId!),
+    enabled: !!submissionId && !videoLocked,
+    staleTime: 0,
+  });
+  const duplicates = duplicatesQuery.data;
   // A video post with no script yet: the script goes in first, other files after.
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
@@ -455,6 +567,7 @@ export default function NewSubmissionPage() {
     setStatus(s.status);
     setDueAt(s.due_kind === "REVISION" ? s.due_at ?? null : null);
     setFiles(s.files);
+    setCheckedSub(s);
   }, []);
 
   useEffect(() => {
@@ -473,9 +586,9 @@ export default function NewSubmissionPage() {
         applyServer(s);
         setContentType(s.content_type);
         setTitle(s.title === "Untitled submission" ? "" : s.title);
-        setBrand(s.brand_code || "");
+        setBrands(brandCodes(s));
         setAccountIds(s.account_ids?.length ? s.account_ids : s.account_id ? [s.account_id] : []);
-        setAudience(s.audience || "");
+        setAudiences(audienceCodes(s));
         setRegion(s.region || "Global");
         setPlatforms(s.platforms);
         setPublishDate(s.publish_at ? new Date(s.publish_at) : undefined);
@@ -483,6 +596,7 @@ export default function NewSubmissionPage() {
         setApprovalTime(s.approval_needed_by ? format(new Date(s.approval_needed_by), "HH:mm") : DEFAULT_APPROVAL_TIME);
         setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
+        setReviewerIds(s.reviewer_ids ?? []);
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
@@ -516,13 +630,13 @@ export default function NewSubmissionPage() {
     if (!publishDate) clear.push("publish_at");
     if (!approvalBy) clear.push("approval_needed_by");
     if (!accountIds.length) clear.push("account_id");
-    if (!brand) clear.push("brand_code");
-    if (!audience) clear.push("audience");
+    if (brands.length === 0) clear.push("brand_code");
+    if (audiences.length === 0) clear.push("audience");
     return {
       title: title.trim() || "Untitled submission",
       content_type: contentType,
-      ...(brand ? { brand_code: brand } : {}),
-      ...(audience ? { audience } : {}),
+      ...(brands.length ? { brand_codes: brands } : {}),
+      ...(audiences.length ? { audiences } : {}),
       ...(region ? { region } : {}),
       platforms,
       ...(accountIds.length ? { account_ids: accountIds } : {}),
@@ -532,6 +646,7 @@ export default function NewSubmissionPage() {
       caption_text: editorRef.current?.innerText.trim() || "",
       rule_sets: ruleSets,
       reviewer_route: reviewers,
+      reviewer_ids: pickedReviewers,
       clear_fields: clear,
     };
   };
@@ -539,7 +654,7 @@ export default function NewSubmissionPage() {
   /** Create the draft if needed, then save the current fields. Calls are queued so they never overlap. */
   const save = (opts: { force?: boolean } = {}): Promise<string | null> => {
     const payload = buildPayload();
-    const hasAnything = Boolean(title.trim() || payload.caption_text || brand || platforms.length || accountIds.length);
+    const hasAnything = Boolean(title.trim() || payload.caption_text || brands.length || platforms.length || accountIds.length);
     saveChain.current = saveChain.current
       .catch(() => null)
       .then(async () => {
@@ -596,17 +711,17 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
-  const suggestRouting = (next: { brand?: string; audience?: string; accounts?: AccountOption[] }) => {
+  const suggestRouting = (next: { brands?: string[]; audiences?: string[]; accounts?: AccountOption[] }) => {
     const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
     // The software brands are ZenaTech businesses, so ZenaTech's general rules apply to them too.
-    if (next.brand === "ZENATECH" || next.brand === "SOFTWARE") rules.add("ZenaTech General");
-    if (next.brand === "ZENADRONE" || next.audience === "DEFENSE") {
+    if (next.brands?.some((b) => b === "ZENATECH" || b === "SOFTWARE")) rules.add("ZenaTech General");
+    if (next.brands?.includes("ZENADRONE") || next.audiences?.includes("DEFENSE")) {
       rules.add("ZenaDrone Defense");
       route.add("Legal Review");
     }
-    if (next.audience === "INVESTORS") route.add("Investor Relations Review");
-    if (next.brand === "CEO_THOUGHT_LEADERSHIP" || next.accounts?.some((a) => a.is_ceo)) {
+    if (next.audiences?.includes("INVESTORS")) route.add("Investor Relations Review");
+    if (next.brands?.includes("CEO_THOUGHT_LEADERSHIP") || next.accounts?.some((a) => a.is_ceo)) {
       rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
       route.add("Executive Review");
@@ -615,12 +730,12 @@ export default function NewSubmissionPage() {
     setReviewers((prev) => Array.from(new Set([...prev, ...route])));
   };
 
-  const onBrandChange = (code: string) => {
-    setBrand(code);
-    // Drop accounts that belong to a different brand.
-    const kept = selectedAccounts.filter((a) => !a.brand_code || a.brand_code === code);
+  const onBrandsChange = (codes: string[]) => {
+    setBrands(codes);
+    // Drop accounts that belong to a brand that's no longer picked.
+    const kept = selectedAccounts.filter((a) => codes.length === 0 || !a.brand_code || codes.includes(a.brand_code));
     if (kept.length !== selectedAccounts.length) setAccountIds(kept.map((a) => a.id));
-    suggestRouting({ brand: code, audience, accounts: kept });
+    suggestRouting({ brands: codes, audiences, accounts: kept });
     markEdited();
   };
 
@@ -633,13 +748,13 @@ export default function NewSubmissionPage() {
       .map((a) => a.platform)
       .filter((p, i, all) => all.indexOf(p) === i && !platforms.includes(p) && !(p === "YOUTUBE" && platforms.includes("YOUTUBE_SHORTS")));
     if (missing.length) setPlatforms((prev) => [...prev, ...missing]);
-    suggestRouting({ brand, audience, accounts: next });
+    suggestRouting({ brands, audiences, accounts: next });
     markEdited();
   };
 
-  const onAudienceChange = (value: string) => {
-    setAudience(value);
-    suggestRouting({ brand, audience: value, accounts: selectedAccounts });
+  const onAudiencesChange = (values: string[]) => {
+    setAudiences(values);
+    suggestRouting({ brands, audiences: values, accounts: selectedAccounts });
     markEdited();
   };
 
@@ -791,16 +906,19 @@ export default function NewSubmissionPage() {
   const mainFiles = files.filter((f) => f.kind === "MAIN");
   const clientMissing = {
     title: !title.trim(),
-    brand_code: !brand,
+    brand_code: brands.length === 0,
     account_id: accountIds.length === 0,
-    audience: !audience,
+    audience: audiences.length === 0,
     region: !region,
     platforms: platforms.length === 0,
+    // A video post starts with its script: it has to be uploaded (and then approved) before anything else is sent.
+    script: scriptFirst && !scriptStage.isLoading && !scriptStage.data?.file_name && !(scriptStage.data?.versions.length ?? 0),
     // While the script is still being approved, the video and the caption aren't asked for yet.
     main_file: !videoLocked && MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
     // Every post needs a caption: the score and the sentiment analysis read it first.
     caption: !videoLocked && !caption.trim(),
     rule_sets: ruleSets.length === 0,
+    reviewer_ids: pickedReviewers.length === 0,
     approval_needed_by: !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
@@ -812,7 +930,51 @@ export default function NewSubmissionPage() {
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
 
-  const submit = async () => {
+  /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again. */
+  const runComplianceCheck = async () => {
+    if (!title.trim() && !caption.trim()) {
+      toast.error("Add a title or caption before running the compliance check.");
+      return;
+    }
+    const started = Date.now();
+    setChecking(true);
+    setCheckAttempts([]);
+    setCheckStartedAt(started);
+    try {
+      const id = await save({ force: true });
+      // Each model call is shown as it happens (fallbacks too); the old result stays hidden until the new one is in.
+      const updated = await submissionService.runCheckStream(id!, (a) =>
+        setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a]))
+      );
+      setCheckedSub(updated);
+      setCheckedAtEdit(editCounter);
+      setLastCheckMs(Date.now() - started);
+    } catch (err) {
+      toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  // Check back while the check is still reading the post (videos, documents), so the score shows up when it's ready.
+  const checkAnalysing = isAnalysing(checkedSub?.latest_check);
+  useEffect(() => {
+    if (!checkAnalysing || !submissionId) return;
+    const t = window.setInterval(async () => {
+      try {
+        setCheckedSub(await submissionService.get(submissionId));
+      } catch {
+        // Try again on the next tick.
+      }
+    }, ANALYSING_REFETCH_MS);
+    return () => window.clearInterval(t);
+  }, [checkAnalysing, submissionId]);
+
+  const hasCheck = Boolean(checkedSub?.latest_check);
+  // Edited since the last check (a check loaded with the draft counts as current until something changes).
+  const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
+
+  const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
     const badDates: string[] = [];
     if (publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
@@ -861,10 +1023,19 @@ export default function NewSubmissionPage() {
       }
       return;
     }
+    if (duplicates?.blocked) {
+      toast.error(`This is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
+      checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (duplicates?.repost && !confirmRepost) {
+      setRepostAsk(duplicates.repost);
+      return;
+    }
     setSubmitting(true);
     try {
       const id = await save({ force: true });
-      const result = await submissionService.submit(id!);
+      const result = await submissionService.submit(id!, confirmRepost);
       // Videos show up in the Content Screener from the server; open this one there next time.
       if (result.submission.files.some((f) => f.kind === "MAIN" && f.mime_type.startsWith("video/"))) {
         queryClient.invalidateQueries({ queryKey: ["review-queue"] });
@@ -886,8 +1057,16 @@ export default function NewSubmissionPage() {
         setShowErrors(true);
         setShowAllDetails(true);
         toast.error(`Please add: ${missing.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
-      } else {
-        toast.error(`Couldn't submit: ${(err as Error).message}`);
+      } else if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
+        // The saved post repeats one already sent (the list on the page may have been a save behind).
+        const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
+        queryClient.setQueryData(
+          ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(",")],
+          detail.duplicates
+        );
+        duplicatesQuery.refetch();
+        if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) setRepostAsk(detail.duplicates.repost);
+        else toast.error(detail.message);
       }
     } finally {
       setSubmitting(false);
@@ -971,7 +1150,7 @@ export default function NewSubmissionPage() {
     return limits.length ? Math.min(...limits) : 2200;
   }, [platforms]);
 
-  const hashtagLibrary = useHashtagLibrary({ brand, audience, region, platforms, ruleSets });
+  const hashtagLibrary = useHashtagLibrary({ brands, audiences, region, platforms, ruleSets });
 
   const saveLabel =
     saveState === "saving"
@@ -1030,7 +1209,7 @@ export default function NewSubmissionPage() {
             captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             window.setTimeout(() => editorRef.current?.focus(), 350);
           }}
-          onResubmit={submit}
+          onResubmit={() => submit()}
         />
       )}
       {resubmitting && canvaMain && (
@@ -1101,19 +1280,19 @@ export default function NewSubmissionPage() {
                   className={isMissing("title") ? "border-red-500" : ""}
                 />
               </Field>
-              <Field label="Brand" required error={errorFor("brand_code")} className="md:col-span-2 lg:col-span-3">
-                <Select value={brand} onValueChange={onBrandChange} disabled={!options}>
-                  <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder={options ? "Select brand" : "Loading brands..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {options?.brands.map((b) => (
-                      <SelectItem key={b.code} value={b.code}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label="Brand(s)" required error={errorFor("brand_code", "Choose at least one brand")} className="md:col-span-2 lg:col-span-3">
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={options.brands.map((b) => b.code)}
+                    value={brands}
+                    onChange={onBrandsChange}
+                    placeholder="Select brands"
+                    getLabel={(code) => options.brands.find((b) => b.code === code)?.name ?? code}
+                    invalid={isMissing("brand_code")}
+                  />
+                )}
               </Field>
 
               <Field
@@ -1146,23 +1325,23 @@ export default function NewSubmissionPage() {
                 )}
                 {options && brandAccounts.length === 0 && (
                   <p className="text-[11px] text-muted-foreground">
-                    No connected accounts{brand ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
+                    No connected accounts{brands.length ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
                   </p>
                 )}
               </Field>
-              <Field label="Target Audience" required error={errorFor("audience")} className="lg:col-span-2">
-                <Select value={audience} onValueChange={onAudienceChange} disabled={!options}>
-                  <SelectTrigger className={`w-full ${isMissing("audience") ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder="Select audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(options?.audiences ?? {}).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")} className="lg:col-span-2">
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={Object.keys(options.audiences)}
+                    value={audiences}
+                    onChange={onAudiencesChange}
+                    placeholder="Select audiences"
+                    getLabel={(code) => options.audiences[code] ?? code}
+                    invalid={isMissing("audience")}
+                  />
+                )}
               </Field>
               <Field label="Region" required error={errorFor("region")} className="md:col-span-2 lg:col-span-2">
                 <Select
@@ -1398,8 +1577,9 @@ export default function NewSubmissionPage() {
                 stage={scriptStage.data}
                 canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
                 onAddScript={() => scriptInputRef.current?.click()}
-                onSend={submit}
+                onSend={() => submit()}
                 sending={submitting}
+                invalid={isMissing("script")}
               />
             )}
             {/* Two ways to add content: upload files, or import a Canva design. */}
@@ -1632,7 +1812,7 @@ export default function NewSubmissionPage() {
                       library={hashtagLibrary.data}
                       loading={hashtagLibrary.isLoading}
                       caption={caption}
-                      hasBrand={Boolean(brand)}
+                      hasBrand={brands.length > 0}
                       onAdd={insertHashtag}
                       onRemove={removeHashtag}
                     />
@@ -1679,6 +1859,8 @@ export default function NewSubmissionPage() {
               maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
               maxReason={hashtagLibrary.data?.max_reason}
               ruleSets={ruleSets}
+              audiences={audiences}
+              onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
             />
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">
@@ -1791,6 +1973,211 @@ export default function NewSubmissionPage() {
             </p>
           </Section>
           )}
+
+          <div ref={checkSectionRef} className="scroll-mt-4">
+          <Section
+            step={7}
+            title="Check & Send for Review"
+            description="Check your post yourself before a reviewer sees it. Edit and check again as often as you like, then send it when you're confident."
+          >
+            <div className="flex flex-col gap-4">
+              {videoLocked ? (
+                <p className="flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+                  <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  Your script is checked first: open it from the script card above to see its compliance score. The
+                  compliance check and sentiment analysis of the video and caption open here once the script is approved.
+                </p>
+              ) : (
+                <>
+                  {/* Compliance: the same rulebook check the reviewer sees */}
+                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Compliance check</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            Regulatory, legal and brand messaging rules for the selected rule sets, audience and region.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={hasCheck && !checkStale ? "outline" : "default"}
+                        className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                        onClick={() => void runComplianceCheck()}
+                        disabled={checking || uploading.length > 0}
+                      >
+                        {checking ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : hasCheck ? (
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        ) : (
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        )}
+                        {hasCheck ? "Check again" : "Run compliance check"}
+                      </Button>
+                    </div>
+                    {checking ? (
+                      <CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />
+                    ) : checkedSub?.latest_check ? (
+                      <>
+                        {checkStale && (
+                          <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                            You've edited the post since this check. Check again to see the score for your latest changes.
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground">
+                          {lastCheckMs != null && !checkStale ? "New result" : "Last result"}
+                          {checkedSub.latest_check.checked_at
+                            ? ` · checked ${format(new Date(checkedSub.latest_check.checked_at), "MMM d, h:mm:ss a")}`
+                            : ""}
+                        </p>
+                        {lastCheckMs != null && <CheckModelsUsed attempts={checkAttempts} durationMs={lastCheckMs} />}
+                        <ComplianceView
+                          sub={checkedSub}
+                          outdatedText="The rulebook has changed since this check. Check again to use the current rules."
+                        />
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
+                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <BarChart3 className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">Sentiment analysis</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          How the tone and messaging may land with your audience. Recent mood on your topics is in Market
+                          &amp; News Sentiment above.
+                        </p>
+                      </div>
+                    </div>
+                    <SentimentPanel
+                      submissionId={submissionId}
+                      beforeAnalyse={async () => {
+                        try {
+                          await save({ force: true });
+                          return true;
+                        } catch (err) {
+                          toast.error(`Couldn't save the draft: ${(err as Error).message}`);
+                          return false;
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Who it goes to, and the send itself */}
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3">
+                <Field
+                  label="Send to reviewers"
+                  required
+                  error={errorFor("reviewer_ids", "Pick at least one reviewer")}
+                >
+                  {reviewersQuery.isSuccess && reviewerOptions.length === 0 ? (
+                    <div
+                      className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${
+                        isMissing("reviewer_ids") ? "border-red-500" : "border-input"
+                      }`}
+                    >
+                      No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
+                    </div>
+                  ) : (
+                    <MultiSelect<string>
+                      options={reviewerOptions.map((r) => r.id)}
+                      value={pickedReviewers}
+                      onChange={(ids) => {
+                        setReviewerIds(ids);
+                        markEdited();
+                      }}
+                      placeholder={
+                        reviewersQuery.isLoading
+                          ? "Loading reviewers..."
+                          : reviewersQuery.isError
+                          ? "Couldn't load reviewers"
+                          : "Pick reviewers"
+                      }
+                      getLabel={(id) => {
+                        const r = reviewerOptions.find((x) => x.id === id);
+                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
+                      }}
+                      getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
+                      renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
+                      invalid={isMissing("reviewer_ids")}
+                      searchable
+                      selectAll
+                    />
+                  )}
+                  <p className="text-[11px] text-muted-foreground">
+                    {reviewersQuery.isSuccess && reviewerOptions.length === 0
+                      ? "Add users and give them a reviewer role (System & Security) to send them content."
+                      : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
+                  </p>
+                </Field>
+                {!videoLocked && duplicates && <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    {!videoLocked && duplicates?.blocked
+                      ? "Duplicate post: change the submission details above to send it."
+                      : videoLocked
+                      ? "Sends your script to the reviewers you picked."
+                      : !hasCheck
+                      ? "You haven't run the compliance check yet. It also runs when you send."
+                      : checkStale
+                      ? "Edited since your last check. It runs again when you send."
+                      : "Ready when you are. The reviewer sees the same check and analysis."}
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => submit()}
+                    disabled={submitting || checking || uploading.length > 0 || (!videoLocked && !!duplicates?.blocked)}
+                    className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Section>
+          </div>
+          <AlertDialog open={!!repostAsk} onOpenChange={(open) => !open && setRepostAsk(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Send the same post again?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {repostAsk && (
+                    <>
+                      The same post had already been sent for approval
+                      {repostAsk.submitted_at ? ` on ${format(new Date(repostAsk.submitted_at), "MMM d, yyyy")}` : ""} as{" "}
+                      {repostAsk.reference_code}, for{" "}
+                      {repostAsk.publish_at ? format(new Date(repostAsk.publish_at), "MMM d, yyyy") : "no publish date"}. Do you
+                      want to continue for {publishDate ? format(publishDate, "MMM d, yyyy") : "no publish date"}?
+                    </>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Not now</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    setRepostAsk(null);
+                    submit(true);
+                  }}
+                >
+                  Continue for this date
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* ---------------- Summary ---------------- */}
@@ -1871,11 +2258,13 @@ export default function NewSubmissionPage() {
               </SummaryRow>
               <SummaryRow icon={Globe2} label="Market Sentiment">
                 {moodDecision ? (
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
-                    <span className={`shrink-0 rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+                  <span className="flex min-w-0 flex-col items-start gap-1">
+                    <span className={`rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
                       {moodDecision.recommendation}
                     </span>
-                    <span className="truncate text-xs text-foreground/80">{moodDecision.reason}</span>
+                    <span className="text-xs leading-snug text-foreground/80" title={moodDecision.reason}>
+                      {moodDecision.reason}
+                    </span>
                   </span>
                 ) : (
                   <span className="text-muted-foreground text-xs">Unmonitored / Neutral</span>
@@ -1910,11 +2299,10 @@ export default function NewSubmissionPage() {
             </Button>
             <Button
               type="button"
-              onClick={submit}
-              disabled={submitting || uploading.length > 0}
+              onClick={() => checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
               className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+              <ArrowDown className="w-3.5 h-3.5" /> Check &amp; Send
             </Button>
           </div>
           {optionsQuery.isError && (

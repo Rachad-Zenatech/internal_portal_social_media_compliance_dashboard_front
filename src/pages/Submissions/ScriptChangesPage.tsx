@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, CheckCircle2, Download, Loader2, PencilLine, Upload } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Download, Loader2, PencilLine, Undo2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,22 @@ function Changes({ stage }: { stage: ScriptStage }) {
   const parts = useMemo(() => (shown ? diffWords(base?.body ?? shown.body, shown.body) : []), [base, shown]);
   const changes = useMemo(() => changesOf(parts), [parts]);
   const fromReviewer = shown?.source === "REVIEWER_EDIT";
+  // The creator can take the reviewer's changes one at a time: accept it, or keep their own wording there.
+  const [decisions, setDecisions] = useState<Record<number, "accept" | "reject">>({});
+  const decide = (id: number, d: "accept" | "reject") =>
+    setDecisions((prev) => {
+      const next = { ...prev };
+      if (next[id] === d) delete next[id];
+      else next[id] = d;
+      return next;
+    });
+  const rejected = parts.filter((p) => p.kind === "change" && decisions[p.id] === "reject").length;
+  const accepted = parts.filter((p) => p.kind === "change" && decisions[p.id] === "accept").length;
+  // The script with the reviewer's changes applied except where the creator kept their own wording.
+  const merged = useMemo(
+    () => parts.map((p) => (p.kind === "same" ? p.after : decisions[p.id] === "reject" ? p.removed : p.added)).join(""),
+    [parts, decisions]
+  );
   // The reviewer marked up the version they were reading: the one before their own edit, else the one shown.
   const textRef = useRef<HighlightableHandle | null>(null);
   // The reviewer's highlights the creator has checked off while editing.
@@ -141,6 +157,8 @@ function Changes({ stage }: { stage: ScriptStage }) {
 
   const verdict = scriptVerdict(editing ? null : shown.check);
   const canEdit = stage.can_respond;
+  // Taking the reviewer's changes one at a time, while it is the creator's turn on their edited version.
+  const canDecide = status === "EDITS_PROPOSED" && canEdit && fromReviewer && !editing;
 
   return (
     <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)] lg:flex-row">
@@ -330,25 +348,62 @@ function Changes({ stage }: { stage: ScriptStage }) {
             </>
           )}
           {tab === "request" && base &&
-            changes.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => pick(c.id)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors ${
-                  focusId === c.id ? "border-blue-500 bg-blue-50/50 dark:bg-blue-500/5" : "border-border bg-card hover:bg-muted/40"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-                    {c.number}
+            changes.map((c) => {
+              const d = decisions[c.id];
+              return (
+                <div
+                  key={c.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => pick(c.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      pick(c.id);
+                    }
+                  }}
+                  className={`flex cursor-pointer flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors ${
+                    focusId === c.id ? "border-blue-500 bg-blue-50/50 dark:bg-blue-500/5" : "border-border bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                      {c.number}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">{displayText(c.before) ? `after “…${displayText(c.before)}”` : "at the start of a line"}</span>
+                    {d && (
+                      <span
+                        className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          d === "accept" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
+                        }`}
+                      >
+                        {d === "accept" ? "Accepted" : "Keeping mine"}
+                      </span>
+                    )}
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">{displayText(c.before) ? `after “…${displayText(c.before)}”` : "at the start of a line"}</span>
-                </span>
-                {c.removed && <span className="rounded bg-red-100 px-1.5 py-0.5 text-[13px] text-red-800 line-through dark:bg-red-500/20 dark:text-red-300">{displayText(c.removed) || "(formatting)"}</span>}
-                {c.added && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[13px] text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200">{displayText(c.added) || "(formatting)"}</span>}
-              </button>
-            ))}
+                  {c.removed && (
+                    <span className={`rounded bg-red-100 px-1.5 py-0.5 text-[13px] text-red-800 dark:bg-red-500/20 dark:text-red-300 ${d === "reject" ? "" : "line-through"}`}>
+                      {displayText(c.removed) || "(formatting)"}
+                    </span>
+                  )}
+                  {c.added && (
+                    <span className={`rounded bg-emerald-100 px-1.5 py-0.5 text-[13px] text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200 ${d === "reject" ? "line-through opacity-60" : ""}`}>
+                      {displayText(c.added) || "(formatting)"}
+                    </span>
+                  )}
+                  {canDecide && (
+                    <span className="mt-0.5 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button type="button" size="sm" variant={d === "accept" ? "default" : "outline"} className="h-7 flex-1 gap-1 text-xs" onClick={() => decide(c.id, "accept")}>
+                        <Check className="w-3.5 h-3.5" /> Accept
+                      </Button>
+                      <Button type="button" size="sm" variant={d === "reject" ? "default" : "outline"} className="h-7 flex-1 gap-1 text-xs" onClick={() => decide(c.id, "reject")}>
+                        <X className="w-3.5 h-3.5" /> Keep mine
+                      </Button>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           {tab === "request" && base && changes.length === 0 && <p className="px-1 py-6 text-center text-xs text-muted-foreground">The wording is the same.</p>}
         </div>
 
@@ -407,15 +462,66 @@ function Changes({ stage }: { stage: ScriptStage }) {
             </>
           ) : status === "EDITS_PROPOSED" && canEdit ? (
             <>
-              <p className="text-[13px] text-foreground/80">Accepting approves the script and unlocks the video upload.</p>
+              {changes.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {accepted + rejected === 0
+                    ? "Accept or keep your own wording on each change, or accept them all below."
+                    : `${accepted} accepted · ${rejected} kept as yours · ${changes.length - accepted - rejected} not decided (taken as accepted).`}
+                </p>
+              )}
+              {rejected > 0 ? (
+                <>
+                  <p className="text-[13px] text-foreground/80">
+                    You are keeping your wording on {rejected} change{rejected === 1 ? "" : "s"}, so this goes back to the reviewer to check.
+                  </p>
+                  <NoteField
+                    valueRef={noteValue}
+                    onHasText={noop}
+                    rows={2}
+                    placeholder="Note for the reviewer (optional): why you kept your wording"
+                    aria-label="Note for the reviewer"
+                    className="min-h-0 resize-none bg-card text-[13px]"
+                  />
+                </>
+              ) : (
+                <p className="text-[13px] text-foreground/80">Accepting approves the script and unlocks the video upload.</p>
+              )}
               <div className="flex gap-2">
-                <Button variant="outline" className="h-10 flex-1 gap-1.5" onClick={() => setEditing(true)}>
+                <Button
+                  variant="outline"
+                  className="h-10 flex-1 gap-1.5"
+                  onClick={() => {
+                    // Editing starts from what the creator has decided so far.
+                    setText(merged);
+                    setEditing(true);
+                  }}
+                >
                   <PencilLine className="w-4 h-4" /> Edit the script
                 </Button>
-                <Button className="h-10 flex-1" disabled={accept.isPending} onClick={() => accept.mutate()}>
-                  {accept.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Accept changes
-                </Button>
+                {rejected > 0 ? (
+                  <Button
+                    className="h-10 flex-1"
+                    disabled={revise.isPending}
+                    onClick={() =>
+                      revise.mutate(
+                        { text: merged, note: noteValue.current.trim() || undefined },
+                        { onSuccess: () => navigate("/submissions") }
+                      )
+                    }
+                  >
+                    {revise.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Send to reviewer
+                  </Button>
+                ) : (
+                  <Button className="h-10 flex-1" disabled={accept.isPending} onClick={() => accept.mutate()}>
+                    {accept.isPending && <Loader2 className="w-4 h-4 animate-spin" />} {accepted > 0 ? "Accept all changes" : "Accept changes"}
+                  </Button>
+                )}
               </div>
+              {accepted + rejected > 0 && (
+                <Button variant="ghost" size="sm" className="h-7 w-fit gap-1 px-2 text-xs" onClick={() => setDecisions({})}>
+                  <Undo2 className="w-3.5 h-3.5" /> Start over
+                </Button>
+              )}
             </>
           ) : status === "CHANGES_REQUESTED" && canEdit ? (
             <div className="flex gap-2">

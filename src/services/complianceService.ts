@@ -176,6 +176,44 @@ export interface ComplianceCheckResponse {
   content_parts?: string[];
   /** Rule sets the post's wording brought in on top of the chosen ones, and the wording that did it. */
   added_rule_sets?: { rule_set: string; because: string[] }[];
+  /** The sources the post cites (links, "Source:" lines, attached documents) and what each showed about its claims. */
+  source_checks?: SourceCheck[];
+}
+
+/**
+ * SUPPORTED: the source says it. CONTRADICTED: it says something different, or less (costs points). NOT_FOUND: it covers
+ * the subject but not this. UNCLEAR: could be read either way, so a person decides.
+ */
+export type SourceVerdict = 'SUPPORTED' | 'CONTRADICTED' | 'NOT_FOUND' | 'UNCLEAR';
+
+export interface SourceClaim {
+  /** The claim as the post states it. */
+  claim: string;
+  verdict: SourceVerdict;
+  where: 'caption' | 'image';
+  /** What the source says about it (not always word for word). */
+  evidence?: string | null;
+  /** What to change or check, when the verdict isn't SUPPORTED. */
+  note?: string | null;
+  confidence: number;
+}
+
+export interface SourceCheck {
+  /** The link, the cited document's name, or the attached file's name. */
+  reference: string;
+  kind: 'URL' | 'NAMED' | 'DOCUMENT';
+  where: 'caption' | 'image' | 'attached';
+  /** The words that marked it as a citation ("Source:", "Read the full article"). */
+  cue?: string | null;
+  /** READ: opened and checked. UNREADABLE: couldn't be opened or read. NOT_PROVIDED: cited by name only. */
+  status: 'READ' | 'UNREADABLE' | 'NOT_PROVIDED';
+  title?: string | null;
+  url?: string | null;
+  published?: string | null;
+  authority?: 'OFFICIAL' | 'COMPANY' | 'NEWS' | 'OTHER' | null;
+  message?: string | null;
+  claims: SourceClaim[];
+  model?: string | null;
 }
 
 /** What the check read from the post's symbols, before its wording was matched against the rules. */

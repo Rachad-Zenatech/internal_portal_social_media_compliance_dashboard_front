@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import Breadcrumbs from "./Breadcrumbs";
 import { GlobalProgressOverlay } from "./GlobalProgressOverlay";
+import AiStatusBanner from "./AiStatusBanner";
 
 interface Props {
   children: ReactNode;
@@ -44,6 +45,7 @@ export default function AppShell({ children }: Props) {
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         <TopBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <AiStatusBanner />
         <main
           ref={mainRef}
           className="app-canvas flex-1 overflow-y-auto overflow-x-hidden p-2.5 sm:p-3.5 md:p-4"

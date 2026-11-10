@@ -69,6 +69,20 @@ const EMPTY_LABELS: Record<string, string> = {
   BLOG: "No copy yet",
 };
 
+/**
+ * A picture or video frame shown whole in whatever box it's given, whatever its shape. Tall, wide and square media all
+ * fit without being cropped; the empty sides are filled with a soft, blurred copy of the same picture, so cards keep
+ * one size and still look full.
+ */
+function FitMedia({ src }: { src: string }) {
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-neutral-900">
+      <img src={src} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl" />
+      <img src={src} alt="" loading="lazy" className="relative h-full w-full object-contain" />
+    </div>
+  );
+}
+
 /** Card/list thumbnail: the picked video frame, the image itself, or a styled placeholder. */
 export function CoverThumb({
   cover,
@@ -92,13 +106,17 @@ export function CoverThumb({
   const Icon = CONTENT_ICONS[contentType] ?? FileText;
 
   if (cover && !isVideo && src) {
-    return <img src={src} alt="" loading="lazy" className={`w-full h-full object-cover ${className}`} />;
+    return (
+      <div className={`h-full w-full ${className}`}>
+        <FitMedia src={src} />
+      </div>
+    );
   }
   if (isVideo) {
     return (
       <div className={`relative w-full h-full bg-neutral-900 ${className}`}>
         {thumb.dataUrl ? (
-          <img src={thumb.dataUrl} alt="" className="w-full h-full object-cover" />
+          <FitMedia src={thumb.dataUrl} />
         ) : (
           <div className="w-full h-full grid place-items-center">
             <Film className="w-6 h-6 text-white/40 animate-pulse" />

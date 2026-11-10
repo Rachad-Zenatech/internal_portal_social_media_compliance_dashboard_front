@@ -19,7 +19,7 @@ import { ChevronLeft, ChevronRight, Crown, ExternalLink, FlaskConical, Plus, Rot
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import DemoPoster from "@/components/video/DemoPoster";
 import { CoverThumb } from "@/components/submissions/PostPreview";
@@ -147,42 +147,9 @@ function PostCard({ item, state, selected, onSelect }: { item: CalendarItem; sta
   );
 }
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: [string, string][];
-}) {
-  const current = options.find(([v]) => v === value)?.[1] ?? "";
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className="h-auto min-h-12 w-full flex-1 basis-[160px] rounded-none border-0 border-r border-border/70 px-4 py-2 text-left shadow-none focus-visible:ring-inset"
-        aria-label={label}
-      >
-        <span className="flex min-w-0 flex-col items-start leading-tight">
-          <span className="text-[13px] font-medium text-foreground">{label}</span>
-          <span className="truncate text-xs text-muted-foreground">{current}</span>
-        </span>
-        <span className="sr-only">
-          <SelectValue />
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        {options.map(([v, text]) => (
-          <SelectItem key={v} value={v} className="text-[13px]">
-            {text}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
+/** The look of a filter in the bar above the calendar: flush cells separated by a rule, title over the choice. */
+const BAR_FILTER =
+  "h-auto min-h-12 w-full flex-1 basis-[160px] rounded-none border-0 border-r border-border/70 bg-transparent px-4 py-2 text-left shadow-none hover:bg-muted/40";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -198,10 +165,11 @@ export default function ContentCalendarPage() {
   const [view, setView] = useState<View>("week");
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [profile, setProfile] = useState("all");
-  const [brand, setBrand] = useState("all");
-  const [platform, setPlatform] = useState("all");
-  const [status, setStatus] = useState<"all" | SproutState>("all");
+  // Each filter takes several values; none picked means all.
+  const [profileSel, setProfileSel] = useState<string[]>([]);
+  const [brandSel, setBrandSel] = useState<string[]>([]);
+  const [platformSel, setPlatformSel] = useState<string[]>([]);
+  const [statusSel, setStatusSel] = useState<string[]>([]);
   const sent = useSentToSprout();
   const published = usePublished();
   const now = new Date();
@@ -230,10 +198,10 @@ export default function ContentCalendarPage() {
 
   const visible = items.filter(
     (i) =>
-      (profile === "all" || profileKey(i) === profile) &&
-      (brand === "all" || i.brand_code === brand) &&
-      (platform === "all" || i.platforms.includes(platform)) &&
-      (status === "all" || stateOf(i, sent, now) === status)
+      (profileSel.length === 0 || profileSel.includes(profileKey(i))) &&
+      (brandSel.length === 0 || (i.brand_code != null && brandSel.includes(i.brand_code))) &&
+      (platformSel.length === 0 || i.platforms.some((p) => platformSel.includes(p))) &&
+      (statusSel.length === 0 || statusSel.includes(stateOf(i, sent, now)))
   );
 
   // The days on screen: a week, or the month around the week (whole weeks).
@@ -257,7 +225,7 @@ export default function ContentCalendarPage() {
   const goToday = () => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const title = view === "month" ? format(month, "MMMM yyyy") : `Week of ${format(weekStart, "MMM d, yyyy")}`;
   const anyActivity = Object.keys(sent).length > 0 || Object.keys(published).length > 0;
-  const filtersOn = [profile, brand, platform, status].some((v) => v !== "all");
+  const filtersOn = [profileSel, brandSel, platformSel, statusSel].some((v) => v.length > 0);
 
   const send = (item: CalendarItem) => {
     // Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
@@ -349,14 +317,41 @@ export default function ContentCalendarPage() {
 
           {/* Filters */}
           <div className="flex flex-wrap items-stretch border-b border-border/70">
-            <FilterSelect label="Profiles" value={profile} onChange={setProfile} options={[["all", `All ${profiles.length} profiles`], ...profiles]} />
-            <FilterSelect label="Brands" value={brand} onChange={setBrand} options={[["all", "All brands"], ...brands.map((b): [string, string] => [b.code, b.name])]} />
-            <FilterSelect label="Platforms" value={platform} onChange={setPlatform} options={[["all", "All platforms"], ...platforms.map((p): [string, string] => [p, platformName(p)])]} />
-            <FilterSelect
-              label="Status"
-              value={status}
-              onChange={(v) => setStatus(v as "all" | SproutState)}
-              options={[["all", "Every status"], ...LEGEND.map((s): [string, string] => [s, STATE[s].label])]}
+            <MultiSelectFilter
+              title="Profiles"
+              options={profiles.map(([value, label]) => ({ value, label }))}
+              value={profileSel}
+              onChange={setProfileSel}
+              allLabel={`All ${profiles.length} profiles`}
+              noun="profile"
+              className={BAR_FILTER}
+            />
+            <MultiSelectFilter
+              title="Brands"
+              options={brands.map((b) => ({ value: b.code, label: b.name }))}
+              value={brandSel}
+              onChange={setBrandSel}
+              allLabel="All brands"
+              noun="brand"
+              className={BAR_FILTER}
+            />
+            <MultiSelectFilter
+              title="Platforms"
+              options={platforms.map((p) => ({ value: p, label: platformName(p) }))}
+              value={platformSel}
+              onChange={setPlatformSel}
+              allLabel="All platforms"
+              noun="platform"
+              className={BAR_FILTER}
+            />
+            <MultiSelectFilter
+              title="Status"
+              options={LEGEND.map((s) => ({ value: s, label: STATE[s].label }))}
+              value={statusSel}
+              onChange={setStatusSel}
+              allLabel="Every status"
+              noun="status"
+              className={BAR_FILTER}
             />
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-xs text-muted-foreground">
               {LEGEND.map((s) => (
@@ -369,10 +364,10 @@ export default function ContentCalendarPage() {
                   type="button"
                   className="font-medium text-blue-700 hover:underline dark:text-blue-300"
                   onClick={() => {
-                    setProfile("all");
-                    setBrand("all");
-                    setPlatform("all");
-                    setStatus("all");
+                    setProfileSel([]);
+                    setBrandSel([]);
+                    setPlatformSel([]);
+                    setStatusSel([]);
                   }}
                 >
                   Clear filters

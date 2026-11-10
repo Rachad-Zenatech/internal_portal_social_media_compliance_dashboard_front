@@ -156,7 +156,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signedIn = Boolean(permissions);
   useEffect(() => {
     if (!signedIn) return;
-    const refresh = window.setInterval(() => refreshLinkToken().catch(() => undefined), LINK_TOKEN_REFRESH_MS);
+    let lastLinkRefresh = Date.now();
+    const refreshLink = () => {
+      lastLinkRefresh = Date.now();
+      return refreshLinkToken().catch(() => undefined);
+    };
+    const refresh = window.setInterval(refreshLink, LINK_TOKEN_REFRESH_MS);
+    // A sleeping laptop or a background tab can pause that timer past the token's life, leaving every image and video
+    // on the page with an expired link. Refresh as soon as the tab is looked at again.
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastLinkRefresh > LINK_TOKEN_REFRESH_MS / 2) refreshLink();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
     let active = false;
     let lastBeat = Date.now();
     const onActivity = () => {
@@ -172,6 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 30_000);
     return () => {
       window.clearInterval(refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
       window.clearInterval(beat);
       events.forEach((e) => window.removeEventListener(e, onActivity));
     };

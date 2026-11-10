@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { format, formatDistanceToNow } from "date-fns";
+import { differenceInCalendarDays, format, formatDistanceToNow } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import type { DateRange } from "react-day-picker";
 import {
   AlertTriangle,
   BarChart3,
+  CalendarRange,
   CheckCircle2,
   ChevronDown,
   Eye,
@@ -21,7 +23,10 @@ import {
 
 import { Section, SectionIcon, TONE, type Tone } from "@/components/dashboard/dashboardParts";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePerformance } from "@/hooks/usePerformance";
@@ -34,6 +39,93 @@ const RANGES = [
   { days: 90, label: "90 days" },
 ];
 const ALL = "ALL";
+// The longest custom range the server accepts, in days (both ends included).
+const MAX_RANGE_DAYS = 366;
+
+type AppliedRange = { from: Date; to: Date };
+
+const rangeDays = (r: { from: Date; to: Date }) => differenceInCalendarDays(r.to, r.from) + 1;
+const rangeLabel = (r: AppliedRange) =>
+  r.from.getFullYear() === r.to.getFullYear()
+    ? `${format(r.from, "MMM d")} – ${format(r.to, "MMM d, yyyy")}`
+    : `${format(r.from, "MMM d, yyyy")} – ${format(r.to, "MMM d, yyyy")}`;
+
+/** A pill that opens a two-month calendar to pick a start and end day; the range only applies on Apply. */
+function CustomRangePicker({ value, onApply, onClear }: { value: AppliedRange | null; onApply: (r: AppliedRange) => void; onClear: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<DateRange | undefined>(value ?? undefined);
+  const complete = draft?.from && draft?.to ? { from: draft.from, to: draft.to } : null;
+  const tooLong = complete ? rangeDays(complete) > MAX_RANGE_DAYS : false;
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) setDraft(value ?? undefined);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Custom date range"
+          className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors ${
+            value ? "border-blue-700 bg-blue-700 text-white shadow-sm" : "border-border bg-card text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <CalendarRange className="w-3.5 h-3.5" />
+          {value ? rangeLabel(value) : "Custom range"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <Calendar
+          mode="range"
+          numberOfMonths={2}
+          selected={draft}
+          onSelect={setDraft}
+          defaultMonth={draft?.from ?? new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)}
+          disabled={{ after: new Date() }}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2.5">
+          <p className={`text-xs ${tooLong ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
+            {!draft?.from
+              ? "Pick a start day, then an end day."
+              : !complete
+              ? `From ${format(draft.from, "MMM d, yyyy")}: pick an end day.`
+              : tooLong
+              ? `That's ${rangeDays(complete)} days; pick at most ${MAX_RANGE_DAYS}.`
+              : `${rangeLabel(complete)} · ${rangeDays(complete)} day${rangeDays(complete) === 1 ? "" : "s"}`}
+          </p>
+          <div className="flex gap-2">
+            {value && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => {
+                  onClear();
+                  setOpen(false);
+                }}
+              >
+                Clear
+              </Button>
+            )}
+            <Button
+              size="sm"
+              className="h-8 bg-blue-700 text-xs text-white hover:bg-blue-800"
+              disabled={!complete || tooLong}
+              onClick={() => {
+                if (complete) onApply(complete);
+                setOpen(false);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 const HEALTH: Record<PostHealth, { label: string; tone: string; edge: string; Icon: typeof CheckCircle2 }> = {
   HEALTHY: { label: "Positive", tone: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", edge: "border-l-emerald-500", Icon: CheckCircle2 },
@@ -395,6 +487,8 @@ function PostDetail({ post, onClose }: { post: PerformancePost | null; onClose: 
  */
 export default function PostPerformancePage() {
   const [days, setDays] = useState(30);
+  // A custom range, when set, replaces the 7 / 30 / 90 days.
+  const [custom, setCustom] = useState<AppliedRange | null>(null);
   const [platform, setPlatform] = useState(ALL);
   const [brand, setBrand] = useState(ALL);
   // Undefined until someone picks: the server starts reviewers on the team's posts and creators on their own.
@@ -402,6 +496,8 @@ export default function PostPerformancePage() {
   const [open, setOpen] = useState<PerformancePost | null>(null);
   const { report, isLoading, isFetching, error } = usePerformance({
     days,
+    start: custom ? format(custom.from, "yyyy-MM-dd") : undefined,
+    end: custom ? format(custom.to, "yyyy-MM-dd") : undefined,
     platform: platform === ALL ? undefined : platform,
     brand: brand === ALL ? undefined : brand,
     mine,
@@ -454,7 +550,17 @@ export default function PostPerformancePage() {
 
       {/* Filters, in one row above everything they affect. */}
       <div className="flex flex-wrap items-center gap-2">
-        <Pills label="Period" value={days} onChange={setDays} options={RANGES.map((r) => ({ v: r.days, label: r.label }))} />
+        <Pills
+          label="Period"
+          // No pill is selected while a custom range is on.
+          value={custom ? -1 : days}
+          onChange={(d) => {
+            setDays(d);
+            setCustom(null);
+          }}
+          options={RANGES.map((r) => ({ v: r.days, label: r.label }))}
+        />
+        <CustomRangePicker value={custom} onApply={setCustom} onClear={() => setCustom(null)} />
         <Select value={platform} onValueChange={setPlatform}>
           <SelectTrigger size="sm" className="h-8 w-[170px] rounded-full bg-card text-xs" aria-label="Platform">
             <SelectValue />
@@ -597,7 +703,7 @@ export default function PostPerformancePage() {
 
             <Section
               title="Views by Platform"
-              subtitle={`Last ${days} days`}
+              subtitle={custom ? rangeLabel(custom) : `Last ${days} days`}
               icon={<SectionIcon Icon={BarChart3} tone="blue" />}
               className="lg:col-span-2 2xl:col-span-1"
             >
