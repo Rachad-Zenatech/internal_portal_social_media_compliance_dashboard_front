@@ -30,6 +30,24 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
 - `GlobalProgressOverlay` (export function)
 
+## src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
+- `HubQueueOrStreamItem` (export interface)
+- `HubChannelGroupStatus` (export interface)
+- `HubConnectedServer` (export interface)
+- `MessageHubStatusResponse` (export interface)
+- `forceServerOffline` (function)
+- `buildOfflineServer` (function)
+    - `q` (fn)
+- `buildAllOfflineFallback` (function)
+- `fetchWithTimeout` (function)
+- `MessageHubStatusDropdown` (export function)
+    - `queryClient` (fn)
+    - `handleActiveTest` (fn)
+    - `getStatusDot` (fn)
+    - `getServerBadge` (fn)
+    - `formatLastSeen` (fn)
+    - `renderMetric` (fn)
+
 ## src/components/AppShell/Navigation.tsx (140 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface)
 - `NavigationItem` (export interface)
@@ -48,7 +66,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - `ThemeSwitch` (export function)
 
-## src/components/AppShell/TopBar.tsx (596 lines) - top bar (components  app shell)
+## src/components/AppShell/TopBar.tsx (598 lines) - top bar (components  app shell)
 - `ViewModeToggle` (function) - Super admins only: switch between seeing the app as a reviewer and as a content creator.
 - `TopBarClock` (function)
 - `sendWindowsNotification` (function)
@@ -268,6 +286,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+
+## src/components/submissions/DelegateReview.tsx (152 lines) - delegate review (components submissions)
+- `DelegateTarget` (interface)
+- `DelegateReviewButton` (export function) - Hand the post in review to another reviewer.
+- `DelegationTrail` (export function) - Who handed this post to whom, newest first.
 
 ## src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - `DeleteDraftTarget` (export interface)
@@ -1148,6 +1171,10 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `openRow` (fn)
     - `activity` (fn) - The team's activity, minus the reviewer's own actions.
     - `plural` (fn)
+
+## src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
+- `Outcome` (function) - What happened to the delegated version: still waiting, or who decided and how.
+- `DelegationsPage` (export function) - Delegation history: every post the reviewer handed to someone else, or that was handed to them, and where each  one stands now.
 
 ## src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - `AuditLog` (export function)
