@@ -4,6 +4,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
   ArrowRight,
+  BarChart3,
   BookOpen,
   CalendarClock,
   Check,
@@ -677,6 +678,186 @@ function ResultView({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: num
   );
 }
 
+const CARD = "rounded-2xl border border-border/70 bg-card p-5 shadow-xs sm:p-6";
+
+const VERDICT_PILL: Record<SentimentAssessment, string> = {
+  NO_CONCERNS: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200",
+  REVIEW_SUGGESTED: "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200",
+  SIGNIFICANT_CONCERNS: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200",
+  INSUFFICIENT_INFORMATION: "bg-muted text-foreground",
+};
+
+/** The editor's version of the result: the verdict, then tone, brand fit and reputational concern in three tiles. */
+function DesignHead({ r, ctx }: { r: SentimentResult; ctx?: FindingContext }) {
+  const a = ASSESSMENT[r.overall_assessment];
+  const brandTone = r.brand_alignment.rating === "MISALIGNED" ? LEVEL_TONE.HIGH : r.brand_alignment.rating === "PARTIALLY_ALIGNED" ? LEVEL_TONE.MODERATE : "";
+  const tile = (label: string, value: string, note?: string | null, tone = "") => (
+    <div className="flex flex-col gap-1.5 rounded-xl border border-border/70 p-3.5">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className={`text-base font-bold ${tone}`}>{value}</span>
+      {note && <span className="text-xs leading-relaxed text-muted-foreground">{note}</span>}
+    </div>
+  );
+  return (
+    <>
+      {ctx?.analysis.comparison && <ComparisonView c={ctx.analysis.comparison} r={r} />}
+      <div className="flex flex-wrap items-start gap-4 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:p-5">
+        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-bold ${VERDICT_PILL[r.overall_assessment]}`}>
+          <a.Icon className="h-4 w-4" /> {a.label}
+        </span>
+        <p className="min-w-0 flex-1 basis-80 text-sm leading-relaxed text-foreground/90">{r.summary}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {tile("Tone", r.tone.primary, [r.tone.secondary, `${titleCase(r.tone.intensity)} intensity`].filter(Boolean).join(" · "))}
+        {tile("Fit with the brand", BRAND_LABELS[r.brand_alignment.rating], r.brand_alignment.explanation, brandTone)}
+        {tile("Reputational concern", titleCase(r.reputational_concern), null, LEVEL_TONE[r.reputational_concern])}
+      </div>
+    </>
+  );
+}
+
+const READING: Record<string, { label: string; cls: string }> = {
+  NONE: { label: "Positive", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200" },
+  LOW: { label: "Positive", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200" },
+  MODERATE: { label: "Mixed", cls: "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200" },
+  HIGH: { label: "Concern", cls: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200" },
+};
+
+/** Audiences, the controversy dial and what was flagged, each in its own card, as in the design. */
+function DesignRest({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: number) => void; ctx?: FindingContext }) {
+  const c = r.controversy;
+  const findings = bySeverity(r.findings);
+  return (
+    <>
+      {(r.audience_interpretations.length > 0 || (c.applies && c.level)) && (
+        <section className={`${CARD} flex flex-col gap-3.5`}>
+          <h2 className="text-lg font-bold text-foreground">How each audience may read it</h2>
+          {r.audience_interpretations.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {r.audience_interpretations.map((ai, i) => {
+                const reading = READING[ai.concern_level] ?? READING.LOW;
+                return (
+                  <div key={i} className="flex flex-col gap-2 rounded-xl border border-border/70 p-3.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-foreground">{ai.audience}</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${reading.cls}`}>{reading.label}</span>
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-foreground/80">{ai.likely_reading}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {c.applies && c.level ? (
+            <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 p-3.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-sm font-bold text-foreground">Controversy: level {c.level} of 6</span>
+                {c.style && <span className="text-xs text-muted-foreground">{c.style}</span>}
+              </div>
+              <div className="grid grid-cols-6 gap-1.5" role="img" aria-label={`Controversy level ${c.level} of 6`}>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <span
+                    key={n}
+                    className={`grid h-8 place-items-center rounded-lg border text-xs font-bold ${
+                      n === c.level
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : n <= 4
+                        ? "border-blue-100 bg-blue-50 text-blue-900 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200"
+                        : "border-red-100 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200"
+                    }`}
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>Educational</span>
+                <span>Confrontational</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 text-[11px]">
+                {c.target && (
+                  <span className={`rounded-md px-2 py-0.5 ${c.target === "PEOPLE_OR_INSTITUTIONS" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground"}`}>
+                    {TARGET_LABELS[c.target]}
+                  </span>
+                )}
+                {c.professional_and_nonpartisan != null && (
+                  <span className={`rounded-md px-2 py-0.5 ${c.professional_and_nonpartisan ? "bg-muted text-muted-foreground" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
+                    {c.professional_and_nonpartisan ? "Professional & nonpartisan" : "Not professional / nonpartisan"}
+                  </span>
+                )}
+                {c.capability_claims_precise != null && (
+                  <span className={`rounded-md px-2 py-0.5 ${c.capability_claims_precise ? "bg-muted text-muted-foreground" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>
+                    {c.capability_claims_precise ? "Capability claims precise" : "Capability claims overstated"}
+                  </span>
+                )}
+                {c.defense_buyer_credibility_risk && (
+                  <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
+                    Defense-buyer credibility risk: <strong className={LEVEL_TONE[c.defense_buyer_credibility_risk]}>{titleCase(c.defense_buyer_credibility_risk)}</strong>
+                  </span>
+                )}
+              </div>
+              {c.explanation && <p className="text-xs leading-relaxed text-muted-foreground">{c.explanation}</p>}
+            </div>
+          ) : null}
+        </section>
+      )}
+      {r.precedents && r.precedents.length > 0 && <PrecedentsView precedents={r.precedents} />}
+
+      <section className={`${CARD} flex flex-col gap-3.5`}>
+        <h2 className="text-lg font-bold text-foreground">Things it noticed</h2>
+        {findings.length === 0 ? (
+          <p className="text-[13px] text-muted-foreground">Nothing in the post stood out.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
+            {findings.map((f, i) => (
+              <FindingCard key={f.id ?? i} f={f} onSeek={onSeek} ctx={ctx} />
+            ))}
+          </div>
+        )}
+        {r.audio && <AudioCard audio={r.audio} />}
+        {r.information_gaps.length > 0 && (
+          <div className="border-t border-border/60 pt-3 text-[13px] leading-relaxed text-muted-foreground">
+            <strong className="font-semibold text-foreground">What it couldn't see:</strong> {r.information_gaps.join(" ")}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
+/** The side column: what the analysis read, and how to use it. */
+function DesignAside({ analysis, result }: { analysis: SentimentAnalysis | null | undefined; result: SentimentResult | null | undefined }) {
+  const images = analysis?.images?.length ?? 0;
+  return (
+    <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-4">
+      {result && analysis && (
+        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs sm:p-5">
+          <h2 className="text-base font-bold text-foreground">What it read</h2>
+          <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-foreground/80">
+            <li>Title and caption</li>
+            {images > 0 && <li>{images} image{images === 1 ? "" : "s"}, including {images === 1 ? "its" : "their"} text</li>}
+            {analysis.has_video && <li>The video, its speech and on-screen text</li>}
+            {analysis.context_used && analysis.context_used.length > 0 && <li>Brand voice and audience notes: {analysis.context_used.join(", ")}</li>}
+            {result.guidelines_used.length > 0 && <li>{result.guidelines_used.length} rule{result.guidelines_used.length === 1 ? "" : "s"} that apply to this post</li>}
+            {result.precedents && result.precedents.length > 0 && <li>{result.precedents.length} similar past review{result.precedents.length === 1 ? "" : "s"}, as guidance</li>}
+          </ul>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {analysis.completed_at ? `Ran ${formatDistanceToNow(new Date(analysis.completed_at), { addSuffix: true })}` : "Ran just now"}
+            {analysis.model ? ` · ${analysis.model}` : ""}
+          </p>
+          {result.model_note && <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{result.model_note}</p>}
+        </section>
+      )}
+      <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs sm:p-5">
+        <h2 className="text-base font-bold text-foreground">Use it to improve the post</h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">
+          Change the caption, then run it again. Each run reads the latest version. It is advice for you: it has no score, and nothing here blocks you from sending.
+        </p>
+      </section>
+    </aside>
+  );
+}
+
 /**
  * Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
  * Advisory only, shown alongside (never instead of) the rulebook check and human review.
@@ -688,6 +869,8 @@ export default function SentimentPanel({
   onSeek,
   onApplyRevision,
   beforeAnalyse,
+  showTopicTrends = true,
+  design = false,
   className = "",
 }: {
   submissionId?: string | null;
@@ -701,6 +884,10 @@ export default function SentimentPanel({
   /** In the editor: saves the draft and runs the rulebook check, so one click runs every check. Resolves false if it
    * couldn't run, and then nothing else does. */
   beforeAnalyse?: () => Promise<boolean>;
+  /** Show how the post's topics are doing online. Off where the page shows public mood in its own section. */
+  showTopicTrends?: boolean;
+  /** The editor's layout: cards and a side column, as in the design. */
+  design?: boolean;
   className?: string;
 }) {
   const { analysis, isLoading, run, scheduleAfterReset, rate, saveTestCase, usage } = useSentiment(submissionId, version);
@@ -710,8 +897,9 @@ export default function SentimentPanel({
   const [showDetail, setShowDetail] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const canRun = canRunProp && version == null;
+  const trends = SHOW_TOPIC_TRENDS && showTopicTrends;
   // The topics' current mood only means something for the current content, not an earlier version.
-  const topics = usePublicMood(submissionId, SHOW_TOPIC_TRENDS && version == null);
+  const topics = usePublicMood(submissionId, trends && version == null);
   const running = isSentimentRunning(analysis) || run.isPending || preparing;
   /** All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis. */
   const analyseAll = async () => {
@@ -723,7 +911,7 @@ export default function SentimentPanel({
         setPreparing(false);
       }
     }
-    if (SHOW_TOPIC_TRENDS) topics.refresh();
+    if (trends) topics.refresh();
     run.mutate();
   };
   const ctx: FindingContext | undefined =
@@ -742,72 +930,8 @@ export default function SentimentPanel({
   const resetsIn = resetAt ? formatDistanceToNow(new Date(resetAt)) : null;
   const result = analysis?.status === "COMPLETED" ? analysis.result : null;
 
-  return (
-    // A size container, so the result spreads into more columns wherever the panel is wide.
-    <div className={`@container space-y-3 ${className}`}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-violet-500" /> Sentiment analysis
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            Advisory · {SHOW_TOPIC_TRENDS ? "how its topics are doing online, and " : ""}how the post is likely to be perceived
-            {beforeAnalyse ? ". Analyse also runs the rulebook check." : ""}
-          </p>
-        </div>
-        {canRun && submissionId && (
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-[11px] gap-1"
-              disabled={running || outOfRuns}
-              onClick={analyseAll}
-              title={
-                outOfRuns
-                  ? "Daily AI limit reached"
-                  : beforeAnalyse
-                  ? "Runs the rulebook check, the topic trend and the perception check together"
-                  : undefined
-              }
-            >
-              {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              {analysis ? "Re-run" : "Analyse"}
-            </Button>
-            {usage?.remaining != null && (
-              <span className={`text-[10px] tabular-nums ${outOfRuns ? "text-amber-700 dark:text-amber-300 font-semibold" : "text-muted-foreground"}`}>
-                {outOfRuns ? "Daily limit reached" : `${usage.remaining} left today`}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-      {canRun && outOfRuns && (
-        <p className="text-[11px] rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-200 px-2 py-1.5">
-          The daily AI limit for sentiment analysis has been reached
-          {companyCapped ? " for the whole company" : ""}.
-          {resetsIn ? ` More runs free up in ${resetsIn}.` : ""} Unchanged content still shows its last result.
-        </p>
-      )}
-
-      {SHOW_TOPIC_TRENDS && submissionId && version == null && (
-        <TopicTrend
-          submissionId={submissionId}
-          mood={topics.mood}
-          isLoading={topics.isLoading}
-          canEdit={canRunProp}
-          busy={topics.dismissTopic.isPending}
-          onDismiss={(topicId) => topics.dismissTopic.mutate({ topicId })}
-          onRestore={(topicId) => topics.dismissTopic.mutate({ topicId, restore: true })}
-        />
-      )}
-
-      {submissionId && (
-        <p className={`flex items-center gap-1.5 text-xs font-semibold text-foreground ${SHOW_TOPIC_TRENDS ? "border-t border-border/60 pt-3" : ""}`}>
-          <Users className="w-3.5 h-3.5 text-violet-500" /> How it'll be perceived
-        </p>
-      )}
-
+  const statusChain = (
+    <>
       {!submissionId ? (
         <p className="text-xs text-muted-foreground">Save the draft to analyse its tone.</p>
       ) : isLoading ? (
@@ -874,6 +998,15 @@ export default function SentimentPanel({
             </Button>
           )}
         </div>
+      ) : result && design ? (
+        <>
+          {!analysis.is_current && (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+              <strong className="font-semibold">You've changed the post since this was run.</strong> Run it again to see how the new version reads.
+            </p>
+          )}
+          <DesignHead r={result} ctx={ctx} />
+        </>
       ) : result ? (
         <>
           {!analysis.is_current && (
@@ -887,7 +1020,7 @@ export default function SentimentPanel({
               High-stakes post (CEO or investor-facing), so it was analysed with the stronger model.
             </p>
           )}
-          <PerceptionSummary r={result} mood={SHOW_TOPIC_TRENDS && version == null ? topics.mood : null} ctx={ctx} onSeek={onSeek} />
+          <PerceptionSummary r={result} mood={trends && version == null ? topics.mood : null} ctx={ctx} onSeek={onSeek} />
           <button
             type="button"
             onClick={() => setShowDetail((o) => !o)}
@@ -942,6 +1075,126 @@ export default function SentimentPanel({
           )}
         </>
       ) : null}
+    </>
+  );
+
+  if (design) {
+    return (
+      <div className={`@container grid grid-cols-1 items-start gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] ${className}`}>
+        <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
+          <section className={`${CARD} flex flex-col gap-4`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                  <BarChart3 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold leading-tight text-foreground">Sentiment analysis</h2>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">How the tone, brand fit and wording may land with your audience. Advice for you: it is not a score and doesn't block sending.</p>
+                </div>
+              </div>
+              {canRun && submissionId && (
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    type="button"
+                    variant={analysis && analysis.is_current ? "outline" : "default"}
+                    className={`h-10 gap-2 rounded-xl px-4 text-sm font-semibold ${analysis && analysis.is_current ? "" : "bg-blue-700 text-white hover:bg-blue-800"}`}
+                    disabled={running || outOfRuns}
+                    onClick={analyseAll}
+                  >
+                    {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {analysis ? "Run again" : "Run sentiment analysis"}
+                  </Button>
+                  {usage?.remaining != null && (
+                    <span className={`text-xs tabular-nums ${outOfRuns ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
+                      {outOfRuns ? "Daily limit reached" : `${usage.remaining} runs left today`}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {canRun && outOfRuns && (
+              <p className="rounded-xl bg-amber-500/10 px-3.5 py-3 text-[13px] text-amber-800 dark:text-amber-200">
+                The daily AI limit for sentiment analysis has been reached{companyCapped ? " for the whole company" : ""}.
+                {resetsIn ? ` More runs free up in ${resetsIn}.` : ""} Unchanged content still shows its last result.
+              </p>
+            )}
+            {statusChain}
+          </section>
+          {result && <DesignRest r={result} onSeek={onSeek} ctx={ctx} />}
+        </div>
+        <DesignAside analysis={analysis} result={result} />
+      </div>
+    );
+  }
+
+  return (
+    // A size container, so the result spreads into more columns wherever the panel is wide.
+    <div className={`@container space-y-3 ${className}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-violet-500" /> Sentiment analysis
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            Advisory · {trends ? "how its topics are doing online, and " : ""}how the post is likely to be perceived
+            {beforeAnalyse ? ". Analyse also runs the rulebook check." : ""}
+          </p>
+        </div>
+        {canRun && submissionId && (
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[11px] gap-1"
+              disabled={running || outOfRuns}
+              onClick={analyseAll}
+              title={
+                outOfRuns
+                  ? "Daily AI limit reached"
+                  : beforeAnalyse
+                  ? "Runs the rulebook check, the topic trend and the perception check together"
+                  : undefined
+              }
+            >
+              {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+              {analysis ? "Re-run" : "Analyse"}
+            </Button>
+            {usage?.remaining != null && (
+              <span className={`text-[10px] tabular-nums ${outOfRuns ? "text-amber-700 dark:text-amber-300 font-semibold" : "text-muted-foreground"}`}>
+                {outOfRuns ? "Daily limit reached" : `${usage.remaining} left today`}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      {canRun && outOfRuns && (
+        <p className="text-[11px] rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-200 px-2 py-1.5">
+          The daily AI limit for sentiment analysis has been reached
+          {companyCapped ? " for the whole company" : ""}.
+          {resetsIn ? ` More runs free up in ${resetsIn}.` : ""} Unchanged content still shows its last result.
+        </p>
+      )}
+
+      {trends && submissionId && version == null && (
+        <TopicTrend
+          submissionId={submissionId}
+          mood={topics.mood}
+          isLoading={topics.isLoading}
+          canEdit={canRunProp}
+          busy={topics.dismissTopic.isPending}
+          onDismiss={(topicId) => topics.dismissTopic.mutate({ topicId })}
+          onRestore={(topicId) => topics.dismissTopic.mutate({ topicId, restore: true })}
+        />
+      )}
+
+      {submissionId && (
+        <p className={`flex items-center gap-1.5 text-xs font-semibold text-foreground ${trends ? "border-t border-border/60 pt-3" : ""}`}>
+          <Users className="w-3.5 h-3.5 text-violet-500" /> How it'll be perceived
+        </p>
+      )}
+
+      {statusChain}
 
     </div>
   );

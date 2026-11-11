@@ -1,5 +1,6 @@
 import { Ban } from "lucide-react";
 
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 
 /**
@@ -47,7 +48,7 @@ export default function ScoreBreakdown({
           {scored.map((v) => (
             <li key={`${v.rule_id}-${v.kind ?? ""}`} className="flex items-start justify-between gap-3 px-2.5 py-1.5">
               <span className="min-w-0">
-                <span className="font-semibold text-foreground">{v.rule_number}</span>
+                <RuleNumberBadge v={v} />
                 <span className="text-muted-foreground"> · {v.kind === "MISSING_DISCLAIMER" ? "Missing disclaimer" : v.title}</span>
                 {why(v) && (
                   <span className="ml-1.5 rounded bg-amber-100 px-1 py-px text-[10px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">

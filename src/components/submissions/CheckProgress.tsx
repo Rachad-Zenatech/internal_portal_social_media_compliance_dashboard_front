@@ -126,3 +126,18 @@ export function CheckModelsUsed({ attempts, durationMs }: { attempts: CheckAttem
     </div>
   );
 }
+
+/** The models a saved check used, read from the saved result, so it shows after a reload too. */
+export function SavedCheckModels({ models }: { models?: { attempts: CheckAttempt[]; duration_ms: number } | null }) {
+  if (!models) {
+    return <p className="text-[11px] text-muted-foreground">Which model ran isn't recorded for this check. Check again to see it.</p>;
+  }
+  if (!models.attempts.length) {
+    return (
+      <p className="text-[11px] text-muted-foreground">
+        No AI model was called for this check ({seconds(models.duration_ms)}), so it used the wording rules and any answer already saved for the same text.
+      </p>
+    );
+  }
+  return <CheckModelsUsed attempts={models.attempts} durationMs={models.duration_ms} />;
+}

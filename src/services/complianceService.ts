@@ -120,6 +120,9 @@ export interface ComplianceViolation {
   status?: FindingStatus;
   /** How the AI read it in context (rules judged in context only). */
   evaluation?: ContextEvaluation | null;
+  /** The sentence the wording sits in, and the lines around it. */
+  passage?: string | null;
+  context?: string | null;
 }
 
 /**

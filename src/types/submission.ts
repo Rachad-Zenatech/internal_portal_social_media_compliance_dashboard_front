@@ -101,6 +101,8 @@ export type ScriptMatch = {
 /** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
   checked_at?: string;
+  /** Which AI models answered during this check, and how long it took. Missing on checks saved before this was kept. */
+  models?: { attempts: CheckAttempt[]; duration_ms: number } | null;
   includes_transcript?: boolean;
   /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
   transcript_pending?: boolean;
@@ -214,7 +216,32 @@ export interface Submission {
   updated_at: string;
 }
 
+/** The five steps a creator works through on a post. */
+export type PostStepKey = "details" | "compliance" | "sentiment" | "mood" | "send";
+
+/** done; stale (run before the post was last edited, so run it again); running; todo (not done yet). */
+export type PostStepState = "done" | "stale" | "running" | "todo";
+
+/** How far a post has got through its steps (see the server's post_steps_service). */
+export interface SubmissionSteps {
+  details: PostStepState;
+  compliance: PostStepState;
+  sentiment: PostStepState;
+  mood: PostStepState;
+  send: PostStepState;
+  /** Where to carry on: the first of the first four steps not done, else send. Null once it has been sent. */
+  next: PostStepKey | null;
+  /** Steps 1 to 4 are all done and up to date: the only time it can be sent for review. */
+  ready_to_send: boolean;
+  /** Sent (in review, approved or published): nothing can be edited or re-run. */
+  locked: boolean;
+  /** What the details step still lacks, by field name. */
+  missing: string[];
+}
+
 export interface SubmissionSummary {
+  /** How far the creator has got through the five steps (missing on very old servers). */
+  steps?: SubmissionSteps | null;
   /** Video drafts in the script stage: where the script is (null when there's no script stage). */
   script_status?: ScriptStatus | null;
   id: string;
