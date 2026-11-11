@@ -11,9 +11,12 @@ import {
   Clock,
   FilePen,
   FileText,
+  Film,
+  ImagePlus,
   History,
   Info,
   Loader2,
+  Lock,
   MessageSquare,
   MoreHorizontal,
   Plus,
@@ -71,13 +74,15 @@ import {
   brandCodes,
   audienceNames,
 } from "@/components/submissions/submissionUi";
-import { QUICK_CREATE, Score, issuesText, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
+import { QUICK_CREATE, scriptNeedsChanges, scriptPillOf } from "@/components/dashboard/dashboardParts";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
-import type { Submission, SubmissionSummary } from "@/types/submission";
+import PostSteps from "@/components/submissions/PostSteps";
+import { POST_STEPS, missingText, ranOnce, resumePath, stepPath } from "@/lib/postSteps";
+import type { PostStepKey, Submission, SubmissionSummary } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Stages, filters and sorting
@@ -328,6 +333,8 @@ function SubmissionCard({
 // ---------------------------------------------------------------------------
 // Gallery card (creators): picture first, then the few facts they scan for
 // ---------------------------------------------------------------------------
+// Post row (creators): one row per post, with how far it has got through its five steps
+// ---------------------------------------------------------------------------
 
 /** "Today", "Tomorrow", a weekday within the week ahead, otherwise the date. */
 function friendlyDate(iso: string) {
@@ -379,105 +386,180 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
   return { text: STAGES[stage]?.label ?? s.status, tone: muted };
 }
 
-function GalleryCard({
+/** The platforms a post goes to, as their own marks. */
+function PlatformBadges({ platforms }: { platforms: string[] }) {
+  return (
+    <span className="flex items-center gap-1.5 text-foreground">
+      {platforms.map((p) => (
+        <span key={p} title={platformName(p)} className="inline-flex">
+          <PlatformIcon platform={p as SocialPlatform} className="h-5 w-5 2xl:h-6 2xl:w-6" />
+          <span className="sr-only">{platformName(p)}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing. */
+function EmptyTile({ contentType }: { contentType: string }) {
+  const video = contentType === "VIDEO";
+  const article = contentType === "BLOG";
+  const Icon = video ? Film : article ? FileText : ImagePlus;
+  return (
+    <span className="grid h-full w-full place-items-center bg-[#DCE9FF] text-[#0F2A66] dark:bg-blue-500/15 dark:text-blue-200">
+      <span className="flex flex-col items-center gap-1">
+        <Icon className="h-5 w-5 opacity-70" />
+        <span className="text-[10px] font-semibold leading-none">{video ? "No video yet" : article ? "No article yet" : "No image yet"}</span>
+      </span>
+    </span>
+  );
+}
+
+/** The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100. */
+function ScoreRing({ score, pending }: { score?: number | null; pending?: boolean }) {
+  const has = score != null;
+  const bar = !has ? "#CBD5E1" : score >= 90 ? "#10B981" : score >= 70 ? "#F59E0B" : "#EF4444";
+  return (
+    <span
+      title={has ? `Compliance score ${score} out of 100` : pending ? "Still being checked" : "No compliance score yet"}
+      className="flex w-24 shrink-0 flex-col gap-1.5 2xl:w-28"
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Compliance</span>
+      <span className="flex items-baseline gap-1 leading-none">
+        {has ? (
+          <>
+            <span className="text-2xl font-bold tabular-nums text-foreground 2xl:text-[28px]">{score}</span>
+            <span className="text-xs font-medium text-muted-foreground">/100</span>
+          </>
+        ) : pending ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Checking
+          </span>
+        ) : (
+          <span className="text-sm font-medium text-muted-foreground">Not checked</span>
+        )}
+      </span>
+      <span className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 2xl:h-2">
+        <span className="block h-full rounded-full transition-all" style={{ width: `${has ? Math.max(score, 3) : 0}%`, background: bar }} />
+      </span>
+    </span>
+  );
+}
+
+/** "3 of 5 steps done", or where a sent post is. */
+function progressText(s: SubmissionSummary, stage: Stage): string {
+  const steps = s.steps;
+  if (!steps) return "";
+  if (steps.locked) return stage === "IN_REVIEW" ? "Sent for review" : (STAGES[stage]?.label ?? "Sent");
+  if (steps.ready_to_send) return "Ready to send";
+  const done = POST_STEPS.filter((p) => steps[p.key] === "done").length;
+  return `${done} of ${POST_STEPS.length} steps done`;
+}
+
+function PostRow({
   s,
-  onSelect,
-  onContinue,
+  labels,
+  onOpen,
+  onOpenStep,
   onDelete,
 }: {
   s: SubmissionSummary;
-  onSelect: (s: SubmissionSummary) => void;
-  onContinue: (s: SubmissionSummary) => void;
+  labels: Labels;
+  onOpen: (s: SubmissionSummary) => void;
+  onOpenStep: (s: SubmissionSummary, step: PostStepKey) => void;
   onDelete: (s: SubmissionSummary) => void;
 }) {
   const stage = stageOf(s);
   const line = statusLine(s);
-  const account = accountsOf(s)[0];
-  const where = [
-    s.platforms.length ? `${platformName(s.platforms[0])}${s.platforms.length > 1 ? ` +${s.platforms.length - 1}` : ""}` : null,
-    account?.handle ? `@${account.handle.replace(/^@/, "")}` : account?.account_name,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const locked = Boolean(s.steps?.locked);
   const fix = stage === "CHANGES_REQUESTED";
-  // "to fix" only where the creator can act on it (a draft, or changes requested); otherwise just "found".
-  const issueWords = issuesText(s.issue_count);
-  const issues =
-    s.analysis_pending || s.script_send_status === "PROCESSING" || s.latest_score == null
-      ? null
-      : !issueWords
-      ? "No issues"
-      : fix || stage === "DRAFT"
-      ? issueWords
-      : issueWords.replace("to fix", "found");
+  const brand = labels.brands(brandCodes(s));
+  const audience = labels.audience(audienceCodes(s));
+  const pill = scriptPillOf({ status: stage, script_status: s.script_status }) ?? STAGES[stage] ?? { label: stage, pill: "bg-muted text-muted-foreground" };
+  const scriptBack = scriptNeedsChanges(s);
+  const scriptWithReviewer = stage === "DRAFT" && s.script_status === "IN_REVIEW";
+  // Pictures are mostly square, so they get a square tile (a video keeps the wide one): less empty space around them.
+  const tallThumb = s.content_type !== "VIDEO";
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card transition-shadow hover:shadow-md">
+    <li
+      className={`flex flex-wrap items-center gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md 2xl:grid 2xl:grid-cols-[minmax(0,3fr)_minmax(200px,1.1fr)_minmax(170px,1fr)_auto_minmax(150px,auto)] 2xl:gap-8 2xl:px-6 2xl:py-5 ${
+        fix ? "border-red-200 dark:border-red-500/30" : "border-border/70"
+      }`}
+    >
+      {/* The post itself: opens the step it was left on (or, once sent, the read-only view) */}
       <button
         type="button"
-        onClick={() => onSelect(s)}
-        className="flex flex-1 flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+        onClick={() => onOpen(s)}
+        className="flex min-w-0 flex-[3_1_280px] items-center gap-4 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
-          <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white">
-            {CONTENT_TYPE_LABELS[s.content_type] ?? s.content_type}
+        <span className={`relative block shrink-0 overflow-hidden rounded-xl bg-muted ${tallThumb ? "h-24 w-24 2xl:h-32 2xl:w-32" : "h-[68px] w-[88px] 2xl:h-[88px] 2xl:w-32"}`}>
+          {s.cover || s.script_excerpt ? (
+            <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
+          ) : (
+            <EmptyTile contentType={s.content_type} />
+          )}
+        </span>
+        <span className="flex min-w-0 flex-col gap-1.5">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-[15px] font-semibold text-foreground 2xl:text-lg">{s.title}</span>
+            <PlatformBadges platforms={s.platforms} />
           </span>
-        </div>
-        <div className="flex flex-1 flex-col gap-2.5 px-4 pb-4 pt-3.5">
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-foreground">{s.title}</p>
-            <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
-              {s.platforms[0] && <PlatformIcon platform={s.platforms[0] as SocialPlatform} className="w-3.5 h-3.5 shrink-0" />}
-              <span className="truncate">{where || "No account set"}</span>
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <StagePill stage={stage} small script={s.script_status} />
-            <Score score={s.latest_score} pending={s.analysis_pending} progress={s.analysis_progress} unavailable={s.ai_unavailable} calculating={s.script_send_status === "PROCESSING"} />
-            {issues && <span className="text-xs text-muted-foreground">{issues}</span>}
-          </div>
-          <p className={`text-sm ${line.tone}`}>{line.text}</p>
-        </div>
+          <span className="truncate text-[13px] text-muted-foreground 2xl:text-[15px]">{[brand, audience].filter(Boolean).join(" · ") || CONTENT_TYPE_LABELS[s.content_type] || "No brand yet"}</span>
+          <span className={`text-xs 2xl:text-sm ${line.tone}`}>{line.text}</span>
+          {/* On a wide screen there's room to show how the caption starts */}
+          {s.caption_text?.trim() && <span className="hidden max-w-2xl truncate text-sm text-muted-foreground/80 2xl:block">{s.caption_text.trim()}</span>}
+        </span>
       </button>
-      {scriptNeedsChanges(s) ? (
-        <div className="px-4 pb-4">
-          <Button asChild className="h-9 w-full rounded-lg bg-blue-700 font-medium text-white hover:bg-blue-800">
+
+      {/* How far it has got: hover a step for what it's for, click it to open it */}
+      {s.steps && (
+        <div className="flex min-w-[168px] flex-[1_1_180px] flex-col gap-1.5">
+          <PostSteps size="lg" steps={s.steps} onOpen={(step) => onOpenStep(s, step)} />
+          <span className="text-xs font-medium text-muted-foreground 2xl:text-sm">{progressText(s, stage)}</span>
+        </div>
+      )}
+
+      <div className="flex min-w-[130px] flex-[1_1_150px] flex-col items-start gap-1.5">
+        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold 2xl:px-4 2xl:py-1.5 2xl:text-sm ${pill.pill}`}>
+          {locked && <Lock className="h-3 w-3" />}
+          {pill.label}
+        </span>
+        {s.steps && !locked && s.steps.next && !s.steps.ready_to_send && (
+          <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Next: {POST_STEPS.find((p) => p.key === s.steps!.next)?.label}</span>
+        )}
+        {fix && <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Unlocked: edit and re-run</span>}
+      </div>
+
+      <ScoreRing score={s.latest_score} pending={s.analysis_pending || s.script_send_status === "PROCESSING"} />
+
+      <div className="flex flex-none basis-[150px] flex-col items-end gap-2">
+        {scriptBack ? (
+          <Button asChild className="h-10 rounded-[10px] bg-blue-700 px-4 text-[13px] font-semibold text-white hover:bg-blue-800 2xl:h-11 2xl:px-6 2xl:text-sm">
             <Link to={`/submissions/${s.id}/script`}>Review changes</Link>
           </Button>
-        </div>
-      ) : stage === "DRAFT" && s.script_status === "IN_REVIEW" ? (
-        // Already sent: nothing left to do on the draft, so it's just there to look at.
-        <div className="px-4 pb-4">
-          <Button asChild variant="outline" className="h-9 w-full rounded-lg font-medium">
-            <Link to={`/submissions/${s.id}/script`}>View script</Link>
+        ) : scriptWithReviewer ? (
+          <Button asChild variant="outline" className="h-10 gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold 2xl:h-11 2xl:px-6 2xl:text-sm">
+            <Link to={`/submissions/${s.id}/script`}>
+              <Lock className="h-3.5 w-3.5" /> View script
+            </Link>
           </Button>
-        </div>
-      ) : (
-        (fix || stage === "DRAFT") && (
-          <div className="px-4 pb-4">
-            <Button
-              variant={fix ? "default" : "outline"}
-              className={`h-9 w-full rounded-lg font-medium ${fix ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
-              onClick={() => onContinue(s)}
-            >
-              {fix ? "Fix issues" : s.script_status === "APPROVED" ? "Upload video" : "Continue draft"}
-            </Button>
-          </div>
-        )
-      )}
-      {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
-      {s.can_delete && (
-        <div className="px-4 pb-3.5 -mt-1">
-          <button
-            type="button"
-            onClick={() => onDelete(s)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-red-600 dark:hover:text-red-400"
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Delete draft
+        ) : locked ? (
+          <Button variant="outline" className="h-10 gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold 2xl:h-11 2xl:px-6 2xl:text-sm" onClick={() => onOpen(s)}>
+            <Lock className="h-3.5 w-3.5" /> View
+          </Button>
+        ) : (
+          <Button className="h-10 rounded-[10px] bg-blue-700 px-4 text-[13px] font-semibold text-white hover:bg-blue-800 2xl:h-11 2xl:px-6 2xl:text-sm" onClick={() => onOpen(s)}>
+            {fix ? "Make changes" : s.script_status === "APPROVED" ? "Upload video" : "Continue"}
+          </Button>
+        )}
+        {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
+        {s.can_delete && (
+          <button type="button" onClick={() => onDelete(s)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:underline dark:text-red-400 2xl:text-sm">
+            <Trash2 className="h-3.5 w-3.5 2xl:h-4 2xl:w-4" /> Delete draft
           </button>
-        </div>
-      )}
-    </article>
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -706,16 +788,35 @@ function ReviewCard({
       </div>
     );
   } else if (SUBMITTABLE.has(summary.status) && mine) {
-    footerTitle = "Your next step";
-    footerNote = summary.status === "CHANGES_REQUESTED" ? "Make the requested changes, then resubmit it." : "Send it for review when it's ready.";
+    // Nothing goes for review until all the steps are done and up to date.
+    const steps = summary.steps;
+    const ready = !steps || steps.ready_to_send;
+    const nextLabel = steps?.next ? POST_STEPS.find((p) => p.key === steps.next)?.label : null;
+    footerTitle = ready ? "Your next step" : "Finish the steps first";
+    footerNote = !ready
+      ? `It can be sent once every step is done${nextLabel ? `. Next: ${nextLabel}` : ""}.${
+          steps?.next === "details" && steps.missing.length ? ` ${missingText(steps.missing)}` : ""
+        }`
+      : summary.status === "CHANGES_REQUESTED"
+      ? "Make the requested changes, then resubmit it."
+      : "Send it for review when it's ready.";
     actions = (
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(`/submissions/new?id=${summary.id}`)}>
-          <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Edit draft"}
-        </Button>
-        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => onSubmit(summary)}>
-          <Send className="w-3.5 h-3.5" /> {submitLabel(summary)}
-        </Button>
+      <div className="flex flex-col items-end gap-2">
+        {steps && <PostSteps steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(resumePath(summary.id, steps))}>
+            <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Continue"}
+          </Button>
+          <Button
+            size="sm"
+            disabled={!ready}
+            title={ready ? undefined : "Finish every step first"}
+            className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white disabled:opacity-50"
+            onClick={() => onSubmit(summary)}
+          >
+            <Send className="w-3.5 h-3.5" /> {submitLabel(summary)}
+          </Button>
+        </div>
       </div>
     );
   } else if (summary.status === "APPROVED" && (mine || summary.can_manage_approval)) {
@@ -972,6 +1073,7 @@ export default function SubmissionsListPage() {
   const [search, setSearch] = useState("");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
+  const [audiences, setAudiences] = useState<string[]>([]);
   const [prefs, setPrefsState] = useState<Prefs>(loadPrefs);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<SubmissionSummary | null>(null);
@@ -987,6 +1089,25 @@ export default function SubmissionsListPage() {
   // Creators browse a gallery and open details in a side sheet; reviewers keep the list beside the review panel.
   const gallery = !isReviewer;
 
+  // A click on a post you can still change opens the step you left off on. A post that has been sent (it is locked), or a
+  // script a reviewer sent back, opens in the side sheet, which has what each needs.
+  const openPost = (item: SubmissionSummary) => {
+    // In review: the same steps, locked, opened on its compliance result.
+    if (item.status === "IN_REVIEW") {
+      navigate(stepPath(item.id, "compliance"));
+    } else if (item.steps && !item.steps.locked && !scriptNeedsChanges(item) && item.script_status !== "IN_REVIEW") {
+      navigate(resumePath(item.id, item.steps));
+    } else {
+      setSelectedId(item.id);
+    }
+  };
+  // A click on one step opens that step. On a locked post it opens the read-only view in the side sheet.
+  const openStep = (item: SubmissionSummary, step: PostStepKey) => {
+    if (item.status === "IN_REVIEW") navigate(stepPath(item.id, step));
+    else if (!item.steps || item.steps.locked) setSelectedId(item.id);
+    else navigate(stepPath(item.id, step));
+  };
+
   const setPrefs = (patch: Partial<Prefs>) =>
     setPrefsState((p) => {
       const next = { ...p, ...patch };
@@ -994,10 +1115,13 @@ export default function SubmissionsListPage() {
       return next;
     });
 
-  const scope = canSeeAll ? prefs.scope : "mine";
+  // My posts is your own posts only; the reviewers' list keeps its "Everyone's" switch.
+  const scope = canSeeAll && !gallery ? prefs.scope : "mine";
   const { data = [], isLoading, isError, error } = useQuery({
     queryKey: ["submissions", scope],
     queryFn: () => submissionService.list(undefined, scope),
+    // A step counts once it has run; re-running after an edit is asked for in the editor (see ranOnce).
+    select: (rows) => rows.map((s) => (s.steps ? { ...s, steps: ranOnce(s.steps) } : s)),
     // Statuses change from other screens (autosave, submit); always show the latest.
     staleTime: 0,
     refetchInterval: refetchWhileAnalysing,
@@ -1040,6 +1164,8 @@ export default function SubmissionsListPage() {
 
   // Platform options come from what's actually in the list.
   const platformsInList = useMemo(() => [...new Set(data.flatMap((s) => s.platforms))].sort(), [data]);
+  // The audiences that are actually in the list.
+  const audiencesInList = useMemo(() => [...new Set(data.flatMap((s) => audienceCodes(s)))].sort(), [data]);
   // The same brands, in the same order, as the brand picker on New Submission; plus any retired brand still on
   // older content, so it can be found.
   const brandsInList = useMemo(() => {
@@ -1055,6 +1181,7 @@ export default function SubmissionsListPage() {
         (!stage || tabOf(s) === stage) &&
         (platforms.length === 0 || s.platforms.some((p) => platforms.includes(p))) &&
         (brands.length === 0 || brandCodes(s).some((c) => brands.includes(c))) &&
+        (audiences.length === 0 || audienceCodes(s).some((c) => audiences.includes(c))) &&
         (!q ||
           s.title.toLowerCase().includes(q) ||
           s.reference_code.toLowerCase().includes(q) ||
@@ -1063,18 +1190,19 @@ export default function SubmissionsListPage() {
           (s.created_by_name ?? "").toLowerCase().includes(q))
     );
     return sortItems(filtered, prefs.sort);
-  }, [inView, stage, platforms, brands, search, prefs.sort]);
+  }, [inView, stage, platforms, brands, audiences, search, prefs.sort]);
 
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
   const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
 
-  const filtersActive = Boolean(stage || search || platforms.length || brands.length);
+  const filtersActive = Boolean(stage || search || platforms.length || brands.length || audiences.length);
   const clearFilters = () => {
     setStage("");
     setSearch("");
     setPlatforms([]);
     setBrands([]);
+    setAudiences([]);
   };
   const waitingForMe = creatorView ? 0 : data.filter((s) => s.can_review).length;
 
@@ -1103,7 +1231,7 @@ export default function SubmissionsListPage() {
               ? "Review submitted content, run compliance checks, and manage approvals."
               : scope === "all"
               ? "Everyone's posts on your brands, with what needs action first."
-              : "Everything you've created, with what needs you first."}
+              : "Everything you've made, and how far each post has got."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
@@ -1125,7 +1253,7 @@ export default function SubmissionsListPage() {
       </header>
 
       {/* Status tabs: the one status filter */}
-      <div className="flex max-w-full flex-wrap gap-1 self-start rounded-[10px] bg-muted p-1 w-fit" role="group" aria-label="Filter by status">
+      <div className="flex max-w-full flex-wrap gap-2" role="group" aria-label="Filter by status">
         {STAGE_FILTERS.map((f) => {
           const active = stage === f.value;
           const count = stageCounts[f.value] ?? 0;
@@ -1135,16 +1263,18 @@ export default function SubmissionsListPage() {
               type="button"
               aria-pressed={active}
               onClick={() => setStage(active && f.value ? "" : f.value)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-[7px] px-3 text-[13px] font-medium transition-colors ${
+              className={`inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors ${
                 active
-                  ? "bg-card text-foreground shadow-sm"
-                  : count === 0
-                  ? "text-muted-foreground/60 hover:text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                  : "border-slate-300 bg-card text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-300"
               }`}
             >
               {f.label}
-              <span className={`text-xs tabular-nums ${active ? "text-muted-foreground" : count === 0 ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
+              <span
+                className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold tabular-nums ${
+                  active ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                }`}
+              >
                 {isLoading ? "–" : count}
               </span>
             </button>
@@ -1201,28 +1331,6 @@ export default function SubmissionsListPage() {
               )}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              {canSeeAll && (
-                <div className="flex rounded-lg bg-muted p-1" role="group" aria-label="Whose content">
-                  {(
-                    [
-                      ["mine", "My content"],
-                      ["all", "Everyone's"],
-                    ] as const
-                  ).map(([v, label]) => (
-                    <button
-                      key={v}
-                      type="button"
-                      aria-pressed={scope === v}
-                      onClick={() => setPrefs({ scope: v })}
-                      className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                        scope === v ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -1230,7 +1338,7 @@ export default function SubmissionsListPage() {
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by title or SUB number"
                   aria-label="Search posts"
-                  className="h-9 rounded-lg bg-card pl-9 text-sm"
+                  className="h-10 rounded-xl bg-card pl-9 text-sm"
                 />
               </div>
               <MultiSelectFilter
@@ -1250,6 +1358,15 @@ export default function SubmissionsListPage() {
                 noun="brand"
                 ariaLabel="Brand"
                 className="w-[140px]"
+              />
+              <MultiSelectFilter
+                options={audiencesInList.map((a) => ({ value: a, label: labels.audience([a]) ?? a }))}
+                value={audiences}
+                onChange={setAudiences}
+                allLabel="All Audiences"
+                noun="audience"
+                ariaLabel="Audience"
+                className="w-[150px]"
               />
               <Select value={prefs.sort} onValueChange={(v) => setPrefs({ sort: v as SortBy })}>
                 <SelectTrigger className="h-9 w-[160px] rounded-lg bg-card text-xs" aria-label="Sort by">
@@ -1309,17 +1426,11 @@ export default function SubmissionsListPage() {
             </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 min-[112.5rem]:grid-cols-5">
+              <ul className="flex flex-col gap-3">
                 {visible.map((s) => (
-                  <GalleryCard
-                    key={s.id}
-                    s={s}
-                    onSelect={(item) => setSelectedId(item.id)}
-                    onContinue={(item) => navigate(`/submissions/new?id=${item.id}`)}
-                    onDelete={setDeleting}
-                  />
+                  <PostRow key={s.id} s={s} labels={labels} onOpen={openPost} onOpenStep={openStep} onDelete={setDeleting} />
                 ))}
-              </div>
+              </ul>
             </>
           )}
         </>

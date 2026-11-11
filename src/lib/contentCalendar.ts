@@ -250,14 +250,8 @@ export function fromSubmission(s: SubmissionSummary): CalendarItem | null {
     reference_code: s.reference_code,
     title: s.title,
     caption: s.caption_text ?? "",
-    // Each account's own caption, by the platform it publishes to (YouTube accounts post Shorts too).
-    captions_by_platform: Object.fromEntries(
-      (s.accounts ?? []).flatMap((a) => {
-        const text = s.account_captions?.[a.id];
-        if (!text) return [];
-        return (a.platform === "YOUTUBE" ? ["YOUTUBE", "YOUTUBE_SHORTS"] : [a.platform]).map((p) => [p, text] as const);
-      })
-    ),
+    // Platforms with their own caption; the rest publish the main one.
+    captions_by_platform: s.platform_captions ?? {},
     content_type: s.content_type,
     platforms: s.platforms,
     primary_platform: s.platforms[0] ?? "",

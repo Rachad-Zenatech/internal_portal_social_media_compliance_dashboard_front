@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpenText, Loader2, Megaphone, Pencil, Plus, ScrollText, Smartphone, Trash2, Users } from "lucide-react";
+import { BookOpenText, ExternalLink, Loader2, Megaphone, Pencil, Plus, ScrollText, Search, Smartphone, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import NewsroomSyncBar from "@/components/compliance/NewsroomSyncBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -121,6 +122,8 @@ export default function MessagingContextPage() {
   const [editing, setEditing] = useState<ContextEntry | "new" | null>(null);
   const [form, setForm] = useState<ContextEntryInput>(EMPTY("BRAND_VOICE"));
   const [deleting, setDeleting] = useState<ContextEntry | null>(null);
+  // Facts run to hundreds (one per newsroom article): a search narrows them.
+  const [factSearch, setFactSearch] = useState("");
 
   const entries = useQuery({ queryKey: ["messaging-context"], queryFn: contextService.list });
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
@@ -140,7 +143,10 @@ export default function MessagingContextPage() {
     for (const e of entries.data ?? []) c[e.kind] = (c[e.kind] ?? 0) + 1;
     return c;
   }, [entries.data]);
-  const shown = (entries.data ?? []).filter((e) => e.kind === kind);
+  const needle = factSearch.trim().toLowerCase();
+  const ofKind = (entries.data ?? []).filter((e) => e.kind === kind);
+  const shown =
+    kind === "FACT" && needle ? ofKind.filter((e) => `${e.title} ${e.body}`.toLowerCase().includes(needle)) : ofKind;
   const current = KINDS.find((k) => k.value === kind)!;
 
   const done = (msg: string) => {
@@ -231,6 +237,19 @@ export default function MessagingContextPage() {
           them as background (not instructions), and shows which ones it used.
           </span>
         </p>
+        {kind === "FACT" && <NewsroomSyncBar canSync={canEdit} />}
+        {kind === "FACT" && ofKind.length > 0 && (
+          <div className="relative border-b border-border/60 px-4 py-2.5">
+            <Search className="pointer-events-none absolute left-6.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={factSearch}
+              onChange={(e) => setFactSearch(e.target.value)}
+              placeholder={`Search ${ofKind.length} facts (a product, partner, place...)`}
+              aria-label="Search facts"
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+        )}
         {entries.isLoading ? (
           <p className="p-6 text-xs text-muted-foreground flex items-center gap-2">
             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
@@ -240,12 +259,16 @@ export default function MessagingContextPage() {
             <span className={`mx-auto mb-2 grid h-10 w-10 place-items-center rounded-xl ${current.tone}`}>
               <ScrollText className="w-5 h-5" />
             </span>
-            <p className="font-semibold text-foreground">No {current.label.toLowerCase()} yet</p>
+            <p className="font-semibold text-foreground">
+              {kind === "FACT" && needle ? "No facts match that search" : `No ${current.label.toLowerCase()} yet`}
+            </p>
             <p>
               {kind === "BRAND_VOICE"
                 ? 'Until there is, the analysis rates brand fit as "no guidance".'
                 : kind === "FACT"
-                ? "Without facts the analysis can't tell whether claims like product availability are plausible."
+                ? needle
+                  ? "Try another word."
+                  : "Without facts the analysis can't tell whether claims like product availability are plausible. Sync the newsroom to fill them in."
                 : "Add one to give the analysis this background."}
             </p>
           </div>
@@ -262,11 +285,25 @@ export default function MessagingContextPage() {
                       {e.title}
                       {!e.is_active && <span className="ml-2 text-[11px] font-normal text-muted-foreground">(off)</span>}
                       {e.is_starter && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">starter</span>}
+                      {e.auto_source === "NEWSROOM" && (
+                        <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
+                          newsroom
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       Applies to: {scopeText(e)}
                       {e.as_of && ` · as of ${e.as_of}`}
-                      {e.source && ` · source: ${e.source}`}
+                      {e.source_url ? (
+                        <>
+                          {" · "}
+                          <a href={e.source_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-sky-700 hover:underline dark:text-sky-300">
+                            read the article <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </>
+                      ) : (
+                        e.source && ` · source: ${e.source}`
+                      )}
                     </p>
                   </div>
                   {canEdit && (

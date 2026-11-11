@@ -321,6 +321,22 @@ export function Deadline({ dueAt }: { dueAt?: string | null }) {
   );
 }
 
+/** The deadline on one line, as a pill: red when late, amber when due today, plain otherwise. */
+export function DeadlinePill({ dueAt }: { dueAt?: string | null }) {
+  const base = "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold";
+  if (!dueAt) return <span className="text-xs text-muted-foreground">No deadline</span>;
+  const due = new Date(dueAt);
+  if (isPast(due))
+    return (
+      <span className={`${base} bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300`} title={format(due, "MMM d, yyyy h:mm a")}>
+        {formatDistanceToNow(due)} late
+      </span>
+    );
+  if (isToday(due))
+    return <span className={`${base} bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200`}>Today {format(due, "h:mm a")}</span>;
+  return <span className={`${base} bg-muted text-foreground`}>{format(due, "MMM d")}</span>;
+}
+
 // ---------------------------------------------------------------------------
 // Colour and icon pieces shared by both dashboards
 // ---------------------------------------------------------------------------

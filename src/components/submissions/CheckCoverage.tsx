@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, ChevronDown, Eye, FileWarning, Hash, Info, Loader2, UserCheck } from "lucide-react";
 
+import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import type { StoredCheck } from "@/types/submission";
 
 /**
@@ -139,7 +140,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
             <ul className="mt-1 ml-5 space-y-0.5">
               {manual.map((m) => (
                 <li key={m.rule_id}>
-                  <span className="font-semibold text-foreground">{m.rule_number}</span> · {m.title}
+                  <RuleNumberBadge v={m} /> {m.title}
                 </li>
               ))}
             </ul>

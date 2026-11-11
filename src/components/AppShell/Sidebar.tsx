@@ -2,7 +2,7 @@ import { ChevronDown, PanelRight } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { navigation, type AppView, type NavigationItem } from "./Navigation";
 import { useState } from "react";
-import zenatechLogo from "@/assets/zenatech_logo.png";
+import zenatechLogo from "@/assets/zenatech_logo_trimmed.png";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,19 @@ import type { User } from "@/types/auth";
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+}
+
+/** The page an item stands for, as the address bar shows it. "My posts" stays lit on a post's own pages, but not on "New submission". */
+function isItemActive(item: NavigationItem, pathname: string, search = ""): boolean {
+  if (!item.path) return false;
+  // A saved post opens in the editor (/submissions/new?id=...): that is still "My posts", not a new submission.
+  const editingPost = pathname === "/submissions/new" && new URLSearchParams(search).has("id");
+  if (item.path === "/submissions/new" && editingPost) return false;
+  if (item.path === "/submissions") {
+    if (editingPost) return true;
+    return pathname === "/submissions" || (pathname.startsWith("/submissions/") && pathname !== "/submissions/new");
+  }
+  return pathname === item.path || (item.path !== "/" && pathname.startsWith(item.path + "/"));
 }
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
@@ -83,10 +96,6 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     return acc;
   }, {});
 
-  // Items slide in one after another; the counter gives each its delay.
-  let order = 0;
-  const enter = () => ({ animationDelay: `${Math.min(order++, 14) * 35}ms` });
-
   return (
     <>
       {/* Mobile & Tablet backdrop overlay */}
@@ -100,11 +109,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       <aside
         className={`
           fixed laptop:static top-0 bottom-0 left-0 z-50 h-full flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out shadow-lg laptop:shadow-none
-          ${isOpen ? "w-52 tablet:w-56 desktop:w-60 translate-x-0" : "-translate-x-full laptop:translate-x-0 laptop:w-14"}
+          ${isOpen ? "w-56 tablet:w-60 desktop:w-64 translate-x-0" : "-translate-x-full laptop:translate-x-0 laptop:w-[68px]"}
         `}
       >
         <div
-          className={`flex items-center h-16 tablet:h-20 px-3 py-2 transition-all duration-300 ease-in-out ${
+          className={`flex items-center h-[88px] px-4 pt-3 pb-2 transition-all duration-300 ease-in-out ${
             isOpen ? "justify-between" : "laptop:justify-center"
           }`}
         >
@@ -116,18 +125,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           >
             <img
               src={zenatechLogo}
-              alt="Logo"
-              className={`transition-all duration-300 ease-in-out object-contain cursor-pointer ${
-                isOpen
-                  ? "h-12 sm:h-14 tablet:h-16 w-auto max-w-[185px] tablet:max-w-[215px] scale-[1.4] origin-left hover:scale-[1.45]"
-                  : "w-0 h-0"
-              }`}
+              alt="ZenaTech"
+              className={`object-contain ${isOpen ? "h-8 desktop:h-9 w-auto max-w-full" : "w-0 h-0"}`}
             />
           </Link>
 
           <button
             onClick={onToggle}
-            className="rounded-lg p-2 hover:bg-sidebar-accent flex-shrink-0 cursor-pointer text-sidebar-foreground"
+            className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg cursor-pointer text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             title="Toggle Sidebar"
           >
             <PanelRight size={20} />
@@ -135,15 +140,13 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </div>
 
         <TooltipProvider delayDuration={0}>
-          <nav key={view} className="space-y-3 px-2 mt-2 pb-4 overflow-y-auto scrollbar-hide flex-1 min-h-0">
+          <nav key={view} className="space-y-4 px-3 mt-0 pb-4 overflow-y-auto scrollbar-hide flex-1 min-h-0">
             {Object.entries(groupedNavigation).map(([section, items]) => (
               <div key={section} className="space-y-1">
                 {isOpen ? (
-                  <div className="animate-nav-enter px-3 mb-2 text-[10px] font-bold tracking-widest text-muted-foreground uppercase" style={enter()}>
-                    {section}
-                  </div>
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-[0.14em] text-muted-foreground/80 uppercase">{section}</div>
                 ) : (
-                  <div className="h-4" />
+                  <div className="mx-3 my-2 h-px bg-sidebar-border" />
                 )}
 
                 {items.map((item) => {
@@ -152,7 +155,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   if (item.subItems) {
                     const isExpanded = expandedItems[item.label];
                     return (
-                      <div key={item.label} className="animate-nav-enter flex flex-col" style={enter()}>
+                      <div key={item.label} className="flex flex-col">
                         <Tooltip delayDuration={0}>
                           <TooltipTrigger asChild>
                             <button
@@ -164,52 +167,27 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 }
                               }}
                               className={`
-                                group flex items-center justify-between h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out hover:bg-sidebar-accent text-sidebar-foreground
+                                flex items-center justify-between h-10 rounded-lg text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent
                                 ${isOpen ? "px-3" : "px-0 justify-center"}
                               `}
                             >
-                              <div
-                                className={`flex items-center ${
-                                  isOpen ? "justify-start" : "justify-center"
-                                }`}
-                              >
-                                <div className="flex items-center justify-center flex-shrink-0 relative transition-transform duration-200 group-hover:scale-115">
-                                  <Icon size={16} />
-                                </div>
-                                <span
-                                  className={`text-xs font-medium transition-all duration-300 ease-in-out ${
-                                    isOpen
-                                      ? "opacity-100 ml-3 translate-x-0 w-auto group-hover:translate-x-0.5"
-                                      : "opacity-0 ml-0 -translate-x-4 w-0 overflow-hidden"
-                                  }`}
-                                >
-                                  {item.label}
-                                </span>
+                              <div className="flex items-center">
+                                <Icon size={18} strokeWidth={2} className="flex-shrink-0 text-muted-foreground" />
+                                {isOpen && <span className="ml-3">{item.label}</span>}
                               </div>
                               {isOpen && (
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <ChevronDown
-                                    size={16}
-                                    className={`transition-transform duration-300 ease-out ${isExpanded ? "" : "-rotate-90"}`}
-                                  />
-                                </div>
+                                <ChevronDown size={16} className={`flex-shrink-0 text-muted-foreground transition-transform duration-200 ${isExpanded ? "" : "-rotate-90"}`} />
                               )}
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent
-                            side="right"
-                            sideOffset={10}
-                            className={`font-semibold z-50 ${isOpen ? "hidden" : ""}`}
-                          >
+                          <TooltipContent side="right" sideOffset={10} className={`font-semibold z-50 ${isOpen ? "hidden" : ""}`}>
                             {item.label}
                           </TooltipContent>
                         </Tooltip>
 
                         <div
-                          className={`ml-6 pl-2 border-l border-sidebar-border/60 space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${
-                            isOpen && isExpanded
-                              ? "max-h-[1000px] mt-1 opacity-100"
-                              : "max-h-0 opacity-0"
+                          className={`ml-[21px] pl-3 border-l border-sidebar-border space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${
+                            isOpen && isExpanded ? "max-h-[1000px] mt-1 opacity-100" : "max-h-0 opacity-0"
                           }`}
                         >
                           {item.subItems.map((sub) => {
@@ -219,28 +197,20 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 key={sub.path}
                                 to={sub.path}
                                 className={`
-                                  relative flex items-center justify-between h-7.5 px-2.5 rounded-md text-xs font-medium transition-all duration-200 hover:translate-x-0.5
+                                  flex items-center justify-between h-8 px-3 rounded-lg text-xs transition-colors
                                   ${
                                     isSubActive
-                                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-2xs font-semibold"
-                                      : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/80"
+                                      ? "bg-blue-50 font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                                      : "font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                                   }
                                 `}
                               >
-                                <span
-                                  className={`absolute -left-[12.5px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-sidebar-primary ring-2 ring-sidebar transition-transform duration-300 ${
-                                    isSubActive ? "scale-100" : "scale-0"
-                                  }`}
-                                  aria-hidden
-                                />
                                 <span className="truncate">{sub.label}</span>
-                                {sub.label === "Role Assignments" &&
-                                  isSuperAdmin &&
-                                  pendingUsersCount > 0 && (
-                                    <div className="flex-shrink-0 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1.5">
-                                      {pendingUsersCount}
-                                    </div>
-                                  )}
+                                {sub.label === "Role Assignments" && isSuperAdmin && pendingUsersCount > 0 && (
+                                  <div className="flex-shrink-0 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1.5">
+                                    {pendingUsersCount}
+                                  </div>
+                                )}
                               </Link>
                             );
                           })}
@@ -249,56 +219,31 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     );
                   }
 
-                  const isMainActive =
-                    location.pathname === item.path ||
-                    (item.path !== "/" && location.pathname.startsWith(item.path + "/"));
+                  const isMainActive = isItemActive(item, location.pathname, location.search);
 
                   return (
                     <Tooltip key={item.path} delayDuration={0}>
                       <TooltipTrigger asChild>
                         <Link
                           to={item.path!}
-                          style={enter()}
+                          aria-current={isMainActive ? "page" : undefined}
                           className={`
-                            animate-nav-enter group flex items-center h-8 tablet:h-8.5 overflow-hidden rounded-md text-xs transition-all duration-300 ease-in-out
+                            relative flex items-center h-10 rounded-lg text-[13px] transition-colors
                             ${isOpen ? "px-3 justify-start" : "px-0 justify-center"}
                             ${
                               isMainActive
-                                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md shadow-sidebar-primary/25 font-semibold"
-                                : "hover:bg-sidebar-accent text-sidebar-foreground font-medium"
+                                ? "bg-blue-50 font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                                : "font-medium text-sidebar-foreground hover:bg-sidebar-accent"
                             }
                           `}
                         >
-                          <div
-                            key={isMainActive ? "active" : "idle"}
-                            className={`flex items-center justify-center flex-shrink-0 relative ${
-                              isMainActive ? "animate-nav-icon-pop" : "transition-transform duration-200 group-hover:scale-115"
-                            }`}
-                          >
-                            <Icon size={16} />
-                          </div>
-                          <div
-                            className={`flex items-center justify-between min-w-0 ${
-                              isOpen ? "flex-1" : "w-0"
-                            }`}
-                          >
-                            <span
-                              className={`text-xs font-medium transition-all duration-300 ease-in-out truncate ${
-                                isOpen
-                                  ? "opacity-100 ml-3 translate-x-0 w-auto group-hover:translate-x-0.5"
-                                  : "opacity-0 ml-0 -translate-x-4 w-0 overflow-hidden"
-                              }`}
-                            >
-                              {item.label}
-                            </span>
-                          </div>
+                          {/* A slim bar on the page you're on */}
+                          {isMainActive && <span aria-hidden className="absolute -left-3 top-2 bottom-2 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />}
+                          <Icon size={18} strokeWidth={2} className={`flex-shrink-0 ${isMainActive ? "" : "text-muted-foreground"}`} />
+                          {isOpen && <span className="ml-3 truncate">{item.label}</span>}
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        sideOffset={10}
-                        className={`font-semibold z-50 ${isOpen ? "hidden" : ""}`}
-                      >
+                      <TooltipContent side="right" sideOffset={10} className={`font-semibold z-50 ${isOpen ? "hidden" : ""}`}>
                         {item.label}
                       </TooltipContent>
                     </Tooltip>

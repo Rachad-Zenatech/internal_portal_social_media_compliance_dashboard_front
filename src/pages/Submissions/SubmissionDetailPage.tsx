@@ -41,7 +41,7 @@ import ScriptStageCard from "@/components/script/ScriptStageCard";
 import DeleteDraftDialog from "@/components/submissions/DeleteDraftDialog";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel, { ChangesRequestedBanner } from "@/components/submissions/ReviewDecisionPanel";
-import { AccountCaptionsView } from "@/components/submissions/AccountCaptions";
+import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import { DelegationTrail } from "@/components/submissions/DelegateReview";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import { useReviewComments } from "@/hooks/useReview";
@@ -572,7 +572,7 @@ export default function SubmissionDetailPage() {
               <DetailRow label="Caption / copy">
                 {s.caption_text ? <p className="text-sm leading-relaxed whitespace-pre-wrap">{s.caption_text}</p> : null}
               </DetailRow>
-              <AccountCaptionsView accounts={s.accounts ?? []} captions={s.account_captions} mainCaption={s.caption_text} />
+              <PlatformCaptionsView platforms={s.platforms} captions={s.platform_captions} mainCaption={s.caption_text} />
             </div>
           </Panel>
 

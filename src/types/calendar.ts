@@ -24,7 +24,7 @@ export interface CalendarItem {
   poster_variant?: PosterVariant;
   /** The post's copy. */
   caption: string;
-  /** A different caption for some platforms (from the captions written per publishing account). */
+  /** Platforms with their own caption; the rest publish caption. */
   captions_by_platform?: Record<string, string>;
   /** Every platform it goes to; primary_platform is the first. */
   platforms: string[];

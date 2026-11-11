@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { FileText, Loader2, PenLine, RefreshCw, Send } from "lucide-react";
+import { ArrowRight, FileText, Loader2, PenLine, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,7 +22,7 @@ export default function RevisionWorkspace({
   submitting,
   onReplace,
   onEditCaption,
-  onResubmit,
+  onDone,
 }: {
   submissionId: string;
   /** Resubmit-by date for the requested changes. */
@@ -35,7 +35,8 @@ export default function RevisionWorkspace({
   submitting: boolean;
   onReplace: (file: File) => void;
   onEditCaption: () => void;
-  onResubmit: () => void;
+  /** The changes are made: save and go on to run the checks again. */
+  onDone: () => void;
 }) {
   const { comments } = useReviewComments(submissionId);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -61,10 +62,10 @@ export default function RevisionWorkspace({
     <Card className="py-0 gap-0 border-amber-500/40 shadow-xs overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 bg-amber-500/5 border-b border-amber-500/20">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">The reviewer asked for changes</p>
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">The reviewer's comments</p>
           <p className="text-xs text-amber-900/80 dark:text-amber-100/80">
             {open > 0 ? `${open} open comment${open === 1 ? "" : "s"}. ` : "All comments resolved. "}
-            Click a comment's time to jump to that moment, fix it here, then resubmit. Everything else stays as it was.
+            Click a comment's time to jump to that moment and fix it here. When you're done, run the checks again.
           </p>
           {due && (
             <p className={`mt-1 text-xs font-semibold ${due.overdue ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-100"}`}>
@@ -74,11 +75,12 @@ export default function RevisionWorkspace({
         </div>
         <Button
           size="sm"
-          onClick={onResubmit}
+          onClick={onDone}
           disabled={submitting || replacing}
           className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
         >
-          {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Resubmit for Review
+          {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Done: run the checks again
+          {!submitting && <ArrowRight className="w-3.5 h-3.5" />}
         </Button>
       </div>
 

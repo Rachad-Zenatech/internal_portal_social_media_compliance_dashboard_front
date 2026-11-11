@@ -7,10 +7,9 @@ import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, FileText } from 
 import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import DayAgenda from "@/components/dashboard/DayAgenda";
-import UploadScriptDialog from "@/components/script/UploadScriptDialog";
 import {
   ActivityList,
-  Deadline,
+  DeadlinePill,
   Loading,
   Platforms,
   Score,
@@ -55,7 +54,6 @@ function ReviewerDashboard() {
   const navigate = useNavigate();
   const { setActiveVideoId } = useVideoUploadQueue();
   const now = useMemo(() => new Date(), []);
-  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
 
   // Reviewers see everyone's content on their brands, as in the Content Screener.
   const submissions = useQuery({
@@ -144,14 +142,6 @@ function ReviewerDashboard() {
           <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
-            onClick={() => setScriptDialogOpen(true)}
-          >
-            <FileText className="w-4 h-4 text-blue-600" /> Upload script
-          </Button>
           <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
             <Link to="/content-calendar">
               <CalendarDays className="w-4 h-4" /> Calendar
@@ -228,14 +218,21 @@ function ReviewerDashboard() {
               </div>
             ) : (
               <div className="overflow-x-auto border-t border-border/60">
-                <table className="w-full min-w-[760px] text-sm">
+                <table className="w-full min-w-[760px] table-fixed text-sm">
+                  <colgroup>
+                    <col />
+                    <col className="w-[17%]" />
+                    <col className="w-[140px]" />
+                    <col className="w-[160px]" />
+                    <col className="w-[104px]" />
+                  </colgroup>
                   <thead>
-                    <tr className="text-left text-xs text-muted-foreground">
-                      <th className="py-2.5 pl-4 pr-3 font-medium">Post</th>
-                      <th className="px-3 py-2.5 font-medium">Audience</th>
-                      <th className="px-3 py-2.5 font-medium">Deadline</th>
-                      <th className="px-3 py-2.5 font-medium">Compliance</th>
-                      <th className="py-2.5 pl-3 pr-4 text-right font-medium">
+                    <tr className="bg-muted/30 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <th className="py-2 pl-4 pr-3 font-semibold">Post</th>
+                      <th className="px-3 py-2 font-semibold">Audience</th>
+                      <th className="px-3 py-2 font-semibold">Deadline</th>
+                      <th className="px-3 py-2 font-semibold">Compliance</th>
+                      <th className="py-2 pl-3 pr-4 text-right font-semibold">
                         <span className="sr-only">Actions</span>
                       </th>
                     </tr>
@@ -248,15 +245,15 @@ function ReviewerDashboard() {
                         return (
                           <tr
                             key={`script-${sc.id}`}
-                            className={`border-t border-border/60 ${urgent ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-500/5 dark:hover:bg-red-500/10" : "hover:bg-muted/30"}`}
+                            className={`border-t border-border/60 transition-colors hover:bg-muted/30 ${urgent ? "shadow-[inset_3px_0_0_var(--color-red-500)]" : ""}`}
                           >
                             <td className="py-3 pl-4 pr-3">
                               <div className="flex items-center gap-3">
                                 <span className="grid h-10 w-14 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
                                   <FileText className="w-5 h-5" />
                                 </span>
-                                <div className="min-w-0">
-                                  <Link to={`/submissions/${sc.id}/script`} className="block max-w-[260px] truncate font-medium text-foreground hover:underline">
+                                <div className="min-w-0 flex-1">
+                                  <Link to={`/submissions/${sc.id}/script`} className="block truncate font-semibold text-foreground hover:underline">
                                     {sc.title}
                                   </Link>
                                   <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -271,9 +268,9 @@ function ReviewerDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(sc)}</td>
-                            <td className="px-3 py-3 text-xs">
-                              <Deadline dueAt={sc.approval_needed_by} />
+                            <td className="truncate px-3 py-3 text-sm text-muted-foreground">{audienceName(sc)}</td>
+                            <td className="px-3 py-3">
+                              <DeadlinePill dueAt={sc.approval_needed_by} />
                             </td>
                             <td className="px-3 py-3">
                               <Score score={sc.score} unavailable={sc.ai_unavailable} />
@@ -298,13 +295,13 @@ function ReviewerDashboard() {
                       return (
                         <tr
                           key={r.id}
-                          className={`border-t border-border/60 ${urgent ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-500/5 dark:hover:bg-red-500/10" : "hover:bg-muted/30"}`}
+                          className={`border-t border-border/60 transition-colors hover:bg-muted/30 ${urgent ? "shadow-[inset_3px_0_0_var(--color-red-500)]" : ""}`}
                         >
                           <td className="py-3 pl-4 pr-3">
                             <div className="flex items-center gap-3">
                               <Thumb s={r} className="h-10 w-14" />
-                              <div className="min-w-0">
-                                <Link to={`/submissions/${r.id}`} className="block max-w-[260px] truncate font-medium text-foreground hover:underline">
+                              <div className="min-w-0 flex-1">
+                                <Link to={`/submissions/${r.id}`} className="block truncate font-semibold text-foreground hover:underline">
                                   {r.title}
                                 </Link>
                                 <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -317,9 +314,9 @@ function ReviewerDashboard() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-sm text-foreground whitespace-nowrap">{audienceName(r)}</td>
-                          <td className="px-3 py-3 text-xs">
-                            <Deadline dueAt={r.due_at} />
+                          <td className="truncate px-3 py-3 text-sm text-muted-foreground">{audienceName(r)}</td>
+                          <td className="px-3 py-3">
+                            <DeadlinePill dueAt={r.due_at} />
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex flex-col gap-0.5">
@@ -441,12 +438,6 @@ function ReviewerDashboard() {
           </Section>
         </div>
       </div>
-
-      <UploadScriptDialog
-        open={scriptDialogOpen}
-        onOpenChange={setScriptDialogOpen}
-        onSuccess={(id) => navigate(`/compliance/scanner?script=${id}`)}
-      />
     </div>
   );
 }

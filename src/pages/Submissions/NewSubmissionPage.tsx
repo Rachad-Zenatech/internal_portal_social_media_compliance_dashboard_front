@@ -12,8 +12,6 @@ import {
   Check,
   ChevronDown,
   ClipboardList,
-  ArrowDown,
-  BarChart3,
   RefreshCw,
   ShieldCheck,
   Clock,
@@ -67,6 +65,7 @@ import {
   isAnalysing,
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
+import ComplianceStep from "@/components/submissions/ComplianceStep";
 import ComplianceView from "@/components/submissions/ComplianceView";
 import DuplicateNotice from "@/components/submissions/DuplicateNotice";
 import {
@@ -79,23 +78,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CheckModelsUsed, CheckProgress } from "@/components/submissions/CheckProgress";
+import { CheckModelsUsed, CheckProgress, SavedCheckModels } from "@/components/submissions/CheckProgress";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
-import { AccountCaptionsEditor } from "@/components/submissions/AccountCaptions";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
+import PlatformCaptions from "@/components/submissions/PlatformCaptions";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
+import RevisionGuide from "@/components/submissions/RevisionGuide";
+import { useReviewComments } from "@/hooks/useReview";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import ScriptStageCard from "@/components/script/ScriptStageCard";
 import TopicTrend, { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import { usePublicMood } from "@/hooks/usePublicMood";
+import { useSentiment } from "@/hooks/useSentiment";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
+import { POST_STEPS, isStepKey } from "@/lib/postSteps";
+import PostStepNav, { StepFooter, StepGate } from "@/components/submissions/PostStepNav";
+import type { PostStepKey, SubmissionSummary } from "@/types/submission";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
 import { canvaService } from "@/services/canvaService";
 import { submissionService } from "@/services/submissionService";
@@ -218,27 +223,53 @@ function withTime(date: Date, time: string) {
 // Small building blocks
 // ---------------------------------------------------------------------------
 
-function Section({ step, title, description, children }: { step: number; title: string; description: string; children: ReactNode }) {
+/** What each required detail is called when it is missing. */
+const MISSING_LABEL: Record<string, string> = {
+  title: "Title",
+  brand_code: "Brand",
+  account_id: "Account to post on",
+  audience: "Audience",
+  region: "Region",
+  platforms: "Platform",
+  script: "Script",
+  main_file: "Image or video",
+  caption: "Caption",
+  rule_sets: "Rule set",
+};
+
+/** The editor shows one of the five steps at a time (?step=). */
+const STEP_NUMBER: Record<PostStepKey, number> = { details: 1, compliance: 2, sentiment: 3, mood: 4, send: 5 };
+const STEP_TITLE: Record<PostStepKey, string> = {
+  details: "Post details",
+  compliance: "Compliance rules",
+  sentiment: "Sentiment analysis",
+  mood: "Public mood",
+  send: "Send for review",
+};
+const STEP_DESCRIPTION: Record<PostStepKey, string> = {
+  details: "",
+  compliance: "Check your post against the rulebook yourself. Edit and check again as often as you like.",
+  sentiment: "How the tone and messaging may land with your audience. Edit and run it again as often as you like.",
+  mood: "",
+  send: "Pick your reviewers and send it. Once it is sent the post is locked.",
+};
+
+function Section({ title, description, children, id }: { step?: number; title: string; description?: string; children: ReactNode; id?: string }) {
   return (
-    <Card className="py-0 gap-0 border-border/80 shadow-xs">
-      <div className="flex items-start gap-3 px-4 sm:px-5 pt-4 pb-3">
-        <span className="w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center shrink-0">
-          {step}
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-foreground leading-tight">{title}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        </div>
+    <Card id={id} className="py-0 gap-0 rounded-2xl border-border/70 shadow-xs scroll-mt-4">
+      <div className="px-5 sm:px-6 pt-5 pb-3">
+        <h2 className="text-lg font-bold tracking-tight text-foreground leading-tight">{title}</h2>
+        {description && <p className="mt-1 text-[13px] text-muted-foreground">{description}</p>}
       </div>
-      <div className="px-4 sm:px-5 pb-5">{children}</div>
+      <div className="px-5 sm:px-6 pb-6">{children}</div>
     </Card>
   );
 }
 
 function Field({ label, required, error, children, className = "" }: { label: string; required?: boolean; error?: string | false; children: ReactNode; className?: string }) {
   return (
-    <div className={`space-y-1.5 min-w-0 ${className}`}>
-      <Label className="text-xs font-semibold text-foreground">
+    <div className={`space-y-2 min-w-0 ${className}`}>
+      <Label className="text-[13px] font-semibold text-foreground">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </Label>
@@ -291,7 +322,7 @@ function MultiSelect<T extends string>({
         <div
           role="button"
           tabIndex={0}
-          className={`min-h-9 w-full flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-left cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+          className={`min-h-11 w-full flex items-center gap-1.5 rounded-xl border bg-background px-3 py-1.5 text-left cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
             invalid ? "border-red-500" : "border-input"
           }`}
         >
@@ -416,6 +447,14 @@ export default function NewSubmissionPage() {
   const [loadingExisting, setLoadingExisting] = useState(Boolean(routeId));
   const idRef = useRef<string | null>(routeId);
 
+  // My posts opens a post on the step it was left on (?step=compliance): once the draft has loaded, scroll to it.
+  const stepParam = searchParams.get("step");
+  useEffect(() => {
+    if (!isStepKey(stepParam) || loadingExisting) return;
+    const timer = window.setTimeout(() => document.getElementById(`step-${stepParam}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+    return () => window.clearTimeout(timer);
+  }, [stepParam, loadingExisting]);
+
   // Form fields
   // A new post can start on a type picked elsewhere (e.g. the dashboard's quick-create buttons: ?type=CAROUSEL).
   const [contentType, setContentType] = useState<ContentType>(() => {
@@ -435,8 +474,8 @@ export default function NewSubmissionPage() {
   const [approvalBy, setApprovalBy] = useState<Date | undefined>(undefined);
   const [approvalTime, setApprovalTime] = useState(DEFAULT_APPROVAL_TIME);
   const [caption, setCaption] = useState("");
-  // Captions written for particular publishing accounts (by account id); the others use the main caption.
-  const [accountCaptions, setAccountCaptions] = useState<Record<string, string>>({});
+  // Platforms with their own caption; the rest post the main one.
+  const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
@@ -463,6 +502,9 @@ export default function NewSubmissionPage() {
   // The creator's own pre-send checks: the post as last saved (it carries the rulebook check), whether one is running,
   // and the edit count when it last ran, to say when it's out of date.
   const [checkedSub, setCheckedSub] = useState<Submission | null>(null);
+  // Sent for review: every step can be looked at, nothing can be changed or run again.
+  const [readOnly, setReadOnly] = useState(false);
+  const [sentAt, setSentAt] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
   // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
@@ -535,7 +577,26 @@ export default function NewSubmissionPage() {
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
   // Live public mood & news sentiment for the post's topics.
-  const { mood, isLoading: moodLoading, refresh: refreshMood } = usePublicMood(submissionId, Boolean(submissionId));
+  const { mood, isLoading: moodLoading, refresh: refreshMood, dismissTopic } = usePublicMood(submissionId, Boolean(submissionId));
+  // The same query the sentiment panel uses, so the step bar knows when it has run (no extra request).
+  const { analysis: sentimentAnalysis } = useSentiment(submissionId);
+
+  // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
+  const inRevision = status === "CHANGES_REQUESTED";
+  const { data: revisionHistory } = useQuery({
+    queryKey: ["submission-history", submissionId],
+    queryFn: () => submissionService.history(submissionId!),
+    enabled: Boolean(submissionId) && inRevision,
+    staleTime: 0,
+  });
+  const sentBack = useMemo(
+    () =>
+      (revisionHistory?.review_jobs ?? [])
+        .filter((j) => j.decision === "REQUEST_CHANGES" && j.decided_at)
+        .sort((a, b) => new Date(b.decided_at!).getTime() - new Date(a.decided_at!).getTime())[0] ?? null,
+    [revisionHistory]
+  );
+  const { comments: reviewComments } = useReviewComments(inRevision ? submissionId : null);
   const moodDecision = overallPostDecision(mood);
 
   // Scripts are read in the background; refresh their status until they're done so the creator sees it.
@@ -581,12 +642,14 @@ export default function NewSubmissionPage() {
       .get(routeId)
       .then((s) => {
         if (cancelled) return;
-        if (!s.can_edit) {
+        if (!s.can_edit && s.status !== "IN_REVIEW") {
           toast.info(`${s.reference_code} is ${s.status.replace("_", " ").toLowerCase()}. Withdraw it to make changes.`);
           navigate(`/submissions/${s.id}`, { replace: true });
           return;
         }
         applyServer(s);
+        setReadOnly(!s.can_edit);
+        setSentAt(s.submitted_at ?? null);
         setContentType(s.content_type);
         setTitle(s.title === "Untitled submission" ? "" : s.title);
         setBrands(brandCodes(s));
@@ -603,7 +666,7 @@ export default function NewSubmissionPage() {
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
-        setAccountCaptions(s.account_captions ?? {});
+        setPlatformCaptions(s.platform_captions ?? {});
         setSavedAt(new Date(s.updated_at));
         setSaveState("saved");
       })
@@ -648,9 +711,8 @@ export default function NewSubmissionPage() {
       ...(approvalBy ? { approval_needed_by: approvalBy.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
       caption_text: editorRef.current?.innerText.trim() || "",
-      account_captions: Object.fromEntries(
-        Object.entries(accountCaptions).filter(([id, text]) => accountIds.includes(id) && text.trim())
-      ),
+      // Only for platforms it still goes to; a platform that was taken off loses its caption.
+      platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
       rule_sets: ruleSets,
       reviewer_route: reviewers,
       reviewer_ids: pickedReviewers,
@@ -660,6 +722,7 @@ export default function NewSubmissionPage() {
 
   /** Create the draft if needed, then save the current fields. Calls are queued so they never overlap. */
   const save = (opts: { force?: boolean } = {}): Promise<string | null> => {
+    if (readOnly) return Promise.resolve(idRef.current);
     const payload = buildPayload();
     const hasAnything = Boolean(title.trim() || payload.caption_text || brands.length || platforms.length || accountIds.length);
     saveChain.current = saveChain.current
@@ -691,7 +754,7 @@ export default function NewSubmissionPage() {
 
   // Autosave 1.5 s after the last edit.
   useEffect(() => {
-    if (editCounter === 0) return;
+    if (editCounter === 0 || readOnly) return;
     const t = window.setTimeout(() => {
       save().catch((err: Error) => toast.error(`Couldn't save the draft: ${err.message}`));
     }, 1500);
@@ -937,8 +1000,78 @@ export default function NewSubmissionPage() {
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
 
+  // ---- The five steps: one at a time (?step=), and the later ones wait until the details are filled in ----
+  const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? stepParam : "details";
+  const onDetails = stepView === "details";
+  const SENDING_FIELDS = ["reviewer_ids", "approval_needed_by", "publish_at"];
+  // What the post still needs before its compliance check, sentiment analysis and public mood can be run.
+  const detailsMissing = (Object.entries(clientMissing) as [keyof typeof clientMissing, boolean][])
+    .filter(([key, missing]) => missing && !SENDING_FIELDS.includes(key))
+    .map(([key]) => MISSING_LABEL[key] ?? key);
+  const detailsComplete = detailsMissing.length === 0;
+  // A video's script is approved first; until then its own flow handles the later steps.
+  const gated = !onDetails && !videoLocked && !detailsComplete;
+  const toolView = (step: PostStepKey) => stepView === step && !gated;
+  const goToStep = (step: PostStepKey) =>
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("step", step);
+      return next;
+    });
+
+  const [continuing, setContinuing] = useState(false);
+  const [dupChecked, setDupChecked] = useState<{ report: DuplicateReport; edit: number } | null>(null);
+  const [repostTarget, setRepostTarget] = useState<PostStepKey | null>(null);
+
+  /** Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate. */
+  const leaveDetails = async (target: PostStepKey) => {
+    setShowErrors(true);
+    if (!detailsComplete) {
+      toast.error(`Fill in the required fields first: ${detailsMissing.join(", ")}.`);
+      window.setTimeout(() => document.querySelector(".border-red-500")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+      return;
+    }
+    setContinuing(true);
+    try {
+      const id = await save({ force: true });
+      if (!videoLocked) {
+        const report = await submissionService.duplicates(id!);
+        setDupChecked({ report, edit: editCounter });
+        if (report.blocked) {
+          toast.error(`This is a duplicate of ${report.blocking?.reference_code}. Change the post details first.`);
+          return;
+        }
+        if (report.repost) {
+          // The same post went out before, on another date: ask before going on.
+          setRepostTarget(target);
+          setRepostAsk(report.repost);
+          return;
+        }
+      }
+      goToStep(target);
+    } catch (err) {
+      toast.error(`Couldn't check the post: ${(err as Error).message}`);
+    } finally {
+      setContinuing(false);
+    }
+  };
+  // The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
+  const wideCompliance = (toolView("compliance") || toolView("sentiment")) && !videoLocked;
+  const backToCaption = () => {
+    goToStep("details");
+    window.setTimeout(() => captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+  };
+  const openStep = (target: PostStepKey) =>
+    onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
+
   /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again. */
   const runComplianceCheck = async () => {
+    if (!detailsComplete && !videoLocked) {
+      toast.error(`Fill in the required fields before running the check: ${detailsMissing.join(", ")}.`);
+      setShowErrors(true);
+      goToStep("details");
+      return;
+    }
     if (!title.trim() && !caption.trim()) {
       toast.error("Add a title or caption before running the compliance check.");
       return;
@@ -980,6 +1113,16 @@ export default function NewSubmissionPage() {
   const hasCheck = Boolean(checkedSub?.latest_check);
   // Edited since the last check (a check loaded with the draft counts as current until something changes).
   const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
+  // In a revision, a check counts only once it has run again after the reviewer sent the post back.
+  const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
+  const ranSinceSentBack = (at?: string | null) =>
+    Boolean(at && revisionHistory) && (sentBackAt == null || new Date(at!).getTime() > sentBackAt);
+  const recheck = {
+    compliance: hasCheck && !checkStale && ranSinceSentBack(checkedSub?.latest_check?.checked_at),
+    sentiment: sentimentAnalysis?.status === "COMPLETED" && ranSinceSentBack(sentimentAnalysis.completed_at),
+    mood: Boolean(mood),
+  };
+  const changesMade = editCounter > 0 || recheck.compliance;
 
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -1029,6 +1172,37 @@ export default function NewSubmissionPage() {
         setSubmitting(false);
       }
       return;
+    }
+    // Sent back by a reviewer: the changes are checked again before the new version goes back.
+    if (resubmitting && !recheck.compliance) {
+      toast.error("Run the compliance check on your changes before resubmitting.");
+      openStep("compliance");
+      return;
+    }
+    if (resubmitting && !recheck.sentiment) {
+      toast.error("Run the sentiment analysis on your changes before resubmitting.");
+      openStep("sentiment");
+      return;
+    }
+    // The steps count once they've run, but what's sent has to be what was checked: anything edited since is run again.
+    if (checkStale) {
+      toast.error("You've edited the post since the compliance check. Run the compliance check again before sending.");
+      openStep("compliance");
+      return;
+    }
+    if (submissionId) {
+      const saved = await submissionService.list(undefined, "mine").catch(() => [] as SubmissionSummary[]);
+      const steps = saved.find((s) => s.id === submissionId)?.steps;
+      if (steps?.compliance === "stale") {
+        toast.error("You've edited the post since the compliance check. Run the compliance check again before sending.");
+        openStep("compliance");
+        return;
+      }
+      if (steps?.sentiment === "stale") {
+        toast.error("You've edited the post since the sentiment analysis. Run the sentiment analysis again before sending.");
+        openStep("sentiment");
+        return;
+      }
     }
     if (duplicates?.blocked) {
       toast.error(`This is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
@@ -1152,10 +1326,14 @@ export default function NewSubmissionPage() {
     toast.success("Caption added. Edit it as you like; it's checked with the rest of the post.");
   };
 
+  // The main caption only has to fit the platforms that post it (not those with their own).
   const charLimit = useMemo(() => {
-    const limits = platforms.map((p) => CHAR_LIMITS[p]).filter((n): n is number => typeof n === "number");
+    const limits = platforms
+      .filter((p) => !(p in platformCaptions))
+      .map((p) => CHAR_LIMITS[p])
+      .filter((n): n is number => typeof n === "number");
     return limits.length ? Math.min(...limits) : 2200;
-  }, [platforms]);
+  }, [platforms, platformCaptions]);
 
   const hashtagLibrary = useHashtagLibrary({ brands, audiences, region, platforms, ruleSets });
 
@@ -1181,8 +1359,8 @@ export default function NewSubmissionPage() {
   return (
     <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[1800px]">
       <DashboardHeader
-        title={referenceCode ? `Edit Submission ${referenceCode}` : "New Submission"}
-        subtitle="Create a new content submission for compliance review and approval."
+        title={referenceCode ? "Edit Submission" : "New Submission"}
+        subtitle={referenceCode ? `${referenceCode} · Create a new content submission for compliance review and approval.` : "Create a new content submission for compliance review and approval."}
         actions={
           <>
             {submissionId && (
@@ -1202,7 +1380,55 @@ export default function NewSubmissionPage() {
         }
       />
 
+      {readOnly && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3.5 dark:border-blue-500/30 dark:bg-blue-500/10">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-blue-950 dark:text-blue-100">In review: this post is locked</p>
+            <p className="text-[13px] text-blue-950/80 dark:text-blue-100/80">
+              You can look through every step and the results you ran before sending, but nothing can be changed or run again.
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" className="h-8 bg-card text-xs" onClick={() => navigate(`/submissions/${submissionId}`)}>
+            Open the post page
+          </Button>
+        </div>
+      )}
+
+      <PostStepNav
+        current={stepView}
+        states={{
+          details: detailsComplete ? "done" : "todo",
+          // Done once it has run; the compliance step itself says when the post changed since.
+          compliance: resubmitting ? (recheck.compliance ? "done" : "stale") : hasCheck ? "done" : "todo",
+          sentiment: resubmitting
+            ? recheck.sentiment
+              ? "done"
+              : "stale"
+            : sentimentAnalysis?.status === "COMPLETED"
+            ? "done"
+            : "todo",
+          mood: mood ? "done" : "todo",
+          ...(readOnly ? { send: "done" as const } : {}),
+        }}
+        onGo={openStep}
+      />
+
       {resubmitting && submissionId && (
+        <RevisionGuide
+          reviewer={sentBack?.decided_by_name}
+          note={sentBack?.decision_notes}
+          dueAt={dueAt}
+          openComments={reviewComments.filter((c) => !c.resolved_at).length}
+          changesMade={changesMade}
+          rechecked={recheck}
+          submitting={submitting}
+          onOpenStep={openStep}
+          onResubmit={() => submit()}
+        />
+      )}
+
+      {/* The reviewer's comments beside the content, where the edits are made: on the details step only. */}
+      {resubmitting && submissionId && onDetails && (
         <RevisionWorkspace
           submissionId={submissionId}
           dueAt={dueAt}
@@ -1216,66 +1442,23 @@ export default function NewSubmissionPage() {
             captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             window.setTimeout(() => editorRef.current?.focus(), 350);
           }}
-          onResubmit={() => submit()}
+          onDone={() => openStep("compliance")}
         />
       )}
-      {resubmitting && canvaMain && (
+      {resubmitting && canvaMain && onDetails && (
         <CanvaReimportBar file={canvaMain} resubmitting busy={reimporting || submitting} onReimport={reimportCanva} />
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 sm:gap-5 items-start">
+      <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${wideCompliance ? "" : "xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
         {/* ---------------- Form ---------------- */}
-        <div className="space-y-4 min-w-0">
+        <div id="step-details" className="space-y-4 min-w-0 scroll-mt-4">
+          {/* Sent for review: the details can be read, not changed. */}
+          <fieldset disabled={readOnly} className="contents">
           {showDetails && (
-          <>
-          <Section step={1} title="Content Type" description="Select the type of content you want to submit.">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" role="radiogroup">
-              {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
-                const selected = contentType === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => {
-                      if (value === contentType) return;
-                      if (mainFiles.length > 0) {
-                        toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
-                      }
-                      setContentType(value);
-                      if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
-                      markEdited();
-                    }}
-                    className={`relative text-left rounded-xl border p-3.5 transition-all ${
-                      selected ? "border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/40" : "border-border/80 hover:border-border hover:bg-muted/30"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-3 right-3 w-4 h-4 rounded-full border flex items-center justify-center ${
-                        selected ? "border-blue-600" : "border-muted-foreground/40"
-                      }`}
-                    >
-                      {selected && <span className="w-2 h-2 rounded-full bg-blue-600" />}
-                    </span>
-                    <span
-                      className={`w-9 h-9 rounded-lg border flex items-center justify-center mb-2.5 ${
-                        selected ? "border-blue-500/40 text-blue-600 dark:text-blue-400 bg-background" : "border-border text-foreground"
-                      }`}
-                    >
-                      <Icon className="w-4.5 h-4.5" />
-                    </span>
-                    <span className="block text-sm font-semibold text-foreground">{label}</span>
-                    <span className="block text-[11px] text-muted-foreground mt-0.5 leading-snug">{description}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </Section>
-
-          <Section step={2} title="Submission Details" description="Provide key details about your content.">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-4 gap-y-3.5">
-              <Field label="Title" required error={errorFor("title")} className="md:col-span-2 lg:col-span-3">
+          <div className={onDetails ? "space-y-4" : "hidden"}>
+          <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">
+            <div className="flex flex-col gap-5">
+              <Field label="Title" required error={errorFor("title")}>
                 <Input
                   value={title}
                   onChange={(e) => {
@@ -1284,10 +1467,48 @@ export default function NewSubmissionPage() {
                   }}
                   maxLength={300}
                   placeholder="e.g. ZenaDrone 1000 – Autonomous Defense Capabilities"
-                  className={isMissing("title") ? "border-red-500" : ""}
+                  className={`h-11 rounded-xl ${isMissing("title") ? "border-red-500" : ""}`}
                 />
               </Field>
-              <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")} className="md:col-span-2 lg:col-span-3">
+
+              <div className="space-y-2">
+                <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
+                  {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
+                    const selected = contentType === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        title={description}
+                        onClick={() => {
+                          if (value === contentType) return;
+                          if (mainFiles.length > 0) {
+                            toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
+                          }
+                          setContentType(value);
+                          if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
+                          markEdited();
+                        }}
+                        className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${
+                          selected
+                            ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                            : "border-border bg-card text-muted-foreground hover:border-slate-400 hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">{CONTENT_TYPES.find((c) => c.value === contentType)?.description}</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+              <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>
                 {!options ? (
                   <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
                 ) : (
@@ -1309,13 +1530,53 @@ export default function NewSubmissionPage() {
                   </p>
                 )}
               </Field>
+              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")}>
+                {!options ? (
+                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
+                ) : (
+                  <MultiSelect<string>
+                    options={Object.keys(options.audiences)}
+                    value={audiences}
+                    onChange={onAudiencesChange}
+                    placeholder="Select audiences"
+                    getLabel={(code) => options.audiences[code] ?? code}
+                    invalid={isMissing("audience")}
+                  />
+                )}
+              </Field>
+                <div className="md:col-span-2">
+                <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
+                <MultiSelect
+                  options={options?.rule_sets ?? []}
+                  value={ruleSets}
+                  onChange={(next) => {
+                    setRuleSets(next);
+                    markEdited();
+                  }}
+                  placeholder="Select rule sets"
+                  compact
+                  invalid={isMissing("rule_sets")}
+                />
+                </Field>
+                </div>
+              </div>
+              <div className="-mt-2">
+              <p className="text-[11px] text-muted-foreground mt-0">
+              Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
+              sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
+              </p>
+              </div>
+            </div>
+          </Section>
 
+          <Section step={2} title="Where it goes" description="The accounts and platforms it posts through, and when.">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
               <Field
                 label="Publishing Account(s)"
                 required
                 error={errorFor("account_id", "Choose at least one connected account")}
-                className="lg:col-span-2"
-              >
+                className="md:col-span-2"
+           >
                 {!options || brandAccounts.length === 0 ? (
                   <div className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${isMissing("account_id") ? "border-red-500" : "border-input"}`}>
                     {!options ? "Loading accounts..." : "No connected accounts"}
@@ -1344,43 +1605,7 @@ export default function NewSubmissionPage() {
                   </p>
                 )}
               </Field>
-              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")} className="lg:col-span-2">
-                {!options ? (
-                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
-                ) : (
-                  <MultiSelect<string>
-                    options={Object.keys(options.audiences)}
-                    value={audiences}
-                    onChange={onAudiencesChange}
-                    placeholder="Select audiences"
-                    getLabel={(code) => options.audiences[code] ?? code}
-                    invalid={isMissing("audience")}
-                  />
-                )}
-              </Field>
-              <Field label="Region" required error={errorFor("region")} className="md:col-span-2 lg:col-span-2">
-                <Select
-                  value={region}
-                  onValueChange={(v) => {
-                    setRegion(v);
-                    markEdited();
-                  }}
-                  disabled={!options}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {options?.regions.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-
-              <Field label="Platform(s)" required error={errorFor("platforms")} className="md:col-span-2 lg:col-span-2">
+              <Field label="Platform(s)" required error={errorFor("platforms")}>
                 <MultiSelect<string>
                   options={options?.platforms ?? []}
                   value={platforms}
@@ -1399,14 +1624,35 @@ export default function NewSubmissionPage() {
                   </p>
                 )}
               </Field>
+              <Field label="Region" required error={errorFor("region")}>
+                <Select
+                  value={region}
+                  onValueChange={(v) => {
+                    setRegion(v);
+                    markEdited();
+                  }}
+                  disabled={!options}
+                >
+                  <SelectTrigger className="h-11 w-full rounded-xl">
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {options?.regions.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field
                 label="Intended Publish Date"
                 error={errorFor("publish_at", "Pick a date in the future")}
-                className="md:col-span-2 lg:col-span-2"
-              >
+                
+           >
                 <Popover>
                   <div
-                    className={`flex h-9 items-center gap-2 rounded-md border bg-background px-2.5 ${
+                    className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${
                       isMissing("publish_at") ? "border-red-500" : "border-input"
                     }`}
                   >
@@ -1450,13 +1696,13 @@ export default function NewSubmissionPage() {
                 required
                 error={errorFor(
                   "approval_needed_by",
-                  approvalBy && publishDate && approvalBy > publishDate ? "Must be on or before the publish date" : approvalBy ? "Pick a date in the future" : "Required"
+                  approvalBy && publishDate && approvalBy> publishDate ? "Must be on or before the publish date" : approvalBy ? "Pick a date in the future" : "Required"
                 )}
-                className="md:col-span-2 lg:col-span-2"
-              >
+                
+           >
                 <Popover>
                   <div
-                    className={`flex h-9 items-center gap-2 rounded-md border bg-background px-2.5 ${
+                    className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${
                       isMissing("approval_needed_by") ? "border-red-500" : "border-input"
                     }`}
                   >
@@ -1549,9 +1795,10 @@ export default function NewSubmissionPage() {
             </div>
           </Section>
 
-          <Section step={3} title="Upload Content" description="Upload your content and any supporting materials in one go.">
-            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only. */}
-            {contentType === "VIDEO" && (
+
+          <Section step={3} title="Image and sources" description="Upload your image or video, and any documents that back up your claims.">
+            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
+            {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <FileText className="w-3.5 h-3.5 shrink-0" />
@@ -1696,7 +1943,7 @@ export default function NewSubmissionPage() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {files.map((f) => (
-                    <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={() => removeFile(f)} />
+                    <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={readOnly ? undefined : () => removeFile(f)} />
                   ))}
                   {uploading.map((u) => (
                     <div key={u.key} className="flex items-center gap-3 rounded-lg border border-dashed border-border p-2.5 text-xs text-muted-foreground min-h-[58px]">
@@ -1739,11 +1986,11 @@ export default function NewSubmissionPage() {
               onImported={onCanvaImported}
             />
           </Section>
-          </>
+          </div>
           )}
 
           {resubmitting && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5">
+            <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 ${onDetails ? "" : "hidden"}`}>
               <p className="text-xs text-muted-foreground">
                 {showAllDetails
                   ? "All details are open. Anything you change is part of the next version."
@@ -1756,10 +2003,10 @@ export default function NewSubmissionPage() {
             </div>
           )}
 
-          <div ref={captionSectionRef} className="scroll-mt-4">
+          <div ref={captionSectionRef} className={`scroll-mt-4 ${onDetails ? "" : "hidden"}`}>
           <Section
             step={4}
-            title="Caption / Copy"
+            title="Caption"
             description="Required. Write or paste your caption, script, or copy, or have one suggested from your post."
           >
             <div className={`rounded-lg border ${isMissing("caption") ? "border-red-500" : "border-input"} overflow-hidden`}>
@@ -1843,7 +2090,7 @@ export default function NewSubmissionPage() {
               </div>
               <div
                 ref={editorRef}
-                contentEditable
+                contentEditable={!readOnly}
                 suppressContentEditableWarning
                 role="textbox"
                 aria-multiline="true"
@@ -1869,18 +2116,6 @@ export default function NewSubmissionPage() {
               {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
               {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
             </p>
-            {selectedAccounts.length > 1 && (
-              <AccountCaptionsEditor
-                accounts={selectedAccounts}
-                captions={accountCaptions}
-                mainCaption={caption}
-                limitFor={(platform) => CHAR_LIMITS[platform] ?? 2200}
-                onChange={(next) => {
-                  setAccountCaptions(next);
-                  markEdited();
-                }}
-              />
-            )}
             <CaptionSignalsBar
               caption={caption}
               maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
@@ -1889,6 +2124,19 @@ export default function NewSubmissionPage() {
               audiences={audiences}
               onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
             />
+            {platforms.length > 1 && (
+              <PlatformCaptions
+                platforms={platforms}
+                captions={platformCaptions}
+                mainCaption={caption}
+                limitFor={(p) => CHAR_LIMITS[p]}
+                readOnly={readOnly}
+                onChange={(next) => {
+                  setPlatformCaptions(next);
+                  markEdited();
+                }}
+              />
+            )}
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">
                 Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
@@ -1907,10 +2155,13 @@ export default function NewSubmissionPage() {
             )}
           </Section>
           </div>
+          </fieldset>
 
           {showDetails && (
+          <div className={toolView("mood") ? "" : "hidden"}>
           <Section
-            step={5}
+            id="step-mood"
+            step={4}
             title="Market & News Sentiment"
             description="Live industry conversation on X and news outlets for your post's topics, and whether posting now carries backlash risk."
           >
@@ -1947,13 +2198,22 @@ export default function NewSubmissionPage() {
                       className="h-7 text-xs"
                       onClick={() => refreshMood()}
                       disabled={moodLoading}
+                      hidden={readOnly}
                     >
                       {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
                     </Button>
                   </div>
                 </div>
 
-                <TopicTrend submissionId={submissionId} mood={mood} isLoading={moodLoading} canEdit={false} />
+                <TopicTrend
+                  submissionId={submissionId}
+                  mood={mood}
+                  isLoading={moodLoading}
+                  canEdit={!readOnly}
+                  busy={dismissTopic.isPending}
+                  onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
+                  onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+                />
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
@@ -1975,41 +2235,47 @@ export default function NewSubmissionPage() {
               </div>
             )}
           </Section>
+          </div>
           )}
 
-          {showDetails && (
-          <Section step={6} title="Compliance" description="Select the rule sets this content is checked against.">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-3.5">
-              <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
-                <MultiSelect
-                  options={options?.rule_sets ?? []}
-                  value={ruleSets}
-                  onChange={(next) => {
-                    setRuleSets(next);
-                    markEdited();
-                  }}
-                  placeholder="Select rule sets"
-                  compact
-                  invalid={isMissing("rule_sets")}
-                />
-              </Field>
+          {gated && <StepGate missing={detailsMissing} onBack={() => goToStep("details")} />}
+
+          {toolView("compliance") && !videoLocked && (
+            <div id="step-compliance" className="scroll-mt-4">
+              <ComplianceStep
+                sub={checkedSub}
+                title={title}
+                caption={caption}
+                mainFile={mainFiles[0]}
+                editable={!readOnly}
+                checking={checking}
+                stale={checkStale}
+                progress={<CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />}
+                extra={
+                  checkedSub?.latest_check ? (
+                    lastCheckMs != null && checkAttempts.length > 0 ? (
+                      <CheckModelsUsed attempts={checkAttempts} durationMs={lastCheckMs} />
+                    ) : (
+                      <SavedCheckModels models={checkedSub.latest_check.models} />
+                    )
+                  ) : null
+                }
+                onCheck={() => void runComplianceCheck()}
+                onEditCaption={backToCaption}
+                onReplaceMedia={() => goToStep("details")}
+              />
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
-              sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
-            </p>
-          </Section>
           )}
 
-          <div ref={checkSectionRef} className="scroll-mt-4">
+          <div ref={checkSectionRef} className={`scroll-mt-4 ${onDetails || stepView === "mood" || gated || (toolView("compliance") && !videoLocked) ? "hidden" : ""}`}>
           <Section
-            step={7}
-            title="Check & Send for Review"
-            description="Check your post yourself before a reviewer sees it. Edit and check again as often as you like, then send it when you're confident."
+            step={STEP_NUMBER[stepView]}
+            title={STEP_TITLE[stepView]}
+            description={STEP_DESCRIPTION[stepView]}
           >
             <div className="flex flex-col gap-4">
               {videoLocked ? (
-                <p className="flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+                <p className={`flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground ${stepView === "send" ? "hidden" : ""}`}>
                   <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   Your script is checked first: open it from the script card above to see its compliance score. The
                   compliance check and sentiment analysis of the video and caption open here once the script is approved.
@@ -2017,7 +2283,7 @@ export default function NewSubmissionPage() {
               ) : (
                 <>
                   {/* Compliance: the same rulebook check the reviewer sees */}
-                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
+                  <div className={`scroll-mt-4 rounded-xl border border-border/80 p-3.5 space-y-3 ${toolView("compliance") ? "" : "hidden"}`}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="flex min-w-0 items-start gap-2.5">
                         <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
@@ -2075,20 +2341,17 @@ export default function NewSubmissionPage() {
                   </div>
 
                   {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
-                  <div className="rounded-xl border border-border/80 p-3.5 space-y-3">
-                    <div className="flex min-w-0 items-start gap-2.5">
-                      <BarChart3 className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">Sentiment analysis</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          How the tone and messaging may land with your audience. Recent mood on your topics is in Market
-                          &amp; News Sentiment above.
-                        </p>
-                      </div>
-                    </div>
+                  <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
                     <SentimentPanel
                       submissionId={submissionId}
+                      showTopicTrends={false}
+                      canRun={!readOnly}
+                      design
                       beforeAnalyse={async () => {
+                        if (!detailsComplete) {
+                          toast.error(`Fill in the required fields before running the analysis: ${detailsMissing.join(", ")}.`);
+                          return false;
+                        }
                         try {
                           await save({ force: true });
                           return true;
@@ -2102,8 +2365,17 @@ export default function NewSubmissionPage() {
                 </>
               )}
 
+              {readOnly && toolView("send") && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
+                  <p className="font-semibold">Sent for review{sentAt ? ` on ${format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a")}` : ""}</p>
+                  <p className="mt-1 text-[13px] text-blue-950/80 dark:text-blue-100/80">
+                    It's with the reviewer now. You'll get a notification when they decide.
+                  </p>
+                </div>
+              )}
+
               {/* Who it goes to, and the send itself */}
-              <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3">
+              <div id="step-send" className={`scroll-mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3 ${toolView("send") && !readOnly ? "" : "hidden"}`}>
                 <Field
                   label="Send to reviewers"
                   required
@@ -2176,7 +2448,47 @@ export default function NewSubmissionPage() {
             </div>
           </Section>
           </div>
-          <AlertDialog open={!!repostAsk} onOpenChange={(open) => !open && setRepostAsk(null)}>
+
+          {/* Details: the duplicate check happens on the way to the compliance step */}
+          {onDetails && dupChecked && dupChecked.edit === editCounter && (dupChecked.report.blocked || dupChecked.report.repost) && (
+            <DuplicateNotice report={dupChecked.report} publishAt={publishDate ?? null} />
+          )}
+          {onDetails && (
+            <StepFooter
+              busy={continuing}
+              onSave={readOnly ? undefined : saveNow}
+              saving={saveState === "saving"}
+              next={{ label: "Continue to compliance rules", onClick: () => (readOnly ? goToStep("compliance") : void leaveDetails("compliance")) }}
+            />
+          )}
+          {!onDetails && !gated && (
+            <StepFooter
+              onSave={readOnly ? undefined : saveNow}
+              saving={saveState === "saving"}
+              back={{
+                label: `Back: ${STEP_TITLE[POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key]}`,
+                onClick: () => goToStep(POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key),
+              }}
+              next={
+                stepView === "send"
+                  ? undefined
+                  : {
+                      label: `Continue to ${STEP_TITLE[POST_STEPS[STEP_NUMBER[stepView]].key].toLowerCase()}`,
+                      onClick: () => goToStep(POST_STEPS[STEP_NUMBER[stepView]].key),
+                    }
+              }
+            />
+          )}
+
+          <AlertDialog
+            open={!!repostAsk}
+            onOpenChange={(open) => {
+              if (!open) {
+                setRepostAsk(null);
+                setRepostTarget(null);
+              }
+            }}
+          >
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Send the same post again?</AlertDialogTitle>
@@ -2197,7 +2509,13 @@ export default function NewSubmissionPage() {
                 <AlertDialogAction
                   onClick={() => {
                     setRepostAsk(null);
-                    submit(true);
+                    if (repostTarget) {
+                      const target = repostTarget;
+                      setRepostTarget(null);
+                      goToStep(target);
+                    } else {
+                      submit(true);
+                    }
                   }}
                 >
                   Continue for this date
@@ -2208,8 +2526,33 @@ export default function NewSubmissionPage() {
         </div>
 
         {/* ---------------- Summary ---------------- */}
-        <div className="space-y-3 xl:sticky xl:top-0">
-          <Card className="py-0 gap-0 border-border/80 shadow-xs">
+        <div className={`space-y-3 xl:sticky xl:top-0 ${wideCompliance ? "hidden" : ""}`}>
+          {onDetails && (
+            <Card className="py-0 gap-0 rounded-2xl border-border/70 shadow-xs">
+              <div className="px-5 pt-5 pb-2">
+                <h2 className="text-base font-bold text-foreground">Ready to continue</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {detailsComplete ? "Everything required is in." : `${detailsMissing.length} still to fill in.`}
+                </p>
+              </div>
+              <ul className="space-y-1.5 px-5 pb-5">
+                {Object.entries(MISSING_LABEL)
+                  .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
+                  .map(([key, label]) => {
+                    const missing = (clientMissing as Record<string, boolean>)[key];
+                    return (
+                      <li key={key} className="flex items-center gap-2 text-[13px]">
+                        <span className={`grid h-4 w-4 place-items-center rounded-full ${missing ? "border border-border" : "bg-blue-600 text-white"}`}>
+                          {!missing && <Check className="h-3 w-3" strokeWidth={3} />}
+                        </span>
+                        <span className={missing ? "text-muted-foreground" : "font-medium text-foreground"}>{label}</span>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </Card>
+          )}
+          <Card className="py-0 gap-0 rounded-2xl border-border/70 shadow-xs">
             <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-2">
               <div className="flex items-start gap-3 min-w-0">
                 <span className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
@@ -2306,7 +2649,7 @@ export default function NewSubmissionPage() {
               ) : (
                 <div className="space-y-2">
                   {files.map((f) => (
-                    <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={() => removeFile(f)} />
+                    <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={readOnly ? undefined : () => removeFile(f)} />
                   ))}
                   {uploading.map((u) => (
                     <div key={u.key} className="flex items-center gap-3 rounded-lg border border-dashed border-border p-2 text-xs text-muted-foreground">
@@ -2320,18 +2663,6 @@ export default function NewSubmissionPage() {
 
           </Card>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={saveNow} disabled={saveState === "saving"} className="gap-1.5 text-xs font-semibold">
-              {saveState === "saving" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Draft
-            </Button>
-            <Button
-              type="button"
-              onClick={() => checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <ArrowDown className="w-3.5 h-3.5" /> Check &amp; Send
-            </Button>
-          </div>
           {optionsQuery.isError && (
             <p className="text-[11px] text-red-600">Couldn't load brands and accounts. Refresh to try again.</p>
           )}
