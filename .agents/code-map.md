@@ -30,19 +30,20 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
 - `GlobalProgressOverlay` (export function)
 
-## src/components/AppShell/Navigation.tsx (130 lines) - navigation (components  app shell)
+## src/components/AppShell/Navigation.tsx (121 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface)
 - `NavigationItem` (export interface)
 - `AppView` (export type)
-- `navigation` (export const)
+- `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
 - `pathInView` (export function) - Whether a page belongs to a view.
 
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function)
 - `NotificationDropdownContent` (export function)
 
-## src/components/AppShell/Sidebar.tsx (315 lines) - sidebar (components  app shell)
+## src/components/AppShell/Sidebar.tsx (260 lines) - The page an item stands for, as the address bar shows it.
 - `SidebarProps` (interface)
+- `isItemActive` (function) - The page an item stands for, as the address bar shows it.
 - `Sidebar` (export function)
 
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
@@ -255,16 +256,17 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SuggestionCard` (function)
 - `CaptionSuggester` (export function) - Suggest a caption": three captions drafted from the post itself (images, video transcript, title), in the  brand's voice and already run ...
 
-## src/components/submissions/CheckCoverage.tsx (152 lines) - check coverage (components submissions)
+## src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
 - `CheckCoverage` (export function) - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
 
-## src/components/submissions/CheckProgress.tsx (129 lines) - What each AI step of the check is, in the creator's words.
+## src/components/submissions/CheckProgress.tsx (144 lines) - What each AI step of the check is, in the creator's words.
 - `stepLabel` (const)
 - `seconds` (const)
 - `Elapsed` (function)
 - `AttemptList` (function) - Each step's model attempts in the order they ran; a model tried after another failed is a fallback.
 - `CheckProgress` (export function) - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
 - `CheckModelsUsed` (export function) - After a check: which models answered, and how many fallbacks it took.
+- `SavedCheckModels` (export function) - The models a saved check used, read from the saved result, so it shows after a reload too.
 
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
@@ -272,6 +274,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - `DeleteDraftTarget` (export interface)
 - `DeleteDraftDialog` (export function) - Confirm and delete a draft.
+
+## src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
+- `day` (const)
+- `Ref` (function) - SUB-12 · Launch post (in review, sent Nov 3, 2026)
+- `Details` (function) - Each dropdown: what both posts share, and what only this post adds.
+- `DuplicateNotice` (export function) - Posts already sent for approval with the same content and caption as this one.
 
 ## src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `statusOf` (export const) - What a finding amounts to; checks saved before statuses existed only had violations.
@@ -333,16 +341,16 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `pill` (const)
 - `RevisionTimelinePicker` (export function) - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (184 lines) - revision workspace (components submissions)
+## src/components/submissions/RevisionWorkspace.tsx (186 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) - A flag's rule number; hovering it shows the rule that was broken.
 
-## src/components/submissions/ScoreBreakdown.tsx (91 lines) - Violations always list here; a warning only when it cost points.
+## src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...
 
-## src/components/submissions/SentimentPanel.tsx (1055 lines) - sentiment panel (components submissions)
+## src/components/submissions/SentimentPanel.tsx (1308 lines) - sentiment panel (components submissions)
 - `titleCase` (const)
 - `timestamp` (const)
 - `Metric` (function)
@@ -363,9 +371,14 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `bySeverity` (const) - Most serious first; the first TOP_FINDINGS go in the summary, the rest under "More detail".
 - `PerceptionSummary` (function) - The short answer: will it be perceived well? The verdict, what the topic numbers say, and the most serious  wording to fix (with the sugg...
 - `ResultView` (function)
+- `DesignHead` (function) - The editor's version of the result: the verdict, then tone, brand fit and reputational concern in three tiles.
+    - `tile` (fn)
+- `DesignRest` (function) - Audiences, the controversy dial and what was flagged, each in its own card, as in the design.
+- `DesignAside` (function) - The side column: what the analysis read, and how to use it.
 - `SentimentPanel` (export function) - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
     - `topics` (fn) - The topics' current mood only means something for the current content, not an earlier version.
     - `analyseAll` (fn) - All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis.
+    - `statusChain` (fn)
 - `SaveTestCaseDialog` (function) - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
 
 ## src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
@@ -818,10 +831,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - `PendingAccess` (export function)
 
-## src/pages/Compliance/ComplianceRulesPage.tsx (1608 lines) - compliance rules page (pages  compliance)
+## src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - `ScopeKey` (type)
 - `RuleScope` (type)
 - `ScopeOption` (type)
+- `severityLook` (function)
+    - `severity` (fn)
 - `ChipPicker` (function) - Toggle chips for picking several values; nothing picked means "all".
 - `nextRuleNumber` (function) - Next free "Rule N" number across every rule, not just the filtered list.
 - `FlagStatsNote` (function) - How noisy a rule is in practice: how often it flagged submitted content and how often reviewers dismissed it.
@@ -841,7 +856,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1780 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1935 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -864,10 +879,12 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `flagsOf` (function)
     - `caption` (fn)
 - `escapeRe` (const)
-- `HighlightedCaption` (function) - The caption with every flagged phrase highlighted.
+- `HighlightedCaption` (export function) - The caption with every flagged phrase highlighted.
+- `MarkedTerm` (interface) - One flagged phrase in the caption: which rule found it, and whether it was dismissed.
+- `MarkedCaption` (function) - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
 - `TimelinePart` (interface)
-- `timelineOf` (function) - The video split into its checked parts, each coloured by what was found there.
-- `FlaggedMoments` (function) - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
+- `timelineOf` (export function) - The video split into its checked parts, each coloured by what was found there.
+- `FlaggedMoments` (export function) - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
     - `count` (fn)
 - `CommentComposer` (function) - Write a reviewer comment, pinned to a moment, a range of the video, or no time.
     - `post` (fn)
@@ -1202,7 +1219,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2316 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2602 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1227,6 +1244,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `scriptStage` (fn) - the script stage (required: false) work as they always did.
     - `duplicatesQuery` (fn) - Posts already sent for approval with the same content and caption, looked up again after every save and upload.
     - `refreshScript` (fn)
+    - `sentBack` (fn)
     - `applyServer` (fn) - ----- Load an existing draft (S08 resume) -----
     - `buildPayload` (fn) - ----- Saving (S01, S02-S04, S06, S08) -----
     - `save` (fn) - Create the draft if needed, then save the current fields.
@@ -1245,7 +1263,15 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `pickApproval` (fn)
     - `isMissing` (fn)
     - `errorFor` (fn)
+    - `detailsMissing` (fn) - What the post still needs before its compliance check, sentiment analysis and public mood can be run.
+    - `toolView` (fn)
+    - `goToStep` (fn)
+    - `leaveDetails` (fn) - Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate.
+    - `wideCompliance` (fn) - The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
+    - `backToCaption` (fn)
+    - `openStep` (fn)
     - `runComplianceCheck` (fn) - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+    - `ranSinceSentBack` (fn)
     - `submit` (fn)
     - `exec` (fn) - ----- Caption editor -----
     - `insertHashtag` (fn) - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
@@ -1297,7 +1323,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1546 lines) - submissions list page (pages  submissions)
+## src/pages/Submissions/SubmissionsListPage.tsx (1653 lines) - submissions list page (pages  submissions)
 - `Stage` (type) - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
 - `stageOf` (function)
 - `tabOf` (function) - The tab a post is counted under.
@@ -1320,7 +1346,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SubmissionCard` (function)
 - `friendlyDate` (function) - Today", "Tomorrow", a weekday within the week ahead, otherwise the date.
 - `statusLine` (function) - One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,  grey when it's waiting on so...
-- `GalleryCard` (function)
+- `PlatformBadges` (function) - The platforms a post goes to, as their own marks.
+- `EmptyTile` (function) - What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing.
+- `ScoreRing` (function) - The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100.
+- `progressText` (function) - 3 of 5 steps done", or where a sent post is.
+- `PostRow` (function)
 - `HistoryView` (function)
 - `CheckCard` (function) - One of the two analysis cards: what it checks, its result so far, and a way to open or run it.
 - `ReviewCard` (function)
@@ -1332,10 +1362,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `navigate` (fn)
     - `isWide` (fn)
     - `submit` (fn)
+    - `openPost` (fn) - script a reviewer sent back, opens in the side sheet, which has what each needs.
+    - `openStep` (fn) - A click on one step opens that step.
     - `setPrefs` (fn)
     - `inMonth` (fn)
     - `stageCounts` (fn)
     - `platformsInList` (fn) - Platform options come from what's actually in the list.
+    - `audiencesInList` (fn) - The audiences that are actually in the list.
     - `brandsInList` (fn) - older content, so it can be found.
     - `managed` (fn)
     - `visible` (fn)
@@ -1359,7 +1392,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const)
 
-## src/services/complianceService.ts (352 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (355 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type)
 - `TrafficLight` (export type)
 - `ComplianceRule` (export interface)
@@ -1513,7 +1546,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (592 lines) - AD: paid social ad.
+## src/types/submission.ts (619 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
@@ -1531,6 +1564,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AnalysisStep` (export interface) - One part of the post still being read before the rulebook check can score it.
 - `AnalysisProgress` (export interface) - While the check is still reading the post: what's left and when the score is expected.
 - `Submission` (export interface)
+- `PostStepKey` (export type) - The five steps a creator works through on a post.
+- `PostStepState` (export type) - done; stale (run before the post was last edited, so run it again); running; todo (not done yet).
+- `SubmissionSteps` (export interface) - How far a post has got through its steps (see the server's post_steps_service).
 - `SubmissionSummary` (export interface)
 - `SubmissionUpdate` (export interface)
 - `SubmissionVersion` (export interface)
