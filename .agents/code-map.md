@@ -55,20 +55,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
 - `pathInView` (export function) - Whether a page belongs to a view.
 
-## src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- `NavigationSubItem` (export interface)
-- `NavigationItem` (export interface)
-- `AppView` (export type)
-- `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) - Whether a page belongs to a view.
-
-## src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- `NavigationSubItem` (export interface)
-- `NavigationItem` (export interface)
-- `AppView` (export type)
-- `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) - Whether a page belongs to a view.
-
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function)
 - `NotificationDropdownContent` (export function)
@@ -105,6 +91,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ProtectedRouteProps` (interface)
 - `ProtectedRoute` (export function)
 
+## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
+- `NewsroomSyncBar` (export function) - Where the facts come from: the ZenaTech newsroom, read once a day.
+
 ## src/components/dashboard/CreatorDashboard.tsx (431 lines) - creator dashboard (components dashboard)
 - `dueLabel` (function) - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
 - `PostFilter` (type)
@@ -133,7 +122,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `dayName` (const)
 - `DayAgenda` (export function) - One day of posts at a time, in time order, with arrows to step through days.
 
-## src/components/dashboard/dashboardParts.tsx (400 lines) - Pieces shared by the reviewer and creator dashboards.
+## src/components/dashboard/dashboardParts.tsx (416 lines) - Pieces shared by the reviewer and creator dashboards.
 - `UPCOMING_DAYS` (export const)
 - `greeting` (export function)
 - `issuesText` (export const)
@@ -156,6 +145,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `viewAll` (export const)
 - `RowMenu` (export function)
 - `Deadline` (export function)
+- `DeadlinePill` (export function) - The deadline on one line, as a pill: red when late, amber when due today, plain otherwise.
 - `TONE` (export const) - Soft icon backgrounds, one per colour.
 - `Tone` (export type)
 - `SectionIcon` (export function) - The small coloured icon before a section title.
@@ -363,6 +353,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Sparkline` (export function) - Mentions per day over the window, as a tiny line.
 - `MoodBar` (export function) - Positive / neutral / negative share of mentions.
 - `SpikeBadge` (export function)
+
+## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
+- `PlatformCaptions` (export function) - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...
 
 ## src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - `formatDuration` (function)
@@ -1008,7 +1001,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `pickScript` (fn)
 - `FilterChip` (function)
 
-## src/pages/Compliance/MessagingContextPage.tsx (412 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
+## src/pages/Compliance/MessagingContextPage.tsx (449 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - `EMPTY` (const)
 - `Chips` (function)
 - `MessagingContextPage` (export function) - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
@@ -1020,7 +1013,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `platformOptions` (fn)
     - `nameOf` (fn)
     - `counts` (fn)
-    - `shown` (fn)
+    - `ofKind` (fn)
     - `done` (fn)
     - `save` (fn)
     - `toggle` (fn)
@@ -1225,7 +1218,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
 
-## src/pages/Dashboard/Dashboard.tsx (453 lines) - dashboard (pages  dashboard)
+## src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
 - `Dashboard` (export function) - Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own.
 - `isFailing` (const) - A check that would stop approval or clearly needs work: a red result, or a score under 60.
 - `isOverdue` (const)
@@ -1311,7 +1304,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2643 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2666 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1371,7 +1364,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `typedTail` (fn) - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
     - `removeHashtag` (fn) - Takes a hashtag or cashtag out of the caption (undo brings it back).
     - `applySuggestedCaption` (fn) - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn)
+    - `charLimit` (fn) - The main caption only has to fit the platforms that post it (not those with their own).
     - `hashtagLibrary` (fn)
 
 ## src/pages/Submissions/ScriptChangesPage.tsx (549 lines) - script changes page (pages  submissions)
@@ -1508,7 +1501,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `VideoJob` (export interface)
 - `complianceService` (export const)
 
-## src/services/contextService.ts (10 lines) - context service (services)
+## src/services/contextService.ts (13 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const)
 
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
@@ -1584,10 +1577,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `HashtagLibrary` (export interface) - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface)
 
-## src/types/context.ts (26 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (46 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface)
 - `ContextEntry` (export interface)
+- `ContextSync` (export interface) - A sync of facts from the newsroom: running, or how the last one went.
 
 ## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - `PostHealth` (export type)
@@ -1638,7 +1632,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (649 lines) - AD: paid social ad.
+## src/types/submission.ts (652 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)
