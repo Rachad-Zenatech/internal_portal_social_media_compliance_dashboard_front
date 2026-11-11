@@ -1024,7 +1024,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `pickScript` (fn)
 - `FilterChip` (function)
 
-## src/pages/Compliance/MessagingContextPage.tsx (449 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
+## src/pages/Compliance/MessagingContextPage.tsx (452 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - `EMPTY` (const)
 - `Chips` (function)
 - `MessagingContextPage` (export function) - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
@@ -1036,7 +1036,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `platformOptions` (fn)
     - `nameOf` (fn)
     - `counts` (fn)
-    - `ofKind` (fn)
+    - `ofKind` (fn) - A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
     - `done` (fn)
     - `save` (fn)
     - `toggle` (fn)
@@ -1534,7 +1534,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `VideoJob` (export interface)
 - `complianceService` (export const)
 
-## src/services/contextService.ts (13 lines) - The newsroom sync running now, or the last one (null before the first).
+## src/services/contextService.ts (26 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const)
 
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
@@ -1613,11 +1613,16 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `HashtagLibrary` (export interface) - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface)
 
-## src/types/context.ts (46 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (89 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface)
 - `ContextEntry` (export interface)
 - `ContextSync` (export interface) - A sync of facts from the newsroom: running, or how the last one went.
+- `BrandVoiceStatus` (export type) - NONE: no manual yet.
+- `BrandColor` (export interface)
+- `BrandTypeface` (export interface)
+- `BrandVoiceInput` (export interface) - What can be edited by hand.
+- `BrandVoice` (export interface) - A brand's voice, read from its brand manual (PDF) or written by hand.
 
 ## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - `PostHealth` (export type)

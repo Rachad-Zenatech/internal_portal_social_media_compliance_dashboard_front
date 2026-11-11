@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import NewsroomSyncBar from "@/components/compliance/NewsroomSyncBar";
+import BrandVoicePanel from "@/components/compliance/BrandVoicePanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -144,7 +145,8 @@ export default function MessagingContextPage() {
     return c;
   }, [entries.data]);
   const needle = factSearch.trim().toLowerCase();
-  const ofKind = (entries.data ?? []).filter((e) => e.kind === kind);
+  // A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
+  const ofKind = (entries.data ?? []).filter((e) => e.kind === kind && e.auto_source !== "BRAND_MANUAL");
   const shown =
     kind === "FACT" && needle ? ofKind.filter((e) => `${e.title} ${e.body}`.toLowerCase().includes(needle)) : ofKind;
   const current = KINDS.find((k) => k.value === kind)!;
@@ -238,6 +240,7 @@ export default function MessagingContextPage() {
           </span>
         </p>
         {kind === "FACT" && <NewsroomSyncBar canSync={canEdit} />}
+        {kind === "BRAND_VOICE" && <BrandVoicePanel />}
         {kind === "FACT" && ofKind.length > 0 && (
           <div className="relative border-b border-border/60 px-4 py-2.5">
             <Search className="pointer-events-none absolute left-6.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

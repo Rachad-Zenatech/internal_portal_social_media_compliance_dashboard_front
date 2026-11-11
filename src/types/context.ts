@@ -43,3 +43,46 @@ export interface ContextSync {
   error?: string | null;
   started_by_name?: string | null;
 }
+
+/** NONE: no manual yet. PROCESSING: being read. DONE: read in full. PARTIAL: the AI couldn't read it, so only the
+ * colour codes, fonts and a logo guess came from the PDF itself. FAILED: nothing could be read. */
+export type BrandVoiceStatus = "NONE" | "PROCESSING" | "DONE" | "PARTIAL" | "FAILED";
+
+export interface BrandColor {
+  name?: string | null;
+  hex: string;
+  usage?: string | null;
+}
+
+export interface BrandTypeface {
+  name: string;
+  role?: string | null;
+  usage?: string | null;
+}
+
+/** What can be edited by hand. */
+export interface BrandVoiceInput {
+  voice?: string | null;
+  tone: string[];
+  do_examples: string[];
+  dont_examples: string[];
+  colors: BrandColor[];
+  typefaces: BrandTypeface[];
+  logo_notes?: string | null;
+}
+
+/** A brand's voice, read from its brand manual (PDF) or written by hand. */
+export interface BrandVoice extends BrandVoiceInput {
+  brand_code: string;
+  brand_name: string;
+  status: BrandVoiceStatus;
+  error?: string | null;
+  manual_name?: string | null;
+  manual_size?: number | null;
+  manual_uploaded_at?: string | null;
+  has_logo: boolean;
+  extracted_at?: string | null;
+  updated_at?: string | null;
+  updated_by_name?: string | null;
+  can_edit: boolean;
+}
