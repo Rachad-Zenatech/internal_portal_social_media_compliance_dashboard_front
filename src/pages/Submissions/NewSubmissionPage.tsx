@@ -1159,7 +1159,7 @@ export default function NewSubmissionPage() {
       setSubmitting(true);
       try {
         const id = await save({ force: true });
-        const next = await scriptService.submit(id!);
+        const next = await scriptService.submit(id!, confirmRepost);
         queryClient.setQueryData(["script", id], next);
         queryClient.invalidateQueries({ queryKey: ["script-queue"] });
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
@@ -1167,7 +1167,14 @@ export default function NewSubmissionPage() {
         toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
         navigate("/submissions");
       } catch (err) {
-        toast.error(`Error sending the script: ${(err as Error).message}`);
+        // The same script was already sent: for another date the creator confirms (the same dialog as posts).
+        if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
+          const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
+          if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) setRepostAsk(detail.duplicates.repost);
+          else toast.error(detail.message);
+        } else {
+          toast.error(`Error sending the script: ${(err as Error).message}`);
+        }
       } finally {
         setSubmitting(false);
       }
@@ -1796,7 +1803,15 @@ export default function NewSubmissionPage() {
           </Section>
 
 
-          <Section step={3} title="Image and sources" description="Upload your image or video, and any documents that back up your claims.">
+          <Section
+            step={3}
+            title={videoLocked ? "Script" : "Image and sources"}
+            description={
+              videoLocked
+                ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
+                : "Upload your image or video, and any documents that back up your claims."
+            }
+          >
             {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
             {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
@@ -1844,7 +1859,9 @@ export default function NewSubmissionPage() {
                 invalid={isMissing("script")}
               />
             )}
-            {/* Two ways to add content: upload files, or import a Canva design. */}
+            {/* Two ways to add content: upload files, or import a Canva design. A video post waiting on its script
+                only has the script card above; both open once the script is approved. */}
+            {!videoLocked && (
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
             <div
               role="button"
@@ -1912,6 +1929,7 @@ export default function NewSubmissionPage() {
               <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
             </button>
             </div>
+            )}
             {!scriptFirst && (
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
               <Button
