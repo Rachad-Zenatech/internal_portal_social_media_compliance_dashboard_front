@@ -54,6 +54,13 @@ export interface BrandColor {
   usage?: string | null;
 }
 
+/** A row of swatches in the manual (e.g. the tints of a main colour), read straight from the PDF. */
+export interface PaletteRow {
+  base_hex: string;
+  label: string;
+  colors: string[];
+}
+
 export interface BrandTypeface {
   name: string;
   role?: string | null;
@@ -75,6 +82,8 @@ export interface BrandVoiceInput {
 export interface BrandVoice extends BrandVoiceInput {
   brand_code: string;
   brand_name: string;
+  /** The extended palette shown in the manual, by main colour. */
+  palette: PaletteRow[];
   status: BrandVoiceStatus;
   error?: string | null;
   manual_name?: string | null;

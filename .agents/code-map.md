@@ -91,6 +91,20 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ProtectedRouteProps` (interface)
 - `ProtectedRoute` (export function)
 
+## src/components/compliance/BrandVoicePanel.tsx (404 lines) - brand voice panel (components compliance)
+- `BrandVoicePanel` (export function) - Brand voice, brand by brand: each brand has its own manual (PDF) and its own voice, colours, typefaces and logo,  read from the manual an...
+    - `queryClient` (fn)
+    - `voices` (fn)
+    - `refresh` (fn)
+- `BrandCard` (function)
+    - `upload` (fn)
+    - `reread` (fn)
+- `lines` (const)
+- `EditDialog` (function)
+    - `save` (fn)
+    - `setColor` (fn)
+    - `setFace` (fn)
+
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) - Where the facts come from: the ZenaTech newsroom, read once a day.
 
@@ -1613,13 +1627,14 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `HashtagLibrary` (export interface) - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface)
 
-## src/types/context.ts (89 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (98 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface)
 - `ContextEntry` (export interface)
 - `ContextSync` (export interface) - A sync of facts from the newsroom: running, or how the last one went.
 - `BrandVoiceStatus` (export type) - NONE: no manual yet.
 - `BrandColor` (export interface)
+- `PaletteRow` (export interface) - A row of swatches in the manual (e.g.
 - `BrandTypeface` (export interface)
 - `BrandVoiceInput` (export interface) - What can be edited by hand.
 - `BrandVoice` (export interface) - A brand's voice, read from its brand manual (PDF) or written by hand.

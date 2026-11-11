@@ -187,17 +187,45 @@ function BrandCard({ voice: v, onChanged, onEdit }: { voice: BrandVoice; onChang
           {v.colors.length > 0 && (
             <div>
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Colours</p>
-              <div className="flex flex-wrap gap-2">
+              <ul className="space-y-1.5">
                 {v.colors.map((c) => (
-                  <div key={c.hex} className="flex items-center gap-1.5 rounded-md border border-border/70 px-1.5 py-1" title={c.usage ?? undefined}>
-                    <span className="h-5 w-5 rounded border border-black/10" style={{ backgroundColor: c.hex }} />
-                    <span className="text-[11px]">
-                      {c.name && <span className="font-medium">{c.name} </span>}
+                  <li key={c.hex} className="flex items-start gap-2">
+                    <span className="mt-0.5 h-7 w-7 shrink-0 rounded-md border border-black/10" style={{ backgroundColor: c.hex }} />
+                    <span className="min-w-0 text-xs">
+                      {c.name && <span className="font-semibold">{c.name} </span>}
                       <span className="font-mono text-muted-foreground">{c.hex}</span>
+                      {c.usage && <span className="block text-muted-foreground">{c.usage}</span>}
+                      {v.palette
+                        .filter((row) => row.base_hex === c.hex)
+                        .map((row) => (
+                          <span key={row.label} className="mt-1 flex items-center gap-2">
+                            <span className="w-24 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              {row.label}
+                            </span>
+                            <span className="flex overflow-hidden rounded border border-black/10">
+                              {row.colors.map((hex) => (
+                                <button
+                                  key={hex}
+                                  type="button"
+                                  title={`${hex} (click to copy)`}
+                                  aria-label={`Copy ${hex}`}
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(hex).then(
+                                      () => toast.success(`Copied ${hex}`),
+                                      () => toast.error("Couldn't copy")
+                                    );
+                                  }}
+                                  className="h-5 w-5 sm:w-6"
+                                  style={{ backgroundColor: hex }}
+                                />
+                              ))}
+                            </span>
+                          </span>
+                        ))}
                     </span>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
           {v.typefaces.length > 0 && (
