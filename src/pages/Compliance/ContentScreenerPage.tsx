@@ -33,6 +33,7 @@ import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
+import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
@@ -762,6 +763,7 @@ function PostView({
             )}
           </p>
         </div>
+        <PlatformCaptionsView platforms={s.platforms} captions={s.platform_captions} mainCaption={s.caption_text} />
       </div>
     </div>
   );

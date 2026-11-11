@@ -91,6 +91,20 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ProtectedRouteProps` (interface)
 - `ProtectedRoute` (export function)
 
+## src/components/compliance/BrandVoicePanel.tsx (404 lines) - brand voice panel (components compliance)
+- `BrandVoicePanel` (export function) - Brand voice, brand by brand: each brand has its own manual (PDF) and its own voice, colours, typefaces and logo,  read from the manual an...
+    - `queryClient` (fn)
+    - `voices` (fn)
+    - `refresh` (fn)
+- `BrandCard` (function)
+    - `upload` (fn)
+    - `reread` (fn)
+- `lines` (const)
+- `EditDialog` (function)
+    - `save` (fn)
+    - `setColor` (fn)
+    - `setFace` (fn)
+
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) - Where the facts come from: the ZenaTech newsroom, read once a day.
 
@@ -205,6 +219,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `NoteFieldBase` (function) - A comment box that keeps what is typed to itself.
 - `NoteField` (const)
 
+## src/components/script/ScriptBatchBar.tsx (80 lines) - Reviewers open scripts in the Content screener; the creator on the post's script page.
+- `ScriptBatchBar` (export function) - The strip across the top of a script that came in a batch: which batch and which script this is, and a way to step to  the previous or ne...
+
+## src/components/script/ScriptCompliance.tsx (71 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `activeFlagCount` (export function) - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `ScriptCompliance` (export function) - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
+
 ## src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const)
 - `Highlighted` (export function) - Text with the given phrases marked (flagged wording).
@@ -240,6 +261,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Divider` (const)
 - `Toolbar` (function)
 - `ScriptEditor` (export function) - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
+
+## src/components/script/ScriptInsights.tsx (104 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
+- `Section` (function) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
+- `ScriptInsights` (export function) - Before a script is sent for review, the creator can read how it comes across, as they can for a post: its sentiment and  reputational ris...
+
+## src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
+- `ScriptPrecheck` (export function) - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
 
 ## src/components/script/ScriptReviewWorkspace.tsx (926 lines) - script review workspace (components script)
 - `PanelTab` (type)
@@ -329,7 +357,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 
-## src/components/submissions/DelegateReview.tsx (152 lines) - delegate review (components submissions)
+## src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - `DelegateTarget` (interface)
 - `DelegateReviewButton` (export function) - Hand the post in review to another reviewer.
 - `DelegationTrail` (export function) - Who handed this post to whom, newest first.
@@ -359,6 +387,10 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - `FlagReviewControl` (export function) - A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that.
 
+## src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
+- `Field` (export function) - The fields of a post's details, shared by the new-submission form and the script batch form so both look and work  the same: a bold label...
+- `MultiSelect` (export function) - Select-style box that holds removable chips; options open in a popover.
+
 ## src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - `HashtagPicker` (export function) - The Hashtags picker: tags suited to the post's brand, audience and platforms (already screened by the rulebook),  plus the company cashta...
 
@@ -369,6 +401,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - `PlatformCaptions` (export function) - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...
+
+## src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
+- `PlatformCaptionsView` (export function) - Read-only: the caption each platform publishes, for reviewers and the post page.
 
 ## src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - `formatDuration` (function)
@@ -573,6 +608,11 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `DataTablePaginationProps` (interface)
 - `DataTablePagination` (export function)
 
+## src/components/ui/date-time-picker.tsx (177 lines) - Every half hour, 6 AM to 10 PM; a time picked elsewhere (e.g.
+- `parseValue` (function)
+- `timeLabel` (const)
+- `DateTimePicker` (export function) - The portal's date picker, in place of the browser's: a calendar (and, with `withTime`, a column of times) in a  popover.
+
 ## src/components/ui/dialog.tsx (172 lines) - dialog (components ui)
 - `Dialog` (function)
 - `DialogTrigger` (function)
@@ -765,7 +805,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `useReviewDecision` (export function)
 - `useApprovalActions` (export function) - Approved content: the creator withdraws it for a late fix; a reviewer reschedules it or reopens it.
 
-## src/hooks/useScript.ts (153 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (179 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) - A post's script stage, refreshed while its file is still being read.
 - `useScriptActions` (export function) - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
 - `useDebounced` (export function) - The value, once it has stopped changing for `ms`.
@@ -807,7 +847,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `GlobalProgressProvider` (export function)
 - `useGlobalProgress` (export function)
 
-## src/lib/contentCalendar.ts (427 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+## src/lib/contentCalendar.ts (429 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) - A platform's publish info with its caption limit always set.
 - `PUBLISH_INFO` (export const)
@@ -923,7 +963,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/main.tsx (51 lines) - Create a client
 
-## src/pages/Auth/Login.tsx (225 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+## src/pages/Auth/Login.tsx (234 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `readSignedOut` (function) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `safeReturnTo` (const) - Only same-app paths, so a crafted value can't send the user to another site after signing in.
 - `newNonce` (function)
@@ -957,7 +997,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1707 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1709 lines) - content screener page (pages  compliance)
 - `DueFilter` (type)
 - `CheckFilter` (type)
 - `Filters` (interface)
@@ -1015,7 +1055,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `pick` (fn)
 - `FilterChip` (function)
 
-## src/pages/Compliance/MessagingContextPage.tsx (450 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
+## src/pages/Compliance/MessagingContextPage.tsx (453 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - `EMPTY` (const)
 - `Chips` (function)
 - `MessagingContextPage` (export function) - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
@@ -1027,7 +1067,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `platformOptions` (fn)
     - `nameOf` (fn)
     - `counts` (fn)
-    - `ofKind` (fn)
+    - `ofKind` (fn) - A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
     - `done` (fn)
     - `save` (fn)
     - `toggle` (fn)
@@ -1227,7 +1267,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `send` (fn)
 - `SelectedPost` (function)
 
-## src/pages/ContentCalendar/PublishDraftPage.tsx (295 lines) - publish draft page (pages  content calendar)
+## src/pages/ContentCalendar/PublishDraftPage.tsx (297 lines) - publish draft page (pages  content calendar)
 - `platformName` (const)
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
@@ -1309,6 +1349,18 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ScriptBatchPage` (export function) - A batch of scripts.
 - `BatchView` (function)
 
+## src/pages/Scripts/ScriptReviewPage.tsx (257 lines) - script review page (pages  scripts)
+- `ReviewTab` (type)
+- `CreatorFilter` (type)
+- `Progress` (function) - How far a batch has got: a bar split by where its scripts are.
+- `BatchCard` (function)
+- `ScriptCard` (function) - A script that was uploaded on its own (not in a batch).
+- `Empty` (function)
+- `ScriptReviewPage` (export function) - Script review: every script, whether it was uploaded alone or in a batch of several.
+
+## src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
+- `ScriptReviewScriptPage` (export function) - One video script, reviewed in the Script review section: the script marked up beside its flags, highlights,  sentiment and history, and t...
+
 ## src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - `SocialPlatformConfig` (export interface)
 - `OrganicPost` (interface)
@@ -1324,7 +1376,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2525 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2551 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1402,7 +1454,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `goToHighlight` (fn) - A highlight card was clicked: find that wording in the script and flash it.
     - `pick` (fn)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (666 lines) - submission detail page (pages  submissions)
+## src/pages/Submissions/SubmissionDetailPage.tsx (668 lines) - submission detail page (pages  submissions)
 - `Panel` (function)
 - `LightBadge` (function)
 - `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
@@ -1517,7 +1569,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `VideoJob` (export interface)
 - `complianceService` (export const)
 
-## src/services/contextService.ts (13 lines) - The newsroom sync running now, or the last one (null before the first).
+## src/services/contextService.ts (26 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const)
 
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
@@ -1554,7 +1606,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - `scriptBatchService` (export const) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 
-## src/services/scriptService.ts (46 lines) - The script stage of video posts (see the backend's script_review_service).
+## src/services/scriptService.ts (48 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
 ## src/services/submissionService.ts (292 lines) - submission service (services)
@@ -1577,7 +1629,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AuditLogItem` (export interface)
 - `LoginActivityItem` (export interface)
 
-## src/types/calendar.ts (74 lines) - Approved content placed on the publishing calendar.
+## src/types/calendar.ts (76 lines) - Approved content placed on the publishing calendar.
 - `CalendarItem` (export interface) - Approved content placed on the publishing calendar.
 - `PublishMode` (export type) - What a platform's API lets us create from an approved post.
 - `PublishStyle` (export type) - How the publish step is worded on screen.
@@ -1596,11 +1648,17 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `HashtagLibrary` (export interface) - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface)
 
-## src/types/context.ts (46 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (98 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface)
 - `ContextEntry` (export interface)
 - `ContextSync` (export interface) - A sync of facts from the newsroom: running, or how the last one went.
+- `BrandVoiceStatus` (export type) - NONE: no manual yet.
+- `BrandColor` (export interface)
+- `PaletteRow` (export interface) - A row of swatches in the manual (e.g.
+- `BrandTypeface` (export interface)
+- `BrandVoiceInput` (export interface) - What can be edited by hand.
+- `BrandVoice` (export interface) - A brand's voice, read from its brand manual (PDF) or written by hand.
 
 ## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - `PostHealth` (export type)
@@ -1663,7 +1721,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (652 lines) - AD: paid social ad.
+## src/types/submission.ts (658 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)

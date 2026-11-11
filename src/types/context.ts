@@ -43,3 +43,55 @@ export interface ContextSync {
   error?: string | null;
   started_by_name?: string | null;
 }
+
+/** NONE: no manual yet. PROCESSING: being read. DONE: read in full. PARTIAL: the AI couldn't read it, so only the
+ * colour codes, fonts and a logo guess came from the PDF itself. FAILED: nothing could be read. */
+export type BrandVoiceStatus = "NONE" | "PROCESSING" | "DONE" | "PARTIAL" | "FAILED";
+
+export interface BrandColor {
+  name?: string | null;
+  hex: string;
+  usage?: string | null;
+}
+
+/** A row of swatches in the manual (e.g. the tints of a main colour), read straight from the PDF. */
+export interface PaletteRow {
+  base_hex: string;
+  label: string;
+  colors: string[];
+}
+
+export interface BrandTypeface {
+  name: string;
+  role?: string | null;
+  usage?: string | null;
+}
+
+/** What can be edited by hand. */
+export interface BrandVoiceInput {
+  voice?: string | null;
+  tone: string[];
+  do_examples: string[];
+  dont_examples: string[];
+  colors: BrandColor[];
+  typefaces: BrandTypeface[];
+  logo_notes?: string | null;
+}
+
+/** A brand's voice, read from its brand manual (PDF) or written by hand. */
+export interface BrandVoice extends BrandVoiceInput {
+  brand_code: string;
+  brand_name: string;
+  /** The extended palette shown in the manual, by main colour. */
+  palette: PaletteRow[];
+  status: BrandVoiceStatus;
+  error?: string | null;
+  manual_name?: string | null;
+  manual_size?: number | null;
+  manual_uploaded_at?: string | null;
+  has_logo: boolean;
+  extracted_at?: string | null;
+  updated_at?: string | null;
+  updated_by_name?: string | null;
+  can_edit: boolean;
+}

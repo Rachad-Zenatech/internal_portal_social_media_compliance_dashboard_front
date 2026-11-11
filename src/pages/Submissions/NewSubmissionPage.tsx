@@ -1018,7 +1018,7 @@ export default function NewSubmissionPage() {
       setSubmitting(true);
       try {
         const id = await save({ force: true });
-        const next = await scriptService.submit(id!);
+        const next = await scriptService.submit(id!, confirmRepost);
         queryClient.setQueryData(["script", id], next);
         queryClient.invalidateQueries({ queryKey: ["script-queue"] });
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
@@ -1026,7 +1026,14 @@ export default function NewSubmissionPage() {
         toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
         navigate("/submissions");
       } catch (err) {
-        toast.error(`Error sending the script: ${(err as Error).message}`);
+        // The same script was already sent: for another date the creator confirms (the same dialog as posts).
+        if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
+          const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
+          if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) setRepostAsk(detail.duplicates.repost);
+          else toast.error(detail.message);
+        } else {
+          toast.error(`Error sending the script: ${(err as Error).message}`);
+        }
       } finally {
         setSubmitting(false);
       }
@@ -1367,18 +1374,26 @@ export default function NewSubmissionPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
-              <Field label="Brand(s)" required error={errorFor("brand_code", "Choose at least one brand")}>
+              <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>
                 {!options ? (
                   <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
                 ) : (
-                  <MultiSelect<string>
-                    options={options.brands.map((b) => b.code)}
-                    value={brands}
-                    onChange={onBrandsChange}
-                    placeholder="Select brands"
-                    getLabel={(code) => options.brands.find((b) => b.code === code)?.name ?? code}
-                    invalid={isMissing("brand_code")}
-                  />
+                  // One brand per post: its reviewers are the people who work on that brand.
+                  <Select value={brands[0] ?? ""} onValueChange={(code) => onBrandsChange([code])}>
+                    <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
+                      <SelectValue placeholder="Select a brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.brands.map((b) => (
+                        <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {brands.length > 1 && (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                    This draft had several brands; pick the one it's for. Make a separate post for each other brand.
+                  </p>
                 )}
               </Field>
               <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")}>
@@ -1647,7 +1662,15 @@ export default function NewSubmissionPage() {
           </Section>
 
 
-          <Section step={3} title="Image and sources" description="Upload your image or video, and any documents that back up your claims.">
+          <Section
+            step={3}
+            title={videoLocked ? "Script" : "Image and sources"}
+            description={
+              videoLocked
+                ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
+                : "Upload your image or video, and any documents that back up your claims."
+            }
+          >
             {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
             {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
@@ -1695,7 +1718,9 @@ export default function NewSubmissionPage() {
                 invalid={isMissing("script")}
               />
             )}
-            {/* Two ways to add content: upload files, or import a Canva design. */}
+            {/* Two ways to add content: upload files, or import a Canva design. A video post waiting on its script
+                only has the script card above; both open once the script is approved. */}
+            {!videoLocked && (
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
             <div
               role="button"
@@ -1763,6 +1788,7 @@ export default function NewSubmissionPage() {
               <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
             </button>
             </div>
+            )}
             {!scriptFirst && (
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
               <Button
