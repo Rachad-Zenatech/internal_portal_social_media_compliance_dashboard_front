@@ -45,7 +45,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/CheckProgress.tsx (144 lines) - What each AI step of the check is, in the creator's words.
 - src/components/submissions/ComplianceStep.tsx (484 lines) - Where in the post it was found.
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
-- src/components/submissions/DelegateReview.tsx (152 lines) - delegate review (components submissions)
+- src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
@@ -53,6 +53,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
+- src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (154 lines) - The steps that can't be opened yet, and why they can't.
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
@@ -149,8 +150,6 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Scripts/ScriptBatchesPage.tsx (120 lines) - script batches page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - src/pages/Submissions/NewSubmissionPage.tsx (2674 lines) - new submission page (pages  submissions)
-- src/pages/Submissions/NewSubmissionPage.tsx (2674 lines) - new submission page (pages  submissions)
-- src/pages/Submissions/NewSubmissionPage.tsx (2674 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (549 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (668 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
@@ -178,6 +177,4 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/types/script.ts (81 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (87 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
-- src/types/submission.ts (658 lines) - AD: paid social ad.
-- src/types/submission.ts (658 lines) - AD: paid social ad.
 - src/types/submission.ts (658 lines) - AD: paid social ad.
