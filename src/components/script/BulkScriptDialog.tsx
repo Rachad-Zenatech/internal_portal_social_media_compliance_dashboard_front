@@ -51,9 +51,9 @@ export default function BulkScriptDialog({ open, onOpenChange }: { open: boolean
     try {
       const batch = await scriptBatchService.upload(file);
       queryClient.invalidateQueries({ queryKey: ["script-batches"] });
-      toast.success(`Found ${batch.items.length} script${batch.items.length === 1 ? "" : "s"}. Check them, then send them for review.`);
+      toast.success(`Found ${batch.items.length} script${batch.items.length === 1 ? "" : "s"}. Check ${batch.items.length === 1 ? "it" : "them"}, then send for review.`);
       onOpenChange(false);
-      navigate(`/script-batches/${batch.id}`);
+      navigate(`/script-review/${batch.id}`);
     } catch (e) {
       setError(e instanceof Error && e.message ? e.message : "That file couldn't be read.");
       setUploading(false);
@@ -64,10 +64,10 @@ export default function BulkScriptDialog({ open, onOpenChange }: { open: boolean
     <Dialog open={open} onOpenChange={(next) => !uploading && onOpenChange(next)}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Upload several scripts</DialogTitle>
+          <DialogTitle>Upload scripts</DialogTitle>
           <DialogDescription>
-            Upload one document that holds all your scripts. We split it into separate scripts for you to check, then a reviewer
-            reviews them together, and each approved script becomes its own post for you to film.
+            Upload one document with one script or several. We split it into separate scripts for you to check, then a reviewer
+            reviews them, and each script becomes its own post for you to film once it is approved.
           </DialogDescription>
         </DialogHeader>
 
@@ -122,7 +122,7 @@ export default function BulkScriptDialog({ open, onOpenChange }: { open: boolean
           </Button>
           <Button type="button" onClick={upload} disabled={!file || uploading} className="gap-2 bg-blue-700 text-white hover:bg-blue-800">
             {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {uploading ? "Reading the scripts" : "Split into scripts"}
+            {uploading ? "Reading the scripts" : "Upload"}
           </Button>
         </div>
       </DialogContent>

@@ -93,7 +93,7 @@ export default function UploadScriptDialog({
         description: "Uploading & reading script...",
         type: "document",
         submissionId: subId,
-        link_url: `/compliance/scanner?script=${subId}`,
+        link_url: `/script-review/scripts/${subId}`,
       });
       await uploadPromise;
       await Promise.all([

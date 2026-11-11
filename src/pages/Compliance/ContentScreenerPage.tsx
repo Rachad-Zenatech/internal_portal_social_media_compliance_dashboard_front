@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import {
   CheckCircle2,
   Clock,
-  ExternalLink,
   FileText,
     Layers,
   Loader2,
@@ -66,59 +65,19 @@ import { usePublicMood } from "@/hooks/usePublicMood";
 import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
-import { scriptService } from "@/services/scriptService";
-import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
-import UploadScriptDialog from "@/components/script/UploadScriptDialog";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import type { ComplianceViolation } from "@/services/complianceService";
-import type { ScriptQueueItem } from "@/types/script";
 import type { FlagReview, QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Queue: tabs, filters and the few facts each row needs
 // ---------------------------------------------------------------------------
 
-/** Video scripts waiting for a reviewer are listed under "To review" with the posts, marked with a "Script" label. */
 const TABS: { value: QueueTab; label: string }[] = [
   { value: "review", label: "To review" },
   { value: "sent_back", label: "Sent back" },
   { value: "done", label: "Done" },
 ];
-
-/** "Due tomorrow" for a script: its approval date, if the creator set one already. */
-function scriptDue(s: ScriptQueueItem): { text: string; tone: string } {
-  const muted = "text-muted-foreground";
-  if (s.script_status !== "IN_REVIEW") {
-    const what =
-      s.script_status === "APPROVED" ? "Approved" : s.script_status === "EDITS_PROPOSED" ? "Edited, with the creator" : "Changes requested";
-    return { text: `${what}${s.decided_at ? ` ${formatDistanceToNow(new Date(s.decided_at), { addSuffix: true })}` : ""}`, tone: muted };
-  }
-  const sent = `Sent ${formatDistanceToNow(new Date(s.sent_at), { addSuffix: true })}`;
-  if (!s.approval_needed_by) return { text: sent, tone: muted };
-  const due = new Date(s.approval_needed_by);
-  if (isPast(due)) return { text: `Post overdue ${formatDistanceToNow(due)}`, tone: "text-red-600 dark:text-red-400" };
-  if (isToday(due)) return { text: `Post due today, ${format(due, "h:mm a")}`, tone: "text-amber-700 dark:text-amber-400" };
-  return { text: `${sent} · post due ${format(due, "MMM d")}`, tone: muted };
-}
-
-function ScriptScore({ s }: { s: ScriptQueueItem }) {
-  if (s.score == null) return null;
-  const tone =
-    s.traffic_light === "RED" || s.score < 60
-      ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-      : s.score >= 80
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-      : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300";
-  return <span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${tone}`}>{s.score}</span>;
-}
-
-function ScriptThumb() {
-  return (
-    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
-      <FileText className="w-5 h-5" />
-    </div>
-  );
-}
 
 const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
   VIDEO: { label: "Video", cls: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
@@ -701,11 +660,6 @@ function PostView({
                 </Link>
               </Button>
             )}
-            <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-              <Link to={`/submissions/${s.id}`}>
-                <ExternalLink className="w-3.5 h-3.5" /> Full details & history
-              </Link>
-            </Button>
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -1372,7 +1326,12 @@ export default function ContentScreenerPage() {
   const [params, setParams] = useSearchParams();
   const { activeVideoId } = useVideoUploadQueue();
 
-  // ?script=... (from a "script to review" notification) opens that script in the To review list.
+  const navigate = useNavigate();
+  // Scripts are reviewed in Script review; an older link to one here (e.g. a notification) goes there.
+  const legacyScript = params.get("script");
+  useEffect(() => {
+    if (legacyScript) navigate(`/script-review/scripts/${legacyScript}`, { replace: true });
+  }, [legacyScript, navigate]);
   const [tab, setTab] = useState<QueueTab>("review");
   const postTab: QueueTab = tab;
   const [search, setSearch] = useState("");
@@ -1382,14 +1341,6 @@ export default function ContentScreenerPage() {
   const [selectedId, setSelectedId] = useState<string | null>(
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
   );
-  const [selectedScriptId, setSelectedScriptId] = useState<string | null>(() => params.get("script"));
-  const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
-
-  const scripts = useQuery({
-    queryKey: ["script-queue", tab],
-    queryFn: () => scriptService.queue(tab),
-    staleTime: 0,
-  });
 
   const queue = useQuery({
     queryKey: ["review-queue", postTab, scope],
@@ -1416,64 +1367,18 @@ export default function ContentScreenerPage() {
   const items = useMemo(() => queue.data ?? [], [queue.data]);
   const q = search.trim().toLowerCase();
   const visible = useMemo(() => items.filter((s) => matches(s, filters, q)), [items, filters, q]);
-  const scriptItems = useMemo(
-    () =>
-      (scripts.data ?? []).filter(
-        (s) => !q || s.title.toLowerCase().includes(q) || s.reference_code.toLowerCase().includes(q) || (s.creator_name ?? "").toLowerCase().includes(q)
-      ),
-    [scripts.data, q]
-  );
-  // Scripts and posts in one list, by when each was sent for review, newest or oldest first; rows without a date go last.
+  // Posts by when each was sent for review, newest or oldest first; posts without a date go last.
   const rows = useMemo(() => {
     const time = (d?: string | null) => (d ? new Date(d).getTime() : null);
-    const all: ({ kind: "script"; s: ScriptQueueItem; at: number | null } | { kind: "post"; s: ReviewQueueItem; at: number | null })[] = [
-      ...scriptItems.map((s) => ({ kind: "script" as const, s, at: time(s.sent_at) })),
-      ...visible.map((s) => ({ kind: "post" as const, s, at: time(s.submitted_at) })),
-    ];
     const sign = sort === "newest" ? -1 : 1;
-    return all.sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)));
-  }, [scriptItems, visible, sort]);
-  // One selection across posts and scripts: whatever was picked last, else the first row of the list.
-  const pickedScript = scriptItems.find((s) => s.id === selectedScriptId) ?? null;
-  const firstRow = rows[0];
-  const selected = pickedScript ? null : visible.find((s) => s.id === selectedId) ?? (firstRow?.kind === "post" ? firstRow.s : null);
-  const selectedScript = pickedScript ?? (selected ? null : firstRow?.kind === "script" ? firstRow.s : null);
-  const onScripts = Boolean(selectedScript);
-  const listCount = visible.length + scriptItems.length;
-  const renderScriptRow = (s: ScriptQueueItem) => {
-    const due = scriptDue(s);
-    const current = selectedScript?.id === s.id;
-    return (
-      <li key={s.id}>
-        <button
-          type="button"
-          onClick={() => pickScript(s.id)}
-          aria-current={current}
-          className={`flex w-full gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
-            current ? "border-border bg-muted" : "border-transparent hover:bg-muted/60"
-          }`}
-        >
-          <ScriptThumb />
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground">{s.title}</span>
-            <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-              <span className="shrink-0 rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                Script
-              </span>
-              <span className="truncate">
-                v{s.version_number} · {s.creator_name ?? s.reference_code}
-                {s.platforms.length > 0 && ` · ${s.platforms.map(platformName).join(", ")}`}
-              </span>
-            </span>
-            <span className="mt-0.5 flex items-center justify-between gap-2">
-              <span className={`truncate text-xs font-medium ${due.tone}`}>{due.text}</span>
-              <ScriptScore s={s} />
-            </span>
-          </span>
-        </button>
-      </li>
-    );
-  };
+    return visible
+      .map((s) => ({ s, at: time(s.submitted_at) }))
+      .sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)))
+      .map((r) => r.s);
+  }, [visible, sort]);
+  // Whatever was picked last, else the first post in the list.
+  const selected = visible.find((s) => s.id === selectedId) ?? rows[0] ?? null;
+  const listCount = visible.length;
   const renderPostRow = (s: ReviewQueueItem) => {
         const due = dueText(s, postTab);
         const current = selected?.id === s.id;
@@ -1534,21 +1439,9 @@ export default function ContentScreenerPage() {
 
   const pick = (id: string) => {
     setSelectedId(id);
-    setSelectedScriptId(null);
     setParams((p) => {
       const next = new URLSearchParams(p);
       next.set("id", id);
-      next.delete("script");
-      return next;
-    }, { replace: true });
-  };
-  const pickScript = (id: string) => {
-    setSelectedScriptId(id);
-    setSelectedId(null);
-    setParams((p) => {
-      const next = new URLSearchParams(p);
-      next.set("script", id);
-      next.delete("id");
       return next;
     }, { replace: true });
   };
@@ -1565,20 +1458,6 @@ export default function ContentScreenerPage() {
             {listCount}
           </span>
           <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1.5 pb-1 pt-1.5">
-            {scriptItems.map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => pickScript(s.id)}
-                    aria-current={selectedScript?.id === s.id}
-                    aria-label={`${s.title} script (${s.reference_code})`}
-                    title={`${s.title} · script`}
-                    className={`block rounded-lg p-0.5 ${selectedScript?.id === s.id ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-border"}`}
-                  >
-                    <ScriptThumb />
-                  </button>
-                </li>
-              ))}
             {visible.map((s) => {
               const failing = hasCritical(s) || isFailing(s);
               return (
@@ -1774,13 +1653,10 @@ export default function ContentScreenerPage() {
             ? "Loading..."
             : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : ""} · sent ${
                 sort === "newest" ? "newest" : "oldest"
-              } first${scripts.isLoading ? " · loading scripts..." : ""}`}
+              } first`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
-          {scripts.isError && (
-            <li className="px-3 py-2 text-center text-xs text-red-600">Couldn't load the scripts: {(scripts.error as Error).message}</li>
-          )}
-          {rows.map((r) => (r.kind === "script" ? renderScriptRow(r.s) : renderPostRow(r.s)))}
+          {rows.map(renderPostRow)}
           {queue.isLoading ? (
             <li className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading the queue...
@@ -1788,7 +1664,7 @@ export default function ContentScreenerPage() {
           ) : queue.isError ? (
             <li className="px-3 py-10 text-center text-xs text-red-600">Couldn't load the queue: {(queue.error as Error).message}</li>
           ) : visible.length === 0 ? (
-            scriptItems.length > 0 ? null : <li className="px-3 py-10 text-center text-xs text-muted-foreground">
+            <li className="px-3 py-10 text-center text-xs text-muted-foreground">
               {items.length === 0 ? (tab === "review" ? "Nothing is waiting for review." : "Nothing here.") : "No posts match these filters."}
             </li>
           ) : (
@@ -1797,70 +1673,23 @@ export default function ContentScreenerPage() {
         </ul>
       </ResizablePanel>
 
-      {/* ===== The post (or script) and the review panel ===== */}
-      {onScripts ? (
-        selectedScript ? (
-          <ScriptReviewWorkspace
-            key={selectedScript.id}
-            submissionId={selectedScript.id}
-            isReviewer={isReviewer}
-            onUploadScript={() => setScriptDialogOpen(true)}
-          />
-        ) : (
-          <div className="grid flex-1 place-items-center p-10 text-center">
-            <div className="max-w-md space-y-3">
-              <FileText className="mx-auto w-10 h-10 text-blue-600/70" />
-              <p className="text-base font-semibold text-foreground">{scripts.isLoading ? "Loading..." : "No scripts to review"}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Video posts start with the script. Upload it (PDF, Word or .txt) and send it for review. It's checked against the rulebook, and you can add the video once a reviewer approves it.
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                className="mt-2 h-8 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
-                onClick={() => setScriptDialogOpen(true)}
-              >
-                <FileText className="w-3.5 h-3.5" /> Upload the script
-              </Button>
-            </div>
-          </div>
-        )
-      ) : selected ? (
+      {/* ===== The post and the review panel ===== */}
+      {selected ? (
         <Workspace
           key={`${selected.id}-${selected.current_version}`}
           s={selected}
           labels={labels}
           canReview={isReviewer && Boolean(selected.can_review)}
-          onUploadScript={() => setScriptDialogOpen(true)}
         />
       ) : (
         <div className="grid flex-1 place-items-center p-10 text-center">
           <div className="max-w-md space-y-3">
             <CheckCircle2 className="mx-auto w-10 h-10 text-emerald-500" />
             <p className="text-base font-semibold text-foreground">{queue.isLoading ? "Loading..." : "Nothing to show"}</p>
-            <p className="text-xs text-muted-foreground">Pick a post from the queue to review it, or upload a new script to start a video compliance check.</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="mt-2 h-8 gap-1.5 text-xs font-semibold"
-              onClick={() => setScriptDialogOpen(true)}
-            >
-              <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload the script
-            </Button>
+            <p className="text-xs text-muted-foreground">Pick a post from the queue to review it.</p>
           </div>
         </div>
       )}
-
-      <UploadScriptDialog
-        open={scriptDialogOpen}
-        onOpenChange={setScriptDialogOpen}
-        initialSubmissionId={selectedScript?.id ?? selected?.id}
-        onSuccess={(id) => {
-          setSelectedScriptId(id);
-          setTab("review");
-        }}
-      />
     </div>
   );
 }

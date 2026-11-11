@@ -27,6 +27,8 @@ export const scriptService = {
     apiClient.post<ScriptStage>(`/api/submissions/${id}/script/revise`, { text, note }, quiet),
 
   /** Check wording being edited, without saving it. */
+  /** Creator: check the uploaded script against the rulebook before sending it (the result is kept). */
+  precheck: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/precheck`, undefined, quiet),
   check: (id: string, text: string) => apiClient.post<StoredCheck>(`/api/submissions/${id}/script/check`, { text }, quiet),
 
   /** The reviewer's highlights and notes on a script version (the creator sees them too). */

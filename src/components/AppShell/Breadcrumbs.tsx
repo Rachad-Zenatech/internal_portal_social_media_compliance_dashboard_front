@@ -63,6 +63,8 @@ export default function Breadcrumbs() {
       submissions: "My posts",
       "content-calendar": "Content calendar",
       delegations: "Delegations",
+      "script-review": "Script review",
+      "script-batches": "Script review",
       performance: "Post performance",
       socials: "Social accounts",
     };
