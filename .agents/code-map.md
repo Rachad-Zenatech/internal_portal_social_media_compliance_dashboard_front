@@ -731,7 +731,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `GlobalProgressProvider` (export function)
 - `useGlobalProgress` (export function)
 
-## src/lib/contentCalendar.ts (427 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+## src/lib/contentCalendar.ts (435 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) - A platform's publish info with its caption limit always set.
 - `PUBLISH_INFO` (export const)
@@ -838,7 +838,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/main.tsx (51 lines) - Create a client
 
-## src/pages/Auth/Login.tsx (225 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+## src/pages/Auth/Login.tsx (234 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `readSignedOut` (function) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `safeReturnTo` (const) - Only same-app paths, so a crafted value can't send the user to another site after signing in.
 - `newNonce` (function)
@@ -870,7 +870,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleSubmitForm` (fn)
     - `handleRunScanner` (fn)
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1785 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1787 lines) - content screener page (pages  compliance)
 - `scriptDue` (function) - Due tomorrow" for a script: its approval date, if the creator set one already.
 - `ScriptScore` (function)
 - `ScriptThumb` (function)
@@ -1144,7 +1144,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `send` (fn)
 - `SelectedPost` (function)
 
-## src/pages/ContentCalendar/PublishDraftPage.tsx (295 lines) - publish draft page (pages  content calendar)
+## src/pages/ContentCalendar/PublishDraftPage.tsx (297 lines) - publish draft page (pages  content calendar)
 - `platformName` (const)
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
@@ -1235,7 +1235,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2316 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2343 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1308,7 +1308,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `goToHighlight` (fn) - A highlight card was clicked: find that wording in the script and flash it.
     - `pick` (fn)
 
-## src/pages/Submissions/SubmissionDetailPage.tsx (666 lines) - submission detail page (pages  submissions)
+## src/pages/Submissions/SubmissionDetailPage.tsx (668 lines) - submission detail page (pages  submissions)
 - `Panel` (function)
 - `LightBadge` (function)
 - `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
@@ -1473,7 +1473,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AuditLogItem` (export interface)
 - `LoginActivityItem` (export interface)
 
-## src/types/calendar.ts (74 lines) - Approved content placed on the publishing calendar.
+## src/types/calendar.ts (76 lines) - Approved content placed on the publishing calendar.
 - `CalendarItem` (export interface) - Approved content placed on the publishing calendar.
 - `PublishMode` (export type) - What a platform's API lets us create from an approved post.
 - `PublishStyle` (export type) - How the publish step is worded on screen.
@@ -1546,7 +1546,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (622 lines) - AD: paid social ad.
+## src/types/submission.ts (632 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)

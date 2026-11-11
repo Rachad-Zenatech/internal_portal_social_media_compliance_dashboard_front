@@ -133,13 +133,13 @@ export default function Login() {
       .catch(() => setTestLogin(false));
   }, []);
 
-  const handleTestLogin = async (as: "creator" | "reviewer") => {
+  const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3") => {
     setIsLoading(true);
     try {
       const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
       sessionStorage.setItem("token", token);
       await refreshPermissions();
-      toast.success(`Signed in as the test ${as}`);
+      toast.success(`Signed in as the test ${as.replace(/(\d)$/, " $1")}`);
       navigate("/");
     } catch (error) {
       toast.error(error instanceof Error && error.message ? error.message : "Test sign-in failed");
@@ -198,12 +198,21 @@ export default function Login() {
             {testLogin && (
               <div className="space-y-2 rounded-xl border border-dashed border-amber-400/70 bg-amber-50/60 p-3 dark:border-amber-500/40 dark:bg-amber-500/5">
                 <p className="text-center text-xs font-medium text-amber-800 dark:text-amber-300">Local testing only</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("creator")}>
                     Test creator
                   </Button>
                   <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer")}>
                     Test reviewer
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("manager")}>
+                    Test manager
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer2")}>
+                    Test reviewer 2
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer3")}>
+                    Test reviewer 3
                   </Button>
                 </div>
               </div>

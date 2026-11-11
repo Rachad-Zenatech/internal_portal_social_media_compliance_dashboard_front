@@ -47,6 +47,7 @@ import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
+import { AccountCaptionsView } from "@/components/submissions/AccountCaptions";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
@@ -759,6 +760,7 @@ function PostView({
             {s.caption_text ? <HighlightedCaption text={s.caption_text} terms={terms} /> : <span className="text-muted-foreground">No caption.</span>}
           </p>
         </div>
+        <AccountCaptionsView accounts={s.accounts ?? []} captions={s.account_captions} mainCaption={s.caption_text} />
       </div>
     </div>
   );

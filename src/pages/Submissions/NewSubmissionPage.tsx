@@ -83,6 +83,7 @@ import { CheckModelsUsed, CheckProgress } from "@/components/submissions/CheckPr
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
+import { AccountCaptionsEditor } from "@/components/submissions/AccountCaptions";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
@@ -434,6 +435,8 @@ export default function NewSubmissionPage() {
   const [approvalBy, setApprovalBy] = useState<Date | undefined>(undefined);
   const [approvalTime, setApprovalTime] = useState(DEFAULT_APPROVAL_TIME);
   const [caption, setCaption] = useState("");
+  // Captions written for particular publishing accounts (by account id); the others use the main caption.
+  const [accountCaptions, setAccountCaptions] = useState<Record<string, string>>({});
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
@@ -600,6 +603,7 @@ export default function NewSubmissionPage() {
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
+        setAccountCaptions(s.account_captions ?? {});
         setSavedAt(new Date(s.updated_at));
         setSaveState("saved");
       })
@@ -644,6 +648,9 @@ export default function NewSubmissionPage() {
       ...(approvalBy ? { approval_needed_by: approvalBy.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
       caption_text: editorRef.current?.innerText.trim() || "",
+      account_captions: Object.fromEntries(
+        Object.entries(accountCaptions).filter(([id, text]) => accountIds.includes(id) && text.trim())
+      ),
       rule_sets: ruleSets,
       reviewer_route: reviewers,
       reviewer_ids: pickedReviewers,
@@ -1280,18 +1287,26 @@ export default function NewSubmissionPage() {
                   className={isMissing("title") ? "border-red-500" : ""}
                 />
               </Field>
-              <Field label="Brand(s)" required error={errorFor("brand_code", "Choose at least one brand")} className="md:col-span-2 lg:col-span-3">
+              <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")} className="md:col-span-2 lg:col-span-3">
                 {!options ? (
                   <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
                 ) : (
-                  <MultiSelect<string>
-                    options={options.brands.map((b) => b.code)}
-                    value={brands}
-                    onChange={onBrandsChange}
-                    placeholder="Select brands"
-                    getLabel={(code) => options.brands.find((b) => b.code === code)?.name ?? code}
-                    invalid={isMissing("brand_code")}
-                  />
+                  // One brand per post: its reviewers are the people who work on that brand.
+                  <Select value={brands[0] ?? ""} onValueChange={(code) => onBrandsChange([code])}>
+                    <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
+                      <SelectValue placeholder="Select a brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.brands.map((b) => (
+                        <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {brands.length > 1 && (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                    This draft had several brands; pick the one it's for. Make a separate post for each other brand.
+                  </p>
                 )}
               </Field>
 
@@ -1854,6 +1869,18 @@ export default function NewSubmissionPage() {
               {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
               {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
             </p>
+            {selectedAccounts.length > 1 && (
+              <AccountCaptionsEditor
+                accounts={selectedAccounts}
+                captions={accountCaptions}
+                mainCaption={caption}
+                limitFor={(platform) => CHAR_LIMITS[platform] ?? 2200}
+                onChange={(next) => {
+                  setAccountCaptions(next);
+                  markEdited();
+                }}
+              />
+            )}
             <CaptionSignalsBar
               caption={caption}
               maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
