@@ -32,6 +32,8 @@ const SubmissionDetailPage = lazy(() => import("./pages/Submissions/SubmissionDe
 const ScriptChangesPage = lazy(() => import("./pages/Submissions/ScriptChangesPage"));
 const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const DelegationsPage = lazy(() => import("./pages/Delegations/DelegationsPage"));
+const ScriptBatchesPage = lazy(() => import("./pages/Scripts/ScriptBatchesPage"));
+const ScriptBatchPage = lazy(() => import("./pages/Scripts/ScriptBatchPage"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
 const PublishDraftPage = lazy(() => import("./pages/ContentCalendar/PublishDraftPage"));
 const AuditLog = lazy(() => import("./pages/Logs/AuditLog"));
@@ -46,6 +48,8 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
   { path: "/submissions/:id/script", navigationCode: "DASHBOARD", element: <ScriptChangesPage /> },
   { path: "/delegations", navigationCode: "DASHBOARD", element: <DelegationsPage /> },
+  { path: "/script-batches", navigationCode: "DASHBOARD", element: <ScriptBatchesPage /> },
+  { path: "/script-batches/:id", navigationCode: "DASHBOARD", element: <ScriptBatchPage /> },
   { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
   { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
   { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <ContentScreenerPage /> },

@@ -9,6 +9,7 @@ import {
   CalendarDays,
   BookOpenText,
   Forward,
+  FileStack,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -69,6 +70,15 @@ export const navigation: NavigationItem[] = [
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["reviewer"],
+  },
+  {
+    // Several scripts uploaded in one document: creators send them, reviewers review them all at once.
+    label: "Script batches",
+    path: "/script-batches",
+    icon: FileStack,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+    views: ["reviewer", "creator"],
   },
   {
     // Review hand-offs the reviewer made or received, with each post's current status.
