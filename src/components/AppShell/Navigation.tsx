@@ -2,13 +2,12 @@ import {
   LayoutDashboard,
   ShieldCheck,
   FileClock,
-  Share2,
-  Scale,
-  BookOpenText,
-  ChartColumn,
-  Video,
-  FilePlus2,
+  Images,
+  SquarePen,
+  ScanSearch,
+  BookCheck,
   CalendarDays,
+  BookOpenText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,6 +31,12 @@ export interface NavigationItem {
 
 export type AppView = "reviewer" | "creator";
 
+/**
+ * What each side sees:
+ *   creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)
+ *   reviewers  Dashboard, Content screener, Compliance rulebook, Content calendar (everyone's posts)
+ * The Administration items below are shown by permission, to whoever has it.
+ */
 export const navigation: NavigationItem[] = [
   {
     label: "Dashboard",
@@ -43,7 +48,15 @@ export const navigation: NavigationItem[] = [
   {
     label: "My posts",
     path: "/submissions",
-    icon: FilePlus2,
+    icon: Images,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+    views: ["creator"],
+  },
+  {
+    label: "New submission",
+    path: "/submissions/new",
+    icon: SquarePen,
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["creator"],
@@ -51,49 +64,37 @@ export const navigation: NavigationItem[] = [
   {
     label: "Content screener",
     path: "/compliance/scanner",
-    icon: Video,
+    icon: ScanSearch,
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["reviewer"],
   },
   {
-    label: "Content calendar",
-    path: "/content-calendar",
-    icon: CalendarDays,
-    section: "MAIN",
-    navigationCode: "DASHBOARD",
-  },
-  {
+    // Reviewers manage it; creators can read it but not change it (see ComplianceRulesPage).
     label: "Compliance rulebook",
     path: "/compliance/rules",
-    icon: Scale,
+    icon: BookCheck,
     section: "MAIN",
     navigationCode: "DASHBOARD",
-    views: ["reviewer"],
+    views: ["reviewer", "creator"],
   },
   {
+    // Brand voice, facts, platform norms and audience profiles. Only config managers can change it (see MessagingContextPage).
     label: "Messaging context",
     path: "/compliance/context",
     icon: BookOpenText,
     section: "MAIN",
     navigationCode: "DASHBOARD",
-    views: ["reviewer"],
-  },
-  {
-    label: "Post performance",
-    path: "/performance",
-    icon: ChartColumn,
-    section: "MAIN",
-    navigationCode: "DASHBOARD",
-    // Everyone: reviewers and managers see the team's posts, creators their own.
     views: ["reviewer", "creator"],
   },
   {
-    label: "Social accounts",
-    path: "/socials",
-    icon: Share2,
+    // Reviewers see everyone's posts, creators only their own (see ContentCalendarPage).
+    label: "Content calendar",
+    path: "/content-calendar",
+    icon: CalendarDays,
     section: "MAIN",
     navigationCode: "DASHBOARD",
+    views: ["reviewer", "creator"],
   },
   {
     label: "System & Security",

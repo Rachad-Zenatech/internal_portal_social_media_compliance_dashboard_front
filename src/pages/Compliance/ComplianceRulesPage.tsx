@@ -17,6 +17,7 @@ import {
   XCircle,
   Check,
   Layers,
+  Lock,
 } from 'lucide-react';
 
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -97,6 +98,52 @@ const TRAFFIC_LIGHT_TONE: Record<TrafficLight, { badge: string; solid: string }>
   YELLOW: { badge: 'border-amber-500/40 text-amber-600 bg-amber-500/10', solid: 'bg-amber-600 text-white' },
   GREEN: { badge: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', solid: 'bg-emerald-600 text-white' },
 };
+
+/**
+ * What breaking a rule costs, in the creator's words. Mirrors the backend scoring (_penalty_and_light in
+ * compliance_service): critical or red 35 points and the post is held, high or yellow 20, anything else 10.
+ */
+const SEVERITY_LOOK = {
+  CRITICAL: {
+    points: 35,
+    label: 'Critical',
+    effect: 'Blocks the post until Legal/Compliance clears it.',
+    card: 'bg-card border-border/80 border-l-4 border-l-red-600',
+    pill: 'bg-red-600 text-white',
+    text: 'text-red-700 dark:text-red-300',
+  },
+  HIGH: {
+    points: 20,
+    label: 'High',
+    effect: 'Has to be fixed before the post can be approved.',
+    card: 'bg-card border-border/80 border-l-4 border-l-amber-500',
+    pill: 'bg-amber-500 text-white',
+    text: 'text-amber-800 dark:text-amber-300',
+  },
+  MEDIUM: {
+    points: 10,
+    label: 'Medium',
+    effect: 'Lowers the score; a reviewer decides if it has to change.',
+    card: 'bg-card border-border/80 border-l-4 border-l-blue-500',
+    pill: 'bg-blue-600 text-white',
+    text: 'text-blue-700 dark:text-blue-300',
+  },
+  LOW: {
+    points: 10,
+    label: 'Low',
+    effect: 'Lowers the score; a reviewer decides if it has to change.',
+    card: 'bg-card border-border/80 border-l-4 border-l-slate-400',
+    pill: 'bg-slate-500 text-white',
+    text: 'text-slate-600 dark:text-slate-300',
+  },
+} as const;
+
+function severityLook(rule: ComplianceRule) {
+  const severity = (rule.severity || '').toUpperCase();
+  if (severity === 'CRITICAL' || rule.traffic_light === 'RED') return SEVERITY_LOOK.CRITICAL;
+  if (severity === 'HIGH' || rule.traffic_light === 'YELLOW') return SEVERITY_LOOK.HIGH;
+  return severity === 'MEDIUM' ? SEVERITY_LOOK.MEDIUM : SEVERITY_LOOK.LOW;
+}
 
 /** Toggle chips for picking several values; nothing picked means "all". */
 function ChipPicker({
@@ -199,8 +246,9 @@ function SelfTestNote({ test }: { test?: RuleSelfTest }) {
 
 export default function ComplianceRulesPage() {
   const queryClient = useQueryClient();
-  const { hasPermission } = useAuth();
-  const canManage = hasPermission('CONFIG_ROLES_UPDATE');
+  const { hasPermission, creatorView } = useAuth();
+  // Creators (and a super admin looking at the app as one) can read the rulebook but not change it.
+  const canManage = hasPermission('CONFIG_ROLES_UPDATE') && !creatorView;
 
   // Filters
   const [search, setSearch] = useState('');
@@ -516,6 +564,11 @@ export default function ComplianceRulesPage() {
         subtitle="The rules content is screened against, grouped into rule sets. A submission is only checked against the rules that match its rule sets, brand, audience, region and platforms."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            {!canManage && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:bg-slate-500/15 dark:text-slate-300">
+                <Lock className="h-3.5 w-3.5" /> View only
+              </span>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -718,6 +771,33 @@ export default function ComplianceRulesPage() {
             </CardContent>
           </Card>
 
+          {/* How a finding is scored, in one line each (mirrors the backend scoring in compliance_service). */}
+          <div className="rounded-xl border border-border/70 bg-card px-4 py-3 text-xs leading-relaxed text-muted-foreground shadow-xs">
+            <p className="mb-1.5 text-sm font-semibold text-foreground">How scoring works</p>
+            <ul className="grid gap-x-6 gap-y-1 md:grid-cols-2">
+              <li>
+                <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-red-600 text-white">Violation</span> the post breaks the rule, so it loses
+                the rule's points. A critical one also holds the post and caps its score at 40.
+              </li>
+              <li>
+                <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-violet-600 text-white">Needs review</span> it might break the rule, so a
+                reviewer checks it. No points come off.
+              </li>
+              <li>
+                <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-teal-600 text-white">Evidence required</span> a claim that needs a source
+                costs 5 points (10 at most) until a reviewer confirms the evidence is on file.
+              </li>
+              <li>
+                <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-emerald-600 text-white">Cleared</span> the wording was checked and is
+                fine, so it costs nothing.
+              </li>
+              <li className="md:col-span-2">
+                <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold bg-slate-700 text-white">Repeat hits</span> breaking the same rule again elsewhere in the post
+                costs 5 more points each, up to 10 extra per rule.
+              </li>
+            </ul>
+          </div>
+
           {/* Rules List / Grid */}
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -749,6 +829,7 @@ export default function ComplianceRulesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rules.map((rule) => {
                 const tone = TRAFFIC_LIGHT_TONE[rule.traffic_light] ?? TRAFFIC_LIGHT_TONE.YELLOW;
+                const look = severityLook(rule);
                 const limits: string[] = [
                   ...rule.brands.map((v) => scopeLabel('brands', v)),
                   ...rule.audiences.map((v) => scopeLabel('audiences', v)),
@@ -759,7 +840,7 @@ export default function ComplianceRulesPage() {
                 return (
                   <Card
                     key={rule.id}
-                    className={`flex flex-col justify-between shadow-xs border-border/80 hover:border-primary/40 transition-colors ${
+                    className={`flex flex-col justify-between shadow-xs transition-colors ${look.card} ${
                       rule.is_active ? '' : 'opacity-60'
                     }`}
                   >
@@ -789,8 +870,21 @@ export default function ComplianceRulesPage() {
                           </div>
                           <CardTitle className="text-base font-semibold text-foreground pt-1">{rule.title}</CardTitle>
                         </div>
-                        <Badge className={`text-[10px] font-bold uppercase ${tone.solid}`}>{rule.traffic_light}</Badge>
+                        <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${look.pill}`}>
+                            −{look.points} pts
+                          </span>
+                          <span className={`text-[11px] font-semibold uppercase tracking-wide ${look.text}`}>{look.label}</span>
+                        </div>
                       </div>
+                      <p className={`mt-2 text-xs font-medium ${look.text}`}>
+                        If your post breaks this rule: −{look.points} points. {look.effect}
+                        {rule.evaluation_mode === 'CONTEXT' && (
+                          <span className="font-normal text-muted-foreground">
+                            {' '}The AI reads the wording in context first, so a harmless use costs nothing.
+                          </span>
+                        )}
+                      </p>
                     </CardHeader>
 
                     <CardContent className="space-y-3 pb-3 text-xs text-muted-foreground">
@@ -821,7 +915,7 @@ export default function ComplianceRulesPage() {
                             {rule.prohibited_terms.slice(0, 5).map((term, idx) => (
                               <span
                                 key={idx}
-                                className="px-1.5 py-0.5 rounded-sm bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] font-mono border border-red-500/20"
+                                className="px-1.5 py-0.5 rounded-sm bg-card/80 text-red-600 dark:text-red-400 text-[10px] font-mono border border-red-500/20"
                               >
                                 {term}
                               </span>
@@ -839,8 +933,9 @@ export default function ComplianceRulesPage() {
                       <FlagStatsNote stats={flagStatsByNumber.get(rule.rule_number)} />
 
                       {rule.required_disclaimers && rule.required_disclaimers.length > 0 && (
-                        <div className="p-2 rounded bg-muted/30 border border-border/60 text-[11px] italic text-muted-foreground">
+                        <div className="p-2 rounded bg-card/70 border border-border/60 text-[11px] italic text-muted-foreground">
                           <strong>Required Label:</strong> "{rule.required_disclaimers[0]}"
+                          <span className="not-italic font-semibold text-foreground"> · −20 pts if it's missing</span>
                           <span className="not-italic block mt-0.5">
                             {rule.disclaimer_triggers?.length
                               ? `Needed when content mentions: ${rule.disclaimer_triggers.slice(0, 6).join(", ")}${rule.disclaimer_triggers.length > 6 ? ", ..." : ""}`
@@ -850,9 +945,9 @@ export default function ComplianceRulesPage() {
                       )}
                     </CardContent>
 
-                    <CardFooter className="pt-2 border-t border-border/40 bg-muted/5 flex items-center justify-between text-xs">
+                    <CardFooter className="pt-2 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-xs">
                       <span className="text-[10px] text-muted-foreground">
-                        Severity: <strong className="uppercase">{rule.severity}</strong>
+                        Severity: <strong className={look.text}>{look.label}</strong>
                       </span>
                       {canManage && (
                         <div className="flex items-center gap-1">

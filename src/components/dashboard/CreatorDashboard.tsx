@@ -22,6 +22,8 @@ import {
   statusOf,
 } from "@/components/dashboard/dashboardParts";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import PostSteps from "@/components/submissions/PostSteps";
+import { POST_STEPS, ranOnce, stepPath } from "@/lib/postSteps";
 import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -68,39 +70,67 @@ const scriptSent = (s: SubmissionSummary) =>
 /** When it went to a reviewer: the post's submission, or (for a script) when it was last worked on. */
 const sentAt = (s: SubmissionSummary) => new Date((s.submitted_at ?? s.updated_at) as string);
 
-function NextStepRow({ s, onOpen }: { s: SubmissionSummary; onOpen: () => void }) {
+/** How each kind of next step looks: a stripe and a label in its own colour. */
+const NEXT_LOOK = {
+  overdue: { stripe: "border-l-red-500", label: "text-red-700 dark:text-red-300", chip: "bg-red-600 text-white" },
+  changes: { stripe: "border-l-amber-500", label: "text-amber-700 dark:text-amber-300", chip: "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100" },
+  video: { stripe: "border-l-violet-500", label: "text-violet-700 dark:text-violet-300", chip: "bg-violet-100 text-violet-900 dark:bg-violet-500/20 dark:text-violet-100" },
+  draft: { stripe: "border-l-blue-500", label: "text-blue-700 dark:text-blue-300", chip: "bg-blue-100 text-blue-900 dark:bg-blue-500/20 dark:text-blue-100" },
+} as const;
+
+function NextStepRow({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen: () => void; onOpenStep: (step: string) => void }) {
   const scriptChanges = scriptNeedsChanges(s);
   const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
-  const status = statusPillOf(s);
+  const video = !changes && s.script_status === "APPROVED";
   // Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
-  const due = (changes && s.due_kind === "REVISION") || (s.script_status === "APPROVED" && s.due_kind === "VIDEO") ? dueLabel(s.due_at) : null;
-  const details = scriptChanges
-    ? [s.script_status === "EDITS_PROPOSED" ? "Your reviewer edited the script" : "Your reviewer asked for changes to the script"]
+  const due = (changes && s.due_kind === "REVISION") || (video && s.due_kind === "VIDEO") ? dueLabel(s.due_at) : null;
+  const look = due?.urgent && changes ? NEXT_LOOK.overdue : changes ? NEXT_LOOK.changes : video ? NEXT_LOOK.video : NEXT_LOOK.draft;
+  const kind = scriptChanges
+    ? s.script_status === "EDITS_PROPOSED"
+      ? "Script edited by your reviewer"
+      : "Script changes requested"
     : changes
-    ? [issuesText(s.issue_count) ?? "A reviewer asked for changes"]
-    : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`];
+    ? "Changes requested"
+    : video
+    ? "Script approved · film next"
+    : "Draft in progress";
+  const details = scriptChanges
+    ? "Read the reviewer's changes and accept or edit them."
+    : changes
+    ? issuesText(s.issue_count) ?? "A reviewer asked for changes."
+    : video
+    ? "Upload the video; it's checked against the approved script."
+    : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`].filter(Boolean).join(" · ");
+  const steps = s.steps && !scriptChanges ? ranOnce(s.steps) : null;
+  const stepsDone = steps ? POST_STEPS.filter((p) => steps[p.key] === "done").length : 0;
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border/60 px-4 py-3.5">
-      <Thumb s={s} className="h-11 w-16 rounded-lg" />
-      <div className="min-w-[200px] flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-foreground">{s.title}</span>
-          <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${status.pill}`}>{status.label}</span>
-        </div>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {details.filter(Boolean).join(" · ")}
-          {due && (
-            <span className={due.urgent ? "font-semibold text-red-600 dark:text-red-400" : "font-medium text-foreground"}> · {due.text}</span>
-          )}
-        </p>
+    <li
+      className={`flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border/70 border-l-4 bg-card p-3.5 shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md ${look.stripe}`}
+    >
+      <Thumb s={s} className="h-16 w-24 rounded-lg" />
+      <div className="min-w-[220px] flex-1">
+        <p className={`text-[11px] font-bold uppercase tracking-wide ${look.label}`}>{kind}</p>
+        <p className="mt-0.5 truncate text-base font-semibold text-foreground">{s.title}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{details}</p>
+        {steps && !steps.locked && (
+          <div className="mt-2 flex items-center gap-2.5">
+            <PostSteps steps={steps} onOpen={onOpenStep} />
+            <span className="text-xs text-muted-foreground">
+              {stepsDone} of {POST_STEPS.length} steps done
+            </span>
+          </div>
+        )}
       </div>
-      <Button
-        onClick={onOpen}
-        variant={changes ? "default" : "outline"}
-        className={`h-9 shrink-0 rounded-lg px-4 text-sm font-medium ${changes ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
-      >
-        {scriptChanges ? "Review changes" : changes ? "Fix issues" : s.script_status === "APPROVED" ? "Upload video" : "Continue draft"}
-      </Button>
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        {due && <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${look.chip}`}>{due.text}</span>}
+        <Button
+          onClick={onOpen}
+          variant={changes || video ? "default" : "outline"}
+          className={`h-9 rounded-lg px-4 text-sm font-semibold ${changes || video ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
+        >
+          {scriptChanges ? "Review changes" : changes ? "Fix issues" : video ? "Upload video" : "Continue draft"}
+        </Button>
+      </div>
     </li>
   );
 }
@@ -312,9 +342,14 @@ export default function CreatorDashboard() {
                 <p className="text-xs text-muted-foreground">No changes requested and no drafts. Create a post when you're ready.</p>
               </div>
             ) : (
-              <ul>
+              <ul className="flex flex-col gap-3 border-t border-border/60 bg-muted/20 p-3">
                 {nextSteps.slice(0, NEXT_STEP_LIMIT).map((s) => (
-                  <NextStepRow key={s.id} s={s} onOpen={() => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`)} />
+                  <NextStepRow
+                    key={s.id}
+                    s={s}
+                    onOpen={() => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`)}
+                    onOpenStep={(step) => navigate(stepPath(s.id, step as (typeof POST_STEPS)[number]["key"]))}
+                  />
                 ))}
               </ul>
             )}

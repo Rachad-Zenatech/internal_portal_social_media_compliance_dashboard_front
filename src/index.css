@@ -100,7 +100,8 @@
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
+    --app-canvas: #f4f6fb;
+    --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     /* Active menu item: brand blue, matching the blue buttons and highlights. */
     --sidebar-primary: var(--color-blue-600);
@@ -298,21 +299,20 @@
     }
   }
 
-  /* Page canvas behind the content: plain white, shadcn-style. Cards stand out by their borders, not a grey canvas. */
+  /* Page canvas behind the content: a soft blue-grey, so the white cards stand out from it (as in the design). */
   .app-canvas {
-    background-color: var(--background);
+    background-color: var(--app-canvas);
   }
   .dark .app-canvas {
     background-color: var(--background);
   }
 
-  /* Pages marked data-canvas="plain" (the Content Portal) sit on the plain page background instead of the grey. */
-  .app-canvas:has([data-canvas="plain"]) {
-    background-color: var(--background);
-  }
-
-  /* Pages marked data-canvas="contrast" (the dashboards): the same white canvas; their cards keep a hairline shadow. */
+  /* Pages marked data-canvas="plain" or "contrast" sit on the same canvas; the dashboards' cards keep a hairline shadow. */
+  .app-canvas:has([data-canvas="plain"]),
   .app-canvas:has([data-canvas="contrast"]) {
+    background-color: var(--app-canvas);
+  }
+  .dark .app-canvas:has([data-canvas="plain"]) {
     background-color: var(--background);
   }
   .dark .app-canvas:has([data-canvas="contrast"]) {
