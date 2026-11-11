@@ -8,6 +8,7 @@ import {
   BookCheck,
   CalendarDays,
   BookOpenText,
+  Forward,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -65,6 +66,15 @@ export const navigation: NavigationItem[] = [
     label: "Content screener",
     path: "/compliance/scanner",
     icon: ScanSearch,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+    views: ["reviewer"],
+  },
+  {
+    // Review hand-offs the reviewer made or received, with each post's current status.
+    label: "Delegations",
+    path: "/delegations",
+    icon: Forward,
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["reviewer"],

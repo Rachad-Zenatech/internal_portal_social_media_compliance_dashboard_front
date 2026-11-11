@@ -198,6 +198,8 @@ export interface Submission {
   approver_names?: string[];
   /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
   can_approve?: boolean;
+  /** In review and the viewer may hand it to another reviewer (they keep seeing it and can still decide). */
+  can_delegate?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
   /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
@@ -455,6 +457,10 @@ export interface ReviewQueueItem {
   approver_names?: string[];
   /** The viewer may approve it (a reviewer, and one of its named approvers when it has any). */
   can_approve?: boolean;
+  /** In review and the viewer may hand it to another reviewer. */
+  can_delegate?: boolean;
+  /** Who it was sent to, including anyone it was delegated to. */
+  reviewer_ids?: string[];
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
   /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
@@ -615,4 +621,28 @@ export interface DuplicateReport {
   blocked: boolean;
   blocking?: DuplicateMatch | null;
   repost?: DuplicateMatch | null;
+}
+
+export type DelegationDirection = "all" | "by_me" | "to_me";
+
+/** One hand-off of a post in review, with where the post stands now. */
+export interface Delegation {
+  id: string;
+  submission_id: string;
+  reference_code: string;
+  title: string;
+  content_type: string;
+  status: SubmissionStatus | string;
+  version_number: number;
+  current_version: number;
+  from_user_id?: string | null;
+  from_user_name?: string | null;
+  to_user_id?: string | null;
+  to_user_name?: string | null;
+  note?: string | null;
+  created_at: string;
+  /** The decision on the delegated version, once someone made it. */
+  decision?: string | null;
+  decided_by_name?: string | null;
+  decided_at?: string | null;
 }

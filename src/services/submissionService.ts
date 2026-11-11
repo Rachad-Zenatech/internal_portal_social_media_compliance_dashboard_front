@@ -32,6 +32,8 @@ import type {
   SubmissionHistory,
   SubmissionOptions,
   ReviewerOption,
+  Delegation,
+  DelegationDirection,
   SubmissionSummary,
   SubmissionUpdate,
   SubmitResult,
@@ -136,6 +138,19 @@ export const submissionService = {
   /** Reviewer moves approved content to a new publish time. */
   reschedule: (id: string, publishAt: string) =>
     apiClient.post<Submission>(`/api/submissions/${id}/reschedule`, { publish_at: publishAt }, quiet),
+
+  /** Hand the post in review to another reviewer; the delegator stays on it. */
+  delegate: (id: string, toUserId: string, note?: string) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/delegate`, { to_user_id: toUserId, note: note || null }, quiet),
+
+  /** Every review hand-off on one post. */
+  submissionDelegations: (id: string) => apiClient.get<Delegation[]>(`/api/submissions/${id}/delegations`, quiet),
+
+  /** Hand-offs the viewer made (by_me) or received (to_me). */
+  delegations: (direction: DelegationDirection = "all") =>
+    apiClient.get<Delegation[]>(`/api/submissions/delegations?direction=${direction}`, quiet),
+
+  delegationCount: () => apiClient.get<{ pending: number }>("/api/submissions/delegations/count", quiet),
 
   history: (id: string) => apiClient.get<SubmissionHistory>(`/api/submissions/${id}/history`),
 
