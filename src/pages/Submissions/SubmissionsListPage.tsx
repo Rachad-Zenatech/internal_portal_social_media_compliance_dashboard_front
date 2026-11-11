@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Clock,
   FilePen,
+  FileStack,
   FileText,
   Film,
   ImagePlus,
@@ -81,6 +82,7 @@ import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
 import PostSteps from "@/components/submissions/PostSteps";
+import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import { POST_STEPS, missingText, ranOnce, resumePath, stepPath } from "@/lib/postSteps";
 import type { PostStepKey, Submission, SubmissionSummary } from "@/types/submission";
 
@@ -1070,6 +1072,8 @@ function ReviewCard({
 
 export default function SubmissionsListPage() {
   const [stage, setStage] = useState<"" | Stage>("");
+  // Several video scripts in one document, split and sent for review together.
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
@@ -1244,6 +1248,14 @@ export default function SubmissionsListPage() {
               <Clock className="w-4 h-4" /> {waitingForMe} waiting for your review
             </button>
           )}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-2 rounded-lg px-4 text-sm font-semibold"
+            onClick={() => setBulkDialogOpen(true)}
+          >
+            <FileStack className="w-4 h-4" /> Upload several scripts
+          </Button>
           <Button asChild className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
             <Link to="/submissions/new">
               <Plus className="w-4 h-4" /> New post
@@ -1656,6 +1668,8 @@ export default function SubmissionsListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BulkScriptDialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
@@ -412,7 +413,7 @@ export default function MessagingContextPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ctx-asof" className="text-xs font-semibold">As of (optional)</Label>
-                <Input id="ctx-asof" type="date" value={form.as_of ?? ""} onChange={(e) => setForm((f) => ({ ...f, as_of: e.target.value || null }))} className="text-xs" />
+                <DateTimePicker id="ctx-asof" value={form.as_of} onChange={(v) => setForm((f) => ({ ...f, as_of: v || null }))} />
               </div>
             </div>
           </div>
