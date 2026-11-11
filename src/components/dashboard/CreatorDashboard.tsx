@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
-import { CalendarDays, CheckCircle2, FileText, Plus } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileStack, FileText, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import UploadScriptDialog from "@/components/script/UploadScriptDialog";
+import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import {
   ActivityList,
   Empty,
@@ -187,6 +188,7 @@ export default function CreatorDashboard() {
   const navigate = useNavigate();
   const now = useMemo(() => new Date(), []);
   const [scriptDialogOpen, setScriptDialogOpen] = useState(false);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
 
   const submissions = useQuery({
     queryKey: ["submissions", "mine"],
@@ -270,6 +272,14 @@ export default function CreatorDashboard() {
             onClick={() => setScriptDialogOpen(true)}
           >
             <FileText className="w-4 h-4 text-blue-600" /> Upload script
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-2 rounded-lg px-4 font-medium"
+            onClick={() => setBulkDialogOpen(true)}
+          >
+            <FileStack className="w-4 h-4" /> Upload several scripts
           </Button>
           <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
             <Link to="/content-calendar">
@@ -420,6 +430,7 @@ export default function CreatorDashboard() {
         </div>
       </div>
 
+      <BulkScriptDialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen} />
       <UploadScriptDialog
         open={scriptDialogOpen}
         onOpenChange={setScriptDialogOpen}

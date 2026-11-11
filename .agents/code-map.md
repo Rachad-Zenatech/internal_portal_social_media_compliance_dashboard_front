@@ -4,7 +4,7 @@
 
 How to use: check `.agents/project-index.md` first to locate the file, then inspect its symbols below.
 
-## src/App.tsx (171 lines) - app
+## src/App.tsx (175 lines) - app
 - `PrefixRedirect` (function)
 - `PostsListRoute` (function) - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
 - `NotFoundAlert` (function)
@@ -48,7 +48,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `formatLastSeen` (fn)
     - `renderMetric` (fn)
 
-## src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
+## src/components/AppShell/Navigation.tsx (151 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface)
 - `NavigationItem` (export interface)
 - `AppView` (export type)
@@ -94,7 +94,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) - Where the facts come from: the ZenaTech newsroom, read once a day.
 
-## src/components/dashboard/CreatorDashboard.tsx (431 lines) - creator dashboard (components dashboard)
+## src/components/dashboard/CreatorDashboard.tsx (442 lines) - creator dashboard (components dashboard)
 - `dueLabel` (function) - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
 - `PostFilter` (type)
 - `needsChanges` (const) - A reviewer asked for changes to the post, or sent its script back (with or without edits).
@@ -151,6 +151,19 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `SectionIcon` (export function) - The small coloured icon before a section title.
 - `ACTIVITY_STYLE` (export const) - Each kind of update on a post, with its own icon and colour (same on both dashboards).
 - `ScoreRing` (export function) - An average rulebook score as a ring.
+
+## src/components/script/BatchDetailsForm.tsx (181 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `toLocalInput` (const) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `labelOf` (const)
+- `BatchDetailsForm` (export function) - The details every post made from the batch shares: the same fields as a post's details.
+
+## src/components/script/BatchItemCard.tsx (218 lines) - The state of a script's check as a short chip: its score, or why it has none.
+- `Decision` (export interface)
+- `CheckChip` (function) - The state of a script's check as a short chip: its score, or why it has none.
+- `BatchItemCard` (export function) - One script of a batch.
+
+## src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
+- `BulkScriptDialog` (export function) - Upload one document that holds several scripts.
 
 ## src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
 - `Quote` (function)
@@ -759,6 +772,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `useLiveScriptCheck` (export function) - The rulebook check of wording being edited (null while it matches the saved version, or before it settles).
 - `useScriptHighlights` (export function) - The reviewer's highlights and notes on a script version.
 
+## src/hooks/useScriptBatches.ts (97 lines) - The batches a person uploaded, or (reviewers) those sent for review.
+- `message` (const)
+- `useScriptBatches` (export function) - The batches a person uploaded, or (reviewers) those sent for review.
+- `useScriptBatch` (export function) - One batch, refreshed while its scripts are being checked, and told when that finishes.
+- `useBatchActions` (export function) - The creator's actions on a batch: details, edits to its scripts, and sending it.
+- `useReviewBatch` (export function) - The reviewer's decisions on any number of a batch's scripts at once.
+
 ## src/hooks/useSentiment.ts (83 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - `isSentimentRunning` (export function)
 - `useSentiment` (export function) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
@@ -1289,6 +1309,16 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `posts` (fn)
     - `top` (fn)
 
+## src/pages/Scripts/ScriptBatchPage.tsx (286 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
+- `looksApprovable` (const)
+- `Banner` (function)
+- `ScriptBatchPage` (export function) - A batch of scripts.
+- `BatchView` (function)
+
+## src/pages/Scripts/ScriptBatchesPage.tsx (120 lines) - script batches page (pages  scripts)
+- `Row` (function)
+- `ScriptBatchesPage` (export function) - Script batches: the ones a creator uploaded, and (for reviewers) the ones sent for review.
+
 ## src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - `SocialPlatformConfig` (export interface)
 - `OrganicPost` (interface)
@@ -1661,6 +1691,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - `performanceService` (export const)
 
+## src/services/scriptBatchService.ts (39 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
+- `scriptBatchService` (export const) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
+
 ## src/services/scriptService.ts (44 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
@@ -1742,6 +1775,17 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ScriptStage` (export interface)
 - `ScriptQueueItem` (export interface)
 - `ScriptHighlight` (export interface) - Wording the reviewer highlighted (with an optional note) in a script version.
+
+## src/types/scriptBatch.ts (87 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
+- `BatchStatus` (export type) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
+- `BatchItemStatus` (export type)
+- `BatchDetails` (export interface) - What every post made from the batch shares.
+- `BatchItem` (export interface)
+- `Batch` (export interface)
+- `BatchSummary` (export interface)
+- `ItemDecision` (export interface)
+- `ItemResult` (export interface)
+- `BatchReviewResult` (export interface)
 
 ## src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type)
