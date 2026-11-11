@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Eye, FileText, Globe2, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
+import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";
@@ -13,9 +13,11 @@ import HighlightableText, { type Highlight, type HighlightableHandle } from "@/c
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
-import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
+import { overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { usePublicMood } from "@/hooks/usePublicMood";
+import { useSentiment } from "@/hooks/useSentiment";
+import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { ContextNote, FINDING_ORDER, FindingGroup, StatusPill, groupFindings, isWarning, statusOf } from "@/components/submissions/FindingStatus";
 import { useLiveScriptCheck, useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { replaceInText } from "@/lib/replaceQuote";
@@ -27,6 +29,14 @@ import type { ScriptVersion } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
 type PanelTab = "flags" | "highlights" | "sentiment" | "history";
+
+/** How the sentiment analysis read, in a word, for its tile (the same words as a post's review). */
+const SENTIMENT_TILE: Record<string, { label: string; tone: GlanceTile["tone"] }> = {
+  NO_CONCERNS: { label: "No concerns", tone: "ok" },
+  REVIEW_SUGGESTED: { label: "Review suggested", tone: "warn" },
+  SIGNIFICANT_CONCERNS: { label: "Concerns", tone: "bad" },
+  INSUFFICIENT_INFORMATION: { label: "Not enough to judge", tone: "muted" },
+};
 type Compare = "mine" | "previous";
 
 /** Prefix of the display-only marks for what the creator fixed. */
@@ -132,7 +142,13 @@ function Editor({
   const [mode, setMode] = useState<"read" | "edit">("read");
   const [showChanges, setShowChanges] = useState(true);
   const [compare, setCompare] = useState<Compare>("mine");
-  const [tab, setTab] = useState<PanelTab>("flags");
+  const [tab, setTabState] = useState<PanelTab>("flags");
+  // What the reviewer has opened, so the tiles show what is still to look at.
+  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>(["flags"]));
+  const setTab = useCallback((next: PanelTab) => {
+    setTabState(next);
+    setSeen((prev) => (prev.has(next) ? prev : new Set(prev).add(next)));
+  }, []);
   // The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
   const noteValue = useRef("");
   const [needNote, setNeedNote] = useState(false);
@@ -184,13 +200,15 @@ function Editor({
       openedResponse.current = true;
       setTab("highlights");
     }
-  }, [responded]);
+  }, [responded, setTab]);
   const locateCount = useRef<Record<string, number>>({});
   const { decide } = useScriptActions(submissionId);
   const [confirming, setConfirming] = useState<"approve" | "send_back" | null>(null);
   const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
   const { mood } = usePublicMood(submissionId, true);
   const moodDecision = overallPostDecision(mood);
+  // The same query the sentiment panel uses, for its tile.
+  const { analysis: sentiment } = useSentiment(submissionId);
 
   const hasEdits = !sameText(draft, sent.body);
   useEffect(() => {
@@ -303,16 +321,47 @@ function Editor({
     );
   };
 
-  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
-    { value: "flags", label: "Flags", count: active.length, alert: verdict.critical > 0 },
-    { value: "highlights", label: "Highlighted", count: highlights.length },
+  // The four things a reviewer looks at, each with its one-line answer (as on a post's review).
+  const sentimentRead = sentiment?.status === "COMPLETED" && sentiment.result ? SENTIMENT_TILE[sentiment.result.overall_assessment] : null;
+  const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
+  const flagWords = [
+    verdict.critical > 0 ? `${verdict.critical} critical` : "",
+    grouped.NEEDS_REVIEW.length ? `${grouped.NEEDS_REVIEW.length} to check` : "",
+    grouped.EVIDENCE_REQUIRED.length ? `${grouped.EVIDENCE_REQUIRED.length} need${grouped.EVIDENCE_REQUIRED.length === 1 ? "s" : ""} a source` : "",
+  ].filter(Boolean);
+  const tiles: GlanceTile[] = [
     {
-      value: "sentiment",
-      label: "Sentiment",
-      count: moodDecision ? undefined : mood?.topics.length || undefined,
-      badge: moodDecision ? REC_BADGE[moodDecision.recommendation] : undefined,
+      key: "flags",
+      label: "Flags",
+      value: check?.ai_unavailable ? "No check" : active.length ? `${active.length} open` : "Nothing open",
+      sub: check?.ai_unavailable ? "The check couldn't run" : flagWords.join(" · ") || (grouped.CLEARED.length ? `${grouped.CLEARED.length} cleared` : "No flags on the script"),
+      tone: check?.ai_unavailable ? "muted" : verdict.critical > 0 ? "bad" : active.length ? "warn" : "ok",
+      seen: seen.has("flags"),
     },
-    { value: "history", label: "History", count: versions.length },
+    {
+      key: "highlights",
+      label: "Highlighted",
+      value: highlights.length ? `${highlights.length} marked` : "None",
+      sub: highlights.length ? "Places you marked for changes" : "Select text in the script to mark it",
+      tone: highlights.length ? "warn" : "muted",
+      seen: seen.has("highlights"),
+    },
+    {
+      key: "sentiment",
+      label: "Sentiment",
+      value: sentimentRead?.label ?? (sentimentBusy ? "Running" : "Not run"),
+      sub: moodDecision ? `Public mood: ${moodDecision.recommendation.toLowerCase()}` : sentimentRead ? "Read on the script as sent" : sentimentBusy ? "Will appear here" : "Run it from here",
+      tone: sentimentRead?.tone ?? "muted",
+      seen: seen.has("sentiment"),
+    },
+    {
+      key: "history",
+      label: "History",
+      value: `${versions.length} version${versions.length === 1 ? "" : "s"}`,
+      sub: previous ? `Previous: version ${previous.version_number}` : "First version",
+      tone: "muted",
+      seen: seen.has("history"),
+    },
   ];
 
   return (
@@ -498,62 +547,7 @@ function Editor({
           </div>
         </div>
 
-        {/* Live Market & News Sentiment Banner */}
-        <button
-          type="button"
-          onClick={() => setTab("sentiment")}
-          className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-2 text-left text-xs transition-colors hover:bg-muted/50"
-        >
-          <span className="flex min-w-0 items-center gap-1.5">
-            <Globe2 className="h-3.5 w-3.5 shrink-0 text-sky-600" />
-            <span className="font-semibold text-foreground">Market & news sentiment:</span>
-            <span className="truncate text-muted-foreground">
-              {moodDecision
-                ? moodDecision.reason
-                : mood?.topics.length
-                ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"}`
-                : "View live trends & VADER sentiment"}
-            </span>
-          </span>
-          {moodDecision ? (
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
-              {moodDecision.recommendation}
-            </span>
-          ) : (
-            <span className="shrink-0 text-[11px] font-medium text-sky-700 dark:text-sky-300">Open →</span>
-          )}
-        </button>
-
-        <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
-          {tabs.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.value}
-              onClick={() => setTab(t.value)}
-              className={`-mb-px inline-flex h-9 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium transition-colors ${
-                tab === t.value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-              {t.badge && (
-                <span className={`rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${t.badge.cls}`}>
-                  {t.badge.label}
-                </span>
-              )}
-              {t.count != null && (
-                <span
-                  className={`min-w-[18px] rounded-full px-1.5 text-[11px] font-semibold ${
-                    t.alert ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-muted text-foreground/70"
-                  }`}
-                >
-                  {t.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        <ReviewGlance tiles={tiles} active={tab} onPick={(key) => setTab(key as PanelTab)} />
 
         <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
           {tab === "flags" &&

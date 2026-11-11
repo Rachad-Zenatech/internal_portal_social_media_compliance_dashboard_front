@@ -1,50 +1,37 @@
-import { useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import {
   CheckCircle2,
-  ChevronDown,
   Clock,
   ExternalLink,
   FileText,
-  GalleryHorizontalEnd,
-  Globe2,
-  Image as ImageIcon,
-  Layers,
+    Layers,
   Loader2,
-  Megaphone,
-  MessageSquareText,
   PanelLeftClose,
   PanelLeftOpen,
   Pause,
   Play,
-  Plus,
   Search,
   Send,
   SkipBack,
   SkipForward,
   SlidersHorizontal,
-  Video,
   X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
+import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
-import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
+import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -85,7 +72,7 @@ import UploadScriptDialog from "@/components/script/UploadScriptDialog";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { ScriptQueueItem } from "@/types/script";
-import type { QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
+import type { FlagReview, QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Queue: tabs, filters and the few facts each row needs
@@ -297,7 +284,7 @@ function flagsOf(s: ReviewQueueItem): Flag[] {
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The caption with every flagged phrase highlighted. */
-function HighlightedCaption({ text, terms }: { text: string; terms: string[] }) {
+export function HighlightedCaption({ text, terms }: { text: string; terms: string[] }) {
   if (!terms.length) return <>{text}</>;
   const re = new RegExp(`(${terms.map(escapeRe).join("|")})`, "gi");
   return (
@@ -315,6 +302,64 @@ function HighlightedCaption({ text, terms }: { text: string; terms: string[] }) 
   );
 }
 
+/** One flagged phrase in the caption: which rule found it, and whether it was dismissed. */
+interface MarkedTerm {
+  term: string;
+  ruleId: string;
+  dismissed: boolean;
+}
+
+/**
+ * The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
+ * Clicking marked wording opens that flag in the panel; clicking anything else opens a comment.
+ */
+function MarkedCaption({
+  text,
+  terms,
+  picked,
+  onFlag,
+  onComment,
+}: {
+  text: string;
+  terms: MarkedTerm[];
+  picked: string | null;
+  onFlag: (ruleId: string) => void;
+  onComment: () => void;
+}) {
+  const byTerm = new Map(terms.map((t) => [t.term.toLowerCase(), t]));
+  const pieces = terms.length
+    ? text.split(new RegExp(`(${[...byTerm.keys()].sort((a, b) => b.length - a.length).map(escapeRe).join("|")})`, "gi"))
+    : [text];
+  return (
+    <>
+      {pieces.map((part, i) => {
+        const hit = i % 2 ? byTerm.get(part.toLowerCase()) : undefined;
+        if (!hit) {
+          return (
+            <span key={i} onClick={onComment} className="cursor-text rounded hover:bg-blue-50 dark:hover:bg-blue-500/10">
+              {part}
+            </span>
+          );
+        }
+        return (
+          <mark
+            key={i}
+            onClick={() => onFlag(hit.ruleId)}
+            title={hit.dismissed ? "Dismissed: click to see why" : "Click to see the flag"}
+            className={`cursor-pointer rounded px-0.5 text-foreground ${
+              hit.dismissed
+                ? "border-b-2 border-dashed border-violet-500 bg-violet-200/60 dark:bg-violet-500/30"
+                : "bg-amber-200/70 dark:bg-amber-500/30"
+            } ${picked === hit.ruleId ? "ring-2 ring-violet-500" : ""}`}
+          >
+            {part}
+          </mark>
+        );
+      })}
+    </>
+  );
+}
+
 /** Platforms whose videos are usually vertical: the frame's shape until the video's real shape is known. */
 const VERTICAL_PLATFORMS = ["TIKTOK", "INSTAGRAM", "YOUTUBE_SHORTS"];
 
@@ -326,7 +371,7 @@ interface TimelinePart {
 
 /** The video split into its checked parts, each coloured by what was found there. A part covering the whole video
  * (the title and caption check) is left out when there are finer parts. */
-function timelineOf(s: ReviewQueueItem, duration: number): TimelinePart[] {
+export function timelineOf(s: Pick<ReviewQueueItem, "latest_check">, duration: number): TimelinePart[] {
   const segs = s.latest_check?.segment_flags ?? [];
   const total = duration || Math.max(0, ...segs.map((f) => f.end_sec));
   if (!total) return [];
@@ -338,7 +383,7 @@ function timelineOf(s: ReviewQueueItem, duration: number): TimelinePart[] {
 }
 
 /** "Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times. */
-function FlaggedMoments({
+export function FlaggedMoments({
   parts,
   now,
   duration,
@@ -571,7 +616,9 @@ function PostView({
   now,
   duration,
   playing,
-  canComment,
+  picked,
+  onFlag,
+  onComment,
   onTime,
   onDuration,
   onPlaying,
@@ -586,7 +633,9 @@ function PostView({
   now: number;
   duration: number;
   playing: boolean;
-  canComment: boolean;
+  picked: string | null;
+  onFlag: (ruleId: string) => void;
+  onComment: () => void;
   onTime: (t: number) => void;
   onDuration: (d: number) => void;
   onPlaying: (p: boolean) => void;
@@ -613,7 +662,9 @@ function PostView({
     else v.pause();
   };
   const step = (by: number) => seek(Math.min(Math.max(0, now + by), duration || now + by));
-  const terms = flags.filter((f) => !dismissed.has(f.v.rule_id)).flatMap((f) => f.v.flagged_terms);
+  const terms: MarkedTerm[] = flags.flatMap((f) =>
+    f.v.flagged_terms.filter(Boolean).map((term) => ({ term, ruleId: f.v.rule_id, dismissed: dismissed.has(f.v.rule_id) }))
+  );
   // The most serious open flag at this moment, shown over the video.
   const atFlag = timed
     .filter((f) => Math.abs(now - f.at!) < 0.75 && !dismissed.has(f.v.rule_id))
@@ -717,9 +768,14 @@ function PostView({
           </>
         ) : image ? (
           <div className="flex flex-col gap-2">
-            <div className="grid place-items-center overflow-hidden rounded-xl bg-muted">
+            <button
+              type="button"
+              onClick={onComment}
+              title="Click to comment on the image"
+              className="grid cursor-pointer place-items-center overflow-hidden rounded-xl bg-muted"
+            >
               <img src={authedFileUrl(image.url)} alt={image.original_name} className="max-h-[56vh] w-auto object-contain" />
-            </div>
+            </button>
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
                 {images.map((img, i) => (
@@ -739,24 +795,17 @@ function PostView({
           </div>
         ) : null}
 
-        {/* The reviewer's comment box, under the post as before */}
-        {canComment ? (
-          <div className="border-t border-border/70 pt-4">
-            <CommentComposer s={s} now={now} hasVideo={Boolean(s.video)} />
-          </div>
-        ) : s.status !== "IN_REVIEW" ? (
-          <p className="border-t border-border/70 pt-4 text-xs text-muted-foreground">
-            This was decided, so its notes are read-only. To raise something new, reopen it for changes.
-          </p>
-        ) : null}
-
         <div className="flex flex-col gap-1.5 rounded-xl border border-border/70 px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold text-foreground">Caption</span>
-            <span className="text-xs text-muted-foreground">{(s.caption_text ?? "").length.toLocaleString()} characters</span>
+            <span className="text-xs text-muted-foreground">Click marked wording to see its flag, or anything else to comment</span>
           </div>
           <p className="whitespace-pre-wrap text-sm text-foreground/90">
-            {s.caption_text ? <HighlightedCaption text={s.caption_text} terms={terms} /> : <span className="text-muted-foreground">No caption.</span>}
+            {s.caption_text ? (
+              <MarkedCaption text={s.caption_text} terms={terms} picked={picked} onFlag={onFlag} onComment={onComment} />
+            ) : (
+              <span className="text-muted-foreground">No caption.</span>
+            )}
           </p>
         </div>
       </div>
@@ -768,28 +817,55 @@ function PostView({
 // Review panel: score, flags / sentiment / comments / script, and the decision
 // ---------------------------------------------------------------------------
 
-type PanelTab = "flags" | "sentiment" | "comments" | "script";
+/** How the sentiment analysis read, in a word, for the glance tile. */
+const SENTIMENT_TILE: Record<string, { label: string; tone: GlanceTile["tone"] }> = {
+  NO_CONCERNS: { label: "No concerns", tone: "ok" },
+  REVIEW_SUGGESTED: { label: "Review suggested", tone: "warn" },
+  SIGNIFICANT_CONCERNS: { label: "Concerns", tone: "bad" },
+  INSUFFICIENT_INFORMATION: { label: "Not enough to judge", tone: "muted" },
+};
+
+type PanelTab = "comments" | "compliance" | "sentiment" | "mood" | "script";
 
 function ReviewPanel({
   s,
   flags,
   dismissed,
+  reviews,
   canReview,
   now,
   hasVideo,
   seek,
+  tab,
+  setTab,
+  seen,
+  picked,
+  setPicked,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
   dismissed: Set<string>;
+  /** Who dismissed each dismissed flag on this version, and why. */
+  reviews: Map<string, FlagReview>;
   canReview: boolean;
   now: number;
   hasVideo: boolean;
   seek: (t: number) => void;
+  tab: PanelTab;
+  setTab: (t: PanelTab) => void;
+  /** The tabs the reviewer has opened on this post. */
+  seen: Set<PanelTab>;
+  picked: string | null;
+  setPicked: (ruleId: string | null) => void;
 }) {
-  const [tab, setTab] = useState<PanelTab>("flags");
   const { comments } = useReviewComments(s.id);
-  const { mood } = usePublicMood(s.id, true);
+  const { analysis: sentiment } = useSentiment(s.id);
+  const { mood, isLoading: moodLoading, dismissTopic } = usePublicMood(s.id, true);
+  const canComment = canReview && s.status === "IN_REVIEW";
+  // A flag picked on the post scrolls into view in the panel.
+  useEffect(() => {
+    if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [picked, tab]);
   const moodDecision = overallPostDecision(mood);
   const check = s.latest_check;
   const score = scoreOf(s);
@@ -799,7 +875,12 @@ function ReviewPanel({
   const toCheck = open.filter((f) => statusOf(f.v) === "NEEDS_REVIEW").length;
   const needSource = open.filter((f) => statusOf(f.v) === "EVIDENCE_REQUIRED").length;
   const cleared = flags.filter((f) => statusOf(f.v) === "CLEARED").length;
-  const grouped = groupFindings(flags, (f) => statusOf(f.v));
+  // What was dismissed is shown first and set apart; the rest are grouped by what they are.
+  const dismissedFlags = flags.filter((f) => dismissed.has(f.v.rule_id));
+  const grouped = groupFindings(
+    flags.filter((f) => !dismissed.has(f.v.rule_id)),
+    (f) => statusOf(f.v)
+  );
   const openCritical = openViolations.filter((f) => f.critical).length;
   const manual = check?.manual_review_rules ?? [];
   const transcript = [...(s.video?.transcript ?? [])].sort((a, b) => a.start_sec - b.start_sec);
@@ -817,115 +898,149 @@ function ReviewPanel({
       ? { text: "Check before publishing", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
       : { text: "Ready to approve", tone: "text-emerald-700 dark:text-emerald-400", ring: "border-emerald-300 dark:border-emerald-500/50" };
 
-  const tabs: { value: PanelTab; label: string; count?: number; alert?: boolean; badge?: { label: string; cls: string } }[] = [
-    { value: "flags", label: "Flags", count: open.length, alert: openCritical > 0 },
+  // The four things a reviewer looks at, each with its one-line answer.
+  const sentimentRead = sentiment?.status === "COMPLETED" && sentiment.result ? SENTIMENT_TILE[sentiment.result.overall_assessment] : null;
+  const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
+  const scoreTone: GlanceTile["tone"] = check?.ai_unavailable || score == null ? "muted" : openCritical ? "bad" : score >= 80 ? "ok" : score >= 60 ? "warn" : "bad";
+  const tiles: GlanceTile[] = [
     {
-      value: "sentiment",
-      label: "Sentiment",
-      count: moodDecision ? undefined : mood?.topics.length || undefined,
-      badge: moodDecision ? REC_BADGE[moodDecision.recommendation] : undefined,
+      key: "compliance",
+      label: "Compliance",
+      value: check?.ai_unavailable ? "No score" : score == null ? "Checking" : `${score}/100`,
+      sub: openCritical
+        ? `${openCritical} critical flag${openCritical === 1 ? "" : "s"} open`
+        : [open.length ? `${open.length} open` : "Nothing open", dismissedFlags.length ? `${dismissedFlags.length} dismissed` : ""].filter(Boolean).join(" · "),
+      tone: scoreTone,
+      seen: seen.has("compliance"),
     },
-    { value: "comments", label: "Comments", count: comments.length },
-    ...(hasVideo ? [{ value: "script" as const, label: "Script", count: transcript.length }] : []),
+    {
+      key: "sentiment",
+      label: "Sentiment",
+      value: sentimentRead?.label ?? (sentimentBusy ? "Running" : "Not run"),
+      sub: sentimentRead ? "Run by the creator" : sentimentBusy ? "Will appear here" : "The creator hasn't run it",
+      tone: sentimentRead?.tone ?? "muted",
+      seen: seen.has("sentiment"),
+    },
+    {
+      key: "mood",
+      label: "Public mood",
+      value: moodDecision ? moodDecision.recommendation : moodLoading ? "Loading" : "No data",
+      sub: moodDecision ? moodDecision.reason : mood?.topics.length ? `${mood.topics.length} topic${mood.topics.length === 1 ? "" : "s"}` : "Nothing matched",
+      tone: moodDecision ? (moodDecision.recommendation === "POST" ? "ok" : moodDecision.recommendation === "WAIT" ? "warn" : "bad") : "muted",
+      seen: seen.has("mood"),
+    },
+    {
+      key: "comments",
+      label: "Comments",
+      value: comments.length ? String(comments.length) : "None",
+      sub: comments.length ? "To send with your decision" : "Add one only if it needs changes",
+      tone: "muted",
+      seen: seen.has("comments"),
+    },
   ];
+  const toLookAt = tiles.filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Score */}
-      <div className="flex items-center gap-4 border-b border-border/70 px-5 py-4">
-        <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
-          <span className="text-center leading-none">
-            <span className="block text-xl font-bold tabular-nums text-foreground">{score ?? "–"}</span>
-            <span className="text-[10px] text-muted-foreground">/100</span>
-          </span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
-          {check?.ai_unavailable ? (
-            <p className="text-sm text-muted-foreground">{AI_UNAVAILABLE_MESSAGE}</p>
-          ) : score == null && s.analysis_progress ? (
-            // Still reading the post: what's left and how long, instead of a flag count that isn't final yet.
-            <AnalysisProgressPanel progress={s.analysis_progress} className="mt-1" />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {openViolations.length} open flag{openViolations.length === 1 ? "" : "s"}
-              {openCritical > 0 && ` · ${openCritical} critical`}
-              {toCheck > 0 && ` · ${toCheck} to check`}
-              {needSource > 0 && ` · ${needSource} need${needSource === 1 ? "s" : ""} a source`}
-              {flags.length - open.length - cleared > 0 && ` · ${flags.length - open.length - cleared} dismissed`}
-              {cleared > 0 && ` · ${cleared} cleared by context`}
-            </p>
-          )}
-          {check?.rules_checked != null && (
-            <p className="text-xs text-muted-foreground">
-              {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
-            </p>
-          )}
-          <SourceChecks checks={check?.source_checks} />
-        </div>
-      </div>
-
-      {/* Live Market & News Sentiment Banner (always visible so reviewers see sentiment immediately) */}
-      <button
-        type="button"
-        onClick={() => setTab("sentiment")}
-        className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-2 text-left text-xs transition-colors hover:bg-muted/50"
-      >
-        <span className="flex min-w-0 items-center gap-1.5">
-          <Globe2 className="h-3.5 w-3.5 shrink-0 text-sky-600" />
-          <span className="font-semibold text-foreground">Market & news sentiment:</span>
-          <span className="truncate text-muted-foreground">
-            {moodDecision
-              ? moodDecision.reason
-              : mood?.topics.length
-              ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"}`
-              : "View live trends & VADER sentiment"}
-          </span>
-        </span>
-        {moodDecision ? (
-          <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
-            {moodDecision.recommendation}
-          </span>
-        ) : (
-          <span className="shrink-0 text-[11px] font-medium text-sky-700 dark:text-sky-300">Open →</span>
-        )}
-      </button>
-
-      {/* Tabs */}
-      <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
-        {tabs.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.value}
-            onClick={() => setTab(t.value)}
-            className={`-mb-px inline-flex h-9 items-center gap-1.5 border-b-2 px-2.5 text-[13px] font-medium transition-colors ${
-              tab === t.value ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-            {t.badge && (
-              <span className={`rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${t.badge.cls}`}>
-                {t.badge.label}
-              </span>
-            )}
-            {t.count != null && (
-              <span
-                className={`min-w-[18px] rounded-full px-1.5 text-[11px] font-semibold ${
-                  t.alert ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-muted text-foreground/70"
-                }`}
-              >
-                {t.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <ReviewGlance
+        tiles={tiles}
+        active={tab}
+        onPick={(key) => setTab(key as PanelTab)}
+        extra={hasVideo ? [{ key: "script", label: `Transcript${transcript.length ? ` (${transcript.length})` : ""}` }] : undefined}
+      />
 
       {/* Tab content */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
-        {tab === "flags" &&
+        {tab === "compliance" && (
+        <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-4">
+          <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
+            <span className="text-center leading-none">
+              <span className="block text-xl font-bold tabular-nums text-foreground">{score ?? "–"}</span>
+              <span className="text-[10px] text-muted-foreground">/100</span>
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
+            {check?.ai_unavailable ? (
+              <p className="text-sm text-muted-foreground">{AI_UNAVAILABLE_MESSAGE}</p>
+            ) : score == null && s.analysis_progress ? (
+              // Still reading the post: what's left and how long, instead of a flag count that isn't final yet.
+              <AnalysisProgressPanel progress={s.analysis_progress} className="mt-1" />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {openViolations.length} open flag{openViolations.length === 1 ? "" : "s"}
+                {openCritical > 0 && ` · ${openCritical} critical`}
+                {toCheck > 0 && ` · ${toCheck} to check`}
+                {needSource > 0 && ` · ${needSource} need${needSource === 1 ? "s" : ""} a source`}
+                {flags.length - open.length - cleared > 0 && ` · ${flags.length - open.length - cleared} dismissed`}
+                {cleared > 0 && ` · ${cleared} cleared by context`}
+              </p>
+            )}
+            {check?.rules_checked != null && (
+              <p className="text-xs text-muted-foreground">
+                {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
+              </p>
+            )}
+            <SourceChecks checks={check?.source_checks} />
+          </div>
+        </div>
+        )}
+        {tab === "compliance" && dismissedFlags.length > 0 && (
+          <section className="flex flex-col gap-2.5">
+            <p className="text-[13px] font-bold text-violet-800 dark:text-violet-300">Dismissed ({dismissedFlags.length})</p>
+            {dismissedFlags.map((f) => {
+              const r = reviews.get(f.v.rule_id);
+              return (
+                <article
+                  key={f.v.rule_id}
+                  id={`flag-${f.v.rule_id}`}
+                  onClick={() => {
+                    setPicked(f.v.rule_id);
+                    if (f.at != null) seek(f.at);
+                  }}
+                  className={`flex cursor-pointer flex-col gap-2 rounded-xl border-2 border-dashed border-violet-500 bg-violet-50/60 p-3.5 dark:bg-violet-500/10 ${
+                    picked === f.v.rule_id ? "ring-2 ring-violet-500/50" : ""
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-violet-800 dark:bg-violet-500/20 dark:text-violet-200">
+                      Dismissed{r?.decided_by_name ? ` by ${r.decided_by_name}` : ""}
+                    </span>
+                    {f.at != null && (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-background px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        {formatSec(f.at)}
+                      </span>
+                    )}
+                    <RuleNumberBadge v={f.v} />
+                    <span className="ml-auto text-xs text-muted-foreground">{f.where}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">{f.v.title}</p>
+                  {f.v.flagged_terms.length > 0 && (
+                    <p className="rounded-lg bg-background/80 px-2.5 py-1.5 text-[13px] text-foreground">
+                      {f.v.flagged_terms.map((t) => `“${t}”`).join(", ")}
+                    </p>
+                  )}
+                  {r && (
+                    <p className="rounded-lg border border-violet-200 bg-background px-2.5 py-2 text-[13px] text-foreground/90 dark:border-violet-500/30">
+                      <span className="font-semibold text-violet-800 dark:text-violet-300">Reason:</span> {r.reason_label}
+                      {r.note ? ` · ${r.note}` : ""}
+                    </p>
+                  )}
+                  <FlagReviewControl
+                    submissionId={s.id}
+                    currentVersion={s.current_version}
+                    ruleId={f.v.rule_id}
+                    ruleNumber={f.v.rule_number}
+                    canDismiss={canReview}
+                    evidence={statusOf(f.v) === "EVIDENCE_REQUIRED"}
+                  />
+                </article>
+              );
+            })}
+          </section>
+        )}
+        {tab === "compliance" &&
           (flags.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
               <CheckCircle2 className="mx-auto w-7 h-7 text-emerald-500" />
@@ -937,12 +1052,15 @@ function ReviewPanel({
               {FINDING_ORDER.map((status) => (
                 <FindingGroup key={status} status={status} count={grouped[status].length}>
               {grouped[status].map((f) => {
-                const isDismissed = dismissed.has(f.v.rule_id);
-                const selected = f.at != null && Math.abs(now - f.at) < 0.75;
-                const jump = () => f.at != null && seek(f.at);
+                const selected = picked === f.v.rule_id || (f.at != null && Math.abs(now - f.at) < 0.75);
+                const jump = () => {
+                  setPicked(f.v.rule_id);
+                  if (f.at != null) seek(f.at);
+                };
                 return (
                   <article
                     key={f.v.rule_id}
+                    id={`flag-${f.v.rule_id}`}
                     // The whole card jumps the video to where it was found (as on the previous screener).
                     onClick={jump}
                     onKeyDown={(e) => {
@@ -951,17 +1069,17 @@ function ReviewPanel({
                         jump();
                       }
                     }}
-                    tabIndex={f.at != null ? 0 : undefined}
-                    aria-label={f.at != null ? `${f.v.rule_number}: jump to ${formatSec(f.at)}` : undefined}
+                    tabIndex={0}
+                    aria-label={f.at != null ? `${f.v.rule_number}: jump to ${formatSec(f.at)}` : f.v.rule_number}
                     className={`flex flex-col gap-2 rounded-xl border p-3.5 transition-colors ${
-                      f.at != null ? "cursor-pointer" : ""
+                      "cursor-pointer"
                     } ${
                       selected
                         ? "ring-2 ring-blue-500/50"
                         : ""
                     } ${
                       f.critical ? "border-red-500/30 bg-red-500/5 hover:border-red-500/60" : FINDING_META[statusOf(f.v)].card
-                    } ${isDismissed ? "opacity-60" : ""}`}
+                    }`}
                   >
                     <div className="flex flex-wrap items-center gap-1.5">
                       <StatusPill status={statusOf(f.v)} critical={f.critical} />
@@ -1009,7 +1127,7 @@ function ReviewPanel({
               ))}
             </>
           ))}
-        {tab === "flags" && manual.length > 0 && (
+        {tab === "compliance" && manual.length > 0 && (
           <div className="rounded-xl border border-border/70 p-3.5">
             <p className="text-sm font-semibold text-foreground">Check by hand</p>
             <p className="mb-2 text-xs text-muted-foreground">The text check can't test these. You confirm them when you approve.</p>
@@ -1023,8 +1141,28 @@ function ReviewPanel({
           </div>
         )}
 
-        {tab === "sentiment" && <SentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} />}
+        {tab === "sentiment" && <SentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
 
+        {tab === "mood" && (
+          <TopicTrend
+            submissionId={s.id}
+            mood={mood}
+            isLoading={moodLoading}
+            canEdit={canReview}
+            busy={dismissTopic.isPending}
+            onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
+            onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+          />
+        )}
+
+        {tab === "comments" && canComment && (
+          <div className="rounded-xl border-2 border-blue-600 p-3">
+            <CommentComposer s={s} now={now} hasVideo={hasVideo} />
+          </div>
+        )}
+        {tab === "comments" && !canComment && s.status !== "IN_REVIEW" && (
+          <p className="text-xs text-muted-foreground">This was decided, so its notes are read-only. To raise something new, reopen it for changes.</p>
+        )}
         {tab === "comments" && (
           <ReviewCommentsPanel
             submissionId={s.id}
@@ -1033,7 +1171,7 @@ function ReviewPanel({
             onSeek={seek}
             showHeader={false}
             showComposer={false}
-            emptyText="No comments yet. Write one under the video; they go to the creator with your decision."
+            emptyText="No comments yet. You don't need one to approve. To ask for a change, click the part of the post it is about, or write it above."
           />
         )}
 
@@ -1066,6 +1204,11 @@ function ReviewPanel({
 
       {/* Decision: always in view */}
       <div className="border-t border-border/70 bg-muted/30 p-4">
+        {s.status === "IN_REVIEW" && canReview && (
+          <p className={`mb-3 text-xs ${toLookAt.length ? "text-muted-foreground" : "font-medium text-emerald-700 dark:text-emerald-300"}`} aria-live="polite">
+            {toLookAt.length ? `Still to look at: ${toLookAt.join(", ")}` : "You've looked at everything. Ready to decide."}
+          </p>
+        )}
         {s.status === "IN_REVIEW" ? (
           canReview ? (
             <ReviewDecisionPanel
@@ -1123,7 +1266,7 @@ function useFlags(s: ReviewQueueItem) {
   const flags = useMemo(() => flagsOf(s), [s]);
   const { forCurrent } = useFlagReviews(s.id, s.current_version);
   const dismissed = useMemo(() => new Set(forCurrent.keys()), [forCurrent]);
-  return { flags, dismissed };
+  return { flags, dismissed, reviews: forCurrent };
 }
 
 /** The selected post: media in the middle, the review panel on the right. Remounted per post. */
@@ -1138,7 +1281,14 @@ function Workspace({
   canReview: boolean;
   onUploadScript?: () => void;
 }) {
-  const { flags, dismissed } = useFlags(s);
+  const { flags, dismissed, reviews } = useFlags(s);
+  // Which panel tab is open, and which flag was picked on the post. Clicking the post drives both.
+  const [tab, setTab] = useState<PanelTab>("compliance");
+  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>(["compliance"]));
+  useEffect(() => {
+    setSeen((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
+  }, [tab]);
+  const [picked, setPicked] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -1163,7 +1313,12 @@ function Workspace({
           now={now}
           duration={duration || Math.max(0, ...(s.latest_check?.segment_flags ?? []).map((f) => f.end_sec))}
           playing={playing}
-          canComment={canReview && s.status === "IN_REVIEW"}
+          picked={picked}
+          onFlag={(ruleId) => {
+            setPicked(ruleId);
+            setTab("compliance");
+          }}
+          onComment={() => setTab("comments")}
           onTime={setNow}
           onDuration={setDuration}
           onPlaying={setPlaying}
@@ -1181,7 +1336,21 @@ function Workspace({
         className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
         defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
-        <ReviewPanel s={s} flags={flags} dismissed={dismissed} canReview={canReview} now={now} hasVideo={Boolean(s.video)} seek={seek} />
+        <ReviewPanel
+          s={s}
+          flags={flags}
+          dismissed={dismissed}
+          reviews={reviews}
+          canReview={canReview}
+          now={now}
+          hasVideo={Boolean(s.video)}
+          seek={seek}
+          tab={tab}
+          setTab={setTab}
+          seen={seen}
+          picked={picked}
+          setPicked={setPicked}
+        />
       </ResizablePanel>
     </>
   );
@@ -1387,17 +1556,6 @@ export default function ContentScreenerPage() {
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCollapsed(false)} aria-label="Expand the queue" title="Expand the queue">
             <PanelLeftOpen className="w-4 h-4" />
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 text-blue-600 border-blue-200 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-500/30 dark:bg-blue-500/10"
-            onClick={() => setScriptDialogOpen(true)}
-            aria-label="Upload script"
-            title="Upload script"
-          >
-            <FileText className="w-4 h-4" />
-          </Button>
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${listCount} items`}>
             {listCount}
           </span>
@@ -1469,71 +1627,6 @@ export default function ContentScreenerPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-8 gap-1.5 px-2 text-xs font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
-              onClick={() => setScriptDialogOpen(true)}
-              title="Upload a video script to check and review"
-            >
-              <FileText className="w-3.5 h-3.5 text-blue-600" /> Upload script
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white">
-                  <Plus className="w-3.5 h-3.5" /> New post <ChevronDown className="w-3 h-3 ml-0.5 opacity-80" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=VIDEO" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <Video className="w-3.5 h-3.5 text-purple-600" />
-                      <span>Video</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=SOCIAL_POST" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <MessageSquareText className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Social Post</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=CAROUSEL" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <GalleryHorizontalEnd className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Carousel</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=IMAGE" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Image</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=BLOG" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <FileText className="w-3.5 h-3.5 text-rose-600" />
-                      <span>Blog / Article</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/submissions/new?type=AD" className="flex items-center gap-2 cursor-pointer text-xs font-medium">
-                      <Megaphone className="w-3.5 h-3.5 text-orange-600" />
-                      <span>Paid Ad</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setScriptDialogOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-blue-700 dark:text-blue-400"
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Upload the script</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           <div role="tablist" aria-label="Queue" className="flex rounded-lg bg-muted p-0.5">
             {TABS.map((t) => (
               <button
