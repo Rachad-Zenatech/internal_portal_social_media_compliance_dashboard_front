@@ -179,6 +179,8 @@ export interface Submission {
   due_kind?: DueKind | null;
   caption_html?: string | null;
   caption_text?: string | null;
+  /** Platforms with their own caption (plain text); the others use caption_text. */
+  platform_captions?: Record<string, string>;
   rule_sets: string[];
   reviewer_route: string[];
   /** The reviewers it's sent to; empty means every reviewer on its brand. */
@@ -325,6 +327,7 @@ export interface SubmissionUpdate {
   approval_needed_by?: string;
   caption_html?: string;
   caption_text?: string;
+  platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];
   reviewer_ids?: string[];

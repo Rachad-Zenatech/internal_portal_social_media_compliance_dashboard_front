@@ -83,6 +83,7 @@ import SentimentPanel from "@/components/submissions/SentimentPanel";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
+import PlatformCaptions from "@/components/submissions/PlatformCaptions";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import RevisionGuide from "@/components/submissions/RevisionGuide";
@@ -473,6 +474,8 @@ export default function NewSubmissionPage() {
   const [approvalBy, setApprovalBy] = useState<Date | undefined>(undefined);
   const [approvalTime, setApprovalTime] = useState(DEFAULT_APPROVAL_TIME);
   const [caption, setCaption] = useState("");
+  // Platforms with their own caption; the rest post the main one.
+  const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
@@ -663,6 +666,7 @@ export default function NewSubmissionPage() {
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
+        setPlatformCaptions(s.platform_captions ?? {});
         setSavedAt(new Date(s.updated_at));
         setSaveState("saved");
       })
@@ -707,6 +711,8 @@ export default function NewSubmissionPage() {
       ...(approvalBy ? { approval_needed_by: approvalBy.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
       caption_text: editorRef.current?.innerText.trim() || "",
+      // Only for platforms it still goes to; a platform that was taken off loses its caption.
+      platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
       rule_sets: ruleSets,
       reviewer_route: reviewers,
       reviewer_ids: pickedReviewers,
@@ -1320,10 +1326,14 @@ export default function NewSubmissionPage() {
     toast.success("Caption added. Edit it as you like; it's checked with the rest of the post.");
   };
 
+  // The main caption only has to fit the platforms that post it (not those with their own).
   const charLimit = useMemo(() => {
-    const limits = platforms.map((p) => CHAR_LIMITS[p]).filter((n): n is number => typeof n === "number");
+    const limits = platforms
+      .filter((p) => !(p in platformCaptions))
+      .map((p) => CHAR_LIMITS[p])
+      .filter((n): n is number => typeof n === "number");
     return limits.length ? Math.min(...limits) : 2200;
-  }, [platforms]);
+  }, [platforms, platformCaptions]);
 
   const hashtagLibrary = useHashtagLibrary({ brands, audiences, region, platforms, ruleSets });
 
@@ -2106,6 +2116,19 @@ export default function NewSubmissionPage() {
               audiences={audiences}
               onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
             />
+            {platforms.length > 1 && (
+              <PlatformCaptions
+                platforms={platforms}
+                captions={platformCaptions}
+                mainCaption={caption}
+                limitFor={(p) => CHAR_LIMITS[p]}
+                readOnly={readOnly}
+                onChange={(next) => {
+                  setPlatformCaptions(next);
+                  markEdited();
+                }}
+              />
+            )}
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">
                 Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
