@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
+import { LOCATE_SKIP_ATTR, locateOnPage } from "@/lib/locateOnPage";
 import type { ComplianceViolation, FindingStatus } from "@/services/complianceService";
 
 /** What a finding amounts to; checks saved before statuses existed only had violations. */
@@ -70,7 +71,10 @@ export function StatusPill({ status, critical = false }: { status: FindingStatus
   );
 }
 
-/** How the AI read a finding in context: what it's about, why, and how sure it was. */
+/**
+ * How the AI read a finding in context: what it's about, why, and how sure it was. Clicking it goes to the wording:
+ * in the script viewer when the screen has one (onLocate), otherwise wherever it's shown on the page.
+ */
 export function ContextNote({
   v,
   onLocate,
@@ -78,116 +82,138 @@ export function ContextNote({
   v: Pick<ComplianceViolation, "evaluation">;
   onLocate?: (text: string) => void;
 }) {
+  const [notShown, setNotShown] = useState(false);
   const e = v.evaluation;
   if (!e) return null;
   if (e.source === "UNAVAILABLE") {
     return <p className="text-xs text-muted-foreground">{e.reasoning}</p>;
   }
+  const term = e.matched_text || e.subject || "";
+  const canGo = Boolean(onLocate || term);
   return (
-    <div
-      className={`flex flex-col gap-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2 text-[13px] text-foreground/85 ${
-        onLocate ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/40 transition-colors" : ""
-      }`}
-      onClick={
-        onLocate
-          ? (event) => {
-              event.stopPropagation();
-              onLocate(e.matched_text || e.subject || "");
-            }
-          : undefined
-      }
-      title={onLocate ? "Click to jump to this section in the script" : undefined}
-    >
-      <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <Sparkles className="w-3 h-3 text-sky-500" /> Read in context
-        {e.subject && <span className="font-medium normal-case tracking-normal">· about {e.subject}</span>}
-        <span className="ml-auto font-medium normal-case tracking-normal" title={`Decided by ${e.model ?? "a model"}. Confidence is the model's own estimate.`}>
-          {Math.round(e.confidence * 100)}% sure
-        </span>
-      </p>
-      <p>{e.reasoning}</p>
-      {e.matched_text && (
-        <p className="text-xs text-muted-foreground">
-          Based on: <span className={onLocate ? "underline decoration-sky-400/50 underline-offset-2 text-foreground font-medium" : ""}>“{e.matched_text}”</span>
-        </p>
-      )}
-      {e.rule_decision !== e.decision && (
-        <p className="text-xs text-muted-foreground">The wording alone would have been a {FINDING_META[e.rule_decision].label.toLowerCase()}.</p>
-      )}
-    </div>
-  );
+        <div
+          {...{ [LOCATE_SKIP_ATTR]: "" }}
+          role={canGo ? "button" : undefined}
+          tabIndex={canGo ? 0 : undefined}
+          className={`flex flex-col gap-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2 text-[13px] text-foreground/85 ${canGo ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500" : ""
+            }`}
+          onClick={
+            canGo
+              ? (event) => {
+                event.stopPropagation();
+                if (onLocate) {
+                  onLocate(term);
+                  return;
+                }
+                // Skip the finding card this note sits in: its own copy of the wording isn't where it is.
+                const found = locateOnPage(term, event.currentTarget.parentElement);
+                setNotShown(!found);
+              }
+              : undefined
+          }
+          onKeyDown={
+            canGo
+              ? (event) => {
+                if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  event.currentTarget.click();
+                }
+              }
+              : undefined
+          }
+          title={canGo ? (onLocate ? "Click to jump to this section in the script" : "Click to jump to this wording on the page") : undefined}
+        >
+          <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <Sparkles className="w-3 h-3 text-sky-500" /> Read in context
+            {e.subject && <span className="font-medium normal-case tracking-normal">· about {e.subject}</span>}
+            <span className="ml-auto font-medium normal-case tracking-normal" title={`Decided by ${e.model ?? "a model"}. Confidence is the model's own estimate.`}>
+              {Math.round(e.confidence * 100)}% sure
+            </span>
+          </p>
+          <p>{e.reasoning}</p>
+          {e.matched_text && (
+            <p className="text-xs text-muted-foreground">
+              Based on: <span className={canGo ? "underline decoration-sky-400/50 underline-offset-2 text-foreground font-medium" : ""}>“{e.matched_text}”</span>
+            </p>
+          )}
+          {notShown && <p className="text-xs text-amber-700 dark:text-amber-400">This wording isn't shown on this page right now.</p>}
+          {e.rule_decision !== e.decision && (
+            <p className="text-xs text-muted-foreground">The wording alone would have been a {FINDING_META[e.rule_decision].label.toLowerCase()}.</p>
+          )}
+        </div>
+        );
 }
 
-/** A heading with a count for a group of findings; the cleared group folds away. */
-export function FindingGroup({
-  status,
-  count,
-  children,
+        /** A heading with a count for a group of findings; the cleared group folds away. */
+        export function FindingGroup({
+          status,
+          count,
+          children,
 }: {
-  status: FindingStatus;
-  count: number;
-  children: ReactNode;
+          status: FindingStatus;
+        count: number;
+        children: ReactNode;
 }) {
   const meta = FINDING_META[status];
-  const foldable = status === "CLEARED";
-  const [open, setOpen] = useState(!foldable);
-  if (!count) return null;
-  return (
-    <section className="flex flex-col gap-2.5" aria-label={meta.group}>
-      <button
-        type="button"
-        disabled={!foldable}
-        onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1.5 text-left ${foldable ? "cursor-pointer" : "cursor-default"}`}
-        aria-expanded={open}
-      >
-        {foldable && (open ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />)}
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{meta.group}</span>
-        <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold text-foreground/70">{count}</span>
-        <span className="hidden text-[11px] text-muted-foreground sm:inline">{foldable || status !== "VIOLATION" ? `· ${meta.hint}` : ""}</span>
-      </button>
-      {open && children}
-    </section>
-  );
+        const foldable = status === "CLEARED";
+        const [open, setOpen] = useState(!foldable);
+        if (!count) return null;
+        return (
+        <section className="flex flex-col gap-2.5" aria-label={meta.group}>
+          <button
+            type="button"
+            disabled={!foldable}
+            onClick={() => setOpen((o) => !o)}
+            className={`flex items-center gap-1.5 text-left ${foldable ? "cursor-pointer" : "cursor-default"}`}
+            aria-expanded={open}
+          >
+            {foldable && (open ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />)}
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{meta.group}</span>
+            <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold text-foreground/70">{count}</span>
+            <span className="hidden text-[11px] text-muted-foreground sm:inline">{foldable || status !== "VIOLATION" ? `· ${meta.hint}` : ""}</span>
+          </button>
+          {open && children}
+        </section>
+        );
 }
 
-/**
- * The findings that aren't violations, for screens that list violations their own way: what still needs a look or a
- * source, and the triggers the context cleared. Nothing here costs points or stops approval.
- */
-export function OtherFindings({ violations, className = "" }: { violations: ComplianceViolation[]; className?: string }) {
+        /**
+         * The findings that aren't violations, for screens that list violations their own way: what still needs a look or a
+         * source, and the triggers the context cleared. Nothing here costs points or stops approval.
+         */
+        export function OtherFindings({violations, className = ""}: {violations: ComplianceViolation[]; className?: string }) {
   const warnings = violations.filter(isWarning);
   const cleared = violations.filter((v) => statusOf(v) === "CLEARED");
-  if (!warnings.length && !cleared.length) return null;
+        if (!warnings.length && !cleared.length) return null;
   const row = (v: ComplianceViolation) => (
-    <li key={v.rule_id} className="flex flex-col gap-1.5 text-xs">
-      <p className="flex flex-wrap items-center gap-1.5">
-        <StatusPill status={statusOf(v)} />
-        <span className="font-semibold text-foreground">{v.rule_number}</span>
-        <span className="text-muted-foreground">· {v.title}</span>
-      </p>
-      {v.flagged_terms.length > 0 && <p className="text-muted-foreground">{v.flagged_terms.map((t) => `“${t}”`).join(", ")}</p>}
-      <ContextNote v={v} />
-      {isWarning(v) && v.remediation_guidance && (
-        <p className="text-foreground/80">
-          <span className="font-semibold">What to check:</span> {v.remediation_guidance}
-        </p>
-      )}
-    </li>
-  );
-  return (
-    <div className={`space-y-3 border-t border-border/60 pt-3 ${className}`}>
-      {warnings.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-foreground">
-            Check before publishing <span className="font-normal text-muted-foreground">· a claim that needs a source costs a few points until its evidence is confirmed</span>
+        <li key={v.rule_id} className="flex flex-col gap-1.5 text-xs">
+          <p className="flex flex-wrap items-center gap-1.5">
+            <StatusPill status={statusOf(v)} />
+            <span className="font-semibold text-foreground">{v.rule_number}</span>
+            <span className="text-muted-foreground">· {v.title}</span>
           </p>
-          <ul className="space-y-3">{warnings.map(row)}</ul>
+          {v.flagged_terms.length > 0 && <p className="text-muted-foreground">{v.flagged_terms.map((t) => `“${t}”`).join(", ")}</p>}
+          <ContextNote v={v} />
+          {isWarning(v) && v.remediation_guidance && (
+            <p className="text-foreground/80">
+              <span className="font-semibold">What to check:</span> {v.remediation_guidance}
+            </p>
+          )}
+        </li>
+        );
+        return (
+        <div className={`space-y-3 border-t border-border/60 pt-3 ${className}`}>
+          {warnings.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-foreground">
+                Check before publishing <span className="font-normal text-muted-foreground">· a claim that needs a source costs a few points until its evidence is confirmed</span>
+              </p>
+              <ul className="space-y-3">{warnings.map(row)}</ul>
+            </div>
+          )}
+          <FindingGroup status="CLEARED" count={cleared.length}>
+            <ul className="space-y-3">{cleared.map(row)}</ul>
+          </FindingGroup>
         </div>
-      )}
-      <FindingGroup status="CLEARED" count={cleared.length}>
-        <ul className="space-y-3">{cleared.map(row)}</ul>
-      </FindingGroup>
-    </div>
-  );
+        );
 }
