@@ -10,11 +10,11 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - src/components/AppShell/Breadcrumbs.tsx (158 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
-- src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
+- src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
 - src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
-- src/components/AppShell/Navigation.tsx (151 lines) - navigation (components  app shell)
+- src/components/AppShell/Navigation.tsx (154 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
-- src/components/AppShell/Sidebar.tsx (260 lines) - The page an item stands for, as the address bar shows it.
+- src/components/AppShell/Sidebar.tsx (261 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - src/components/AppShell/TopBar.tsx (598 lines) - top bar (components  app shell)
 - src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
@@ -26,8 +26,8 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - src/components/dashboard/dashboardParts.tsx (416 lines) - Pieces shared by the reviewer and creator dashboards.
-- src/components/script/BatchDetailsForm.tsx (174 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- src/components/script/BatchItemCard.tsx (308 lines) - batch item card (components script)
+- src/components/script/BatchDetailsForm.tsx (177 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- src/components/script/BatchItemCard.tsx (327 lines) - batch item card (components script)
 - src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
 - src/components/script/HighlightableText.tsx (504 lines) - Scroll to the n-th place any of these phrases appears and flash it.
@@ -36,12 +36,12 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/ScriptCompliance.tsx (71 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
 - src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptInsights.tsx (104 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
-- src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
-- src/components/script/ScriptReviewWorkspace.tsx (926 lines) - script review workspace (components script)
+- src/components/script/ScriptInsights.tsx (110 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
+- src/components/script/ScriptPrecheck.tsx (119 lines) - script precheck (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (975 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
-- src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
+- src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
 - src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
 - src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
@@ -71,9 +71,9 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/RevisionWorkspace.tsx (186 lines) - revision workspace (components submissions)
 - src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
-- src/components/submissions/SentimentPanel.tsx (1308 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1314 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
-- src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
+- src/components/submissions/TopicTrend.tsx (438 lines) - topic trend (components submissions)
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
@@ -109,14 +109,14 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
-- src/hooks/usePublicMood.ts (96 lines) - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
-- src/hooks/useReview.ts (151 lines) - Everything that shows a submission's status or review state.
-- src/hooks/useScript.ts (179 lines) - A post's script stage, refreshed while its file is still being read.
+- src/hooks/usePublicMood.ts (129 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
+- src/hooks/useReview.ts (143 lines) - Everything that shows a submission's status or review state.
+- src/hooks/useScript.ts (227 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.
-- src/hooks/useSentiment.ts (83 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+- src/hooks/useSentiment.ts (108 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
-- src/lib/AuthContext.tsx (332 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
-- src/lib/GlobalProgressContext.tsx (140 lines) - global progress context (lib)
+- src/lib/AuthContext.tsx (346 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
+- src/lib/GlobalProgressContext.tsx (165 lines) - When it started, for "running for 0:42".
 - src/lib/contentCalendar.ts (429 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
@@ -134,7 +134,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Auth/Login.tsx (234 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1709 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1717 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (453 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
@@ -153,15 +153,15 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
-- src/pages/Scripts/ScriptBatchPage.tsx (387 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
+- src/pages/Scripts/ScriptBatchPage.tsx (388 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptReviewPage.tsx (257 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2551 lines) - new submission page (pages  submissions)
-- src/pages/Submissions/ScriptChangesPage.tsx (562 lines) - script changes page (pages  submissions)
-- src/pages/Submissions/SubmissionDetailPage.tsx (668 lines) - submission detail page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2595 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
+- src/pages/Submissions/SubmissionDetailPage.tsx (625 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1676 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1688 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
@@ -172,8 +172,8 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
-- src/services/scriptService.ts (48 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (292 lines) - submission service (services)
+- src/services/scriptService.ts (58 lines) - The script stage of video posts (see the backend's script_review_service).
+- src/services/submissionService.ts (291 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (76 lines) - Approved content placed on the publishing calendar.
@@ -182,7 +182,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/types/context.ts (98 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - src/types/publicMood.ts (151 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
-- src/types/script.ts (106 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
+- src/types/script.ts (117 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
-- src/types/submission.ts (658 lines) - AD: paid social ad.
+- src/types/submission.ts (660 lines) - AD: paid social ad.
