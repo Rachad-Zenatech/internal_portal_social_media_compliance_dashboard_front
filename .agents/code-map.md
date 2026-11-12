@@ -452,7 +452,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - `ScoreBreakdown` (export function) - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...
 
-## src/components/submissions/SentimentPanel.tsx (1308 lines) - sentiment panel (components submissions)
+## src/components/submissions/SentimentPanel.tsx (1328 lines) - sentiment panel (components submissions)
 - `titleCase` (const)
 - `timestamp` (const)
 - `Metric` (function)
@@ -1351,7 +1351,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2692 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2717 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1588,7 +1588,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptService.ts (46 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (292 lines) - submission service (services)
+## src/services/submissionService.ts (296 lines) - submission service (services)
 - `submissionService` (export const)
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -1684,13 +1684,16 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ItemResult` (export interface)
 - `BatchReviewResult` (export interface)
 
-## src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
+## src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type)
 - `SentimentAssessment` (export type)
 - `SentimentStatus` (export type) - SCHEDULED: stopped by Gemini's daily limit, set to run again once it resets (retry_at).
 - `FindingVerdict` (export type)
 - `SentimentFinding` (export interface)
 - `SentimentPrecedent` (export interface) - A past review of similar content, given to the analysis as precedent for how this team judges such posts.
+- `EntryRef` (export interface) - The Messaging Context entry a judgement came from.
+- `VoiceLine` (export interface)
+- `ContextUse` (export interface) - A Messaging Context entry and what the analysis did with it (the transparency table).
 - `SentimentResult` (export interface)
 - `SentimentAnalysis` (export interface)
 - `SentimentComparison` (export interface)
@@ -1699,7 +1702,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AiFeatureUsage` (export interface) - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type)
 
-## src/types/submission.ts (658 lines) - AD: paid social ad.
+## src/types/submission.ts (662 lines) - AD: paid social ad.
 - `ContentType` (export type) - AD: paid social ad.
 - `SubmissionFileKind` (export type)
 - `SubmissionStatus` (export type)

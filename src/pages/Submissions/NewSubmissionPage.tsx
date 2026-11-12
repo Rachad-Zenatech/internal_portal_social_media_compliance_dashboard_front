@@ -80,6 +80,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CheckModelsUsed, CheckProgress, SavedCheckModels } from "@/components/submissions/CheckProgress";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
+import PostPreview from "@/components/submissions/PostPreview";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
@@ -713,6 +714,8 @@ export default function NewSubmissionPage() {
       caption_text: editorRef.current?.innerText.trim() || "",
       // Only for platforms it still goes to; a platform that was taken off loses its caption.
       platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
+      // The analysis picks its Messaging Context on its own (any choice saved by an earlier version is cleared).
+      context_picks: {},
       rule_sets: ruleSets,
       reviewer_route: reviewers,
       reviewer_ids: pickedReviewers,
@@ -2362,6 +2365,28 @@ export default function NewSubmissionPage() {
                   <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
                     <SentimentPanel
                       submissionId={submissionId}
+                      post={
+                        // The post itself, shown with the analysis: its picture and each platform's own caption.
+                        platforms.length > 0 ? (
+                          <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
+                            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Your post</p>
+                            <div className="flex gap-3 overflow-x-auto pb-1">
+                              {platforms.map((p) => (
+                                <div key={p} className="w-[280px] shrink-0">
+                                  <PostPreview
+                                    platform={p}
+                                    account={selectedAccounts.find((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS")) ?? null}
+                                    title={title}
+                                    caption={platformCaptions[p]?.trim() ? platformCaptions[p] : caption}
+                                    media={mainFiles[0] ?? files.find((f) => f.kind === "IMAGE") ?? null}
+                                    whenLabel={publishDate ? format(publishDate, "MMM d") : "Not scheduled"}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : undefined
+                      }
                       showTopicTrends={false}
                       canRun={!readOnly}
                       design

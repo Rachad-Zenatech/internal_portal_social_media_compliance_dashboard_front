@@ -119,6 +119,10 @@ export const submissionService = {
   },
 
   /** Posts already sent for approval with the same content and caption, and how their submission details overlap. */
+  /** The Messaging Context the analysis would pick on its own for this post, by kind (entry ids). */
+  contextSuggestions: (id: string) =>
+    apiClient.get<Record<string, string[]>>(`/api/submissions/${id}/context-suggestions`, quiet),
+
   duplicates: (id: string) => apiClient.get<DuplicateReport>(`/api/submissions/${id}/duplicates`, quiet),
 
   /** confirmRepost: send the same post again for another publish date (the server asks with a 409 REPOST_CONFIRM). */

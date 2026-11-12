@@ -179,6 +179,8 @@ export interface Submission {
   due_kind?: DueKind | null;
   caption_html?: string | null;
   caption_text?: string | null;
+  /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
+  context_picks?: Record<string, string[]>;
   /** Platforms with their own caption (plain text); the others use caption_text. */
   platform_captions?: Record<string, string>;
   rule_sets: string[];
@@ -329,6 +331,8 @@ export interface SubmissionUpdate {
   approval_needed_by?: string;
   caption_html?: string;
   caption_text?: string;
+  /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
+  context_picks?: Record<string, string[]>;
   platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];

@@ -66,7 +66,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/RevisionWorkspace.tsx (186 lines) - revision workspace (components submissions)
 - src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
-- src/components/submissions/SentimentPanel.tsx (1308 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1328 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
 - src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
@@ -150,7 +150,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Scripts/ScriptBatchPage.tsx (286 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptBatchesPage.tsx (120 lines) - script batches page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2692 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2717 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (549 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (668 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
@@ -166,7 +166,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/scriptBatchService.ts (39 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - src/services/scriptService.ts (46 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (292 lines) - submission service (services)
+- src/services/submissionService.ts (296 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (76 lines) - Approved content placed on the publishing calendar.
@@ -177,5 +177,5 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/types/publicMood.ts (151 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/script.ts (81 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (87 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
-- src/types/sentiment.ts (161 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
-- src/types/submission.ts (658 lines) - AD: paid social ad.
+- src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
+- src/types/submission.ts (662 lines) - AD: paid social ad.
