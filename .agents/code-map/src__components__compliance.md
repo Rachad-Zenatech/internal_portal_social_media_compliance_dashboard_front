@@ -20,3 +20,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) L16 - Where the facts come from: the ZenaTech newsroom, read once a day.
+
+## src/components/compliance/PolicyWatchPanel.tsx (214 lines) - policy watch panel (components compliance)
+- `Field` (function) L14
+- `ProposalCard` (function) L38 - One drafted update: what changed, the norm now beside the proposed wording, and approve or reject.
+- `PolicyWatchPanel` (export function) L109 - Super admins only: the platform content-policy norms are re-read from the platforms' policy pages every week, and  when a page changes Ge...

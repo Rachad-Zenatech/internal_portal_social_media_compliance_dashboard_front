@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ export function isSentimentRunning(a?: SentimentAnalysis | null) {
 /** Latest sentiment analysis for a submission, checking back every few seconds while one is running. */
 export function useSentiment(submissionId?: string | null, version?: number) {
   const queryClient = useQueryClient();
-  const { addJob } = useGlobalProgress();
+  const { addJob, hasJob } = useGlobalProgress();
   const key = version != null ? ["sentiment", submissionId, version] : ["sentiment", submissionId];
 
   const query = useQuery({
@@ -35,24 +36,36 @@ export function useSentiment(submissionId?: string | null, version?: number) {
   });
 
   // Until the analysis finishes (it runs on the server, often for a minute or more), on the task list at the bottom right.
+  const jobKey = `sentiment:${submissionId}`;
   const trackUntilDone = () => {
+    if (!submissionId || hasJob(jobKey)) return;
     const wait = async () => {
       const until = Date.now() + 15 * 60_000;
       while (Date.now() < until) {
         await new Promise((r) => setTimeout(r, 3000));
-        const latest = await submissionService.getSentiment(submissionId!, version);
+        // A failed look (a blip in the network) doesn't end the wait: the analysis is still running on the server.
+        const latest = await submissionService.getSentiment(submissionId!, version).catch(() => undefined);
+        if (latest === undefined) continue;
         queryClient.setQueryData(key, latest);
         if (!isSentimentRunning(latest)) return latest;
       }
       return null;
     };
     addJob("Checking for sentiment", wait(), {
+      key: jobKey,
       type: "check",
       description: "Sentiment analysis",
       link_url: submissionId ? `/submissions/${submissionId}?step=sentiment` : undefined,
       doneMessage: "The sentiment analysis is done",
     });
   };
+
+  // An analysis already running when the page opens (after a reload, or started earlier) is on the task list too.
+  const running = isSentimentRunning(query.data);
+  useEffect(() => {
+    if (running) trackUntilDone();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, submissionId]);
 
   const run = useMutation({
     mutationFn: () => submissionService.requestSentiment(submissionId!),

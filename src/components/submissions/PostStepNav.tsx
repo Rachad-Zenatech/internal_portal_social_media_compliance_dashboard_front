@@ -33,7 +33,7 @@ export default function PostStepNav({
             const why = shut?.[step.key];
             return (
               <li key={step.key} className="flex flex-col gap-1.5">
-                <span className={`block h-1.5 rounded-full ${active || state === "done" ? "bg-blue-600" : state === "stale" ? "bg-amber-400" : "bg-muted"}`} />
+                <span className={`block h-1.5 rounded-full ${active || state === "done" ? "bg-blue-600" : state === "stale" ? "bg-blue-200 dark:bg-blue-500/40" : "bg-muted"}`} />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -52,7 +52,7 @@ export default function PostStepNav({
                             : state === "done"
                             ? "border-blue-600 bg-blue-600 text-white"
                             : state === "stale"
-                            ? "border-amber-500 bg-amber-50 text-amber-700"
+                            ? "border-blue-600 bg-card text-blue-700 dark:text-blue-300"
                             : "border-border bg-card text-muted-foreground"
                         }`}
                       >

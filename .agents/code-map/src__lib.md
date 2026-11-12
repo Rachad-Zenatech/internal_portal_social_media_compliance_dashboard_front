@@ -16,14 +16,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AuthProvider` (export function) L96
 - `useAuth` (export function) L344
 
-## src/lib/GlobalProgressContext.tsx (165 lines) - When it started, for "running for 0:42".
+## src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - `JobType` (export type) L5 - check": a compliance, sentiment or public mood check, which can take from seconds to minutes.
 - `GlobalProgressJob` (export type) L7
-- `jobHref` (export function) L25 - Where clicking a running job goes: a check back to the page it was started on (the step it runs on), anything else  to its own link (an u...
-- `GlobalProgressContextType` (type) L29
-- `GlobalProgressContext` (const) L47
-- `GlobalProgressProvider` (export function) L49
-- `useGlobalProgress` (export function) L157
+- `jobHref` (export function) L27 - Where clicking a running job goes: a check back to the page it was started on (the step it runs on), anything else  to its own link (an u...
+- `GlobalProgressContextType` (type) L31
+- `GlobalProgressContext` (const) L52
+- `GlobalProgressProvider` (export function) L54
+- `useGlobalProgress` (export function) L170
 
 ## src/lib/contentCalendar.ts (430 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) L16 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.

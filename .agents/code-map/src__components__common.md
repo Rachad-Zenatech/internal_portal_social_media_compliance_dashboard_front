@@ -15,6 +15,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
 - `GlobalLoadingScreen` (export function) L5
 
+## src/components/common/ListPager.tsx (86 lines) - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
+- `pageNumbers` (function) L7 - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
+- `ListPager` (export function) L19 - 26–50 of 132 posts" with previous, page numbers and next.
+
 ## src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
 - `ProtectedRouteProps` (interface) L7
 - `ProtectedRoute` (export function) L13

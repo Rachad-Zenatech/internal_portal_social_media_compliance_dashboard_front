@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ListPager from "@/components/common/ListPager";
+import MonthNavigator from "@/components/submissions/MonthNavigator";
+import StageFilterTabs from "@/components/submissions/StageFilterTabs";
+import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
+import { differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
 import {
   ArrowRight,
   BarChart3,
-  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Clock,
@@ -1170,7 +1173,6 @@ export default function SubmissionsListPage() {
   // Creators see one month at a time, by when each post was first created. Work waiting on them (drafts and
   // changes requested) is never hidden by the month: those two tabs count and show every month.
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const onCurrentMonth = isSameMonth(month, new Date());
   const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED";
   const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month]);
   const inView = gallery && !monthless ? inMonth : data;
@@ -1219,9 +1221,26 @@ export default function SubmissionsListPage() {
     return sortItems(filtered, prefs.sort);
   }, [inView, stage, platforms, brands, audiences, search, prefs.sort]);
 
+  // 25 to a page; a new filter, search or sort starts again from the first page.
+  const paged = usePaged(visible, 25, [stage, platforms, brands, audiences, search, prefs.sort, scope]);
+  const pager = (compact = false) => (
+    <ListPager
+      page={paged.page}
+      pageCount={paged.pageCount}
+      pageSize={paged.pageSize}
+      total={paged.total}
+      noun="posts"
+      compact={compact}
+      onPage={(p) => {
+        paged.setPage(p);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    />
+  );
+
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
-  const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
+  const selected = picked ?? (isWide && !gallery ? paged.pageItems[0] ?? null : null);
 
   const filtersActive = Boolean(stage || search || platforms.length || brands.length || audiences.length);
   const clearFilters = () => {
@@ -1288,77 +1307,20 @@ export default function SubmissionsListPage() {
       </header>
 
       {/* Status tabs: the one status filter */}
-      <div className="flex max-w-full flex-wrap gap-2" role="group" aria-label="Filter by status">
-        {STAGE_FILTERS.map((f) => {
-          const active = stage === f.value;
-          const count = stageCounts[f.value] ?? 0;
-          return (
-            <button
-              key={f.value || "all"}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setStage(active && f.value ? "" : f.value)}
-              className={`inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors ${
-                active
-                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
-                  : "border-slate-300 bg-card text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-300"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold tabular-nums ${
-                  active ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-                }`}
-              >
-                {isLoading ? "–" : count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <StageFilterTabs filters={STAGE_FILTERS} stage={stage} counts={stageCounts} loading={isLoading} onChange={setStage} />
 
       {gallery ? (
         <>
           {/* Filters, top right under the pills */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1" role="group" aria-label="Month">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 bg-card"
-                  onClick={() => setMonth(addMonths(month, -1))}
-                  disabled={monthless}
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="min-w-[140px] text-center leading-tight" aria-live="polite">
-                  <p className="text-sm font-semibold text-foreground">{monthless ? "All months" : format(month, "MMMM yyyy")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isLoading
-                      ? "Loading..."
-                      : monthless
-                      ? `${visible.length} ${visible.length === 1 ? "post" : "posts"} waiting on you`
-                      : `${inMonth.length} ${inMonth.length === 1 ? "post" : "posts"} this month`}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 bg-card"
-                  onClick={() => setMonth(addMonths(month, 1))}
-                  disabled={onCurrentMonth || monthless}
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                {!onCurrentMonth && !monthless && (
-                  <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} className="ml-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
-                    This month
-                  </button>
-                )}
-              </div>
+              <MonthNavigator
+                month={month}
+                onChange={setMonth}
+                monthless={monthless}
+                loading={isLoading}
+                count={monthless ? visible.length : inMonth.length}
+              />
               {filtersActive && (
                 <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                   <X className="w-3.5 h-3.5" /> Clear filters
@@ -1462,10 +1424,11 @@ export default function SubmissionsListPage() {
           ) : (
             <>
               <ul className="flex flex-col gap-3">
-                {visible.map((s) => (
+                {paged.pageItems.map((s) => (
                   <PostRow key={s.id} s={s} labels={labels} onOpen={openPost} onOpenStep={openStep} onDelete={setDeleting} />
                 ))}
               </ul>
+              {pager()}
             </>
           )}
         </>
@@ -1606,7 +1569,7 @@ export default function SubmissionsListPage() {
             ) : (
               <>
                 <div className={isWide ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
-                  {visible.map((s) => (
+                  {paged.pageItems.map((s) => (
                     <SubmissionCard
                       key={s.id}
                       s={s}
@@ -1617,6 +1580,7 @@ export default function SubmissionsListPage() {
                     />
                   ))}
                 </div>
+                {pager(isWide)}
                 <p className="pt-1 text-center text-[11px] text-muted-foreground">
                   {visible.length === data.length ? `Showing all ${data.length} submissions` : `Showing ${visible.length} of ${data.length} submissions`}
                 </p>

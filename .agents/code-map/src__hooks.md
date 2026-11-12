@@ -21,6 +21,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useMarkAllNotificationsAsRead` (export function) L52
 - `useClearAllNotifications` (export function) L63
 
+## src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
+- `usePaged` (export function) L7 - One page of a list shown in the browser.
+
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
@@ -52,9 +55,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useBatchActions` (export function) L44 - The creator's actions on a batch: details, edits to its scripts, and sending it.
 - `useReviewBatch` (export function) L88 - The reviewer's decisions on any number of a batch's scripts at once.
 
-## src/hooks/useSentiment.ts (108 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
-- `isSentimentRunning` (export function) L10
-- `useSentiment` (export function) L15 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+## src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+- `isSentimentRunning` (export function) L11
+- `useSentiment` (export function) L16 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 
 ## src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - `SubmitTarget` (interface) L10

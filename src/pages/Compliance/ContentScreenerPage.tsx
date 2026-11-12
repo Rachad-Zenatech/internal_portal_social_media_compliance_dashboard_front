@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
@@ -16,21 +18,25 @@ import {
   Send,
   SkipBack,
   SkipForward,
-  SlidersHorizontal,
-  X,
 } from "lucide-react";
 
+import {
+  ActiveFilterChips,
+  NO_FILTERS,
+  QueueFiltersButton,
+  platformName,
+  type Filters,
+  type SortOrder,
+} from "@/components/compliance/screener/QueueFilters";
 import { Button } from "@/components/ui/button";
-import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
+import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ReviewCommentsPanel, { ReplyingTo, commentBoxId, formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
@@ -81,44 +87,16 @@ const TABS: { value: QueueTab; label: string }[] = [
 ];
 
 const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
-  VIDEO: { label: "Video", cls: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
-  SOCIAL_POST: { label: "Post", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
-  CAROUSEL: { label: "Carousel", cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
-  IMAGE: { label: "Image", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
-  BLOG: { label: "Article", cls: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" },
-  AD: { label: "Paid Ad", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" },
+  VIDEO: { label: "Video", cls: "bg-muted text-muted-foreground" },
+  SOCIAL_POST: { label: "Post", cls: "bg-muted text-muted-foreground" },
+  CAROUSEL: { label: "Carousel", cls: "bg-muted text-muted-foreground" },
+  IMAGE: { label: "Image", cls: "bg-muted text-muted-foreground" },
+  BLOG: { label: "Article", cls: "bg-muted text-muted-foreground" },
+  AD: { label: "Paid Ad", cls: "bg-muted text-muted-foreground" },
 };
 
-type DueFilter = "any" | "overdue" | "today" | "week" | "none";
-type CheckFilter = "any" | "failing" | "critical" | "passing";
-interface Filters {
-  /** Brand codes and platforms to show; none picked means all. */
-  brands: string[];
-  platforms: string[];
-  due: DueFilter;
-  check: CheckFilter;
-}
-const NO_FILTERS: Filters = { brands: [], platforms: [], due: "any", check: "any" };
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
-const DUE_LABELS: Record<DueFilter, string> = {
-  any: "Any deadline",
-  overdue: "Overdue",
-  today: "Due today",
-  week: "Due this week",
-  none: "No deadline",
-};
-// The list is ordered by when each item was sent for review (deadlines have their own filter).
-type SortOrder = "newest" | "oldest";
-const SORT_LABELS: Record<SortOrder, string> = { newest: "Newest first", oldest: "Oldest first" };
-const CHECK_LABELS: Record<CheckFilter, string> = {
-  any: "Any result",
-  failing: "Failing (red or under 60)",
-  critical: "Has a critical flag",
-  passing: "Passing",
-};
-
-const platformName = (p: string) => PLATFORM_LABELS[p as SocialPlatform] ?? p;
 const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending || s.latest_check?.ai_unavailable ? null : s.latest_check?.score ?? null);
 const isFailing = (s: ReviewQueueItem) => {
   const score = scoreOf(s);
@@ -157,7 +135,7 @@ function dueText(s: ReviewQueueItem, tab: QueueTab): { text: string; tone: strin
   const due = deadlineOf(s);
   if (!due) return { text: "No deadline", tone: muted };
   const who = tab === "sent_back" ? "Creator " : "";
-  if (isPast(due)) return { text: `${who}overdue ${formatDistanceToNow(due)}`, tone: tab === "review" ? "text-red-600 dark:text-red-400" : muted };
+  if (isPast(due)) return { text: `${who}overdue ${formatDistanceToNow(due)}`, tone: tab === "review" ? "text-red-700/80 dark:text-red-300/80" : muted };
   if (isToday(due)) return { text: `${who}due today, ${format(due, "h:mm a")}`, tone: tab === "review" ? "text-amber-700 dark:text-amber-400" : muted };
   return { text: `${who}due ${format(due, "EEE, MMM d")}`, tone: muted };
 }
@@ -178,13 +156,14 @@ function CheckingBadge({ s }: { s: ReviewQueueItem }) {
 function ScoreBadge({ s }: { s: ReviewQueueItem }) {
   const score = scoreOf(s);
   if (score == null) return <CheckingBadge s={s} />;
-  const tone =
-    score >= 80 && !hasCritical(s)
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-      : score >= 60 && !hasCritical(s)
-      ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-      : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
-  return <span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${tone}`}>{score}</span>;
+  // A quiet chip with a coloured dot, rather than a bright filled pill.
+  const dot = score >= 80 && !hasCritical(s) ? "bg-emerald-500" : score >= 60 && !hasCritical(s) ? "bg-amber-500" : "bg-red-500";
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 text-xs font-semibold tabular-nums text-foreground">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {score}
+    </span>
+  );
 }
 
 function Thumb({ s }: { s: ReviewQueueItem }) {
@@ -460,6 +439,47 @@ const CATEGORY_NAMES: Record<string, string> = {
   BRAND: "Brand",
 };
 
+/** "1:05", "65" or "0:65" as seconds; null when it isn't a time. */
+function parseTime(text: string): number | null {
+  const parts = text.trim().split(":");
+  if (parts.length > 2 || parts.some((p) => !/^\d+$/.test(p))) return null;
+  return parts.length === 2 ? Number(parts[0]) * 60 + Number(parts[1]) : Number(parts[0]);
+}
+
+/** One end of a video range: a time to type (m:ss), or "Now" for where the video is. */
+function TimeField({ label, value, now, onChange }: { label: string; value: number; now: number; onChange: (sec: number) => void }) {
+  const [text, setText] = useState(formatSec(value));
+  // Follows the value when it changes from outside (the other end, or "Now").
+  useEffect(() => setText(formatSec(value)), [value]);
+  const commit = () => {
+    const t = parseTime(text);
+    if (t == null) setText(formatSec(value));
+    else onChange(t);
+  };
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-semibold text-foreground">{label}</span>
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+        }}
+        inputMode="numeric"
+        aria-label={`${label} time`}
+        className="h-7 w-16 px-2 text-center text-xs tabular-nums"
+      />
+      <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onChange(Math.floor(now))} title={`Use ${formatSec(now)}, where the video is`}>
+        Now
+      </Button>
+    </span>
+  );
+}
+
 /** Write a reviewer comment, pinned to a moment, a range of the video, or no time. */
 function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number; hasVideo: boolean }) {
   const { add } = useReviewComments(s.id);
@@ -535,20 +555,22 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
         )}
       </div>
       {hasVideo && mode === "RANGE" && (
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => setRange((r) => ({ start: Math.floor(now), end: Math.max(r.end, Math.floor(now) + 1) }))}>
-            Set start ({formatSec(now)})
-          </Button>
-          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() =>
-              setRange((r) => {
-                // An end before the start moves the start back, so the range is never empty.
-                const t = Math.ceil(now);
-                return t > r.start ? { start: r.start, end: t } : { start: Math.max(0, t - 3), end: Math.max(t, 1) };
-              })
-            }>
-            Set end ({formatSec(now)})
-          </Button>
-          <span className="text-muted-foreground">Play to the moment you want, then set the start or end.</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
+          <TimeField
+            label="From"
+            value={range.start}
+            now={now}
+            // A start past the end pushes the end along, so the range is never empty.
+            onChange={(t) => setRange((r) => ({ start: t, end: r.end > t ? r.end : t + 1 }))}
+          />
+          <TimeField
+            label="To"
+            value={range.end}
+            now={now}
+            // An end before the start moves the start back.
+            onChange={(t) => setRange((r) => (t > r.start ? { start: r.start, end: t } : { start: Math.max(0, t - 1), end: Math.max(t, 1) }))}
+          />
+          <span className="text-muted-foreground">Type a time (e.g. 1:05), or play to the moment and click "Now".</span>
         </div>
       )}
       {replyTo && <ReplyingTo c={replyTo} onCancel={() => setReplyTo(null)} />}
@@ -562,12 +584,13 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
           }}
           placeholder={
             !hasVideo || mode === "NONE"
-              ? "Add a general reviewer note..."
+              ? "Suggest a change or leave a note..."
               : mode === "POINT"
               ? `Add a reviewer note at ${formatSec(now)}... (e.g. adjust the disclaimer or cut)`
               : `Add a reviewer note for ${formatSec(range.start)} - ${formatSec(range.end)}... (e.g. cut this section)`
           }
           aria-label="Reviewer note"
+          autoFocus
           className="h-9 min-w-0 flex-1 text-sm"
         />
         <Button type="submit" className="h-9 shrink-0 gap-1.5 px-4 text-xs font-semibold" disabled={!body.trim() || add.isPending}>
@@ -599,6 +622,9 @@ function PostView({
   onPlaying,
   seek,
   onUploadScript,
+  canComment,
+  activeCommentId,
+  onActiveComment,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
@@ -616,10 +642,22 @@ function PostView({
   onPlaying: (p: boolean) => void;
   seek: (t: number) => void;
   onUploadScript?: () => void;
+  /** May leave comments, including on an area of an image. */
+  canComment: boolean;
+  activeCommentId: string | null;
+  onActiveComment: (id: string | null) => void;
 }) {
   const [imageIndex, setImageIndex] = useState(0);
   const images = s.images ?? [];
   const image = images[Math.min(imageIndex, images.length - 1)];
+  const { comments: allComments } = useReviewComments(s.id);
+  // A comment picked in the list shows its image.
+  useEffect(() => {
+    const c = allComments.find((x) => x.id === activeCommentId);
+    const at = c?.file_id ? images.findIndex((i) => i.id === c.file_id) : -1;
+    if (at >= 0) setImageIndex(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCommentId]);
   const account = s.account;
   const needBy = s.approval_needed_by ? new Date(s.approval_needed_by) : null;
   // The frame takes the uploaded video's own shape (width / height), read when it loads. Until then, a guess from
@@ -738,14 +776,23 @@ function PostView({
           </>
         ) : image ? (
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={onComment}
-              title="Click to comment on the image"
-              className="grid cursor-pointer place-items-center overflow-hidden rounded-xl bg-muted"
-            >
-              <img src={authedFileUrl(image.url)} alt={image.original_name} className="max-h-[56vh] w-auto object-contain" />
-            </button>
+            <div className="flex justify-center">
+              <ImageAnnotator
+                key={image.id}
+                imageClassName="max-h-[60vh] w-auto rounded-xl object-contain shadow-md ring-1 ring-border/60"
+                submissionId={s.id}
+                file={image}
+                canDraw={canComment}
+                activeId={activeCommentId}
+                onActive={onActiveComment}
+                onPlainClick={onComment}
+              />
+            </div>
+            {canComment && (
+              <p className="text-xs text-muted-foreground">
+                Drag over the part of the image you mean to comment on it, or use the box on the right for a general comment.
+              </p>
+            )}
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
                 {images.map((img, i) => (
@@ -812,6 +859,8 @@ function ReviewPanel({
   seen,
   picked,
   setPicked,
+  activeComment,
+  setActiveComment,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
@@ -828,6 +877,9 @@ function ReviewPanel({
   seen: Set<PanelTab>;
   picked: string | null;
   setPicked: (ruleId: string | null) => void;
+  /** The comment picked on the image, and the way to pick one from the list. */
+  activeComment: string | null;
+  setActiveComment: (id: string | null) => void;
 }) {
   const { comments } = useReviewComments(s.id);
   const { analysis: sentiment } = useSentiment(s.id);
@@ -904,11 +956,18 @@ function ReviewPanel({
     },
     {
       key: "comments",
-      label: "Comments",
-      value: comments.length ? String(comments.length) : "None",
-      sub: comments.length ? "To send with your decision" : "Add one only if it needs changes",
+      label: canComment ? "Your input" : "Comments",
+      value: canComment ? (comments.length ? `Comments (${comments.length})` : "Comments") : comments.length ? String(comments.length) : "None",
+      sub: canComment
+        ? comments.length
+          ? "Add more suggestions as needed"
+          : "Suggestions, notes, anything to change"
+        : comments.length
+        ? "Left on this post"
+        : "None were left",
       tone: "muted",
       seen: seen.has("comments"),
+      highlight: canComment,
     },
   ];
   const toLookAt = tiles.filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
@@ -1131,7 +1190,11 @@ function ReviewPanel({
         )}
 
         {tab === "comments" && canComment && (
-          <div className="rounded-xl border-2 border-blue-600 p-3">
+          <div className="rounded-xl border-2 border-blue-600 bg-blue-50/40 p-3 dark:border-blue-400 dark:bg-blue-500/10">
+            <p className="text-sm font-semibold text-foreground">Leave a comment or suggestion</p>
+            <p className="mb-2.5 text-xs text-muted-foreground">
+              Write it here, or click the part of the post it's about. The creator sees every comment with the decision.
+            </p>
             <CommentComposer s={s} now={now} hasVideo={hasVideo} />
           </div>
         )}
@@ -1144,9 +1207,11 @@ function ReviewPanel({
             canComment={canReview || isSuggester}
             currentTime={hasVideo ? now : undefined}
             onSeek={seek}
+            activeCommentId={activeComment}
+            onShowRegion={(c) => setActiveComment(activeComment === c.id ? null : c.id)}
             showHeader={false}
             showComposer={false}
-            emptyText="No comments yet. You don't need one to approve. To ask for a change, click the part of the post it is about, or write it above."
+            emptyText="No comments yet. Add a suggestion above if anything should change."
           />
         )}
 
@@ -1267,12 +1332,17 @@ function Workspace({
 }) {
   const { flags, dismissed, reviews } = useFlags(s);
   // Which panel tab is open, and which flag was picked on the post. Clicking the post drives both.
-  const [tab, setTab] = useState<PanelTab>("compliance");
-  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>(["compliance"]));
+  // Every reviewer (deciding or suggesting) opens a post in review on the comments, to leave their suggestions.
+  const { isSuggester } = useAuth();
+  const startTab: PanelTab = s.status === "IN_REVIEW" && (canReview || isSuggester) ? "comments" : "compliance";
+  const [tab, setTab] = useState<PanelTab>(startTab);
+  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>([startTab]));
   useEffect(() => {
     setSeen((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   }, [tab]);
   const [picked, setPicked] = useState<string | null>(null);
+  // The comment picked on the image or in the list, so each shows the other.
+  const [activeComment, setActiveComment] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -1308,6 +1378,12 @@ function Workspace({
           onPlaying={setPlaying}
           seek={seek}
           onUploadScript={onUploadScript}
+          canComment={(canReview || isSuggester) && s.status === "IN_REVIEW"}
+          activeCommentId={activeComment}
+          onActiveComment={(id) => {
+            setActiveComment(id);
+            if (id) setTab("comments");
+          }}
         />
       </section>
       <ResizablePanel
@@ -1334,6 +1410,8 @@ function Workspace({
           seen={seen}
           picked={picked}
           setPicked={setPicked}
+          activeComment={activeComment}
+          setActiveComment={setActiveComment}
         />
       </ResizablePanel>
     </>
@@ -1401,8 +1479,18 @@ export default function ContentScreenerPage() {
       .sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)))
       .map((r) => r.s);
   }, [visible, sort]);
-  // Whatever was picked last, else the first post in the list.
-  const selected = visible.find((s) => s.id === selectedId) ?? rows[0] ?? null;
+  // 20 to a page; a new tab, search, filter or order starts from the first page.
+  const paged = usePaged(rows, 20, [postTab, scope, q, filters, sort]);
+  // A post opened from a link (?id=...) shows on its page once the queue has loaded.
+  const shownLinked = useRef(false);
+  useEffect(() => {
+    if (shownLinked.current || !selectedId || rows.length === 0) return;
+    shownLinked.current = true;
+    paged.showItem((s) => s.id === selectedId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, selectedId]);
+  // Whatever was picked last, else the first post on the page.
+  const selected = visible.find((s) => s.id === selectedId) ?? paged.pageItems[0] ?? null;
   const listCount = visible.length;
   const renderPostRow = (s: ReviewQueueItem) => {
         const due = dueText(s, postTab);
@@ -1442,8 +1530,7 @@ export default function ContentScreenerPage() {
 
   const brands = useMemo(() => [...new Set(items.flatMap((s) => brandCodes(s)).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
-  // How many of the four filters are in use (brand and platform count once each, however many values they hold).
-  const activeFilters = [filters.brands.length > 0, filters.platforms.length > 0, filters.due !== "any", filters.check !== "any"].filter(Boolean).length;
+  const brandLabel = (b: string) => labels.brand(b) ?? b;
 
   // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
@@ -1569,109 +1656,18 @@ export default function ContentScreenerPage() {
                 className="h-8 pl-8 text-[13px]"
               />
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="relative h-8 gap-1.5 px-2.5 text-xs" aria-label="Filters">
-                  <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
-                  {activeFilters > 0 && (
-                    <span className="grid h-4 min-w-4 place-items-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">{activeFilters}</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-72 gap-3 p-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="f-sort" className="text-xs font-medium text-muted-foreground">
-                    Date sent
-                  </Label>
-                  <Select value={sort} onValueChange={(v) => setSort(v as SortOrder)}>
-                    <SelectTrigger id="f-sort" size="sm" className="h-8 w-full text-[13px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(["newest", "oldest"] as const).map((o) => (
-                        <SelectItem key={o} value={o} className="text-[13px]">
-                          {SORT_LABELS[o]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Brand</Label>
-                  <MultiSelectFilter
-                    options={brands.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
-                    value={filters.brands}
-                    onChange={(next) => setFilters((f) => ({ ...f, brands: next }))}
-                    allLabel="All brands"
-                    noun="brand"
-                    ariaLabel="Brand"
-                    className="h-8 w-full text-[13px]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Platform</Label>
-                  <MultiSelectFilter
-                    options={platforms.map((p) => ({ value: p, label: platformName(p) }))}
-                    value={filters.platforms}
-                    onChange={(next) => setFilters((f) => ({ ...f, platforms: next }))}
-                    allLabel="All platforms"
-                    noun="platform"
-                    ariaLabel="Platform"
-                    className="h-8 w-full text-[13px]"
-                  />
-                </div>
-                {[
-                  {
-                    id: "f-due",
-                    label: tab === "sent_back" ? "Creator's deadline" : "Deadline",
-                    value: filters.due,
-                    set: (v: string) => setFilters((f) => ({ ...f, due: v as DueFilter })),
-                    options: Object.entries(DUE_LABELS),
-                  },
-                  {
-                    id: "f-check",
-                    label: "Compliance check",
-                    value: filters.check,
-                    set: (v: string) => setFilters((f) => ({ ...f, check: v as CheckFilter })),
-                    options: Object.entries(CHECK_LABELS),
-                  },
-                ].map((f) => (
-                  <div key={f.id} className="flex flex-col gap-1.5">
-                    <Label htmlFor={f.id} className="text-xs font-medium text-muted-foreground">
-                      {f.label}
-                    </Label>
-                    <Select value={f.value} onValueChange={f.set}>
-                      <SelectTrigger id={f.id} size="sm" className="h-8 w-full text-[13px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {f.options.map(([value, text]) => (
-                          <SelectItem key={value} value={value} className="text-[13px]">
-                            {text}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
-                <Button variant="ghost" size="sm" className="h-8 self-end text-xs" onClick={() => setFilters(NO_FILTERS)} disabled={!activeFilters}>
-                  Clear filters
-                </Button>
-              </PopoverContent>
-            </Popover>
+            <QueueFiltersButton
+              filters={filters}
+              setFilters={setFilters}
+              sort={sort}
+              setSort={setSort}
+              brands={brands}
+              platforms={platforms}
+              brandLabel={brandLabel}
+              sentBack={tab === "sent_back"}
+            />
           </div>
-          {activeFilters > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {filters.brands.map((b) => (
-                <FilterChip key={`brand-${b}`} text={labels.brand(b) ?? b} onClear={() => setFilters((f) => ({ ...f, brands: f.brands.filter((x) => x !== b) }))} />
-              ))}
-              {filters.platforms.map((p) => (
-                <FilterChip key={`platform-${p}`} text={platformName(p)} onClear={() => setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) }))} />
-              ))}
-              {filters.due !== "any" && <FilterChip text={DUE_LABELS[filters.due]} onClear={() => setFilters((f) => ({ ...f, due: "any" }))} />}
-              {filters.check !== "any" && <FilterChip text={CHECK_LABELS[filters.check]} onClear={() => setFilters((f) => ({ ...f, check: "any" }))} />}
-            </div>
-          )}
+          <ActiveFilterChips filters={filters} setFilters={setFilters} brandLabel={brandLabel} />
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
@@ -1681,7 +1677,7 @@ export default function ContentScreenerPage() {
               } first`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
-          {rows.map(renderPostRow)}
+          {paged.pageItems.map(renderPostRow)}
           {queue.isLoading ? (
             <li className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading the queue...
@@ -1696,6 +1692,16 @@ export default function ContentScreenerPage() {
             null
           )}
         </ul>
+        <ListPager
+          compact
+          className="border-t border-border/70 px-4 py-2"
+          page={paged.page}
+          pageCount={paged.pageCount}
+          pageSize={paged.pageSize}
+          total={paged.total}
+          noun="posts"
+          onPage={paged.setPage}
+        />
       </ResizablePanel>
 
       {/* ===== The post and the review panel ===== */}
@@ -1716,16 +1722,5 @@ export default function ContentScreenerPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function FilterChip({ text, onClear }: { text: string; onClear: () => void }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-      {text}
-      <button type="button" onClick={onClear} aria-label={`Remove filter: ${text}`} className="text-muted-foreground hover:text-foreground">
-        <X className="w-3 h-3" />
-      </button>
-    </span>
   );
 }

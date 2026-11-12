@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 
 // "check": a compliance, sentiment or public mood check, which can take from seconds to minutes.
@@ -18,6 +18,8 @@ export type GlobalProgressJob = {
   startedAt?: number;
   /** The page it was started on (path and query), so clicking it while it runs goes back there. */
   startedFrom?: string;
+  /** Names what it waits on (e.g. one post's sentiment), so the same wait is never listed twice. */
+  key?: string;
 };
 
 /** Where clicking a running job goes: a check back to the page it was started on (the step it runs on), anything else
@@ -39,9 +41,12 @@ type GlobalProgressContextType = {
       trackKind?: "doc_text" | "transcript";
       /** Said in a message when it finishes, so people who went elsewhere know (with a link to link_url). */
       doneMessage?: string;
+      key?: string;
     }
   ) => void;
   removeJob: (id: string) => void;
+  /** A job with this key is already running. */
+  hasJob: (key: string) => boolean;
 };
 
 const GlobalProgressContext = createContext<GlobalProgressContextType | undefined>(undefined);
@@ -65,7 +70,12 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("globalProgressJobs", JSON.stringify(activeJobs));
   }, [activeJobs]);
 
+  // The keys of jobs running now, kept in step with every add and remove so two adds in one render see each other.
+  const runningKeys = useRef(new Map<string, string>());
+  const hasJob = (key: string) => runningKeys.current.has(key);
+
   const removeJob = (id: string) => {
+    for (const [k, jobId] of runningKeys.current) if (jobId === id) runningKeys.current.delete(k);
     setActiveJobs((prev) => prev.filter((u) => u.id !== id));
   };
 
@@ -79,9 +89,11 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
       submissionId?: string;
       trackKind?: "doc_text" | "transcript";
       doneMessage?: string;
+      key?: string;
     }
   ) => {
     const id = Math.random().toString(36).substring(7);
+    if (options?.key) runningKeys.current.set(options.key, id);
     setActiveJobs((prev) => [
       ...prev,
       {
@@ -94,6 +106,7 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
         trackKind: options?.trackKind,
         startedAt: Date.now(),
         startedFrom: window.location.pathname + window.location.search,
+        key: options?.key,
       },
     ]);
 
@@ -148,7 +161,7 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <GlobalProgressContext.Provider value={{ activeJobs, addJob, removeJob }}>
+    <GlobalProgressContext.Provider value={{ activeJobs, addJob, removeJob, hasJob }}>
       {children}
     </GlobalProgressContext.Provider>
   );

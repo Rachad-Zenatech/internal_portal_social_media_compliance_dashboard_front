@@ -410,6 +410,12 @@ export interface ReviewComment {
   body: string;
   start_sec?: number | null;
   end_sec?: number | null;
+  /** A comment on an area of an image: which image, and the box as fractions (0 to 1) of its width and height. */
+  file_id?: string | null;
+  region_x?: number | null;
+  region_y?: number | null;
+  region_w?: number | null;
+  region_h?: number | null;
   author_id?: string | null;
   author_name?: string | null;
   /** Written by a reviewer rather than the creator. */
@@ -429,6 +435,12 @@ export interface ReviewCommentCreate {
   category?: ReviewCommentCategory;
   start_sec?: number | null;
   end_sec?: number | null;
+  /** An area of an image: which image, and the box as fractions (0 to 1) of its width and height. */
+  file_id?: string | null;
+  region_x?: number | null;
+  region_y?: number | null;
+  region_w?: number | null;
+  region_h?: number | null;
   /** Replying to another comment on the same post. */
   reply_to_id?: string | null;
 }

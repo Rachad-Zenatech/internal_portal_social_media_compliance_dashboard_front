@@ -5,6 +5,8 @@ import { formatDistanceToNow } from "date-fns";
 import { FileStack, FileText, Plus } from "lucide-react";
 
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { Button } from "@/components/ui/button";
 import { useScriptBatches } from "@/hooks/useScriptBatches";
 import { useAuth } from "@/lib/AuthContext";
@@ -140,6 +142,51 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
+const PILL = "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors";
+const PILL_ON = "border-blue-700 bg-blue-700 text-white";
+const PILL_OFF = "border-border bg-background text-muted-foreground hover:text-foreground";
+
+/** For reviewers: what's waiting for them, what they sent back and what they approved, each with a count. */
+function ReviewerTabs({ tab, counts, onChange }: { tab: ReviewTab; counts: Record<ReviewTab, number>; onChange: (t: ReviewTab) => void }) {
+  return (
+    <div role="tablist" aria-label="Which scripts" className="flex flex-wrap gap-2">
+      {TABS.map((t) => (
+        <button
+          key={t.value}
+          role="tab"
+          aria-selected={tab === t.value}
+          type="button"
+          onClick={() => onChange(t.value)}
+          className={cn(PILL, "inline-flex items-center gap-1.5", tab === t.value ? PILL_ON : PILL_OFF)}
+        >
+          {t.label}
+          <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** For creators: their scripts filtered by where they are. */
+function CreatorFilters({ filter, onChange }: { filter: CreatorFilter; onChange: (f: CreatorFilter) => void }) {
+  return (
+    <div role="tablist" aria-label="Filter" className="flex flex-wrap gap-2">
+      {CREATOR_FILTERS.map((f) => (
+        <button
+          key={f.value}
+          role="tab"
+          aria-selected={filter === f.value}
+          type="button"
+          onClick={() => onChange(f.value)}
+          className={cn(PILL, filter === f.value ? PILL_ON : PILL_OFF)}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Script review: every script, whether it was uploaded alone or in a batch of several. Creators upload scripts here and
  * follow where each is; reviewers see what is waiting for them, what they sent back and what they approved.
@@ -171,6 +218,17 @@ export default function ScriptReviewPage() {
     return Object.fromEntries(TABS.map((t) => [t.value, all.filter((b) => b.status === t.status).length])) as Record<ReviewTab, number>;
   }, [batches.data]);
 
+  // Batches and single scripts together, 24 to a page; a new tab or filter starts from the first page.
+  type ListCard = { kind: "batch"; b: BatchSummary } | { kind: "single"; s: ScriptQueueItem };
+  const cards = useMemo<ListCard[]>(
+    () => [
+      ...shownBatches.map((b) => ({ kind: "batch" as const, b })),
+      ...(reviewer ? shownSingles.map((s) => ({ kind: "single" as const, s })) : []),
+    ],
+    [shownBatches, shownSingles, reviewer]
+  );
+  const paged = usePaged(cards, 24, [tab, filter]);
+
   const loading = batches.isLoading || (reviewer && singles.isLoading);
   const error = batches.error ?? (reviewer ? singles.error : null);
   const nothing = shownBatches.length === 0 && (!reviewer || shownSingles.length === 0);
@@ -193,40 +251,11 @@ export default function ScriptReviewPage() {
         )}
       </div>
 
-      <div role="tablist" aria-label={reviewer ? "Which scripts" : "Filter"} className="flex flex-wrap gap-2">
-        {reviewer
-          ? TABS.map((t) => (
-              <button
-                key={t.value}
-                role="tab"
-                aria-selected={tab === t.value}
-                type="button"
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  tab === t.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t.label}
-                <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
-              </button>
-            ))
-          : CREATOR_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                role="tab"
-                aria-selected={filter === f.value}
-                type="button"
-                onClick={() => setFilter(f.value)}
-                className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  filter === f.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-      </div>
+      {reviewer ? (
+        <ReviewerTabs tab={tab} counts={counts} onChange={setTab} />
+      ) : (
+        <CreatorFilters filter={filter} onChange={setFilter} />
+      )}
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -242,12 +271,24 @@ export default function ScriptReviewPage() {
           hint={reviewer ? undefined : "Use Upload scripts to start. One document can hold as many scripts as you like."}
         />
       ) : (
-        <ul className={GRID}>
-          {shownBatches.map((b) => (
-            <BatchCard key={b.id} batch={b} showCreator={reviewer} />
-          ))}
-          {reviewer && shownSingles.map((s) => <ScriptCard key={s.id} s={s} />)}
-        </ul>
+        <>
+          <ul className={GRID}>
+            {paged.pageItems.map((c) =>
+              c.kind === "batch" ? <BatchCard key={c.b.id} batch={c.b} showCreator={reviewer} /> : <ScriptCard key={c.s.id} s={c.s} />
+            )}
+          </ul>
+          <ListPager
+            page={paged.page}
+            pageCount={paged.pageCount}
+            pageSize={paged.pageSize}
+            total={paged.total}
+            noun="items"
+            onPage={(p) => {
+              paged.setPage(p);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </>
       )}
 
       <BulkScriptDialog open={uploadOpen} onOpenChange={setUploadOpen} />

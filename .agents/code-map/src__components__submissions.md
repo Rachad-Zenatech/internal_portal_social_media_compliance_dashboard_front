@@ -99,6 +99,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - `HashtagPicker` (export function) L10 - The Hashtags picker: tags suited to the post's brand, audience and platforms (already screened by the rulebook),  plus the company cashta...
 
+## src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- `Box` (type) L13 - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- `clamp` (const) L18
+- `ImageAnnotator` (export function) L24 - An image post's picture, with comments on areas of it, as in Google Docs: drag a box over the part you mean and write  the comment there.
+
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.
 - `MoodBar` (export function) L18 - Positive / neutral / negative share of mentions.
@@ -133,28 +138,38 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - `ProcessLog` (export function) L11 - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 
-## src/components/submissions/ReviewCommentsPanel.tsx (288 lines) - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `formatSec` (export const) L21
-- `commentBoxId` (export const) L24 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `ReplyingTo` (export function) L27 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L41
-- `ReviewCommentsPanel` (export function) L138 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+## src/components/submissions/ReviewCommentsPanel.tsx (311 lines) - Kept here too so existing imports from this file keep working.
+- `ReplyingTo` (export function) L17 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `useThreads` (function) L43 - Threads: a comment and every reply that follows its chain, oldest first.
+- `ReviewCommentsPanel` (export function) L66 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+- `CommentThread` (function) L190 - A comment and its replies; a long thread shows its latest replies until it's opened.
+- `CommentComposer` (function) L232 - The box for writing a comment (reviewers pick a category) or a note to the reviewer (creators).
+- `CategoryPicker` (function) L292
 
-## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewConversation.tsx (212 lines) - Sent back: the creator can reply.
+- `ReviewConversation` (export function) L14 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
+- `ImageThumbnails` (function) L137 - The post's images as thumbnails, each with how many open comments are on it.
+- `CommentTimeline` (function) L175 - A bar under the video with a mark for each comment pinned to a moment (or a stretch) of it.
+
+## src/components/submissions/ReviewDecisionPanel.tsx (420 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55
 - `toLocalInput` (const) L57
 - `defaultPublishTime` (function) L60 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
-- `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
+    - `decide` (fn) L87
+    - `start` (fn) L103
+    - `toggleConfirmed` (fn) L110
+    - `confirm` (fn) L121
+- `ApprovalBlockers` (function) L309 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
+- `ManualRulesChecklist` (function) L351 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
+- `ChangesRequestedBanner` (export function) L388 - For the creator: the reviewer sent it back.
+    - `navigate` (fn) L399
 
-## src/components/submissions/ReviewGlance.tsx (90 lines) - The one thing to know at a glance: a score, a verdict, a count.
-- `GlanceTone` (export type) L3
-- `GlanceTile` (export interface) L5
-- `ReviewGlance` (export function) L28 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
+## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
+- `GlanceTone` (export type) L4
+- `GlanceTile` (export interface) L6
+- `ReviewGlance` (export function) L31 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
 
 ## src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - `RecheckState` (export type) L7
@@ -171,8 +186,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `pill` (const) L47
 - `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (186 lines) - revision workspace (components submissions)
-- `RevisionWorkspace` (export function) L15 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+## src/components/submissions/RevisionWorkspace.tsx (208 lines) - revision workspace (components submissions)
+- `RevisionWorkspace` (export function) L16 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+- `CommentMarks` (function) L166 - Where the comments are, on the video's timeline: blue open, grey resolved; a click jumps there.
+- `CaptionCard` (function) L193
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) L11 - A flag's rule number; hovering it shows the rule that was broken.

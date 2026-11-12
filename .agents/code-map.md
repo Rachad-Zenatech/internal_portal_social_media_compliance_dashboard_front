@@ -11,15 +11,15 @@ to find the right file.
 | --- | --- | --- |
 | .agents/code-map/src.md | 2 | 1 KB |
 | .agents/code-map/src__components__AppShell.md | 11 | 4 KB |
-| .agents/code-map/src__components__common.md | 4 | 1 KB |
-| .agents/code-map/src__components__compliance.md | 2 | 1 KB |
+| .agents/code-map/src__components__common.md | 5 | 1 KB |
+| .agents/code-map/src__components__compliance.md | 3 | 1 KB |
 | .agents/code-map/src__components__dashboard.md | 5 | 5 KB |
 | .agents/code-map/src__components__script.md | 17 | 11 KB |
-| .agents/code-map/src__components__submissions.md | 37 | 20 KB |
+| .agents/code-map/src__components__submissions.md | 39 | 21 KB |
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 11 | 5 KB |
+| .agents/code-map/src__hooks.md | 12 | 5 KB |
 | .agents/code-map/src__lib.md | 16 | 9 KB |
 | .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 8 KB |
@@ -29,7 +29,7 @@ to find the right file.
 | .agents/code-map/src__pages__Delegations.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Logs.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Performance.md | 1 | 2 KB |
-| .agents/code-map/src__pages__Scripts.md | 3 | 1 KB |
+| .agents/code-map/src__pages__Scripts.md | 3 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 12 | 5 KB |
