@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { ApiError } from "@/services/helper";
 
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { scriptService } from "@/services/scriptService";
 import type { ScriptHighlight, ScriptStage } from "@/types/script";
 
@@ -41,6 +42,7 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
 /** The script stage's actions: send it, decide on it, accept or revise the reviewer's edits. */
 export function useScriptActions(submissionId: string) {
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
   const done = (stage: ScriptStage) => {
     queryClient.setQueryData(["script", submissionId], stage);
     queryClient.invalidateQueries({ queryKey: ["script-queue"] });
@@ -80,9 +82,32 @@ export function useScriptActions(submissionId: string) {
     },
   });
   const precheck = useMutation({
-    mutationFn: () => scriptService.precheck(submissionId),
+    mutationFn: () => {
+      const running = scriptService.precheck(submissionId);
+      addJob("Checking for compliance", running, {
+        type: "check",
+        description: "Script compliance check",
+        link_url: `/submissions/${submissionId}`,
+        doneMessage: "The compliance check of your script is done",
+      });
+      return running;
+    },
     onSuccess: (s) => queryClient.setQueryData(["script", submissionId], s),
     onError: fail("check the script"),
+  });
+  // A suggesting reviewer's own suggestion (private to them for now).
+  const saveSuggestion = useMutation({
+    mutationFn: (data: { text: string; highlights: ScriptHighlight[] }) => scriptService.saveSuggestion(submissionId, data),
+    onSuccess: (s) => {
+      queryClient.setQueryData(["script", submissionId], s);
+      toast.success("Suggestion saved. Only you can see it for now.");
+    },
+    onError: fail("save the suggestion"),
+  });
+  const discardSuggestion = useMutation({
+    mutationFn: () => scriptService.discardSuggestion(submissionId),
+    onSuccess: (s) => queryClient.setQueryData(["script", submissionId], s),
+    onError: fail("discard the suggestion"),
   });
   const decide = useMutation({
     mutationFn: (data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
@@ -116,7 +141,7 @@ export function useScriptActions(submissionId: string) {
   });
   return {
     precheck,
-    submit, decide, accept, revise };
+    submit, decide, accept, revise, saveSuggestion, discardSuggestion };
 }
 
 /** The value, once it has stopped changing for `ms`. */
@@ -129,17 +154,40 @@ export function useDebounced<T>(value: T, ms: number): T {
   return settled;
 }
 
-/** The rulebook check of wording being edited (null while it matches the saved version, or before it settles). */
+/**
+ * The rulebook check of wording being edited. It does not run as you type: once the wording differs from the saved
+ * version, `changed` is true and the check on show is out of date until `run()` checks the wording as it is now. `data`
+ * is the last check that was run (for the wording at that time), and `upToDate` says whether it is for the wording now.
+ */
 export function useLiveScriptCheck(submissionId: string, text: string, saved: string) {
-  const settled = useDebounced(text, 700);
-  const changed = settled.trim() !== saved.trim() && settled.trim().length > 0;
-  return useQuery({
-    queryKey: ["script-check", submissionId, settled],
-    queryFn: () => scriptService.check(submissionId, settled),
-    enabled: changed,
+  const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
+  const [checked, setChecked] = useState<string | null>(null);
+  const changed = text.trim() !== saved.trim() && text.trim().length > 0;
+  const query = useQuery({
+    queryKey: ["script-check", submissionId, checked],
+    queryFn: () => scriptService.check(submissionId, checked!),
+    enabled: checked != null && checked.trim() !== saved.trim() && checked.trim().length > 0,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+  const upToDate = checked != null && checked.trim() === text.trim();
+  const run = () => {
+    setChecked(text);
+    // Also on the task list at the bottom right, so it can be left running while you use other tools.
+    const running = queryClient.fetchQuery({
+      queryKey: ["script-check", submissionId, text],
+      queryFn: () => scriptService.check(submissionId, text),
+      staleTime: 60_000,
+    });
+    addJob("Checking for compliance", running, {
+      type: "check",
+      description: "Script compliance check",
+      link_url: `/script-review/scripts/${submissionId}`,
+      doneMessage: "The compliance check of the script is done",
+    });
+  };
+  return { ...query, changed, upToDate, run };
 }
 
 /**

@@ -10,6 +10,7 @@ import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import HighlightCards, { AddressedCards } from "@/components/script/HighlightCards";
 import HighlightableText, { type Highlight, type HighlightableHandle } from "@/components/script/HighlightableText";
+import CheckingNotice from "@/components/common/CheckingNotice";
 import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
@@ -26,7 +27,8 @@ import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { AI_UNAVAILABLE_SHORT } from "@/components/submissions/submissionUi";
 import { changesOf, diffWords } from "@/lib/wordDiff";
 import type { ComplianceViolation } from "@/services/complianceService";
-import type { ScriptVersion } from "@/types/script";
+import ScriptSuggestPanel from "@/components/script/ScriptSuggestPanel";
+import type { ScriptHighlight, ScriptSuggestion, ScriptVersion } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
 type PanelTab = "flags" | "highlights" | "sentiment" | "history";
@@ -122,6 +124,7 @@ export default function ScriptReviewWorkspace({
           reference={data.reference_code}
           status={data.status}
           canReview={isReviewer && data.can_review}
+          suggest={data.can_suggest ? { suggestion: data.suggestion ?? null } : null}
           onUploadScript={onUploadScript}
         />
       </div>
@@ -136,6 +139,7 @@ function Editor({
   reference,
   status,
   canReview,
+  suggest = null,
   onUploadScript,
 }: {
   submissionId: string;
@@ -144,11 +148,18 @@ function Editor({
   reference: string;
   status?: string | null;
   canReview: boolean;
+  /** A suggesting reviewer (comments and suggested edits, no deciding), with their own saved suggestion. */
+  suggest?: { suggestion: ScriptSuggestion | null } | null;
   onUploadScript?: () => void;
 }) {
   const sent = versions[versions.length - 1];
   const previous = versions.length > 1 ? versions[versions.length - 2] : null;
-  const [draft, setDraft] = useState(() => (canReview ? readDraft(submissionId, sent.version_number) : null) ?? sent.body);
+  const suggesting = Boolean(suggest);
+  // Reviewers edit the script and a suggesting reviewer edits their own suggestion of it: the same editing tools.
+  const canEditScript = canReview || suggesting;
+  const [draft, setDraft] = useState(
+    () => (suggest?.suggestion?.body ?? (canReview ? readDraft(submissionId, sent.version_number) : null)) ?? sent.body
+  );
   const [mode, setMode] = useState<"read" | "edit">("read");
   const [showChanges, setShowChanges] = useState(true);
   const [compare, setCompare] = useState<Compare>("mine");
@@ -172,7 +183,11 @@ function Editor({
   const editorRef = useRef<ScriptEditorHandle | null>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
   const textRef = useRef<HighlightableHandle | null>(null);
-  const { highlights, onChange: onHighlightsChange } = useScriptHighlights(submissionId, sent.version_number, canReview);
+  // A suggesting reviewer's notes are their own (kept with their suggestion), not the reviewer's shared highlights.
+  const shared = useScriptHighlights(submissionId, suggesting ? undefined : sent.version_number, canReview);
+  const [mine, setMine] = useState<ScriptHighlight[]>(() => suggest?.suggestion?.highlights ?? []);
+  const highlights = suggesting ? mine : shared.highlights;
+  const onHighlightsChange = suggesting ? setMine : shared.onChange;
   // What the creator did about the highlights from the review before this version (shown only once they responded).
   const reviewedBefore = [...versions].reverse().find((v) => v.review_decision && v.version_number < sent.version_number);
   const { highlights: earlier } = useScriptHighlights(submissionId, reviewedBefore?.version_number, false);
@@ -225,9 +240,12 @@ function Editor({
     if (canReview) writeDraft(submissionId, sent.version_number, hasEdits ? draft : null);
   }, [canReview, draft, hasEdits, sent.version_number, submissionId]);
 
+  // Editing doesn't re-run the check by itself: the check on show is the last one run (else the one as sent), and
+  // once the wording has changed since, the reviewer is asked to rerun it.
   const live = useLiveScriptCheck(submissionId, draft, sent.body);
   const check: StoredCheck | null | undefined = hasEdits ? live.data ?? sent.check : sent.check;
-  const checking = hasEdits && (live.isFetching || !live.data);
+  const checking = hasEdits && live.isFetching;
+  const stale = hasEdits && !checking && !live.upToDate;
   const verdict = scriptVerdict(check);
   const violations = check?.violations ?? [];
   // What still needs attention: cleared triggers aren't marked in the script or counted.
@@ -390,7 +408,7 @@ function Editor({
         </header>
 
         <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border/70 bg-card/95 px-5 py-2 backdrop-blur">
-          {canReview && (
+          {canEditScript && (
             <div role="tablist" aria-label="Mode" className="flex rounded-lg bg-muted p-0.5">
               {(
                 [
@@ -420,7 +438,7 @@ function Editor({
             <div role="tablist" aria-label="Compare" className="flex rounded-lg bg-muted p-0.5">
               {(
                 [
-                  ["mine", canReview ? "Your changes" : "This version"],
+                  ["mine", canEditScript ? "Your changes" : "This version"],
                   ["previous", `Changes since version ${previous.version_number}`],
                 ] as const
               ).map(([value, label]) => (
@@ -468,7 +486,7 @@ function Editor({
                 <FileText className="w-3.5 h-3.5" /> {sent.file_name}
               </span>
             )}
-            {canReview && hasEdits && (
+            {canEditScript && hasEdits && (
               <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={() => setDraft(sent.body)}>
                 <RotateCcw className="w-3.5 h-3.5" /> Undo my changes
               </Button>
@@ -499,7 +517,7 @@ function Editor({
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-3">
                   <span className="text-xs font-medium text-foreground">
                     {changes.length} change{changes.length === 1 ? "" : "s"}{" "}
-                    {compare === "previous" ? `from version ${previous?.version_number}` : canReview ? "by you" : ""}
+                    {compare === "previous" ? `from version ${previous?.version_number}` : canEditScript ? "by you" : ""}
                   </span>
                   <DiffLegend />
                 </div>
@@ -529,7 +547,7 @@ function Editor({
         defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <div className="flex items-center gap-4 border-b border-border/70 px-5 py-4">
-          <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
+          <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring} ${stale ? "opacity-50" : ""}`}>
             {checking ? (
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             ) : (
@@ -540,8 +558,8 @@ function Editor({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">Script check · {hasEdits ? "with your changes" : "as sent"}</p>
-            <p className={`text-[15px] font-semibold ${verdict.tone}`}>{verdict.text}</p>
+            <p className="text-xs text-muted-foreground">Script check · {hasEdits ? (stale ? "before your changes" : "with your changes") : "as sent"}</p>
+            <p className={`text-[15px] font-semibold ${verdict.tone} ${stale ? "opacity-60" : ""}`}>{verdict.text}</p>
             {check?.ai_unavailable ? (
               <p className="text-sm text-muted-foreground">{AI_UNAVAILABLE_SHORT}</p>
             ) : (
@@ -551,11 +569,30 @@ function Editor({
               {grouped.NEEDS_REVIEW.length > 0 && ` · ${grouped.NEEDS_REVIEW.length} to check`}
               {grouped.EVIDENCE_REQUIRED.length > 0 && ` · ${grouped.EVIDENCE_REQUIRED.length} need${grouped.EVIDENCE_REQUIRED.length === 1 ? "s" : ""} a source`}
               {grouped.CLEARED.length > 0 && ` · ${grouped.CLEARED.length} cleared`}
-              {hasEdits && sent.check?.score != null && check?.score != null && !checking && ` · was ${sent.check.score}`}
+              {hasEdits && sent.check?.score != null && check?.score != null && !checking && !stale && ` · was ${sent.check.score}`}
             </p>
             )}
+            {stale && (
+              <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">We detected changes. Please rerun the check.</p>
+            )}
           </div>
+          {hasEdits && (
+            <Button
+              type="button"
+              size="sm"
+              variant={stale ? "default" : "outline"}
+              className={`h-8 shrink-0 gap-1.5 text-xs font-semibold ${stale ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
+              disabled={checking || (!stale && !checking)}
+              onClick={() => live.run()}
+              title={stale ? "Check the script with your changes" : checking ? "Checking" : "The check is up to date"}
+            >
+              {checking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+              {checking ? "Checking" : "Rerun"}
+            </Button>
+          )}
         </div>
+
+        {checking && <CheckingNotice what="compliance" className="mx-4 mt-3" />}
 
         <ReviewGlance tiles={tiles} active={tab} onPick={(key) => setTab(key as PanelTab)} />
 
@@ -576,7 +613,7 @@ function Editor({
                       <FlagCard
                         key={v.rule_id}
                         v={v}
-                        canEdit={canReview}
+                        canEdit={canEditScript}
                         added
                         onFind={findInScript}
                         onGo={() => goToFlag(v)}
@@ -594,7 +631,7 @@ function Editor({
                         <FlagCard
                           key={v.rule_id}
                           v={v}
-                          canEdit={canReview}
+                          canEdit={canEditScript}
                           onFind={findInScript}
                           onGo={() => goToFlag(v)}
                           onAddDisclaimer={(text) => addDisclaimer(v, text)}
@@ -651,7 +688,19 @@ function Editor({
           {tab === "history" && <VersionHistory versions={versions} />}
         </div>
 
-        {canReview ? (
+        {suggesting ? (
+          <ScriptSuggestPanel
+            submissionId={submissionId}
+            sentBody={sent.body}
+            draft={draft}
+            highlights={highlights}
+            saved={suggest?.suggestion ?? null}
+            onDiscarded={() => {
+              setDraft(sent.body);
+              setMine([]);
+            }}
+          />
+        ) : canReview ? (
           <div className="flex flex-col gap-2.5 border-t border-border/70 bg-muted/40 px-4 py-3.5">
             <label htmlFor="script-note" className="flex items-baseline justify-between gap-2 text-xs font-medium text-foreground">
               <span>Comments for the creator</span>

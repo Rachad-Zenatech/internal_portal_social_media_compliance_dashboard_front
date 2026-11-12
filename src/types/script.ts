@@ -21,6 +21,14 @@ export interface ScriptVersion {
   reviewed_at?: string | null;
 }
 
+/** A suggesting reviewer's own suggestion on a script version: their edited wording and their notes on it. */
+export interface ScriptSuggestion {
+  version_number: number;
+  body: string;
+  highlights: ScriptHighlight[];
+  updated_at: string;
+}
+
 /** Where a script sits in the batch it was uploaded with, for stepping through the batch one script at a time. */
 export interface ScriptBatchRef {
   batch_id: string;
@@ -59,6 +67,9 @@ export interface ScriptStage {
   can_respond: boolean;
   /** Set when the script came in a batch of scripts uploaded together. */
   batch?: ScriptBatchRef | null;
+  /** A suggesting reviewer looking at a script in review, and their own suggestion so far. */
+  can_suggest?: boolean;
+  suggestion?: ScriptSuggestion | null;
   /** The creator's compliance check of the uploaded script, run before sending it. */
   precheck?: StoredCheck | null;
   /** The script, the post's details or the rulebook changed since that check. */
