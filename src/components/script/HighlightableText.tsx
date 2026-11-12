@@ -154,7 +154,7 @@ const HighlightableText = forwardRef<
     for (let i = 1; i < nextMarkers.length; i++) nextMarkers[i].top = Math.max(nextMarkers[i].top, nextMarkers[i - 1].top + 30);
     setMarkers((old) =>
       old.length === nextMarkers.length &&
-      old.every((m, i) => m.key === nextMarkers[i].key && m.ids.join() === nextMarkers[i].ids.join() && Math.abs(m.top - nextMarkers[i].top) < 1)
+        old.every((m, i) => m.key === nextMarkers[i].key && m.ids.join() === nextMarkers[i].ids.join() && Math.abs(m.top - nextMarkers[i].top) < 1)
         ? old
         : nextMarkers
     );

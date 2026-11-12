@@ -52,13 +52,13 @@ export function useScriptActions(submissionId: string) {
   };
   const fail = (what: string) => (err: unknown) => toast.error(`Couldn't ${what}: ${(err as Error).message}`);
   /** A script already sent: refused for the same place and date; for another date, offer to send it anyway. */
-  const duplicate = (err: unknown, again: () => void): boolean => {
+  const duplicate = (err: unknown, again: () => void, againLabel = "Send anyway"): boolean => {
     if (!(err instanceof ApiError) || err.status !== 409 || !err.detail || typeof err.detail !== "object") return false;
     const detail = err.detail as { code?: string; message?: string };
     if (detail.code === "REPOST_CONFIRM") {
       toast(detail.message ?? "The same script was already sent for another date.", {
         duration: 15000,
-        action: { label: "Send anyway", onClick: again },
+        action: { label: againLabel, onClick: again },
       });
       return true;
     }
@@ -82,8 +82,9 @@ export function useScriptActions(submissionId: string) {
     },
   });
   const precheck = useMutation({
-    mutationFn: () => {
-      const running = scriptService.precheck(submissionId);
+    // Duplicates are settled here, before the compliance check (a repost for another date is confirmed, then checked).
+    mutationFn: (opts?: { confirmRepost?: boolean }) => {
+      const running = scriptService.precheck(submissionId, Boolean(opts?.confirmRepost));
       addJob("Checking for compliance", running, {
         type: "check",
         description: "Script compliance check",
@@ -93,7 +94,9 @@ export function useScriptActions(submissionId: string) {
       return running;
     },
     onSuccess: (s) => queryClient.setQueryData(["script", submissionId], s),
-    onError: fail("check the script"),
+    onError: (err) => {
+      if (!duplicate(err, () => precheck.mutate({ confirmRepost: true }), "Check anyway")) fail("check the script")(err);
+    },
   });
   // A suggesting reviewer's own suggestion (private to them for now).
   const saveSuggestion = useMutation({
