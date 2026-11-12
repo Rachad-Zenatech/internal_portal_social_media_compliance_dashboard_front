@@ -41,6 +41,20 @@ import type {
 
 const quiet = { skipGlobalLoading: true };
 
+export interface ScrapeStatus {
+  state: "idle" | "running" | "finished" | "failed";
+  started_at: string | null;
+  finished_at: string | null;
+  error: string | null;
+  collection: {
+    status?: string;
+    topics?: number;
+    collected_at?: string;
+    stored_in?: string;
+    sources?: { kind: string; name: string; status: string; items: number }[];
+  } | null;
+}
+
 export const submissionService = {
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
 
@@ -213,6 +227,10 @@ export const submissionService = {
   /** Trigger live scraping of X (Twitter) & news sentiment with Playwright + VADER (or future API). */
   triggerScrapeTwitter: () =>
     apiClient.post<{ status: string; message: string; source: string }>("/api/listening/scrape", undefined, quiet),
+
+  /** Whether a scrape is running, and how the last one went (state, error, per-source results). */
+  scrapeStatus: () =>
+    apiClient.get<ScrapeStatus>("/api/listening/scrape/status", quiet),
 
   /** Write (or reuse) the AI reading of how this post may land given the current mood. */
   summarisePublicMood: (id: string) => apiClient.post<PublicMood>(`/api/submissions/${id}/public-mood/summary`, undefined, quiet),

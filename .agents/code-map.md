@@ -425,6 +425,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - `PostSteps` (export function) - The five steps of a post as five dots, in order.
 
+## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
+- `ProcessLog` (export function) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
+
 ## src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
 - `COMMENT_CATEGORIES` (export const)
 - `toneFor` (const)
@@ -506,7 +509,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Row` (function)
 - `SourceChecks` (export function) - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
-## src/components/submissions/TopicTrend.tsx (415 lines) - topic trend (components submissions)
+## src/components/submissions/TopicTrend.tsx (441 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const)
 - `overallPostDecision` (export function)
 - `TopicRow` (function)
@@ -793,7 +796,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
-## src/hooks/usePublicMood.ts (96 lines) - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
+## src/hooks/usePublicMood.ts (120 lines) - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `usePublicMood` (export function) - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `useMarketTrends` (export function) - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
 - `useScrapeTwitter` (export function) - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
@@ -1609,7 +1612,8 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptService.ts (48 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (292 lines) - submission service (services)
+## src/services/submissionService.ts (310 lines) - submission service (services)
+- `ScrapeStatus` (export interface)
 - `submissionService` (export const)
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -1670,7 +1674,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `PerformanceReport` (export interface)
 - `PerformanceFilters` (export interface)
 
-## src/types/publicMood.ts (151 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
+## src/types/publicMood.ts (162 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - `PublishingRecommendation` (export type)
 - `ListeningPost` (export interface)
 - `TopicSnapshot` (export interface)
@@ -1678,6 +1682,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `PublicMoodOverall` (export type)
 - `PublicMoodResult` (export interface)
 - `PublicMoodSummary` (export interface)
+- `ProcessStep` (export interface)
 - `PublicMood` (export interface)
 - `MoodVerdict` (export type)
 - `DismissedTopic` (export interface)
