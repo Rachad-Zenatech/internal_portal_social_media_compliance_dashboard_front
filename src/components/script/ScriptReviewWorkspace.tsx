@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { locateOnPage } from "@/lib/locateOnPage";
 import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
@@ -805,7 +806,8 @@ export function FlagCard({
   /** Take that addition back. */
   onDiscard?: () => void;
   onFind?: (term: string) => void;
-  /** Go to this flag's wording in the script. Without it the card is just information (as on the creator's page). */
+  /** Go to this flag's wording in the script. Without it (as on the creator's page) the card finds the wording
+   * wherever it's shown on the page instead, like "Read in context" does. */
   onGo?: (specificTerm?: string) => void;
   onAddDisclaimer?: (text: string) => void;
 }) {
@@ -813,19 +815,32 @@ export function FlagCard({
   const missing = v.kind === "MISSING_DISCLAIMER";
   const cleared = statusOf(v) === "CLEARED";
   const struck = added ? "line-through decoration-muted-foreground/70" : "";
+  const [notShown, setNotShown] = useState(false);
+  const matched = v.evaluation?.matched_text?.trim();
+  const pageTerms = [...(matched ? [matched] : []), ...(missing ? [] : v.flagged_terms)].filter(Boolean);
+  const canGo = Boolean(onGo || pageTerms.length);
+  /** Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next
+   * place it appears each click), skipping this card's own copy of it. */
+  const go = (card: Element | null, specificTerm?: string) => {
+    if (onGo) {
+      onGo(specificTerm);
+      return;
+    }
+    setNotShown(!(specificTerm ? [specificTerm] : pageTerms).some((t) => locateOnPage(t, card)));
+  };
   return (
     <article
-      role={onGo ? "button" : undefined}
-      tabIndex={onGo ? 0 : undefined}
-      title={onGo ? "Show in the script" : undefined}
-      onClick={onGo ? () => onGo() : undefined}
+      role={canGo ? "button" : undefined}
+      tabIndex={canGo ? 0 : undefined}
+      title={canGo ? (onGo ? "Show in the script" : "Show this wording on the page") : undefined}
+      onClick={canGo ? (e) => go(e.currentTarget) : undefined}
       onKeyDown={(e) => {
-        if (onGo && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        if (canGo && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
-          onGo();
+          go(e.currentTarget);
         }
       }}
-      className={`flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${onGo ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/30" : ""} ${cleared || added ? "opacity-80" : ""}`}
+      className={`flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${canGo ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/30" : ""} ${cleared || added ? "opacity-80" : ""}`}
     >
       <div className="flex items-center gap-2">
         <StatusPill status={statusOf(v)} critical={critical} />
@@ -839,6 +854,7 @@ export function FlagCard({
         <ContextNote
           v={v}
           onLocate={
+            // Without a script viewer the note finds the wording on the page itself (skipping this card).
             onGo
               ? (term) => {
                   onGo(term || undefined);
@@ -857,11 +873,12 @@ export function FlagCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onFind?.(t);
+                // Reviewers edit it in the script; everyone else is taken to this word.
+                if (canEdit) onFind?.(t);
+                else go(e.currentTarget.closest("article"), t);
               }}
-              disabled={!canEdit}
-              className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200 disabled:cursor-default disabled:hover:bg-amber-100 dark:bg-amber-500/15 dark:text-amber-200"
-              title={canEdit ? "Find it in the script and edit it" : undefined}
+              className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200 dark:bg-amber-500/15 dark:text-amber-200"
+              title={canEdit ? "Find it in the script and edit it" : "Show this wording"}
             >
               {canEdit && <Search className="w-3 h-3" />}“{t}”
             </button>
@@ -873,6 +890,7 @@ export function FlagCard({
           <span className="font-semibold">{isWarning(v) ? "What to check:" : "How to fix:"}</span> {v.remediation_guidance}
         </p>
       )}
+      {notShown && <p className="text-xs text-amber-700 dark:text-amber-400">This wording isn't shown on this page right now.</p>}
       {missing && (added || !cleared) && canEdit && (v.missing_disclaimers?.length ?? 0) > 0 && (
         <div className="flex flex-col gap-1.5">
           <p className={`rounded-lg bg-muted px-2.5 py-1.5 text-xs text-foreground/80 ${struck}`}>“{v.missing_disclaimers![0]}”</p>

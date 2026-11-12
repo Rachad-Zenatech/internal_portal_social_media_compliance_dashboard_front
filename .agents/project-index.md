@@ -38,7 +38,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
 - src/components/script/ScriptInsights.tsx (104 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
 - src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
-- src/components/script/ScriptReviewWorkspace.tsx (948 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (966 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
