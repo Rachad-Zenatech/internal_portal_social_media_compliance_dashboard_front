@@ -13,8 +13,8 @@ export default function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
   // Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
-  const { hasPermission } = useAuth();
-  const reviewerView = hasPermission("CONTENT_REVIEW_VIEW");
+  const { hasPermission, creatorView } = useAuth();
+  const reviewerView = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
   const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
   const [customTrails, setCustomTrails] = useState<Record<string, BreadcrumbItem[]>>({});
 
@@ -86,16 +86,22 @@ export default function Breadcrumbs() {
 
   const activeTrail = customTrails[location.pathname];
 
-  const breadcrumbItems = pathnames.map((value, index) => {
+  const breadcrumbItems = pathnames.flatMap((value, index) => {
     if (reviewerView && index === 0 && value === "submissions") {
       const id = pathnames[1] && pathnames[1] !== "new" ? pathnames[1] : null;
-      return { value, title: "Content screener", to: `/compliance/scanner${id ? `?id=${id}` : ""}` };
+      return [{ value, title: "Content screener", to: `/compliance/scanner${id ? `?id=${id}` : ""}` }];
     }
-    return {
+    if (index === 0 && value === "script-docs") {
+      return [{ value, title: "Script review", to: "/script-review" }];
+    }
+    if (pathnames[0] === "script-review" && index === 1 && value === "scripts") {
+      return [];
+    }
+    return [{
       value,
       title: null as string | null,
       to: `/${pathnames.slice(0, index + 1).join("/")}`,
-    };
+    }];
   });
 
   return (

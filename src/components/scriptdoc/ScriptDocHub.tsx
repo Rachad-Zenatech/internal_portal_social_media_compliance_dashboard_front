@@ -126,7 +126,7 @@ function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | nul
           <DialogDescription>{template?.storyline}</DialogDescription>
         </DialogHeader>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Script title" autoFocus maxLength={300} />
-        {template && (
+        {template && template.key !== "blank" && template.rows.some((r) => r.time || r.voiceover || r.visual) && (
           <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-muted-foreground">

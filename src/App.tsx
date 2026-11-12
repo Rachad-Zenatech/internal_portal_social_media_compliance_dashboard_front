@@ -145,6 +145,8 @@ function App() {
                 <Route path="/configurations" element={<Navigate to="/configurations/users" replace />} />
                 <Route path="/compliance" element={<Navigate to="/compliance/scanner" replace />} />
                 <Route path="/log" element={<Navigate to="/log/audit" replace />} />
+                <Route path="/script-docs" element={<Navigate to="/script-review" replace />} />
+                <Route path="/script-review/scripts" element={<Navigate to="/script-review" replace />} />
 
                 {/* Submissions: the list and the new-submission form share one tabbed area */}
                 <Route

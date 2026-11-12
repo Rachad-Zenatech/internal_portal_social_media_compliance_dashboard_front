@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
+import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
 
 /**
@@ -14,6 +16,15 @@ export default function ScriptReviewScriptPage() {
   const navigate = useNavigate();
   const { hasPermission, creatorView } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
+  const { data } = useScriptStage(id ?? "");
+
+  useEffect(() => {
+    const label = data?.reference_code || data?.title;
+    if (!id || !label) return;
+    document.dispatchEvent(
+      new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-review/scripts/${id}`, title: label } })
+    );
+  }, [id, data?.reference_code, data?.title]);
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 min-[112.5rem]:max-w-[2200px]">

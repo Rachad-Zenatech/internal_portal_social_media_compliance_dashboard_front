@@ -55,6 +55,13 @@ export default function ScriptDocPage() {
   useEffect(() => {
     docRef.current = doc ?? null;
   }, [doc]);
+
+  useEffect(() => {
+    if (!id || !doc?.title) return;
+    document.dispatchEvent(
+      new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-docs/${id}`, title: doc.title } })
+    );
+  }, [id, doc?.title]);
   const askTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpenState] = useState<Record<DialogName, boolean>>({ submit: false, bulk: false, checkIn: false, level2: false, decide: false });
   const setOpen = useCallback((name: DialogName, value: boolean) => setOpenState((o) => ({ ...o, [name]: value })), []);

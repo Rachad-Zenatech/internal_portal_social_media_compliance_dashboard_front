@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ArrowLeft, ArrowRight, CheckCheck, CheckCircle2, Loader2, Plus, Send, ShieldCheck, Trash2 } from "lucide-react";
@@ -60,6 +60,16 @@ function BatchView({ batch }: { batch: Batch }) {
   const navigate = useNavigate();
   const { hasPermission, user, canSwitchView } = useAuth();
   const actions = useBatchActions(batch.id);
+
+  useEffect(() => {
+    if (!batch.title) return;
+    document.dispatchEvent(
+      new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-review/${batch.id}`, title: batch.title } })
+    );
+    document.dispatchEvent(
+      new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-batches/${batch.id}`, title: batch.title } })
+    );
+  }, [batch.id, batch.title]);
   // Scripts being checked now; "Check all" checks two at a time.
   const [checkingIds, setCheckingIds] = useState<string[]>([]);
   const checkScripts = async (ids: string[]) => {
