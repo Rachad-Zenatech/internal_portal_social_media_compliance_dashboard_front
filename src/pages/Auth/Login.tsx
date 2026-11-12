@@ -133,7 +133,7 @@ export default function Login() {
       .catch(() => setTestLogin(false));
   }, []);
 
-  const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3") => {
+  const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3" | "suggester") => {
     setIsLoading(true);
     try {
       const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
@@ -213,6 +213,9 @@ export default function Login() {
                   </Button>
                   <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer3")}>
                     Test reviewer 3
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("suggester")}>
+                    Test suggester
                   </Button>
                 </div>
               </div>

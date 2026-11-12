@@ -396,6 +396,11 @@ export default function NewSubmissionPage() {
   const pickedReviewers = reviewersQuery.data
     ? reviewerIds.filter((id) => reviewerOptions.some((r) => r.id === id))
     : reviewerIds;
+  // Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+  const approverOptions = useMemo(() => reviewerOptions.filter((r) => r.kind !== "SUGGESTER"), [reviewerOptions]);
+  const suggesterOptions = useMemo(() => reviewerOptions.filter((r) => r.kind === "SUGGESTER"), [reviewerOptions]);
+  const pickedApprovers = pickedReviewers.filter((id) => approverOptions.some((r) => r.id === id));
+  const pickedSuggesters = pickedReviewers.filter((id) => suggesterOptions.some((r) => r.id === id));
   const selectedAccounts = useMemo(
     () => accountIds.map((id) => accounts.find((a) => a.id === id)).filter((a): a is AccountOption => Boolean(a)),
     [accounts, accountIds]
@@ -847,7 +852,7 @@ export default function NewSubmissionPage() {
     // Every post needs a caption: the score and the sentiment analysis read it first.
     caption: !videoLocked && !caption.trim(),
     rule_sets: ruleSets.length === 0,
-    reviewer_ids: pickedReviewers.length === 0,
+    reviewer_ids: pickedApprovers.length === 0,
     approval_needed_by: !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
@@ -2329,7 +2334,7 @@ export default function NewSubmissionPage() {
                   required
                   error={errorFor("reviewer_ids", "Pick at least one reviewer")}
                 >
-                  {reviewersQuery.isSuccess && reviewerOptions.length === 0 ? (
+                  {reviewersQuery.isSuccess && approverOptions.length === 0 ? (
                     <div
                       className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${
                         isMissing("reviewer_ids") ? "border-red-500" : "border-input"
@@ -2339,10 +2344,10 @@ export default function NewSubmissionPage() {
                     </div>
                   ) : (
                     <MultiSelect<string>
-                      options={reviewerOptions.map((r) => r.id)}
-                      value={pickedReviewers}
+                      options={approverOptions.map((r) => r.id)}
+                      value={pickedApprovers}
                       onChange={(ids) => {
-                        setReviewerIds(ids);
+                        setReviewerIds([...ids, ...pickedSuggesters]);
                         markEdited();
                       }}
                       placeholder={
@@ -2353,10 +2358,10 @@ export default function NewSubmissionPage() {
                           : "Pick reviewers"
                       }
                       getLabel={(id) => {
-                        const r = reviewerOptions.find((x) => x.id === id);
-                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}${r.kind === "SUGGESTER" ? " · Suggests only" : ""}` : "Reviewer";
+                        const r = approverOptions.find((x) => x.id === id);
+                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
                       }}
-                      getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
+                      getSearchText={(id) => approverOptions.find((x) => x.id === id)?.email ?? ""}
                       renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
                       invalid={isMissing("reviewer_ids")}
                       searchable
@@ -2364,11 +2369,32 @@ export default function NewSubmissionPage() {
                     />
                   )}
                   <p className="text-[11px] text-muted-foreground">
-                    {reviewersQuery.isSuccess && reviewerOptions.length === 0
+                    {reviewersQuery.isSuccess && approverOptions.length === 0
                       ? "Add users and give them a reviewer role (System & Security) to send them content."
                       : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                   </p>
                 </Field>
+                {suggesterOptions.length > 0 && (
+                  <Field label="Suggesting reviewers (optional)">
+                    <MultiSelect<string>
+                      options={suggesterOptions.map((r) => r.id)}
+                      value={pickedSuggesters}
+                      onChange={(ids) => {
+                        setReviewerIds([...pickedApprovers, ...ids]);
+                        markEdited();
+                      }}
+                      placeholder="Pick suggesting reviewers"
+                      getLabel={(id) => suggesterOptions.find((x) => x.id === id)?.name ?? "Reviewer"}
+                      getSearchText={(id) => suggesterOptions.find((x) => x.id === id)?.email ?? ""}
+                      renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
+                      searchable
+                      selectAll
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      They can read the post, leave comments and suggest edits to the script. They can&apos;t approve or schedule it.
+                    </p>
+                  </Field>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                   <p className="text-[11px] text-muted-foreground">
                     {videoLocked
