@@ -234,7 +234,8 @@ export default function ReviewDecisionPanel({
       </div>
       )}
       {target.can_delegate && (
-        <div className={layout === "bar" ? "" : "flex justify-end"}>
+        // In the bar layout the buttons above are a grid with its own gap: give this one the same gap.
+        <div className={layout === "bar" ? "mt-2" : "flex justify-end"}>
           <DelegateReviewButton target={target} className={layout === "bar" ? `w-full ${barOutline}` : layout === "inline" ? "h-9 text-xs font-semibold" : "text-xs"} />
         </div>
       )}

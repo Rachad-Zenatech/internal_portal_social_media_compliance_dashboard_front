@@ -27,12 +27,28 @@ export const formatSec = (sec: number) => `${Math.floor(sec / 60)}:${String(Math
 /** The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it. */
 export const commentBoxId = (submissionId: string) => `comment-box-${submissionId}`;
 
+/** A small tag for a comment on an area of an image, in the quotes and the reply strip as on the card itself. */
+function AreaTag({ number }: { number: number }) {
+  return (
+    <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-background/70 px-1 py-px text-[10px] font-semibold text-primary">
+      <ScanSearch className="w-3 h-3" /> Image area {number}
+    </span>
+  );
+}
+
 /** Above a comment box while replying: who and what is being replied to, with a way to stop replying. */
 export function ReplyingTo({ c, onCancel }: { c: ReviewComment; onCancel: () => void }) {
+  const { user } = useAuth();
+  const { comments } = useReviewComments(c.submission_id);
+  const number = regionNumbers(comments).get(c.id);
+  const mine = Boolean(user && c.author_id === user.id);
   return (
     <div className="flex items-start gap-2 rounded-md border-l-4 border-primary bg-primary/5 px-2.5 py-1.5 text-[11px]">
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-primary">Replying to {c.author_name ?? "a comment"}</p>
+        <p className="font-semibold text-primary">
+          Replying to {mine ? "yourself" : c.author_name ?? "a comment"}
+          {number != null && <AreaTag number={number} />}
+        </p>
         <p className="truncate text-muted-foreground">{c.body}</p>
       </div>
       <button type="button" onClick={onCancel} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Stop replying">
@@ -54,8 +70,17 @@ function CommentItem({
   onDelete,
   onReply,
   onJump,
+  parentNumber,
+  mineParent,
+  hideQuote,
 }: {
   c: ReviewComment;
+  /** Shown right under the comment it answers: no need to quote it again. */
+  hideQuote?: boolean;
+  /** The number of the image area the replied-to comment is on, if it is on one. */
+  parentNumber?: number;
+  /** The comment it replies to is the viewer's own. */
+  mineParent?: boolean;
   /** Its number on the image, when it is about an area of one. */
   number?: number;
   active?: boolean;
@@ -89,7 +114,7 @@ function CommentItem({
       className={`scroll-mt-4 rounded-lg border p-2.5 text-xs space-y-1.5 transition-colors duration-300 ${
         pick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 hover:border-blue-400/70" : ""
       } ${highlighted ? "ring-2 ring-primary ring-offset-1" : ""} ${
-        active ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500 shadow-sm" : resolved ? "border-border/60 opacity-70" : c.from_reviewer ? "border-amber-500/30 bg-amber-500/5" : "border-border/80"
+        active ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500 shadow-sm" : resolved ? "border-border/60 bg-card opacity-70" : "border-border/80 bg-card"
       }`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
@@ -127,7 +152,7 @@ function CommentItem({
           {c.version_number > 0 ? `v${c.version_number}` : "draft"} · {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
         </span>
       </div>
-      {c.reply_to_id && (
+      {c.reply_to_id && !hideQuote && (
         // The comment this replies to, as in a chat app; a click goes to it.
         <button
           type="button"
@@ -136,7 +161,10 @@ function CommentItem({
           className="block w-full rounded-md border-l-4 border-primary/60 bg-muted/60 px-2 py-1 text-left hover:bg-muted disabled:cursor-default"
           title={c.reply_to_body != null ? "Go to this message" : undefined}
         >
-          <span className="block text-[10px] font-semibold text-primary">{c.reply_to_author ?? "Someone"}</span>
+          <span className="block text-[10px] font-semibold text-primary">
+            {mineParent ? "You" : c.reply_to_author ?? "Someone"}
+            {parentNumber != null && <AreaTag number={parentNumber} />}
+          </span>
           <span className="line-clamp-2 text-[11px] text-muted-foreground">{c.reply_to_body ?? "This message was deleted."}</span>
         </button>
       )}
@@ -202,6 +230,7 @@ export default function ReviewCommentsPanel({
   emptyText?: string;
 }) {
   const { comments, isLoading, add, resolve, remove } = useReviewComments(submissionId);
+  const { user: viewer } = useAuth();
   // Reviewers file feedback under a category (legal, editorial...). Creators just leave the reviewer a note.
   const { hasPermission } = useAuth();
   const asReviewer = hasPermission("CONTENT_REVIEW_VIEW");
@@ -218,9 +247,36 @@ export default function ReviewCommentsPanel({
   const [flashId, setFlashId] = useState<string | null>(null);
   const flashTimer = useRef<number | undefined>(undefined);
 
+  // Threads: a comment and every reply that follows its chain, oldest first. A reply whose comment was deleted starts its own.
+  const threads = useMemo(() => {
+    const byId = new Map(comments.map((c) => [c.id, c] as const));
+    const rootOf = (c: ReviewComment): ReviewComment => {
+      let cur = c;
+      for (let i = 0; i < 50 && cur.reply_to_id && byId.has(cur.reply_to_id); i++) cur = byId.get(cur.reply_to_id)!;
+      return cur;
+    };
+    const order: ReviewComment[] = [];
+    const replies = new Map<string, ReviewComment[]>();
+    for (const c of comments) {
+      const root = rootOf(c);
+      if (root.id === c.id) order.push(c);
+      else replies.set(root.id, [...(replies.get(root.id) ?? []), c]);
+    }
+    return { roots: order, replies, rootOf };
+  }, [comments]);
+  // Long threads show their latest replies; the rest open on request (or when one is jumped to).
+  const [openThreads, setOpenThreads] = useState<Set<string>>(new Set());
+  const SHOWN_REPLIES = 2;
+  const COLLAPSE_AFTER = 3;
+
   /** Scroll to a comment (from a reply's quote) and ring it for a moment. */
   const jumpTo = (id: string) => {
-    document.getElementById(`comment-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const target = comments.find((c) => c.id === id);
+    if (target) {
+      const root = threads.rootOf(target).id;
+      setOpenThreads((prev) => (prev.has(root) ? prev : new Set(prev).add(root)));
+    }
+    window.setTimeout(() => document.getElementById(`comment-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
     setFlashId(id);
     window.clearTimeout(flashTimer.current);
     flashTimer.current = window.setTimeout(() => setFlashId(null), 1800);
@@ -271,23 +327,66 @@ export default function ReviewCommentsPanel({
       ) : comments.length === 0 ? (
         <p className="text-xs text-muted-foreground">{emptyText}</p>
       ) : (
-        <div className="space-y-2">
-          {comments.map((c) => (
-            <CommentItem
-              key={c.id}
-              c={c}
-              number={numbers.get(c.id)}
-              active={c.id === activeCommentId}
-              canResolve={canComment}
-              highlighted={flashId === c.id}
-              onSeek={onSeek}
-              onShowRegion={onShowRegion}
-              onResolve={(resolved) => resolve.mutate({ id: c.id, resolved })}
-              onDelete={() => remove.mutate(c.id)}
-              onReply={canComment ? () => replyToComment(c) : undefined}
-              onJump={jumpTo}
-            />
-          ))}
+        <div className="space-y-3">
+          {threads.roots.map((root) => {
+            const replies = threads.replies.get(root.id) ?? [];
+            const collapsed = replies.length > COLLAPSE_AFTER && !openThreads.has(root.id);
+            const hidden = collapsed ? replies.length - SHOWN_REPLIES : 0;
+            const shown = collapsed ? replies.slice(-SHOWN_REPLIES) : replies;
+            const item = (c: ReviewComment) => (
+              <CommentItem
+                key={c.id}
+                c={c}
+                number={numbers.get(c.id)}
+                active={c.id === activeCommentId}
+                canResolve={canComment}
+                highlighted={flashId === c.id}
+                onSeek={onSeek}
+                onShowRegion={onShowRegion}
+                onResolve={(resolved) => resolve.mutate({ id: c.id, resolved })}
+                onDelete={() => remove.mutate(c.id)}
+                onReply={canComment ? () => replyToComment(c) : undefined}
+                onJump={jumpTo}
+                parentNumber={c.reply_to_id ? numbers.get(c.reply_to_id) : undefined}
+                mineParent={Boolean(c.reply_to_id && viewer && comments.find((x) => x.id === c.reply_to_id)?.author_id === viewer.id)}
+                hideQuote={c.reply_to_id === root.id}
+              />
+            );
+            return (
+              <div key={root.id} className="space-y-1.5">
+                {item(root)}
+                {replies.length > 0 && (
+                  <div className="ml-3.5 space-y-1.5 border-l-2 border-border pl-3">
+                    {hidden > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setOpenThreads((prev) => new Set(prev).add(root.id))}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                      >
+                        <Reply className="w-3 h-3" /> Show {hidden} earlier {hidden === 1 ? "reply" : "replies"}
+                      </button>
+                    )}
+                    {shown.map(item)}
+                    {replies.length > COLLAPSE_AFTER && openThreads.has(root.id) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenThreads((prev) => {
+                            const next = new Set(prev);
+                            next.delete(root.id);
+                            return next;
+                          })
+                        }
+                        className="text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                      >
+                        Show fewer replies
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
