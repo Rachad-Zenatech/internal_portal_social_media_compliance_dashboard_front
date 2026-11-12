@@ -4,6 +4,8 @@ import { AlertTriangle, CheckCircle2, FileText, Loader2, Send } from "lucide-rea
 
 import { Button } from "@/components/ui/button";
 import { StageSteps } from "@/components/script/ScriptDiff";
+import ScriptInsights from "@/components/script/ScriptInsights";
+import ScriptPrecheck from "@/components/script/ScriptPrecheck";
 import { useScriptActions } from "@/hooks/useScript";
 import type { ScriptStage } from "@/types/script";
 
@@ -189,10 +191,13 @@ function DraftBody({
   note: string | null;
   reviewer: string | null;
 }) {
-  const { submit } = useScriptActions(submissionId ?? "");
+  const { submit, precheck } = useScriptActions(submissionId ?? "");
   const navigate = useNavigate();
   const hasFile = Boolean(stage?.file_name);
   const failed = stage?.file_status === "FAILED";
+  // Like a post: check compliance, fix what it finds, then send. Sending waits for a check of the script as it is now.
+  const checkable = hasFile && !reading && !failed && !stage?.processing && Boolean(stage?.can_submit);
+  const checked = Boolean(stage?.precheck) && !stage?.precheck_stale;
   return (
     <div className="flex flex-col gap-2.5">
       {status === "CHANGES_REQUESTED" && (
@@ -227,8 +232,10 @@ function DraftBody({
             </span>
           ) : stage?.processing ? (
             <span className="text-blue-700 dark:text-blue-300">Sent</span>
+          ) : checked ? (
+            <span className="text-emerald-700 dark:text-emerald-400">Checked, ready to send</span>
           ) : (
-            <span className="text-emerald-700 dark:text-emerald-400">Ready to send</span>
+            <span className="text-muted-foreground">Uploaded</span>
           )}
         </p>
       )}
@@ -244,11 +251,23 @@ function DraftBody({
           <span>{stage.send_error} Fix it and send the script again.</span>
         </p>
       )}
+      {checkable && (
+        <ScriptPrecheck
+          check={stage?.precheck}
+          stale={stage?.precheck_stale}
+          checkedAt={stage?.precheck_at}
+          checking={precheck.isPending}
+          canCheck={canEdit}
+          onCheck={() => precheck.mutate()}
+        />
+      )}
+      {/* Like a post: read the sentiment and the public mood before sending, too. */}
+      {checkable && submissionId && <ScriptInsights submissionId={submissionId} canRun={canEdit} />}
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript} disabled={!canEdit}>
           <FileText className="w-3.5 h-3.5" /> {hasFile ? "Replace the script" : "Upload the script"}
         </Button>
-        {hasFile && stage?.can_submit && (
+        {hasFile && stage?.can_submit && checked && (
           <Button
             type="button"
             size="sm"

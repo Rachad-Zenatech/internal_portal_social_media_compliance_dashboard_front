@@ -261,6 +261,7 @@ export function fromSubmission(s: SubmissionSummary): CalendarItem | null {
     scheduled_for: s.publish_at,
     brand_code: s.brand_code ?? "",
     score: s.latest_score ?? null,
+    created_by: s.created_by ?? null,
     primary_file: s.cover ?? null,
   };
 }

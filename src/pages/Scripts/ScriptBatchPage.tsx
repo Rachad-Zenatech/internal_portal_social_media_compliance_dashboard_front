@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, CheckCheck, CheckCircle2, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCheck, CheckCircle2, Loader2, Plus, Send, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import BatchDetailsForm from "@/components/script/BatchDetailsForm";
 import BatchItemCard, { type Decision } from "@/components/script/BatchItemCard";
 import { Button } from "@/components/ui/button";
 import { useBatchActions, useReviewBatch, useScriptBatch } from "@/hooks/useScriptBatches";
+import { useAuth } from "@/lib/AuthContext";
 import { scriptBatchService } from "@/services/scriptBatchService";
 import type { Batch, BatchDetails, BatchItem } from "@/types/scriptBatch";
 
@@ -49,7 +50,7 @@ export default function ScriptBatchPage() {
     return (
       <div className="mx-auto max-w-4xl space-y-3 p-6">
         <p className="text-sm text-destructive">{error instanceof Error ? error.message : "That batch couldn't be loaded."}</p>
-        <Button variant="outline" onClick={() => navigate("/script-batches")}>Back to script batches</Button>
+        <Button variant="outline" onClick={() => navigate("/script-review")}>Back to script review</Button>
       </div>
     );
   return <BatchView batch={batch} />;
@@ -57,7 +58,27 @@ export default function ScriptBatchPage() {
 
 function BatchView({ batch }: { batch: Batch }) {
   const navigate = useNavigate();
+  const { hasPermission, user } = useAuth();
   const actions = useBatchActions(batch.id);
+  // Scripts being checked now; "Check all" checks two at a time.
+  const [checkingIds, setCheckingIds] = useState<string[]>([]);
+  const checkScripts = async (ids: string[]) => {
+    setCheckingIds((prev) => [...new Set([...prev, ...ids])]);
+    const queue = [...ids];
+    const worker = async () => {
+      for (let next = queue.shift(); next; next = queue.shift()) {
+        const done = next;
+        try {
+          await actions.checkItem.mutateAsync(done);
+        } catch {
+          // the hook already says what went wrong
+        } finally {
+          setCheckingIds((prev) => prev.filter((x) => x !== done));
+        }
+      }
+    };
+    await Promise.all([worker(), worker()]);
+  };
   const review = useReviewBatch(batch.id);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [skipped, setSkipped] = useState<Record<string, string>>({});
@@ -66,9 +87,19 @@ function BatchView({ batch }: { batch: Batch }) {
 
   const shown = details ?? batch.details;
   const waiting = batch.items.filter((i) => i.status === "IN_REVIEW");
-  const sendable = batch.items.filter((i) => i.status === "DRAFT" || i.status === "CHANGES_REQUESTED");
-  const approved = batch.items.filter((i) => i.status === "APPROVED");
-  const picked = useMemo(() => Object.entries(decisions).filter(([itemId]) => waiting.some((w) => w.id === itemId)), [decisions, waiting]);
+  // Scripts not sent yet: the batch's own edit and send apply to these; a sent script is worked on its own page.
+  const sendable = batch.items.filter((i) => i.status === "DRAFT");
+  // Like a post: each script is checked (and fixed) before it's sent; a script changed since its check is checked again.
+  const unchecked = sendable.filter((i) => !i.check || i.check_stale);
+  const hasPosts = batch.items.some((i) => i.submission_id);
+  // Scripts not sent yet whose own details are incomplete (batches with details per script).
+  const unsentGaps = sendable.filter((i) => i.missing_details.length > 0);
+  // Reviewers open a script in the Content screener; its creator opens it on the post's script page.
+  const reviewerLinks = hasPermission("CONTENT_REVIEW_APPROVE") && batch.created_by !== user?.id;
+  const scriptHref = (item: BatchItem) =>
+    reviewerLinks ? `/script-review/scripts/${item.submission_id}` : `/submissions/${item.submission_id}/script`;
+  const firstWaiting = waiting[0];
+  const picked = Object.entries(decisions).filter(([itemId]) => waiting.some((w) => w.id === itemId));
   const approving = picked.filter(([, d]) => d.decision === "APPROVE").length;
   const sendingBack = picked.filter(([, d]) => d.decision === "SEND_BACK").length;
   const missingNotes = picked.some(([, d]) => d.decision === "SEND_BACK" && !d.note.trim());
@@ -91,7 +122,7 @@ function BatchView({ batch }: { batch: Batch }) {
           setSkipped(stuck);
           // What went through is no longer a pending choice; what didn't stays picked so it can be fixed and retried.
           setDecisions((prev) => Object.fromEntries(Object.entries(prev).filter(([itemId]) => stuck[itemId])));
-          const parts = [made && `${made} approved and made into posts`, back && `${back} sent back`].filter(Boolean);
+          const parts = [made && `${made} approved`, back && `${back} sent back`].filter(Boolean);
           if (parts.length) toast.success(parts.join(", "));
           if (Object.keys(stuck).length) toast.error(`${Object.keys(stuck).length} couldn't be decided. See the notes on those scripts.`);
         },
@@ -103,21 +134,21 @@ function BatchView({ batch }: { batch: Batch }) {
     if (!window.confirm("Delete this batch and its scripts?")) return;
     try {
       await scriptBatchService.remove(batch.id);
-      navigate("/script-batches");
+      navigate("/script-review");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't delete the batch");
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 pb-28">
+    <div className="mx-auto w-full max-w-[1400px] min-[112.5rem]:max-w-[2200px] space-y-5 pb-28">
       <div>
-        <Link to="/script-batches" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Script batches
+        <Link to="/script-review" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Script review
         </Link>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{batch.title}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">{batch.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {batch.items.length} script{batch.items.length === 1 ? "" : "s"}
               {batch.created_by_name ? ` · uploaded by ${batch.created_by_name}` : ""}
@@ -125,7 +156,7 @@ function BatchView({ batch }: { batch: Batch }) {
               {batch.sent_at ? ` · sent ${format(new Date(batch.sent_at), "MMM d, h:mm a")}` : ""}
             </p>
           </div>
-          {batch.can_edit && !approved.length && (
+          {batch.can_edit && !hasPosts && (
             <Button type="button" variant="ghost" size="sm" onClick={deleteBatch} className="gap-1.5 text-muted-foreground hover:text-destructive">
               <Trash2 className="h-4 w-4" /> Delete batch
             </Button>
@@ -140,29 +171,68 @@ function BatchView({ batch }: { batch: Batch }) {
         </Banner>
       )}
       {batch.error && <Banner tone="warn"><span>{batch.error}</span></Banner>}
-      {batch.status === "IN_REVIEW" && batch.can_edit === false && !batch.can_review && (
-        <Banner tone="info"><span>The scripts are with the reviewers. Each one you get approved becomes a post for you to film.</span></Banner>
+      {batch.status === "IN_REVIEW" && !reviewerLinks && (
+        <Banner tone="info"><span>Your scripts are with the reviewers. Each one is reviewed on its own page; you will be told when it is approved or needs changes.</span></Banner>
       )}
-      {batch.status === "CHANGES_REQUESTED" && batch.can_edit && (
-        <Banner tone="warn"><span>Some scripts were sent back. Update them below and send them again; approved scripts are already posts.</span></Banner>
+      {batch.status === "IN_REVIEW" && reviewerLinks && (
+        <Banner tone="info">
+          <span>
+            Open a script to review it with its flags, comments and edits, and step to the next from there. Or decide on several below at once.
+          </span>
+        </Banner>
+      )}
+      {batch.status === "CHANGES_REQUESTED" && !reviewerLinks && (
+        <Banner tone="warn"><span>Some scripts need your changes. Open each one to update it and send it back; approved scripts are already posts to film.</span></Banner>
       )}
       {batch.status === "DONE" && (
         <Banner tone="ok">
           <CheckCircle2 className="mt-0.5 h-4 w-4" />
           <span>
-            Every script is approved and has become a post.{" "}
-            <Link to="/submissions" className="font-medium underline">Open your posts</Link> to film and upload the videos.
+            Every script is approved, and each is its own post.{" "}
+            {!reviewerLinks && (<><Link to="/submissions" className="font-medium underline">Open your posts</Link> to film and upload the videos.</>)}
           </span>
         </Banner>
       )}
 
       {batch.can_edit ? (
-        <section aria-label="Details every post will share" className="space-y-3 rounded-xl border bg-card p-4">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">Details for every post</h2>
-            <p className="text-xs text-muted-foreground">Set once here; each approved script becomes a post with these details.</p>
+        <section aria-label="Details for the posts" className="space-y-3 rounded-xl border bg-card p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-foreground">Details for the posts</h2>
+              <p className="text-xs text-muted-foreground">
+                {batch.per_script_details
+                  ? "Each script has its own details, set on its card below. Sending makes a post for each, checked against the rules for its own details."
+                  : "Set once here. Sending makes a post for each script with these details, so each script is checked against the rules for them."}
+              </p>
+            </div>
+            <div role="radiogroup" aria-label="How the details are set" className="grid grid-cols-2 rounded-lg bg-muted p-0.5 text-xs font-semibold">
+              {([[false, "Same for every script"], [true, "Different for each script"]] as const).map(([value, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  role="radio"
+                  aria-checked={batch.per_script_details === value}
+                  disabled={actions.saveDetails.isPending}
+                  onClick={() => batch.per_script_details !== value && actions.saveDetails.mutate({ per_script_details: value })}
+                  className={`rounded-md px-3 py-1.5 transition-colors ${
+                    batch.per_script_details === value ? "bg-card text-blue-700 shadow-sm dark:text-blue-300" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-          <BatchDetailsForm details={shown} missing={batch.missing_details} onChange={changeDetails} />
+          {batch.per_script_details ? (
+            <p className="text-xs text-muted-foreground">
+              {unsentGaps.length === 0
+                ? "Every script's details are complete."
+                : `${unsentGaps.length} script${unsentGaps.length === 1 ? " needs its" : "s need their"} details: open Details on the card.`}{" "}
+              Switching back to the same details for every script keeps the details you set here.
+            </p>
+          ) : (
+            <BatchDetailsForm details={shown} missing={batch.missing_details} onChange={changeDetails} />
+          )}
         </section>
       ) : (
         batch.details.platforms?.length ? (
@@ -173,13 +243,17 @@ function BatchView({ batch }: { batch: Batch }) {
         ) : null
       )}
 
-      <section aria-label="Scripts" className="space-y-3">
+      <section aria-label="Scripts" className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3 min-[112.5rem]:grid-cols-4">
         {batch.items.map((item) => (
           <BatchItemCard
             key={item.id}
             item={item}
-            canEdit={batch.can_edit}
+            canEdit={batch.can_change_scripts}
             canReview={batch.can_review}
+            perScript={batch.per_script_details}
+            onSaveDetails={(d) => actions.updateItem.mutate({ itemId: item.id, details: d })}
+            openHref={item.submission_id ? scriptHref(item) : undefined}
+            openLabel={reviewerLinks ? (item.status === "IN_REVIEW" ? "Review script" : "Open script") : "Open script"}
             decision={decisions[item.id]}
             skippedReason={skipped[item.id]}
             saving={actions.updateItem.isPending}
@@ -191,46 +265,73 @@ function BatchView({ batch }: { batch: Batch }) {
             }
             onSave={(data) => actions.updateItem.mutate({ itemId: item.id, ...data })}
             onRemove={() => actions.removeItem.mutate(item.id)}
+            checking={checkingIds.includes(item.id)}
+            onCheck={batch.can_change_scripts ? () => void checkScripts([item.id]) : undefined}
           />
         ))}
-        {batch.can_edit && (
+        {batch.can_change_scripts && (
           <Button
             type="button"
             variant="outline"
             onClick={() => actions.addItem.mutate({ title: `Script ${batch.items.length + 1}`, body: "" })}
             disabled={actions.addItem.isPending}
-            className="gap-1.5"
+            className="col-span-full gap-1.5 justify-self-start"
           >
             <Plus className="h-4 w-4" /> Add a script
           </Button>
         )}
       </section>
 
-      {batch.can_edit && (
+      {batch.can_change_scripts && sendable.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-4 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+          <div className="mx-auto flex max-w-[1400px] min-[112.5rem]:max-w-[2200px] flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               {batch.missing_details.length
                 ? `Still needed: ${batch.missing_details.join(", ")}`
-                : `${sendable.length} script${sendable.length === 1 ? "" : "s"} ready to send`}
+                : unsentGaps.length
+                  ? `Still needed: ${unsentGaps.slice(0, 3).map((i) => `${i.title} (${i.missing_details.join(", ")})`).join("; ")}${unsentGaps.length > 3 ? ` and ${unsentGaps.length - 3} more` : ""}`
+                  : unchecked.length
+                    ? `${unchecked.length} script${unchecked.length === 1 ? "" : "s"} to check before sending`
+                    : `${sendable.length} script${sendable.length === 1 ? "" : "s"} checked and ready to send`}
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+            {unchecked.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void checkScripts(unchecked.map((i) => i.id))}
+                disabled={checkingIds.length > 0}
+                className="gap-2"
+              >
+                {checkingIds.length > 0 ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                {checkingIds.length > 0 ? `Checking ${checkingIds.length}…` : unchecked.length === 1 ? "Check compliance" : `Check all ${unchecked.length}`}
+              </Button>
+            )}
             <Button
               type="button"
               onClick={() => actions.send.mutate()}
-              disabled={!batch.can_send || actions.send.isPending}
+              disabled={!batch.can_send || actions.send.isPending || unchecked.length > 0}
               className="gap-2 bg-blue-700 text-white hover:bg-blue-800"
             >
               {actions.send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Send for review
             </Button>
+            </div>
           </div>
         </div>
       )}
 
       {batch.can_review && waiting.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-4 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+          <div className="mx-auto flex max-w-[1400px] min-[112.5rem]:max-w-[2200px] flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
+              {firstWaiting?.submission_id && (
+                <Button asChild size="sm" className="gap-1.5 bg-blue-700 text-white hover:bg-blue-800">
+                  <Link to={scriptHref(firstWaiting)}>
+                    Review one by one <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"

@@ -51,7 +51,7 @@ export function useBatchActions(id: string) {
 
   return {
     saveDetails: useMutation({
-      mutationFn: (data: { title?: string; details?: BatchDetails }) => scriptBatchService.update(id, data),
+      mutationFn: (data: { title?: string; details?: BatchDetails; per_script_details?: boolean }) => scriptBatchService.update(id, data),
       onSuccess: keep,
       onError: fail("Couldn't save the details"),
     }),
@@ -61,7 +61,7 @@ export function useBatchActions(id: string) {
       onError: fail("Couldn't add the script"),
     }),
     updateItem: useMutation({
-      mutationFn: ({ itemId, ...data }: { itemId: string; title?: string; body?: string }) =>
+      mutationFn: ({ itemId, ...data }: { itemId: string; title?: string; body?: string; details?: BatchDetails }) =>
         scriptBatchService.updateItem(id, itemId, data),
       onSuccess: keep,
       onError: fail("Couldn't save the script"),
@@ -70,6 +70,11 @@ export function useBatchActions(id: string) {
       mutationFn: (itemId: string) => scriptBatchService.removeItem(id, itemId),
       onSuccess: keep,
       onError: fail("Couldn't remove the script"),
+    }),
+    checkItem: useMutation({
+      mutationFn: (itemId: string) => scriptBatchService.checkItem(id, itemId),
+      onSuccess: keep,
+      onError: fail("Couldn't check the script"),
     }),
     send: useMutation({
       mutationFn: () => scriptBatchService.send(id),
@@ -87,8 +92,9 @@ export function useReviewBatch(id: string) {
     onSuccess: (result) => {
       queryClient.setQueryData(["script-batch", id], result.batch);
       queryClient.invalidateQueries({ queryKey: ["script-batches"] });
-      // Approved scripts are now posts.
+      // Each script is a post with its own script page and place in the screener's queue.
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["script"] });
       queryClient.invalidateQueries({ queryKey: ["script-queue"] });
     },
     onError: (e) => toast.error(message(e, "Couldn't save the decisions")),

@@ -21,6 +21,22 @@ export interface ScriptVersion {
   reviewed_at?: string | null;
 }
 
+/** Where a script sits in the batch it was uploaded with, for stepping through the batch one script at a time. */
+export interface ScriptBatchRef {
+  batch_id: string;
+  title: string;
+  /** 1-based place in the batch, and how many scripts it has. */
+  position: number;
+  total: number;
+  /** The posts of the scripts before and after this one. */
+  previous_id?: string | null;
+  next_id?: string | null;
+  /** The next script after this one still waiting for a reviewer (going round the batch). */
+  next_waiting_id?: string | null;
+  /** How many of the batch's scripts are still waiting for a reviewer. */
+  waiting: number;
+}
+
 export interface ScriptStage {
   /** Sent, and still being read and scored in the background (it reaches the reviewers when that's done). */
   processing?: boolean;
@@ -41,6 +57,13 @@ export interface ScriptStage {
   can_submit: boolean;
   can_review: boolean;
   can_respond: boolean;
+  /** Set when the script came in a batch of scripts uploaded together. */
+  batch?: ScriptBatchRef | null;
+  /** The creator's compliance check of the uploaded script, run before sending it. */
+  precheck?: StoredCheck | null;
+  /** The script, the post's details or the rulebook changed since that check. */
+  precheck_stale?: boolean;
+  precheck_at?: string | null;
 }
 
 export interface ScriptQueueItem {
@@ -61,6 +84,8 @@ export interface ScriptQueueItem {
   ai_unavailable?: boolean;
   traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
   approval_needed_by?: string | null;
+  /** Set when the script came in a batch (listed with that batch). */
+  batch_id?: string | null;
   script_status: "IN_REVIEW" | "CHANGES_REQUESTED" | "EDITS_PROPOSED" | "APPROVED";
   /** When the reviewer decided; null while it waits. */
   decided_at?: string | null;

@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Clock,
   FilePen,
+  FileStack,
   FileText,
   Film,
   ImagePlus,
@@ -81,6 +82,7 @@ import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
 import PostSteps from "@/components/submissions/PostSteps";
+import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import { POST_STEPS, missingText, ranOnce, resumePath, stepPath } from "@/lib/postSteps";
 import type { PostStepKey, Submission, SubmissionSummary } from "@/types/submission";
 
@@ -821,9 +823,20 @@ function ReviewCard({
     );
   } else if (summary.status === "APPROVED" && (mine || summary.can_manage_approval)) {
     footerTitle = "Approved";
-    footerNote = "It's on the content calendar. Reschedule it or reopen it if something changes.";
+    footerNote = mine
+      ? "Your post is approved! You can now publish it directly to your channels or view it on the calendar."
+      : "It's on the content calendar. Reschedule it or reopen it if something changes.";
     actions = (
       <div className="flex flex-wrap justify-end gap-2">
+        {mine && summary.platforms[0] && (
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => navigate(`/content-calendar/publish/sub-${summary.id}/${summary.platforms[0]}`)}
+          >
+            <Send className="w-3.5 h-3.5" /> Publish post
+          </Button>
+        )}
         <ApprovalActions target={sub ?? summary} isCreator={mine} buttonClassName="h-9 text-xs font-semibold gap-1.5" />
       </div>
     );
@@ -1070,6 +1083,8 @@ function ReviewCard({
 
 export default function SubmissionsListPage() {
   const [stage, setStage] = useState<"" | Stage>("");
+  // Several video scripts in one document, split and sent for review together.
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [platforms, setPlatforms] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
@@ -1244,6 +1259,14 @@ export default function SubmissionsListPage() {
               <Clock className="w-4 h-4" /> {waitingForMe} waiting for your review
             </button>
           )}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-2 rounded-lg px-4 text-sm font-semibold"
+            onClick={() => setBulkDialogOpen(true)}
+          >
+            <FileStack className="w-4 h-4" /> Upload several scripts
+          </Button>
           <Button asChild className="h-10 rounded-lg px-4 gap-2 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white">
             <Link to="/submissions/new">
               <Plus className="w-4 h-4" /> New post
@@ -1656,6 +1679,8 @@ export default function SubmissionsListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BulkScriptDialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import HighlightCards, { AddressedCards } from "@/components/script/HighlightCards";
 import HighlightableText, { type Highlight, type HighlightableHandle } from "@/components/script/HighlightableText";
+import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
@@ -69,10 +70,13 @@ export default function ScriptReviewWorkspace({
   submissionId,
   isReviewer,
   onUploadScript,
+  onOpenScript,
 }: {
   submissionId: string;
   isReviewer: boolean;
   onUploadScript?: () => void;
+  /** Open another script of the batch this one came in (the screener keeps its list, so it picks the script itself). */
+  onOpenScript?: (submissionId: string) => void;
 }) {
   const stage = useScriptStage(submissionId);
   const data = stage.data;
@@ -106,16 +110,22 @@ export default function ScriptReviewWorkspace({
     );
   }
   return (
-    <Editor
-      key={`${submissionId}-${sent.version_number}`}
-      submissionId={submissionId}
-      versions={data.versions}
-      title={data.title}
-      reference={data.reference_code}
-      status={data.status}
-      canReview={isReviewer && data.can_review}
-      onUploadScript={onUploadScript}
-    />
+    // A script from a batch has the batch's strip across the top; the script and its review panel sit side by side below.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {data.batch && <ScriptBatchBar batch={data.batch} reviewer={isReviewer} onOpen={onOpenScript} />}
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <Editor
+          key={`${submissionId}-${sent.version_number}`}
+          submissionId={submissionId}
+          versions={data.versions}
+          title={data.title}
+          reference={data.reference_code}
+          status={data.status}
+          canReview={isReviewer && data.can_review}
+          onUploadScript={onUploadScript}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -240,11 +250,18 @@ function Editor({
     window.setTimeout(() => editorRef.current?.find(term), 60);
   };
   /** A flag card was clicked: take the reviewer to its wording in the script (the next place each time). */
-  const goToFlag = (v: ComplianceViolation) => {
+  const goToFlag = (v: ComplianceViolation, specificTerm?: string) => {
     const missing = v.kind === "MISSING_DISCLAIMER";
-    const terms = missing ? [] : v.flagged_terms;
+    const matched = v.evaluation?.matched_text?.trim();
+    const candidateTerms = specificTerm
+      ? [specificTerm]
+      : [
+          ...(matched ? [matched] : []),
+          ...(missing ? [] : v.flagged_terms),
+        ].filter(Boolean);
+
     if (mode === "edit") {
-      if (terms[0]) findInScript(terms[0]);
+      if (candidateTerms[0]) findInScript(candidateTerms[0]);
       return;
     }
     if (compare !== "mine") setCompare("mine");
@@ -252,7 +269,9 @@ function Editor({
     locateCount.current[v.rule_id] = n + 1;
     // The script may need a render first when the view just changed.
     window.setTimeout(() => {
-      if (terms.length === 0 || textRef.current?.locate(terms, n) === 0) textRef.current?.toEnd();
+      if (candidateTerms.length === 0 || textRef.current?.locate(candidateTerms, n) === 0) {
+        textRef.current?.toEnd();
+      }
     }, compare !== "mine" ? 60 : 0);
   };
   /** A highlight card was clicked: take the reviewer to that wording. */
@@ -569,7 +588,7 @@ function Editor({
                         canEdit={canReview}
                         added
                         onFind={findInScript}
-                        onGo={() => goToFlag(v)}
+                        onGo={(term) => goToFlag(v, term)}
                         onAddDisclaimer={(text) => addDisclaimer(v, text)}
                         onDiscard={() => discardDisclaimer(v.rule_id)}
                       />
@@ -586,7 +605,7 @@ function Editor({
                           v={v}
                           canEdit={canReview}
                           onFind={findInScript}
-                          onGo={() => goToFlag(v)}
+                          onGo={(term) => goToFlag(v, term)}
                           onAddDisclaimer={(text) => addDisclaimer(v, text)}
                           onDiscard={() => discardDisclaimer(v.rule_id)}
                         />
@@ -770,7 +789,7 @@ function Editor({
   );
 }
 
-function FlagCard({
+export function FlagCard({
   v,
   canEdit,
   onFind,
@@ -784,11 +803,11 @@ function FlagCard({
   /** The reviewer added this flag disclaimer to the script: show the card struck through. */
   added?: boolean;
   /** Take that addition back. */
-  onDiscard: () => void;
-  onFind: (term: string) => void;
-  /** Go to this flag's wording in the script. */
-  onGo: () => void;
-  onAddDisclaimer: (text: string) => void;
+  onDiscard?: () => void;
+  onFind?: (term: string) => void;
+  /** Go to this flag's wording in the script. Without it the card is just information (as on the creator's page). */
+  onGo?: (specificTerm?: string) => void;
+  onAddDisclaimer?: (text: string) => void;
 }) {
   const critical = v.traffic_light === "RED";
   const missing = v.kind === "MISSING_DISCLAIMER";
@@ -796,17 +815,17 @@ function FlagCard({
   const struck = added ? "line-through decoration-muted-foreground/70" : "";
   return (
     <article
-      role="button"
-      tabIndex={0}
-      title="Show in the script"
-      onClick={onGo}
+      role={onGo ? "button" : undefined}
+      tabIndex={onGo ? 0 : undefined}
+      title={onGo ? "Show in the script" : undefined}
+      onClick={onGo ? () => onGo() : undefined}
       onKeyDown={(e) => {
-        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        if (onGo && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
           onGo();
         }
       }}
-      className={`flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors hover:border-sky-400/70 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${cleared || added ? "opacity-80" : ""}`}
+      className={`flex flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${onGo ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/30" : ""} ${cleared || added ? "opacity-80" : ""}`}
     >
       <div className="flex items-center gap-2">
         <StatusPill status={statusOf(v)} critical={critical} />
@@ -816,7 +835,20 @@ function FlagCard({
         <RuleNumberBadge v={v} />
         <p className={`mt-1 text-sm font-semibold text-foreground ${struck}`}>{v.title}</p>
       </div>
-      {v.evaluation ? <ContextNote v={v} /> : <p className={`text-[13px] text-foreground/80 ${struck}`}>{v.explanation}</p>}
+      {v.evaluation ? (
+        <ContextNote
+          v={v}
+          onLocate={
+            onGo
+              ? (term) => {
+                  onGo(term || undefined);
+                }
+              : undefined
+          }
+        />
+      ) : (
+        <p className={`text-[13px] text-foreground/80 ${struck}`}>{v.explanation}</p>
+      )}
       {!missing && !cleared && v.flagged_terms.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {v.flagged_terms.map((t) => (
@@ -825,7 +857,7 @@ function FlagCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onFind(t);
+                onFind?.(t);
               }}
               disabled={!canEdit}
               className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 hover:bg-amber-200 disabled:cursor-default disabled:hover:bg-amber-100 dark:bg-amber-500/15 dark:text-amber-200"
@@ -852,7 +884,7 @@ function FlagCard({
               disabled={added}
               onClick={(e) => {
                 e.stopPropagation();
-                onAddDisclaimer(v.missing_disclaimers![0]);
+                onAddDisclaimer?.(v.missing_disclaimers![0]);
               }}
             >
               {added ? "Added to the end of the script" : "Add it to the end of the script"}
@@ -864,7 +896,7 @@ function FlagCard({
               disabled={!added}
               onClick={(e) => {
                 e.stopPropagation();
-                onDiscard();
+                onDiscard?.();
               }}
             >
               Discard changes

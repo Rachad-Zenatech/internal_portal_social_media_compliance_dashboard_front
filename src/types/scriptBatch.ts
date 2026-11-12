@@ -24,12 +24,18 @@ export interface BatchItem {
   body: string;
   status: BatchItemStatus;
   check?: StoredCheck | null;
+  /** Not sent yet: the script or its details changed since the creator's check. */
+  check_stale?: boolean;
   review_note?: string | null;
   reviewed_by_name?: string | null;
   reviewed_at?: string | null;
   /** The post made from it once approved. */
   submission_id?: string | null;
   reference_code?: string | null;
+  /** The details its post gets: its own when the batch sets them per script, else the batch's. */
+  details: BatchDetails;
+  /** What is still missing from them (per-script batches only). */
+  missing_details: string[];
 }
 
 export interface Batch {
@@ -40,13 +46,18 @@ export interface Batch {
   created_by: string;
   created_by_name?: string | null;
   details: BatchDetails;
-  /** The details still missing before it can be sent, by their names on the form. */
+  /** One set of details for every script (false), or each script has its own (true). */
+  per_script_details: boolean;
+  /** The shared details still missing before it can be sent, by their names on the form. */
   missing_details: string[];
   items: BatchItem[];
   error?: string | null;
   sent_at?: string | null;
   created_at: string;
+  /** The details form: until the batch is first sent. */
   can_edit: boolean;
+  /** Edit, add or remove scripts that haven't been sent yet. */
+  can_change_scripts: boolean;
   can_send: boolean;
   can_review: boolean;
 }

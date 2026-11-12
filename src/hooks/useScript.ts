@@ -79,6 +79,11 @@ export function useScriptActions(submissionId: string) {
       }
     },
   });
+  const precheck = useMutation({
+    mutationFn: () => scriptService.precheck(submissionId),
+    onSuccess: (s) => queryClient.setQueryData(["script", submissionId], s),
+    onError: fail("check the script"),
+  });
   const decide = useMutation({
     mutationFn: (data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
       scriptService.decide(submissionId, data),
@@ -109,7 +114,9 @@ export function useScriptActions(submissionId: string) {
       if (!duplicate(err, () => revise.mutate({ ...vars, confirmRepost: true }))) fail("send the script")(err);
     },
   });
-  return { submit, decide, accept, revise };
+  return {
+    precheck,
+    submit, decide, accept, revise };
 }
 
 /** The value, once it has stopped changing for `ms`. */

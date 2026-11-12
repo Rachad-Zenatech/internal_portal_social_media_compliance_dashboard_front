@@ -72,9 +72,9 @@ export const navigation: NavigationItem[] = [
     views: ["reviewer"],
   },
   {
-    // Several scripts uploaded in one document: creators send them, reviewers review them all at once.
-    label: "Script batches",
-    path: "/script-batches",
+    // Every script, single or in a batch: creators upload and follow them, reviewers review them.
+    label: "Script review",
+    path: "/script-review",
     icon: FileStack,
     section: "MAIN",
     navigationCode: "DASHBOARD",

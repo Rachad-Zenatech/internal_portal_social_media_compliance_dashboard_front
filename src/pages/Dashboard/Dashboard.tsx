@@ -103,7 +103,7 @@ function ReviewerDashboard() {
     setActiveVideoId(`sub-${id}`);
     navigate("/compliance/scanner");
   };
-  const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/compliance/scanner?script=${r.s.id}`) : openInScreener(r.s.id));
+  const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/script-review/scripts/${r.s.id}`) : openInScreener(r.s.id));
 
   // The review list shows five at a time; reviewed posts drop out, so keep the page in range.
   const [rawReviewPage, setReviewPage] = useState(0);

@@ -16,7 +16,7 @@ export const scriptBatchService = {
     return apiClient.post<Batch>("/api/script-batches", form, quiet);
   },
 
-  update: (id: string, data: { title?: string; details?: BatchDetails }) =>
+  update: (id: string, data: { title?: string; details?: BatchDetails; per_script_details?: boolean }) =>
     apiClient.patch<Batch>(`/api/script-batches/${id}`, data, quiet),
 
   remove: (id: string) => apiClient.delete<null>(`/api/script-batches/${id}`, quiet),
@@ -24,11 +24,13 @@ export const scriptBatchService = {
   addItem: (id: string, data: { title: string; body: string }) =>
     apiClient.post<Batch>(`/api/script-batches/${id}/items`, data, quiet),
 
-  updateItem: (id: string, itemId: string, data: { title?: string; body?: string }) =>
+  updateItem: (id: string, itemId: string, data: { title?: string; body?: string; details?: BatchDetails }) =>
     apiClient.patch<Batch>(`/api/script-batches/${id}/items/${itemId}`, data, quiet),
 
   removeItem: (id: string, itemId: string) => apiClient.delete<Batch>(`/api/script-batches/${id}/items/${itemId}`, quiet),
 
+  /** Check one script against the rulebook before sending it (the result is kept and reused on send). */
+  checkItem: (id: string, itemId: string) => apiClient.post<Batch>(`/api/script-batches/${id}/items/${itemId}/check`, undefined, quiet),
   /** Send the waiting scripts to the reviewers; they are checked in the background. */
   send: (id: string) => apiClient.post<Batch>(`/api/script-batches/${id}/send`, undefined, quiet),
 
