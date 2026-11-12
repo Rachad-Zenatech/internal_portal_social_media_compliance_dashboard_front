@@ -11,7 +11,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/AppShell/Breadcrumbs.tsx (158 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
 - src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
-- src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
+- src/components/AppShell/MessageHubStatusDropdown.tsx (587 lines) - message hub status dropdown (components  app shell)
 - src/components/AppShell/Navigation.tsx (151 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (260 lines) - The page an item stands for, as the address bar shows it.
@@ -38,7 +38,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
 - src/components/script/ScriptInsights.tsx (104 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
 - src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
-- src/components/script/ScriptReviewWorkspace.tsx (948 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (966 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -54,7 +54,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
-- src/components/submissions/FindingStatus.tsx (194 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+- src/components/submissions/FindingStatus.tsx (220 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
@@ -122,6 +122,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/lib/contentCalendar.ts (430 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
+- src/lib/locateOnPage.ts (159 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - src/lib/postSteps.ts (99 lines) - post steps (lib)
 - src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.

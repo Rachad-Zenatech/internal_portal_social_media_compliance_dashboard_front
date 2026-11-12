@@ -30,7 +30,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
 - `GlobalProgressOverlay` (export function)
 
-## src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
+## src/components/AppShell/MessageHubStatusDropdown.tsx (587 lines) - message hub status dropdown (components  app shell)
 - `HubQueueOrStreamItem` (export interface)
 - `HubChannelGroupStatus` (export interface)
 - `HubConnectedServer` (export interface)
@@ -269,7 +269,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
 - `ScriptPrecheck` (export function) - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
 
-## src/components/script/ScriptReviewWorkspace.tsx (948 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (966 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -298,6 +298,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `approve` (fn) - Approving asks when the video is due (a week by default, or none).
     - `confirmDecision` (fn)
 - `FlagCard` (export function)
+    - `go` (fn) - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
 - `VersionHistory` (export function) - Every version of the script, newest first, with the reviewer's call and note on each.
 
 ## src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
@@ -383,7 +384,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Details` (function) - Each dropdown: what both posts share, and what only this post adds.
 - `DuplicateNotice` (export function) - Posts already sent for approval with the same content and caption as this one.
 
-## src/components/submissions/FindingStatus.tsx (194 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+## src/components/submissions/FindingStatus.tsx (220 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `statusOf` (export const) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `isWarning` (export const)
 - `Meta` (interface)
@@ -392,8 +393,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `groupFindings` (export function) - The findings split by status, each group in the order given.
 - `StatusPill` (export function)
 - `ContextNote` (export function) - How the AI read a finding in context: what it's about, why, and how sure it was.
-- `FindingGroup` (export function) - A heading with a count for a group of findings; the cleared group folds away.
-- `OtherFindings` (export function) - The findings that aren't violations, for screens that list violations their own way: what still needs a look or a  source, and the trigge...
 
 ## src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - `FlagReviewControl` (export function) - A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that.
@@ -901,6 +900,21 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `clearLinkToken` (export function)
 - `useLinkToken` (export function) - The link token, re-rendering when it changes (e.g.
 - `withLinkToken` (export function) - A media URL with the link token added, for <img>, <video> and similar.
+
+## src/lib/locateOnPage.ts (159 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
+- `LOCATE_SKIP_ATTR` (export const) - Wording inside an element with this attribute (the finding cards themselves) is never a match.
+- `HighlightRegistry` (type)
+- `registry` (const)
+- `norm` (const) - Lowercase, plain quotes and dashes, single spaces: so the AI's quote matches what's on screen.
+- `collapse` (function) - Text with whitespace runs collapsed, and where each kept character came from.
+- `cleanTerm` (const)
+- `shown` (const)
+- `skipped` (const)
+- `Hit` (type)
+- `textHits` (function)
+- `fieldHits` (function)
+- `flashRange` (function)
+- `locateOnPage` (export function) - Go to the wording on the page (the next place it appears each time).
 
 ## src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - `unique` (function)
