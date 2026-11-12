@@ -6,6 +6,7 @@ import { Field, MultiSelect } from "@/components/submissions/FormFields";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import type { BatchDetails } from "@/types/scriptBatch";
 
@@ -43,7 +44,12 @@ export default function BatchDetailsForm({
     queryFn: () => submissionService.reviewers(brands),
     staleTime: 60_000,
   });
-  const reviewers = reviewersQuery.data ?? [];
+  const { user } = useAuth();
+  // Nobody approves their own script (a super admin included), so the creator isn't offered as its reviewer.
+  const reviewers = useMemo(
+    () => (reviewersQuery.data ?? []).filter((r) => r.id !== user?.id),
+    [reviewersQuery.data, user?.id]
+  );
   const accounts = useMemo(
     () => (options?.accounts ?? []).filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
     [options, brands]

@@ -166,7 +166,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ACTIVITY_STYLE` (export const) - Each kind of update on a post, with its own icon and colour (same on both dashboards).
 - `ScoreRing` (export function) - An average rulebook score as a ring.
 
-## src/components/script/BatchDetailsForm.tsx (174 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+## src/components/script/BatchDetailsForm.tsx (180 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `toLocalInput` (const) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
