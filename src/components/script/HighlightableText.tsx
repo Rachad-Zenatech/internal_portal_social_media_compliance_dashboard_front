@@ -48,11 +48,12 @@ function textNodes(root: HTMLElement) {
 
 function rangeAt(nodes: { node: Text; start: number }[], from: number, to: number): Range | null {
   const a = nodes.find((n) => from >= n.start && from < n.start + n.node.data.length);
+  // Find node b where `to` falls within the node's span, or exactly at its end boundary
   const b = nodes.find((n) => to > n.start && to <= n.start + n.node.data.length);
   if (!a || !b) return null;
   const r = document.createRange();
-  r.setStart(a.node, from - a.start);
-  r.setEnd(b.node, to - b.start);
+  r.setStart(a.node, Math.min(from - a.start, a.node.data.length));
+  r.setEnd(b.node, Math.min(to - b.start, b.node.data.length));
   return r;
 }
 
@@ -306,12 +307,25 @@ const HighlightableText = forwardRef<
 
   /** Scroll a stretch of the script into view and flash it. */
   const reveal = (r: Range) => {
-    r.startContainer.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const el = r.startContainer instanceof Element ? r.startContainer : r.startContainer.parentElement;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     const reg = registry();
-    if (!reg) return;
-    reg.set(colorName(FLASH), makeHighlight([r]));
-    if (flashTimer.current) window.clearTimeout(flashTimer.current);
-    flashTimer.current = window.setTimeout(() => reg.delete(colorName(FLASH)), 1800);
+    if (reg) {
+      reg.set(colorName(FLASH), makeHighlight([r]));
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+      flashTimer.current = window.setTimeout(() => reg.delete(colorName(FLASH)), 1800);
+    } else if (el) {
+      // Fallback pulse animation if CSS Custom Highlight API is not supported
+      el.animate?.(
+        [
+          { backgroundColor: "rgba(251, 146, 60, 0.5)" },
+          { backgroundColor: "transparent" },
+        ],
+        { duration: 1800, iterations: 1 }
+      );
+    }
   };
 
   useImperativeHandle(
@@ -331,6 +345,19 @@ const HighlightableText = forwardRef<
             const needle = t.toLowerCase();
             for (let i = lower.indexOf(needle); i !== -1; i = lower.indexOf(needle, i + needle.length)) {
               hits.push({ at: i, len: needle.length });
+            }
+          }
+          // If multi-word phrase didn't match directly, try sub-phrases of 3+ words
+          if (hits.length === 0 && clean.includes(" ")) {
+            const words = clean.split(/\s+/).filter(Boolean);
+            if (words.length >= 3) {
+              const windowSize = Math.min(words.length, 4);
+              for (let w = 0; w <= words.length - windowSize; w++) {
+                const sub = words.slice(w, w + windowSize).join(" ").toLowerCase();
+                for (let i = lower.indexOf(sub); i !== -1; i = lower.indexOf(sub, i + sub.length)) {
+                  hits.push({ at: i, len: sub.length });
+                }
+              }
             }
           }
         }
