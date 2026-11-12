@@ -19,6 +19,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
 - `CanvaReimportBar` (export function) L14 - For content imported from Canva: which design and revision it is, and a one-click way to bring in the latest  version after editing it in...
 
+## src/components/submissions/CaptionExtras.tsx (42 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+- `Props` (interface) L4
+- `CaptionExtras` (export function) L18 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+
 ## src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - `CaptionSignalsBar` (export function) L12 - Live feedback under the caption: the hashtags, cashtags and mentions in it, whether there are more hashtags than  the platforms suit, and...
 
@@ -250,6 +254,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `counts` (function) L26
 - `Row` (function) L31
 - `SourceChecks` (export function) L111 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+
+## src/components/submissions/SourceLinksField.tsx (243 lines) - source links field (components submissions)
+- `Props` (interface) L8
+- `normalizeDraftUrl` (function) L24
+- `ClaimResultRow` (function) L37
+- `SourceLinkRow` (function) L58
+- `SourceLinksField` (export function) L139 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
 
 ## src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - `StageTabs` (export function) L4 - The row of status pills above a list, each with its count; click the chosen one again to clear it.

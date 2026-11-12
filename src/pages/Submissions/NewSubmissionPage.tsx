@@ -86,7 +86,7 @@ import PostPreview from "@/components/submissions/PostPreview";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
 import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
-import PlatformCaptions from "@/components/submissions/PlatformCaptions";
+import CaptionExtras from "@/components/submissions/CaptionExtras";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
@@ -363,6 +363,7 @@ export default function NewSubmissionPage() {
   const [caption, setCaption] = useState("");
   // Platforms with their own caption; the rest post the main one.
   const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
+  const [sourceLinks, setSourceLinks] = useState<string[]>([]);
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
@@ -569,6 +570,7 @@ export default function NewSubmissionPage() {
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
         setPlatformCaptions(s.platform_captions ?? {});
+        setSourceLinks(s.source_links ?? []);
         setSavedAt(new Date(s.updated_at));
         setSaveState("saved");
       })
@@ -615,6 +617,7 @@ export default function NewSubmissionPage() {
       caption_text: editorRef.current?.innerText.trim() || "",
       // Only for platforms it still goes to; a platform that was taken off loses its caption.
       platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
+      source_links: sourceLinks,
       // The analysis picks its Messaging Context on its own (any choice saved by an earlier version is cleared).
       context_picks: {},
       rule_sets: ruleSets,
@@ -2119,19 +2122,15 @@ export default function NewSubmissionPage() {
               audiences={audiences}
               onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
             />
-            {platforms.length > 1 && (
-              <PlatformCaptions
-                platforms={platforms}
-                captions={platformCaptions}
-                mainCaption={caption}
-                limitFor={(p) => CHAR_LIMITS[p]}
-                readOnly={readOnly}
-                onChange={(next) => {
-                  setPlatformCaptions(next);
-                  markEdited();
-                }}
-              />
-            )}
+            <CaptionExtras
+              platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
+              limitFor={(p) => CHAR_LIMITS[p]}
+              sourceLinks={sourceLinks}
+              submissionId={submissionId} readOnly={readOnly}
+              ensureSubmissionId={() => save({ force: true })}
+              onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
+              onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
+            />
             {isMissing("caption") && (
               <p className="text-[11px] text-red-600">
                 Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from

@@ -1,6 +1,7 @@
 import { BASE_URL, apiClient } from "@/services/apiClient";
 import { ApiError, handleResponse } from "@/services/helper";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
+import type { SourceLinkCheck } from "@/types/sourceLink";
 import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
 import type {
   AiUsage,
@@ -81,6 +82,10 @@ export const submissionService = {
 
   /** Autosave and explicit saves both use this; it never shows the global loading overlay. */
   update: (id: string, data: SubmissionUpdate) => apiClient.patch<Submission>(`/api/submissions/${id}`, data, quiet),
+
+  /** Quickly fetch a source URL and check whether it supports the post's current material. */
+  checkSourceLink: (id: string, url: string) =>
+    apiClient.post<SourceLinkCheck>(`/api/submissions/${id}/check-source-link`, { url }, quiet),
 
   deleteDraft: (id: string) => apiClient.delete<null>(`/api/submissions/${id}`),
 
