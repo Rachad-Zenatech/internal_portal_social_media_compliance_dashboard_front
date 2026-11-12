@@ -15,12 +15,12 @@ import {
   statusPillOf,
   Score,
   Section,
-  StatCard,
   Thumb,
   greeting,
   issuesText,
   statusOf,
 } from "@/components/dashboard/dashboardParts";
+import CreatorStats, { type PostFilter } from "@/components/dashboard/CreatorStats";
 import DayAgenda from "@/components/dashboard/DayAgenda";
 import PostSteps from "@/components/submissions/PostSteps";
 import { POST_STEPS, ranOnce, stepPath } from "@/lib/postSteps";
@@ -47,7 +47,6 @@ const NEXT_STEP_LIMIT = 3;
 const RECENT_LIMIT = 5;
 const ACTIVITY_LIMIT = 5;
 
-type PostFilter = "all" | "IN_REVIEW" | "APPROVED";
 const FILTERS: { v: PostFilter; label: string }[] = [
   { v: "all", label: "All" },
   { v: "IN_REVIEW", label: "In review" },
@@ -228,6 +227,11 @@ export default function CreatorDashboard() {
   const soonestDue = dueLabel(actions[0]?.due_kind === "REVISION" || actions[0]?.due_kind === "VIDEO" ? actions[0]?.due_at : null);
 
   const [filter, setFilter] = useState<PostFilter>("all");
+  // "Needs your action" narrows the Needs you list to what is overdue or to film; the list opens to all of it on request.
+  const [needsOnly, setNeedsOnly] = useState(false);
+  const [needsOpen, setNeedsOpen] = useState(false);
+  const needs = needsOnly ? actions : nextSteps;
+  const openPost = (s: SubmissionSummary) => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`);
   const sent = useMemo(
     () =>
       mine
@@ -243,13 +247,9 @@ export default function CreatorDashboard() {
 
   const loading = submissions.isLoading;
   const waiting = nextSteps.length;
-  const headline = loading
-    ? ""
-    : waiting === 0
-    ? "Nothing is waiting on you right now."
-    : `You have ${waiting} thing${waiting === 1 ? "" : "s"} waiting on you.${
-        !soonestDue ? "" : soonestDue.text.startsWith("Overdue") ? " One is overdue." : ` One is ${soonestDue.text.replace(/^Due/, "due")}.`
-      }`;
+  const headline = loading ? "" : waiting === 0 ? "Nothing is waiting on you right now." : `You have ${waiting} thing${waiting === 1 ? "" : "s"} waiting on you.`;
+  // The most urgent one, as a shortcut to it.
+  const soonestText = !soonestDue ? null : soonestDue.text.startsWith("Overdue") ? "One is overdue." : `One is ${soonestDue.text.replace(/^Due/, "due")}.`;
 
   return (
     <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
@@ -260,7 +260,14 @@ export default function CreatorDashboard() {
             {greeting(now)}
             {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}!
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{headline}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {headline}
+            {!loading && soonestText && actions[0] && (
+              <button type="button" onClick={() => openPost(actions[0])} className="ml-1 font-medium text-blue-700 hover:underline dark:text-blue-300">
+                {soonestText} Open it
+              </button>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -284,58 +291,47 @@ export default function CreatorDashboard() {
         </div>
       </div>
 
-      {/* At a glance */}
-      <section aria-label="Your posts at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard
-          label="Needs your action"
-          value={loading ? "–" : actions.length}
-          note={soonestDue?.text ?? (actions.length ? `${changes.length} to fix · ${actions.length - changes.length} to film` : "All clear")}
-          noteTone={soonestDue?.urgent ? "red" : soonestDue ? "amber" : "muted"}
-        />
-        <StatCard
-          label="In review"
-          value={loading ? "–" : inReview.length}
-          note={oldestInReview ? `Oldest waiting ${formatDistanceToNow(oldestInReview)}` : "Nothing waiting"}
-        />
-        <StatCard
-          label="Approved"
-          value={summary.data ? summary.data.approved : "–"}
-          note={`Last 30 days${scheduled ? ` · ${scheduled} scheduled` : ""}`}
-        />
-        <StatCard
-          label="Average compliance score"
-          value={
-            summary.data?.average_score != null ? (
-              <>
-                {summary.data.average_score}
-                <span className="text-base font-medium text-muted-foreground"> / 100</span>
-              </>
-            ) : (
-              "–"
-            )
-          }
-          note="Last 30 days"
-        />
-      </section>
+      <CreatorStats
+        loading={loading}
+        actions={actions}
+        changes={changes}
+        soonestDue={soonestDue}
+        inReview={inReview}
+        oldestInReview={oldestInReview}
+        summary={summary.data}
+        scheduled={scheduled}
+        filter={filter}
+        needsOnly={needsOnly}
+        onNeeds={() => setNeedsOnly((on) => !on)}
+        onFilter={setFilter}
+      />
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: what needs them, and what they've sent */}
         <div className="flex min-w-0 flex-col gap-6">
+          <div id="creator-needs" className="scroll-mt-4">
           <Section
             title="Needs you"
-            count={loading || !waiting ? undefined : waiting}
-            subtitle="Most urgent first"
+            count={loading || !needs.length ? undefined : needs.length}
+            subtitle={needsOnly ? "Only changes to make and videos to film" : "Most urgent first"}
             action={
-              waiting > NEXT_STEP_LIMIT ? (
-                <Link to="/submissions" className="shrink-0 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
-                  View all {waiting}
-                </Link>
-              ) : null
+              <div className="flex shrink-0 items-center gap-3 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                {needsOnly && (
+                  <button type="button" onClick={() => setNeedsOnly(false)} className="hover:underline">
+                    Show everything
+                  </button>
+                )}
+                {needs.length > NEXT_STEP_LIMIT && (
+                  <button type="button" onClick={() => setNeedsOpen((o) => !o)} className="hover:underline">
+                    {needsOpen ? "Show fewer" : `Show all ${needs.length}`}
+                  </button>
+                )}
+              </div>
             }
           >
             {loading ? (
               <Loading />
-            ) : waiting === 0 ? (
+            ) : needs.length === 0 ? (
               <div className="border-t border-border/60 px-4 py-8 text-center">
                 <CheckCircle2 className="mx-auto w-8 h-8 text-emerald-500" />
                 <p className="mt-2 text-sm font-semibold text-foreground">Nothing waiting on you</p>
@@ -343,18 +339,20 @@ export default function CreatorDashboard() {
               </div>
             ) : (
               <ul className="flex flex-col gap-3 border-t border-border/60 bg-muted/20 p-3">
-                {nextSteps.slice(0, NEXT_STEP_LIMIT).map((s) => (
+                {needs.slice(0, needsOpen ? undefined : NEXT_STEP_LIMIT).map((s) => (
                   <NextStepRow
                     key={s.id}
                     s={s}
-                    onOpen={() => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`)}
+                    onOpen={() => openPost(s)}
                     onOpenStep={(step) => navigate(stepPath(s.id, step as (typeof POST_STEPS)[number]["key"]))}
                   />
                 ))}
               </ul>
             )}
           </Section>
+          </div>
 
+          <div id="creator-recent" className="scroll-mt-4">
           <Section
             title="Recent posts"
             subtitle="What you've sent for review"
@@ -408,6 +406,7 @@ export default function CreatorDashboard() {
               </>
             )}
           </Section>
+          </div>
         </div>
 
         {/* Right: the day's schedule, and what reviewers did */}

@@ -7,6 +7,7 @@ import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, FileText } from 
 import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import ReviewerStats, { type QueueFilter } from "@/components/dashboard/ReviewerStats";
 import SuggesterDashboard from "@/components/dashboard/SuggesterDashboard";
 import {
   ActivityList,
@@ -15,7 +16,6 @@ import {
   Platforms,
   Score,
   Section,
-  StatCard,
   Thumb,
   greeting,
   issuesText,
@@ -107,11 +107,17 @@ function ReviewerDashboard() {
   };
   const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/script-review/scripts/${r.s.id}`) : openInScreener(r.s.id));
 
-  // The review list shows five at a time; reviewed posts drop out, so keep the page in range.
+  // The cards narrow the list to what is overdue or failing; the review list shows five at a time, so keep the page in range.
+  const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
+  const queue = queueFilter === "overdue" ? needsMyReview.filter(rowOverdue) : queueFilter === "failing" ? needsMyReview.filter(rowFailing) : needsMyReview;
   const [rawReviewPage, setReviewPage] = useState(0);
-  const reviewPages = Math.max(1, Math.ceil(needsMyReview.length / REVIEW_PAGE_SIZE));
+  const reviewPages = Math.max(1, Math.ceil(queue.length / REVIEW_PAGE_SIZE));
   const reviewPage = Math.min(rawReviewPage, reviewPages - 1);
-  const reviewRows = needsMyReview.slice(reviewPage * REVIEW_PAGE_SIZE, (reviewPage + 1) * REVIEW_PAGE_SIZE);
+  const reviewRows = queue.slice(reviewPage * REVIEW_PAGE_SIZE, (reviewPage + 1) * REVIEW_PAGE_SIZE);
+  const changeFilter = (f: QueueFilter) => {
+    setQueueFilter(f);
+    setReviewPage(0);
+  };
 
   // The team's activity, minus the reviewer's own actions.
   const activity = (summary.data?.activity ?? []).filter((a) => a.actor_id !== user?.id).slice(0, ACTIVITY_LIMIT);
@@ -131,6 +137,13 @@ function ReviewerDashboard() {
 
   const s = summary.data;
   const decided = s ? s.approved + s.changes_requested : 0;
+  const waitingNote =
+    [
+      waitingPosts && waitingScripts ? `${plural(waitingPosts, "post")}, ${plural(waitingScripts, "script")}` : null,
+      soonest && rowDue(soonest) ? `Next due ${format(new Date(rowDue(soonest)!), "EEE, MMM d")}` : oldestSent ? `Oldest sent ${formatDistanceToNow(oldestSent)} ago` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || null;
 
   return (
     <div data-canvas="contrast" className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2200px]">
@@ -158,65 +171,47 @@ function ReviewerDashboard() {
         </div>
       </div>
 
-      {/* At a glance */}
-      <section aria-label="Your review queue at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard
-          label="Waiting for you"
-          value={loading ? "–" : waiting}
-          note={
-            !waiting
-              ? "All caught up"
-              : [
-                  waitingPosts && waitingScripts ? `${plural(waitingPosts, "post")}, ${plural(waitingScripts, "script")}` : null,
-                  soonest && rowDue(soonest)
-                    ? `Next due ${format(new Date(rowDue(soonest)!), "EEE, MMM d")}`
-                    : oldestSent
-                    ? `Oldest sent ${formatDistanceToNow(oldestSent)} ago`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || null
-          }
-        />
-        <StatCard
-          label="Overdue"
-          value={loading ? "–" : overdue}
-          note={overdue ? "Past their review deadline" : "None overdue"}
-          noteTone={overdue ? "red" : "green"}
-        />
-        <StatCard
-          label="Failing checks"
-          value={loading ? "–" : failing}
-          note={failing ? "Red result or score under 60" : "No failing checks"}
-          noteTone={failing ? "amber" : "green"}
-        />
-        <StatCard
-          label="Reviewed"
-          value={s ? s.reviews_completed : "–"}
-          note={s ? `Last 30 days · ${s.approved} approved, ${s.changes_requested} sent back` : null}
-        />
-      </section>
+      <ReviewerStats
+        loading={loading}
+        waiting={waiting}
+        waitingNote={waitingNote}
+        overdue={overdue}
+        failing={failing}
+        summary={s}
+        filter={queueFilter}
+        onFilter={changeFilter}
+      />
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: the queue, and how reviewing is going */}
         <div className="flex min-w-0 flex-col gap-6">
+          <div id="reviewer-queue" className="scroll-mt-4">
           <Section
             title="Needs your review"
-            count={loading || !waiting ? undefined : waiting}
-            subtitle="Soonest deadline first"
+            count={loading || !queue.length ? undefined : queue.length}
+            subtitle={queueFilter === "overdue" ? "Only what is overdue" : queueFilter === "failing" ? "Only what has a failing check" : "Soonest deadline first"}
             action={
-              <Link to="/compliance/scanner" className="shrink-0 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
-                View all
-              </Link>
+              <div className="flex shrink-0 items-center gap-3 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                {queueFilter !== "all" && (
+                  <button type="button" onClick={() => changeFilter("all")} className="hover:underline">
+                    Show everything
+                  </button>
+                )}
+                <Link to="/compliance/scanner" className="hover:underline">
+                  View all
+                </Link>
+              </div>
             }
           >
             {loading ? (
               <Loading />
-            ) : waiting === 0 ? (
+            ) : queue.length === 0 ? (
               <div className="border-t border-border/60 px-4 py-8 text-center">
                 <CheckCircle2 className="mx-auto w-8 h-8 text-emerald-500" />
-                <p className="mt-2 text-sm font-semibold text-foreground">All caught up</p>
-                <p className="text-xs text-muted-foreground">Nothing is waiting for your review.</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{queueFilter === "all" ? "All caught up" : "Nothing here"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {queueFilter === "all" ? "Nothing is waiting for your review." : "None of what is waiting matches this."}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto border-t border-border/60">
@@ -371,8 +366,10 @@ function ReviewerDashboard() {
               </div>
             )}
           </Section>
+          </div>
 
           {/* How reviewing is going: decisions and the issues that keep coming up */}
+          <div id="reviewer-activity" className="scroll-mt-4">
           <Section title="Review activity" subtitle="Last 30 days, across the content you review">
             {summary.isLoading ? (
               <Loading />
@@ -430,6 +427,7 @@ function ReviewerDashboard() {
               </div>
             )}
           </Section>
+          </div>
         </div>
 
         {/* Right: the day's schedule, and what the team did */}

@@ -142,48 +142,57 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-const PILL = "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors";
-const PILL_ON = "border-blue-700 bg-blue-700 text-white";
-const PILL_OFF = "border-border bg-background text-muted-foreground hover:text-foreground";
-
-/** For reviewers: what's waiting for them, what they sent back and what they approved, each with a count. */
-function ReviewerTabs({ tab, counts, onChange }: { tab: ReviewTab; counts: Record<ReviewTab, number>; onChange: (t: ReviewTab) => void }) {
+/** The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter. */
+function ScriptReviewTabs({
+  reviewer,
+  tab,
+  onTab,
+  filter,
+  onFilter,
+  counts,
+}: {
+  reviewer: boolean;
+  tab: ReviewTab;
+  onTab: (t: ReviewTab) => void;
+  filter: CreatorFilter;
+  onFilter: (f: CreatorFilter) => void;
+  counts: Record<ReviewTab, number>;
+}) {
   return (
-    <div role="tablist" aria-label="Which scripts" className="flex flex-wrap gap-2">
-      {TABS.map((t) => (
-        <button
-          key={t.value}
-          role="tab"
-          aria-selected={tab === t.value}
-          type="button"
-          onClick={() => onChange(t.value)}
-          className={cn(PILL, "inline-flex items-center gap-1.5", tab === t.value ? PILL_ON : PILL_OFF)}
-        >
-          {t.label}
-          <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** For creators: their scripts filtered by where they are. */
-function CreatorFilters({ filter, onChange }: { filter: CreatorFilter; onChange: (f: CreatorFilter) => void }) {
-  return (
-    <div role="tablist" aria-label="Filter" className="flex flex-wrap gap-2">
-      {CREATOR_FILTERS.map((f) => (
-        <button
-          key={f.value}
-          role="tab"
-          aria-selected={filter === f.value}
-          type="button"
-          onClick={() => onChange(f.value)}
-          className={cn(PILL, filter === f.value ? PILL_ON : PILL_OFF)}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
+        <div role="tablist" aria-label={reviewer ? "Which scripts" : "Filter"} className="flex flex-wrap gap-2">
+          {reviewer
+            ? TABS.map((t) => (
+                <button
+                  key={t.value}
+                  role="tab"
+                  aria-selected={tab === t.value}
+                  type="button"
+                  onClick={() => onTab(t.value)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    tab === t.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t.label}
+                  <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
+                </button>
+              ))
+            : CREATOR_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  role="tab"
+                  aria-selected={filter === f.value}
+                  type="button"
+                  onClick={() => onFilter(f.value)}
+                  className={cn(
+                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    filter === f.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+        </div>
   );
 }
 
@@ -251,11 +260,7 @@ export default function ScriptReviewPage() {
         )}
       </div>
 
-      {reviewer ? (
-        <ReviewerTabs tab={tab} counts={counts} onChange={setTab} />
-      ) : (
-        <CreatorFilters filter={filter} onChange={setFilter} />
-      )}
+      <ScriptReviewTabs reviewer={reviewer} tab={tab} onTab={setTab} filter={filter} onFilter={setFilter} counts={counts} />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>

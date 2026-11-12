@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Dashboard/Dashboard.tsx (446 lines) - dashboard (pages  dashboard)
+## src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
 - `Dashboard` (export function) L32 - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
 - `isFailing` (const) L42 - A check that would stop approval or clearly needs work: a red result, or a score under 60.
 - `isOverdue` (const) L44
@@ -24,5 +24,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `all` (fn) L81
     - `openInScreener` (fn) L104
     - `openRow` (fn) L108
-    - `activity` (fn) L117 - The team's activity, minus the reviewer's own actions.
-    - `plural` (fn) L121
+    - `changeFilter` (fn) L117
+    - `activity` (fn) L123 - The team's activity, minus the reviewer's own actions.
+    - `plural` (fn) L127

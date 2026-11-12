@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListPager from "@/components/common/ListPager";
-import MonthNavigator from "@/components/submissions/MonthNavigator";
-import StageFilterTabs from "@/components/submissions/StageFilterTabs";
+import { CheckCard, HistoryView } from "@/components/submissions/PostDetailParts";
+import StageTabs from "@/components/submissions/StageTabs";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
+import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
 import {
-  ArrowRight,
   BarChart3,
+  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Clock,
@@ -572,83 +572,6 @@ function PostRow({
 // Detail panel: media, tabs and the actions for whoever is looking
 // ---------------------------------------------------------------------------
 
-function HistoryView({ id }: { id: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["submission-history", id],
-    queryFn: () => submissionService.history(id),
-    staleTime: 0,
-  });
-  if (isLoading) {
-    return (
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading history...
-      </p>
-    );
-  }
-  const events = data?.events ?? [];
-  if (!events.length) return <p className="text-xs text-muted-foreground">No history yet.</p>;
-  return (
-    <ol className="relative space-y-3 border-l border-border pl-4">
-      {events.map((e) => (
-        <li key={e.id} className="text-xs">
-          <span className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-blue-500" />
-          <p className="font-medium text-foreground">{e.message}</p>
-          <p className="text-muted-foreground">
-            {e.actor_name ? `${e.actor_name} · ` : ""}
-            {formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}
-          </p>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-/** One of the two analysis cards: what it checks, its result so far, and a way to open or run it. */
-function CheckCard({
-  icon: Icon,
-  title,
-  status,
-  statusTone = "text-muted-foreground",
-  description,
-  action,
-  onAction,
-  busy = false,
-}: {
-  icon: typeof ShieldCheck;
-  title: string;
-  status: string;
-  statusTone?: string;
-  description: string;
-  action?: string | null;
-  onAction?: () => void;
-  busy?: boolean;
-}) {
-  return (
-    <div className="flex flex-col rounded-xl border border-border/70 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Icon className="w-4 h-4 text-blue-700 dark:text-blue-300" /> {title}
-        </p>
-        <span className={`text-[11px] font-semibold ${statusTone}`}>{status}</span>
-      </div>
-      <p className="mt-2 flex-1 text-xs text-muted-foreground">{description}</p>
-      <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
-        <span className="text-muted-foreground">Supports human review</span>
-        {action && (
-          <button
-            type="button"
-            onClick={onAction}
-            disabled={busy}
-            className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300"
-          >
-            {busy && <Loader2 className="w-3 h-3 animate-spin" />} {action} <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function ReviewCard({
   summary,
   labels,
@@ -811,7 +734,7 @@ function ReviewCard({
       <div className="flex flex-col items-end gap-2">
         {steps && <PostSteps steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(resumePath(summary.id, steps))}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(summary.status === "CHANGES_REQUESTED" ? `/submissions/new?id=${summary.id}` : resumePath(summary.id, steps))}>
             <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Continue"}
           </Button>
           <Button
@@ -1125,6 +1048,9 @@ export default function SubmissionsListPage() {
     // In review: the same steps, locked, opened on its compliance result.
     if (item.status === "IN_REVIEW") {
       navigate(stepPath(item.id, "compliance"));
+    } else if (item.status === "CHANGES_REQUESTED" && !scriptNeedsChanges(item)) {
+      // Sent back: it opens on the first step, the reviewers' suggestions.
+      navigate(`/submissions/new?id=${item.id}`);
     } else if (item.steps && !item.steps.locked && !scriptNeedsChanges(item) && item.script_status !== "IN_REVIEW") {
       navigate(resumePath(item.id, item.steps));
     } else {
@@ -1173,6 +1099,7 @@ export default function SubmissionsListPage() {
   // Creators see one month at a time, by when each post was first created. Work waiting on them (drafts and
   // changes requested) is never hidden by the month: those two tabs count and show every month.
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const onCurrentMonth = isSameMonth(month, new Date());
   const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED";
   const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month]);
   const inView = gallery && !monthless ? inMonth : data;
@@ -1307,20 +1234,50 @@ export default function SubmissionsListPage() {
       </header>
 
       {/* Status tabs: the one status filter */}
-      <StageFilterTabs filters={STAGE_FILTERS} stage={stage} counts={stageCounts} loading={isLoading} onChange={setStage} />
+      <StageTabs filters={STAGE_FILTERS} stage={stage} onStage={setStage} counts={stageCounts} loading={isLoading} />
 
       {gallery ? (
         <>
           {/* Filters, top right under the pills */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <MonthNavigator
-                month={month}
-                onChange={setMonth}
-                monthless={monthless}
-                loading={isLoading}
-                count={monthless ? visible.length : inMonth.length}
-              />
+              <div className="flex items-center gap-1" role="group" aria-label="Month">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 bg-card"
+                  onClick={() => setMonth(addMonths(month, -1))}
+                  disabled={monthless}
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="min-w-[140px] text-center leading-tight" aria-live="polite">
+                  <p className="text-sm font-semibold text-foreground">{monthless ? "All months" : format(month, "MMMM yyyy")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isLoading
+                      ? "Loading..."
+                      : monthless
+                      ? `${visible.length} ${visible.length === 1 ? "post" : "posts"} waiting on you`
+                      : `${inMonth.length} ${inMonth.length === 1 ? "post" : "posts"} this month`}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 bg-card"
+                  onClick={() => setMonth(addMonths(month, 1))}
+                  disabled={onCurrentMonth || monthless}
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                {!onCurrentMonth && !monthless && (
+                  <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} className="ml-1 text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">
+                    This month
+                  </button>
+                )}
+              </div>
               {filtersActive && (
                 <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                   <X className="w-3.5 h-3.5" /> Clear filters
