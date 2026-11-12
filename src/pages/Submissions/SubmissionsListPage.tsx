@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListPager from "@/components/common/ListPager";
+import { CheckCard, HistoryView } from "@/components/submissions/PostDetailParts";
+import StageTabs from "@/components/submissions/StageTabs";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
 import {
-  ArrowRight,
   BarChart3,
   ChevronLeft,
   ChevronRight,
@@ -571,83 +572,6 @@ function PostRow({
 // Detail panel: media, tabs and the actions for whoever is looking
 // ---------------------------------------------------------------------------
 
-function HistoryView({ id }: { id: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["submission-history", id],
-    queryFn: () => submissionService.history(id),
-    staleTime: 0,
-  });
-  if (isLoading) {
-    return (
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading history...
-      </p>
-    );
-  }
-  const events = data?.events ?? [];
-  if (!events.length) return <p className="text-xs text-muted-foreground">No history yet.</p>;
-  return (
-    <ol className="relative space-y-3 border-l border-border pl-4">
-      {events.map((e) => (
-        <li key={e.id} className="text-xs">
-          <span className="absolute -left-[5px] mt-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-blue-500" />
-          <p className="font-medium text-foreground">{e.message}</p>
-          <p className="text-muted-foreground">
-            {e.actor_name ? `${e.actor_name} · ` : ""}
-            {formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}
-          </p>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-/** One of the two analysis cards: what it checks, its result so far, and a way to open or run it. */
-function CheckCard({
-  icon: Icon,
-  title,
-  status,
-  statusTone = "text-muted-foreground",
-  description,
-  action,
-  onAction,
-  busy = false,
-}: {
-  icon: typeof ShieldCheck;
-  title: string;
-  status: string;
-  statusTone?: string;
-  description: string;
-  action?: string | null;
-  onAction?: () => void;
-  busy?: boolean;
-}) {
-  return (
-    <div className="flex flex-col rounded-xl border border-border/70 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Icon className="w-4 h-4 text-blue-700 dark:text-blue-300" /> {title}
-        </p>
-        <span className={`text-[11px] font-semibold ${statusTone}`}>{status}</span>
-      </div>
-      <p className="mt-2 flex-1 text-xs text-muted-foreground">{description}</p>
-      <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
-        <span className="text-muted-foreground">Supports human review</span>
-        {action && (
-          <button
-            type="button"
-            onClick={onAction}
-            disabled={busy}
-            className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300"
-          >
-            {busy && <Loader2 className="w-3 h-3 animate-spin" />} {action} <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function ReviewCard({
   summary,
   labels,
@@ -810,7 +734,7 @@ function ReviewCard({
       <div className="flex flex-col items-end gap-2">
         {steps && <PostSteps steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(resumePath(summary.id, steps))}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(summary.status === "CHANGES_REQUESTED" ? `/submissions/new?id=${summary.id}` : resumePath(summary.id, steps))}>
             <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Continue"}
           </Button>
           <Button
@@ -1124,6 +1048,9 @@ export default function SubmissionsListPage() {
     // In review: the same steps, locked, opened on its compliance result.
     if (item.status === "IN_REVIEW") {
       navigate(stepPath(item.id, "compliance"));
+    } else if (item.status === "CHANGES_REQUESTED" && !scriptNeedsChanges(item)) {
+      // Sent back: it opens on the first step, the reviewers' suggestions.
+      navigate(`/submissions/new?id=${item.id}`);
     } else if (item.steps && !item.steps.locked && !scriptNeedsChanges(item) && item.script_status !== "IN_REVIEW") {
       navigate(resumePath(item.id, item.steps));
     } else {
@@ -1307,34 +1234,7 @@ export default function SubmissionsListPage() {
       </header>
 
       {/* Status tabs: the one status filter */}
-      <div className="flex max-w-full flex-wrap gap-2" role="group" aria-label="Filter by status">
-        {STAGE_FILTERS.map((f) => {
-          const active = stage === f.value;
-          const count = stageCounts[f.value] ?? 0;
-          return (
-            <button
-              key={f.value || "all"}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setStage(active && f.value ? "" : f.value)}
-              className={`inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold transition-colors ${
-                active
-                  ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
-                  : "border-slate-300 bg-card text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-300"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold tabular-nums ${
-                  active ? "bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-                }`}
-              >
-                {isLoading ? "–" : count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <StageTabs filters={STAGE_FILTERS} stage={stage} onStage={setStage} counts={stageCounts} loading={isLoading} />
 
       {gallery ? (
         <>

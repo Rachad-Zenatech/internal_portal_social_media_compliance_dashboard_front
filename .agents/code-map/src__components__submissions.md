@@ -126,11 +126,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Caption` (function) L217
 - `PostPreview` (export function) L236 - Approximate look of the post on a platform: who it posts as, the caption and the media.
 
-## src/components/submissions/PostStepNav.tsx (154 lines) - The steps that can't be opened yet, and why they can't.
+## src/components/submissions/PostStepNav.tsx (158 lines) - The steps that can't be opened yet, and why they can't.
 - `TabState` (type) L8
 - `PostStepNav` (export function) L14 - The five steps along the top of the post editor, the one you're on lit.
-- `StepGate` (export function) L82 - Shown in place of a step's tool until the post's details are filled in.
-- `StepFooter` (export function) L109 - The back and next buttons under a step.
+- `StepGate` (export function) L86 - Shown in place of a step's tool until the post's details are filled in.
+- `StepFooter` (export function) L113 - The back and next buttons under a step.
 
 ## src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - `PostSteps` (export function) L12 - The five steps of a post as five dots, in order.
@@ -138,35 +138,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - `ProcessLog` (export function) L11 - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 
-## src/components/submissions/ReviewCommentsPanel.tsx (438 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `formatSec` (export const) L25
-- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `AreaTag` (function) L31 - A small tag for a comment on an area of an image, in the quotes and the reply strip as on the card itself.
-- `ReplyingTo` (export function) L40 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L61
-- `ReviewCommentsPanel` (export function) L203 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
-    - `open` (fn) L240
-    - `numbers` (fn) L241
-    - `threads` (fn) L251 - Threads: a comment and every reply that follows its chain, oldest first.
-    - `rootOf` (fn) L253
-    - `jumpTo` (fn) L273 - Scroll to a comment (from a reply's quote) and ring it for a moment.
-    - `replyToComment` (fn) L285 - Reply: quote the comment in the comment box and put the cursor there (the page's own box, if it has one).
-    - `submit` (fn) L294
+## src/components/submissions/ReviewCommentsPanel.tsx (167 lines) - What other pages import from here.
+- `groupThreads` (function) L17 - A comment and every reply that follows its chain, oldest first.
+- `ReviewCommentsPanel` (export function) L38 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewConversation.tsx (172 lines) - Sent back: the creator can reply.
-- `ReviewConversation` (export function) L14 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
+## src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
+- `ReviewConversation` (export function) L13 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
 
-## src/components/submissions/ReviewDecisionPanel.tsx (373 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55
 - `toLocalInput` (const) L57
 - `defaultPublishTime` (function) L60 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
-- `ChangesRequestedBanner` (export function) L341 - For the creator: the reviewer sent it back.
+- `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
 
 ## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L4
@@ -188,7 +173,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `pill` (const) L47
 - `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (196 lines) - revision workspace (components submissions)
+## src/components/submissions/RevisionWorkspace.tsx (191 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) L16 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)

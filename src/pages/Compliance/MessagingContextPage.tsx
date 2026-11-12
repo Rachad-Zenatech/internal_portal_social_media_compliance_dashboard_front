@@ -114,6 +114,34 @@ function Chips({
   );
 }
 
+/** One tab per kind of context (brand voice, facts, platform norms...), each with how many entries it holds. */
+function KindTabs({ kind, onKind, counts }: { kind: ContextKind; onKind: (k: ContextKind) => void; counts: Record<string, number> }) {
+  return (
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Kind of context">
+        {KINDS.map((k) => {
+          const active = k.value === kind;
+          return (
+            <button
+              key={k.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onKind(k.value)}
+              className={`inline-flex items-center gap-2 rounded-xl border py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-colors ${
+                active ? k.active : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span className={`grid h-6 w-6 place-items-center rounded-md ${k.tone}`}>
+                <k.icon className="w-3.5 h-3.5" />
+              </span>
+              {k.label} <span className="tabular-nums opacity-70">{counts[k.value] ?? 0}</span>
+            </button>
+          );
+        })}
+      </div>
+  );
+}
+
 /**
  * Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,
  * the platform and the audience, and checks claims against known facts.
@@ -211,28 +239,7 @@ export default function MessagingContextPage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Kind of context">
-        {KINDS.map((k) => {
-          const active = k.value === kind;
-          return (
-            <button
-              key={k.value}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setKind(k.value)}
-              className={`inline-flex items-center gap-2 rounded-xl border py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-colors ${
-                active ? k.active : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <span className={`grid h-6 w-6 place-items-center rounded-md ${k.tone}`}>
-                <k.icon className="w-3.5 h-3.5" />
-              </span>
-              {k.label} <span className="tabular-nums opacity-70">{counts[k.value] ?? 0}</span>
-            </button>
-          );
-        })}
-      </div>
+      <KindTabs kind={kind} onKind={setKind} counts={counts} />
 
       <Card className="py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
         <p className="flex items-start gap-2.5 px-4 py-3 border-b border-border/60 bg-muted/20 text-xs text-muted-foreground">

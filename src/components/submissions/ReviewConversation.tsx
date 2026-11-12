@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import ImageAnnotator from "@/components/submissions/ImageAnnotator";
-import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
-import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { ConversationImages, ConversationVideo } from "@/components/submissions/ConversationMedia";
+import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import { useReviewComments } from "@/hooks/useReview";
 import type { SubmissionFile } from "@/types/submission";
 
@@ -53,7 +52,6 @@ export default function ReviewConversation({
   }, [active]);
 
   const hasMedia = Boolean(image || video);
-  const areasOn = (fileId: string) => comments.filter((c) => c.file_id === fileId && c.region_w != null && !c.resolved_at).length;
 
   const list = (
     <ReviewCommentsPanel
@@ -83,82 +81,22 @@ export default function ReviewConversation({
           {/* The post, with where each comment is */}
           <div className="flex min-w-0 flex-col gap-2">
             {image ? (
-              <>
-                <div className="grid place-items-center rounded-xl bg-muted p-2">
-                  <ImageAnnotator
-                    key={image.id}
-                    submissionId={submissionId}
-                    file={image}
-                    canDraw={false}
-                    activeId={active}
-                    onActive={setActive}
-                    imageClassName="max-h-[60vh] w-auto rounded-xl object-contain"
-                  />
-                </div>
-                {images.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
-                    {images.map((img, i) => {
-                      const n = areasOn(img.id);
-                      return (
-                        <button
-                          key={img.id}
-                          type="button"
-                          onClick={() => setImageIndex(i)}
-                          aria-label={`Image ${i + 1}${n ? `, ${n} open comment${n === 1 ? "" : "s"}` : ""}`}
-                          className={`relative h-14 w-14 overflow-hidden rounded-lg border-2 ${i === imageIndex ? "border-blue-600" : "border-transparent opacity-70 hover:opacity-100"}`}
-                        >
-                          <img src={authedFileUrl(img.url)} alt="" className="h-full w-full object-cover" />
-                          {n > 0 && (
-                            <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white">
-                              {n}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">Click a numbered box or a comment to see where it is.</p>
-              </>
+              <ConversationImages submissionId={submissionId} images={images} index={imageIndex} onIndex={setImageIndex} active={active} onActive={setActive} comments={comments} />
             ) : video ? (
-              <>
-                <video
-                  ref={videoRef}
-                  src={authedFileUrl(video.url)}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="max-h-[60vh] w-full rounded-xl bg-black"
-                  onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)}
-                  onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
-                />
-                {duration > 0 && pinned.length > 0 && (
-                  <div className="relative h-5 rounded bg-muted" aria-label="Where the comments are in the video">
-                    <div className="absolute inset-y-0 left-0 rounded bg-blue-600/15" style={{ width: `${Math.min(100, (now / duration) * 100)}%` }} />
-                    {pinned.map((c) => {
-                      const left = Math.min(100, (c.start_sec! / duration) * 100);
-                      const width = c.end_sec != null && c.end_sec > c.start_sec! ? Math.max(1.5, ((c.end_sec - c.start_sec!) / duration) * 100) : 0;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            setActive(c.id);
-                            seek(c.start_sec!);
-                          }}
-                          title={`${formatSec(c.start_sec!)} · ${c.body}`}
-                          aria-label={`Comment at ${formatSec(c.start_sec!)}`}
-                          className={`absolute bottom-0.5 top-0.5 rounded-sm ${
-                            c.id === active ? "bg-blue-600 ring-2 ring-blue-300" : c.resolved_at ? "bg-muted-foreground/40" : "bg-blue-500/70 hover:bg-blue-600"
-                          }`}
-                          style={{ left: `${left}%`, width: width ? `${width}%` : "6px", marginLeft: width ? 0 : -3 }}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">Click a mark on the bar or a comment to jump to its moment.</p>
-              </>
+              <ConversationVideo
+                video={video}
+                videoRef={videoRef}
+                now={now}
+                duration={duration}
+                onTime={setNow}
+                onDuration={setDuration}
+                pinned={pinned}
+                active={active}
+                onPick={(c) => {
+                  setActive(c.id);
+                  seek(c.start_sec!);
+                }}
+              />
             ) : null}
           </div>
 

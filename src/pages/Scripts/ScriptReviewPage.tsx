@@ -142,6 +142,60 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
+/** The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter. */
+function ScriptReviewTabs({
+  reviewer,
+  tab,
+  onTab,
+  filter,
+  onFilter,
+  counts,
+}: {
+  reviewer: boolean;
+  tab: ReviewTab;
+  onTab: (t: ReviewTab) => void;
+  filter: CreatorFilter;
+  onFilter: (f: CreatorFilter) => void;
+  counts: Record<ReviewTab, number>;
+}) {
+  return (
+        <div role="tablist" aria-label={reviewer ? "Which scripts" : "Filter"} className="flex flex-wrap gap-2">
+          {reviewer
+            ? TABS.map((t) => (
+                <button
+                  key={t.value}
+                  role="tab"
+                  aria-selected={tab === t.value}
+                  type="button"
+                  onClick={() => onTab(t.value)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    tab === t.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t.label}
+                  <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
+                </button>
+              ))
+            : CREATOR_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  role="tab"
+                  aria-selected={filter === f.value}
+                  type="button"
+                  onClick={() => onFilter(f.value)}
+                  className={cn(
+                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    filter === f.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+        </div>
+  );
+}
+
 /**
  * Script review: every script, whether it was uploaded alone or in a batch of several. Creators upload scripts here and
  * follow where each is; reviewers see what is waiting for them, what they sent back and what they approved.
@@ -206,40 +260,7 @@ export default function ScriptReviewPage() {
         )}
       </div>
 
-      <div role="tablist" aria-label={reviewer ? "Which scripts" : "Filter"} className="flex flex-wrap gap-2">
-        {reviewer
-          ? TABS.map((t) => (
-              <button
-                key={t.value}
-                role="tab"
-                aria-selected={tab === t.value}
-                type="button"
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  tab === t.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t.label}
-                <span className={cn("rounded-full px-1.5 text-[11px]", tab === t.value ? "bg-white/20" : "bg-muted")}>{counts[t.value]}</span>
-              </button>
-            ))
-          : CREATOR_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                role="tab"
-                aria-selected={filter === f.value}
-                type="button"
-                onClick={() => setFilter(f.value)}
-                className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                  filter === f.value ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-      </div>
+      <ScriptReviewTabs reviewer={reviewer} tab={tab} onTab={setTab} filter={filter} onFilter={setFilter} counts={counts} />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>

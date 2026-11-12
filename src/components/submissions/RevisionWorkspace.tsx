@@ -76,12 +76,7 @@ export default function RevisionWorkspace({
             </p>
           )}
         </div>
-        <Button
-          size="sm"
-          onClick={onDone}
-          disabled={submitting || replacing}
-          className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-        >
+        <Button size="sm" onClick={onDone} disabled={submitting || replacing} className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
           {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Done: run the checks again
           {!submitting && <ArrowRight className="w-3.5 h-3.5" />}
         </Button>

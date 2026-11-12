@@ -8,14 +8,12 @@ import {
   CheckCircle2,
   Clock,
   FileText,
-    Layers,
   Loader2,
   PanelLeftClose,
   PanelLeftOpen,
   Pause,
   Play,
   Search,
-  Send,
   SkipBack,
   SkipForward,
   SlidersHorizontal,
@@ -34,7 +32,8 @@ import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
 import ImageAnnotator from "@/components/submissions/ImageAnnotator";
-import ReviewCommentsPanel, { ReplyingTo, commentBoxId, formatSec } from "@/components/submissions/ReviewCommentsPanel";
+import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
+import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -66,12 +65,12 @@ import {
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { usePublicMood } from "@/hooks/usePublicMood";
-import { useCommentReply, useFlagReviews, useReviewComments } from "@/hooks/useReview";
+import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import type { ComplianceViolation } from "@/services/complianceService";
-import type { FlagReview, QueueTab, ReviewCommentCategory, ReviewQueueItem } from "@/types/submission";
+import type { FlagReview, QueueTab, ReviewQueueItem } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Queue: tabs, filters and the few facts each row needs
@@ -453,176 +452,6 @@ export function FlaggedMoments({
         <span className="min-w-[34px] shrink-0 font-mono text-xs leading-8 text-muted-foreground">{formatSec(duration)}</span>
       </div>
     </div>
-  );
-}
-
-const CATEGORY_NAMES: Record<string, string> = {
-  NOTE: "General note",
-  LEGAL: "Legal",
-  EDITORIAL: "Editorial",
-  COMPLIANCE: "Compliance",
-  BRAND: "Brand",
-};
-
-/** "1:05", "65" or "0:65" as seconds; null when it isn't a time. */
-function parseTime(text: string): number | null {
-  const parts = text.trim().split(":");
-  if (parts.length > 2 || parts.some((p) => !/^\d+$/.test(p))) return null;
-  return parts.length === 2 ? Number(parts[0]) * 60 + Number(parts[1]) : Number(parts[0]);
-}
-
-/** One end of a video range: a time to type (m:ss), or "Now" for where the video is. */
-function TimeField({ label, value, now, onChange }: { label: string; value: number; now: number; onChange: (sec: number) => void }) {
-  const [text, setText] = useState(formatSec(value));
-  // Follows the value when it changes from outside (the other end, or "Now").
-  useEffect(() => setText(formatSec(value)), [value]);
-  const commit = () => {
-    const t = parseTime(text);
-    if (t == null) setText(formatSec(value));
-    else onChange(t);
-  };
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="font-semibold text-foreground">{label}</span>
-      <Input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit();
-          }
-        }}
-        inputMode="numeric"
-        aria-label={`${label} time`}
-        className="h-7 w-16 px-2 text-center text-xs tabular-nums"
-      />
-      <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onChange(Math.floor(now))} title={`Use ${formatSec(now)}, where the video is`}>
-        Now
-      </Button>
-    </span>
-  );
-}
-
-/** Write a reviewer comment, pinned to a moment, a range of the video, or no time. */
-function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number; hasVideo: boolean }) {
-  const { add } = useReviewComments(s.id);
-  // Set by Reply under a comment in the list below; the reply quotes that comment.
-  const { replyTo, setReplyTo } = useCommentReply(s.id);
-  const [category, setCategory] = useState<ReviewCommentCategory>("NOTE");
-  const [mode, setMode] = useState<"POINT" | "RANGE" | "NONE">(hasVideo ? "POINT" : "NONE");
-  const [range, setRange] = useState<{ start: number; end: number }>({ start: 0, end: 5 });
-  const [body, setBody] = useState("");
-
-  const post = () => {
-    if (!body.trim()) return;
-    const at = (t: number) => Math.round(t * 10) / 10;
-    const times =
-      !hasVideo || mode === "NONE"
-        ? { start_sec: null, end_sec: null }
-        : mode === "POINT"
-        ? { start_sec: at(now), end_sec: null }
-        : { start_sec: at(range.start), end_sec: at(Math.max(range.end, range.start + 1)) };
-    add.mutate(
-      { body: body.trim(), category, ...times, reply_to_id: replyTo?.id ?? null },
-      {
-        onSuccess: () => {
-          setBody("");
-          setReplyTo(null);
-        },
-      }
-    );
-  };
-
-  const seg = (on: boolean) =>
-    `flex items-center gap-1 rounded-md px-2.5 py-1 transition-colors ${on ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`;
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        post();
-      }}
-      className="flex flex-col gap-2.5"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={category} onValueChange={(v) => setCategory(v as ReviewCommentCategory)}>
-          <SelectTrigger size="sm" className="h-8 w-[150px] text-xs font-semibold" aria-label="Comment type">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(CATEGORY_NAMES).map(([value, label]) => (
-              <SelectItem key={value} value={value} className="text-xs">
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {hasVideo && (
-          <div className="flex flex-wrap items-center rounded-lg border border-border/70 bg-muted/40 p-0.5 text-[11px] font-semibold">
-            <button type="button" onClick={() => setMode("POINT")} className={seg(mode === "POINT")}>
-              <Clock className="w-3 h-3" /> Point ({formatSec(now)})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("RANGE");
-                setRange({ start: Math.floor(now), end: Math.floor(now) + 5 });
-              }}
-              className={seg(mode === "RANGE")}
-            >
-              <Layers className="w-3 h-3" /> Range ({formatSec(range.start)} - {formatSec(range.end)})
-            </button>
-            <button type="button" onClick={() => setMode("NONE")} className={seg(mode === "NONE")}>
-              No time
-            </button>
-          </div>
-        )}
-      </div>
-      {hasVideo && mode === "RANGE" && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
-          <TimeField
-            label="From"
-            value={range.start}
-            now={now}
-            // A start past the end pushes the end along, so the range is never empty.
-            onChange={(t) => setRange((r) => ({ start: t, end: r.end > t ? r.end : t + 1 }))}
-          />
-          <TimeField
-            label="To"
-            value={range.end}
-            now={now}
-            // An end before the start moves the start back.
-            onChange={(t) => setRange((r) => (t > r.start ? { start: r.start, end: t } : { start: Math.max(0, t - 1), end: Math.max(t, 1) }))}
-          />
-          <span className="text-muted-foreground">Type a time (e.g. 1:05), or play to the moment and click "Now".</span>
-        </div>
-      )}
-      {replyTo && <ReplyingTo c={replyTo} onCancel={() => setReplyTo(null)} />}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Input
-          id={commentBoxId(s.id)}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && replyTo) setReplyTo(null);
-          }}
-          placeholder={
-            !hasVideo || mode === "NONE"
-              ? "Suggest a change or leave a note..."
-              : mode === "POINT"
-              ? `Add a reviewer note at ${formatSec(now)}... (e.g. adjust the disclaimer or cut)`
-              : `Add a reviewer note for ${formatSec(range.start)} - ${formatSec(range.end)}... (e.g. cut this section)`
-          }
-          aria-label="Reviewer note"
-          autoFocus
-          className="h-9 min-w-0 flex-1 text-sm"
-        />
-        <Button type="submit" className="h-9 shrink-0 gap-1.5 px-4 text-xs font-semibold" disabled={!body.trim() || add.isPending}>
-          {add.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Post comment
-        </Button>
-      </div>
-    </form>
   );
 }
 
@@ -1447,6 +1276,59 @@ function Workspace({
 // Page
 // ---------------------------------------------------------------------------
 
+/** The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went. */
+function QueueStrip({
+  items,
+  selectedId,
+  count,
+  onPick,
+  onExpand,
+  titleOf,
+}: {
+  items: ReviewQueueItem[];
+  selectedId?: string;
+  count: number;
+  onPick: (id: string) => void;
+  onExpand: () => void;
+  titleOf: (s: ReviewQueueItem) => string;
+}) {
+  return (
+    <nav aria-label="Review queue (collapsed)" className="hidden w-16 shrink-0 flex-col items-center gap-2 border-r border-border/70 py-3 lg:flex">
+      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onExpand} aria-label="Expand the queue" title="Expand the queue">
+        <PanelLeftOpen className="w-4 h-4" />
+      </Button>
+      <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${count} items`}>
+        {count}
+      </span>
+      <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1.5 pb-1 pt-1.5">
+        {items.map((s) => {
+          const failing = hasCritical(s) || isFailing(s);
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                onClick={() => onPick(s.id)}
+                aria-current={selectedId === s.id}
+                aria-label={`${s.title} (${s.reference_code})`}
+                title={titleOf(s)}
+                className={`relative block rounded-lg p-0.5 ${selectedId === s.id ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-border"}`}
+              >
+                <Thumb s={s} />
+                <span
+                  className={`absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full ring-2 ring-card ${
+                    scoreOf(s) == null ? "bg-muted-foreground/50" : failing ? "bg-red-500" : "bg-emerald-500"
+                  }`}
+                  aria-hidden
+                />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 export default function ContentScreenerPage() {
   const { creatorView, hasPermission } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
@@ -1588,39 +1470,14 @@ export default function ContentScreenerPage() {
     <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)] lg:flex-row">
       {/* ===== Queue, collapsed (wide screens): a slim strip of thumbnails ===== */}
       {queueCollapsed && (
-        <nav aria-label="Review queue (collapsed)" className="hidden w-16 shrink-0 flex-col items-center gap-2 border-r border-border/70 py-3 lg:flex">
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setCollapsed(false)} aria-label="Expand the queue" title="Expand the queue">
-            <PanelLeftOpen className="w-4 h-4" />
-          </Button>
-          <span className="text-[11px] font-medium tabular-nums text-muted-foreground" title={`${listCount} items`}>
-            {listCount}
-          </span>
-          <ul className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-1.5 pb-1 pt-1.5">
-            {visible.map((s) => {
-              const failing = hasCritical(s) || isFailing(s);
-              return (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => pick(s.id)}
-                    aria-current={selected?.id === s.id}
-                    aria-label={`${s.title} (${s.reference_code})`}
-                    title={`${s.title} · ${dueText(s, postTab).text}`}
-                    className={`relative block rounded-lg p-0.5 ${selected?.id === s.id ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-border"}`}
-                  >
-                    <Thumb s={s} />
-                    <span
-                      className={`absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full ring-2 ring-card ${
-                        scoreOf(s) == null ? "bg-muted-foreground/50" : failing ? "bg-red-500" : "bg-emerald-500"
-                      }`}
-                      aria-hidden
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        <QueueStrip
+          items={visible}
+          selectedId={selected?.id}
+          count={listCount}
+          onPick={pick}
+          onExpand={() => setCollapsed(false)}
+          titleOf={(s) => `${s.title} · ${dueText(s, postTab).text}`}
+        />
       )}
 
       {/* ===== Queue ===== */}
