@@ -74,7 +74,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2695,
+      "max_lines": 2694,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -124,7 +124,7 @@
       "kind": "jsx_return"
     },
     "src/components/dashboard/CreatorDashboard.tsx#CreatorDashboard": {
-      "max_lines": 171,
+      "max_lines": 156,
       "kind": "jsx_return"
     },
     "src/components/dashboard/SuggesterDashboard.tsx#SuggesterDashboard": {
@@ -312,7 +312,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Dashboard/Dashboard.tsx#ReviewerDashboard": {
-      "max_lines": 295,
+      "max_lines": 176,
       "kind": "jsx_return"
     },
     "src/pages/Logs/AuditLog.tsx#AuditLog": {
@@ -340,7 +340,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1426,
+      "max_lines": 1381,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {

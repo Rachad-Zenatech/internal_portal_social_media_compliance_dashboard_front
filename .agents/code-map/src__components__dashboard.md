@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/dashboard/CreatorDashboard.tsx (440 lines) - creator dashboard (components dashboard)
+## src/components/dashboard/CreatorDashboard.tsx (447 lines) - creator dashboard (components dashboard)
 - `dueLabel` (function) L38 - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
 - `needsChanges` (const) L62 - A reviewer asked for changes to the post, or sent its script back (with or without edits).
 - `awaitingVideo` (const) L64 - The script is approved and the video is the creator's next step.
@@ -13,17 +13,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `NextStepCard` (function) L74 - One thing waiting on the creator, as a slide: its picture with the deadline on it, what to do and why, how far  along its steps are, and ...
     - `due` (fn) L79 - Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
 - `PostRow` (function) L148
-- `CreatorDashboard` (export function) L195 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
-    - `navigate` (fn) L197
-    - `now` (fn) L198
-    - `submissions` (fn) L201
-    - `summary` (fn) L207
-    - `mine` (fn) L213
-    - `nextSteps` (fn) L216 - Changes to make (soonest due first), then drafts (latest first).
-    - `due` (fn) L217
-    - `openPost` (fn) L244
-    - `sent` (fn) L245
-    - `activity` (fn) L256 - What reviewers did on their posts; their own actions (sending for review) aren't news to them.
+- `CreatorActions` (function) L195 - The creator's shortcuts in the page heading: upload scripts, the calendar, a new post.
+- `CreatorDashboard` (export function) L221 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
+    - `navigate` (fn) L223
+    - `now` (fn) L224
+    - `submissions` (fn) L227
+    - `summary` (fn) L233
+    - `mine` (fn) L239
+    - `nextSteps` (fn) L242 - Changes to make (soonest due first), then drafts (latest first).
+    - `due` (fn) L243
+    - `openPost` (fn) L270
+    - `sent` (fn) L271
+    - `activity` (fn) L282 - What reviewers did on their posts; their own actions (sending for review) aren't news to them.
 
 ## src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
 - `PostFilter` (export type) L7
@@ -35,6 +36,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - `dayName` (const) L11
 - `DayAgenda` (export function) L15 - One day of posts at a time, in time order, with arrows to step through days.
+
+## src/components/dashboard/ReviewSlideshow.tsx (115 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
+- `ReviewSlideshow` (export function) L10 - Cards in a row that slides: arrows move a screenful at a time, the dots show where you are and jump there, and the  row can be swiped or ...
 
 ## src/components/dashboard/ReviewerStats.tsx (73 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - `QueueFilter` (export type) L5 - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.

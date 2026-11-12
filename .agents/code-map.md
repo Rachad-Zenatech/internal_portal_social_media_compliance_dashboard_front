@@ -13,7 +13,7 @@ to find the right file.
 | .agents/code-map/src__components__AppShell.md | 11 | 4 KB |
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
 | .agents/code-map/src__components__compliance.md | 3 | 2 KB |
-| .agents/code-map/src__components__dashboard.md | 7 | 6 KB |
+| .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
 | .agents/code-map/src__components__script.md | 17 | 11 KB |
 | .agents/code-map/src__components__submissions.md | 46 | 23 KB |
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |

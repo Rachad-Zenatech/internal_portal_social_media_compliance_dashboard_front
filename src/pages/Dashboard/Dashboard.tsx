@@ -286,51 +286,79 @@ function ReviewerDashboard() {
             ) : !s ? (
               <p className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">Couldn't load review activity.</p>
             ) : (
-              <div className="grid gap-6 border-t border-border/60 p-4 md:grid-cols-2">
-                <div className="flex min-w-0 flex-col gap-3">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-medium text-foreground">Decisions</span>
-                    <span className="text-xs text-muted-foreground">
-                      {decided} total{s.average_score != null ? ` · average score ${s.average_score}/100` : ""}
-                    </span>
-                  </div>
+              <div className="grid border-t border-border/60 md:grid-cols-2 md:divide-x md:divide-border/60">
+                {/* Decisions: the three numbers, then how they split */}
+                <div className="flex min-w-0 flex-col gap-4 p-5">
+                  <p className="text-sm font-semibold text-foreground">Decisions</p>
                   {decided === 0 ? (
                     <p className="text-sm text-muted-foreground">No decisions in the last 30 days.</p>
                   ) : (
                     <>
-                      <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${s.approved} approved, ${s.changes_requested} sent back`}>
-                        <span className="bg-emerald-500" style={{ width: `${(s.approved / decided) * 100}%` }} />
-                        <span className="bg-amber-500" style={{ width: `${(s.changes_requested / decided) * 100}%` }} />
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: "Approved", value: s.approved, sub: `${Math.round((s.approved / decided) * 100)}%` },
+                          { label: "Sent back", value: s.changes_requested, sub: `${Math.round((s.changes_requested / decided) * 100)}%` },
+                          { label: "Average score", value: s.average_score ?? "–", sub: s.average_score != null ? "out of 100" : "no scores yet" },
+                        ].map((m) => (
+                          <div key={m.label} className="rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5">
+                            <p className="text-[11px] font-medium text-muted-foreground">{m.label}</p>
+                            <p className="mt-0.5 text-2xl font-semibold leading-none tabular-nums text-foreground">{m.value}</p>
+                            <p className="mt-1 text-[11px] text-muted-foreground">{m.sub}</p>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Approved <b className="font-semibold text-foreground">{s.approved}</b>
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-amber-500" /> Sent back for changes{" "}
-                          <b className="font-semibold text-foreground">{s.changes_requested}</b>
-                        </span>
+                      <div className="space-y-1.5">
+                        <div
+                          className="flex h-2 gap-0.5 overflow-hidden rounded-full"
+                          role="img"
+                          aria-label={`${s.approved} approved, ${s.changes_requested} sent back, of ${decided}`}
+                        >
+                          {s.approved > 0 && <span className="rounded-full bg-blue-600" style={{ width: `${(s.approved / decided) * 100}%` }} />}
+                          {s.changes_requested > 0 && <span className="rounded-full bg-blue-200 dark:bg-blue-500/40" style={{ width: `${(s.changes_requested / decided) * 100}%` }} />}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {Math.round((s.approved / decided) * 100)}% approved, of {decided} decision{decided === 1 ? "" : "s"}
+                        </p>
                       </div>
                     </>
                   )}
                 </div>
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="text-sm font-medium text-foreground">Most common issues</span>
+
+                {/* The rulebook issues that come up most, with how often */}
+                <div className="flex min-w-0 flex-col gap-3 border-t border-border/60 p-5 md:border-t-0">
+                  <p className="text-sm font-semibold text-foreground">Most common issues</p>
                   {s.common_findings.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No rulebook issues found in the last 30 days.</p>
                   ) : (
-                    <ol className="flex flex-col gap-1.5">
-                      {s.common_findings.slice(0, 4).map((f) => (
-                        <li key={f.rule_number} className="flex items-baseline gap-2 text-sm">
-                          <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
-                            {/^\d/.test(f.rule_number) ? `Rule ${f.rule_number}` : f.rule_number}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate text-foreground" title={f.title}>
-                            {f.title || "Untitled rule"}
-                          </span>
-                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{f.count}×</span>
-                        </li>
-                      ))}
+                    <ol className="flex flex-col gap-2.5">
+                      {s.common_findings.slice(0, 5).map((f, i) => {
+                        const most = Math.max(...s.common_findings.slice(0, 5).map((x) => x.count), 1);
+                        return (
+                          <li key={f.rule_number} className="flex items-start gap-3">
+                            <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                              {i + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-baseline justify-between gap-2">
+                                <p className="truncate text-sm text-foreground" title={f.title}>
+                                  {f.title || "Untitled rule"}
+                                </p>
+                                <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground">
+                                  {f.count} {f.count === 1 ? "time" : "times"}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="shrink-0 text-[11px] text-muted-foreground">
+                                  {/^\d/.test(f.rule_number) ? `Rule ${f.rule_number}` : f.rule_number}
+                                </span>
+                                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                  <span className="block h-full rounded-full bg-blue-500/70" style={{ width: `${(f.count / most) * 100}%` }} />
+                                </span>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ol>
                   )}
                 </div>

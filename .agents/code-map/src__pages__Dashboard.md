@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Dashboard/Dashboard.tsx (354 lines) - dashboard (pages  dashboard)
+## src/pages/Dashboard/Dashboard.tsx (382 lines) - dashboard (pages  dashboard)
 - `Dashboard` (export function) L33 - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
 - `isFailing` (const) L42 - A check that would stop approval or clearly needs work: a red result, or a score under 60.
 - `QueueRow` (type) L46 - What waits for a reviewer: a post, or a video's script.

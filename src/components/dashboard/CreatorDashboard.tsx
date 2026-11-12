@@ -191,6 +191,32 @@ function PostRow({ s }: { s: SubmissionSummary }) {
 // Page
 // ---------------------------------------------------------------------------
 
+/** The creator's shortcuts in the page heading: upload scripts, the calendar, a new post. */
+function CreatorActions({ onUploadScripts }: { onUploadScripts: () => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
+        onClick={onUploadScripts}
+      >
+        <FileStack className="w-4 h-4 text-blue-600" /> Upload scripts
+      </Button>
+      <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
+        <Link to="/content-calendar">
+          <CalendarDays className="w-4 h-4" /> Calendar
+        </Link>
+      </Button>
+      <Button asChild className="h-10 gap-2 rounded-lg bg-blue-700 px-4 font-medium text-white hover:bg-blue-800">
+        <Link to="/submissions/new">
+          <Plus className="w-4 h-4" /> New post
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
 /** The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did. */
 export default function CreatorDashboard() {
   const { user } = useAuth();
@@ -279,26 +305,7 @@ export default function CreatorDashboard() {
             )}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 gap-2 rounded-lg px-4 font-semibold text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-100"
-            onClick={() => setBulkDialogOpen(true)}
-          >
-            <FileStack className="w-4 h-4 text-blue-600" /> Upload scripts
-          </Button>
-          <Button asChild variant="outline" className="h-10 gap-2 rounded-lg px-4 font-medium">
-            <Link to="/content-calendar">
-              <CalendarDays className="w-4 h-4" /> Calendar
-            </Link>
-          </Button>
-          <Button asChild className="h-10 gap-2 rounded-lg bg-blue-700 px-4 font-medium text-white hover:bg-blue-800">
-            <Link to="/submissions/new">
-              <Plus className="w-4 h-4" /> New post
-            </Link>
-          </Button>
-        </div>
+        <CreatorActions onUploadScripts={() => setBulkDialogOpen(true)} />
       </div>
 
       <CreatorStats
