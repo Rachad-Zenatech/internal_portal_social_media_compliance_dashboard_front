@@ -133,13 +133,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - `ProcessLog` (export function) L11 - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 
-## src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
+## src/components/submissions/ReviewCommentsPanel.tsx (288 lines) - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
 - `COMMENT_CATEGORIES` (export const) L11
 - `toneFor` (const) L18
 - `labelFor` (const) L19
 - `formatSec` (export const) L21
-- `CommentItem` (function) L23
-- `ReviewCommentsPanel` (export function) L90 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+- `commentBoxId` (export const) L24 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
+- `ReplyingTo` (export function) L27 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `CommentItem` (function) L41
+- `ReviewCommentsPanel` (export function) L138 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
 ## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).

@@ -87,6 +87,7 @@ import HashtagPicker from "@/components/submissions/HashtagPicker";
 import PlatformCaptions from "@/components/submissions/PlatformCaptions";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
+import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
 import RevisionGuide from "@/components/submissions/RevisionGuide";
 import { useReviewComments } from "@/hooks/useReview";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
@@ -1299,6 +1300,32 @@ export default function NewSubmissionPage() {
           <Button type="button" variant="outline" size="sm" className="h-8 bg-card text-xs" onClick={() => navigate(`/submissions/${submissionId}`)}>
             Open the post page
           </Button>
+        </div>
+      )}
+
+      {/* Once decided, the creator gets a copy of the review conversation (reviewers and suggesting reviewers) on
+          every step: read-only once approved; sent back, they can reply. On the details step of a post sent back it
+          is beside the edits instead (RevisionWorkspace), so it isn't shown twice. */}
+      {submissionId && (status === "APPROVED" || (status === "CHANGES_REQUESTED" && !onDetails)) && (
+        <div className="rounded-2xl border border-border/80 bg-card px-5 py-4 space-y-3">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <MessageSquareText className="w-4 h-4" /> Review conversation
+            </p>
+            <p className="text-[12px] text-muted-foreground">
+              {status === "APPROVED"
+                ? "What the reviewers and suggesting reviewers said while reviewing this post, for your reference."
+                : "What the reviewers and suggesting reviewers said while reviewing this post. Reply to any of them below."}
+            </p>
+          </div>
+          <ReviewCommentsPanel
+            submissionId={submissionId}
+            canComment={status === "CHANGES_REQUESTED"}
+            showHeader={false}
+            showComposer={status === "CHANGES_REQUESTED"}
+            placeholder="Reply to the reviewer..."
+            emptyText="The reviewers didn't leave any comments on this post."
+          />
         </div>
       )}
 

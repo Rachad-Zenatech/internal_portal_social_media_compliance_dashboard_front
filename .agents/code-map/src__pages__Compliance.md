@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleSubmitForm` (fn) L460
     - `handleRunScanner` (fn) L532
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1717 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1732 lines) - content screener page (pages  compliance)
 - `DueFilter` (type) L92
 - `CheckFilter` (type) L93
 - `Filters` (interface) L94
@@ -57,36 +57,36 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `FlaggedMoments` (export function) L346 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
     - `count` (fn) L363
 - `CommentComposer` (function) L464 - Write a reviewer comment, pinned to a moment, a range of the video, or no time.
-    - `post` (fn) L471
-    - `at` (fn) L473
-    - `seg` (fn) L483
-- `PostView` (function) L570
-    - `toggle` (fn) L618
-    - `step` (fn) L624
-- `PanelTab` (type) L784
-- `ReviewPanel` (function) L786
-    - `canComment` (fn) L822
-- `useFlags` (function) L1234 - Flags, with this version's dismissals, for one post.
-    - `flags` (fn) L1235
-    - `dismissed` (fn) L1237
-- `Workspace` (function) L1242 - The selected post: media in the middle, the review panel on the right.
-    - `seek` (fn) L1265
-- `ContentScreenerPage` (export function) L1332
-    - `navigate` (fn) L1339
-    - `queue` (fn) L1355
-    - `counts` (fn) L1362
-    - `options` (fn) L1367
-    - `labels` (fn) L1368
-    - `items` (fn) L1377
-    - `visible` (fn) L1379
-    - `rows` (fn) L1381 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
-    - `time` (fn) L1382
-    - `renderPostRow` (fn) L1392
-    - `brands` (fn) L1428
-    - `platforms` (fn) L1429
-    - `setCollapsed` (fn) L1441
-    - `pick` (fn) L1450
-- `FilterChip` (function) L1707
+    - `post` (fn) L473
+    - `at` (fn) L475
+    - `seg` (fn) L493
+- `PostView` (function) L585
+    - `toggle` (fn) L633
+    - `step` (fn) L639
+- `PanelTab` (type) L799
+- `ReviewPanel` (function) L801
+    - `canComment` (fn) L837
+- `useFlags` (function) L1249 - Flags, with this version's dismissals, for one post.
+    - `flags` (fn) L1250
+    - `dismissed` (fn) L1252
+- `Workspace` (function) L1257 - The selected post: media in the middle, the review panel on the right.
+    - `seek` (fn) L1280
+- `ContentScreenerPage` (export function) L1347
+    - `navigate` (fn) L1354
+    - `queue` (fn) L1370
+    - `counts` (fn) L1377
+    - `options` (fn) L1382
+    - `labels` (fn) L1383
+    - `items` (fn) L1392
+    - `visible` (fn) L1394
+    - `rows` (fn) L1396 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
+    - `time` (fn) L1397
+    - `renderPostRow` (fn) L1407
+    - `brands` (fn) L1443
+    - `platforms` (fn) L1444
+    - `setCollapsed` (fn) L1456
+    - `pick` (fn) L1465
+- `FilterChip` (function) L1722
 
 ## src/pages/Compliance/MessagingContextPage.tsx (453 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - `EMPTY` (const) L58

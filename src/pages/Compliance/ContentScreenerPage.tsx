@@ -31,7 +31,7 @@ import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGl
 import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
-import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
+import ReviewCommentsPanel, { ReplyingTo, commentBoxId, formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -63,7 +63,7 @@ import {
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { usePublicMood } from "@/hooks/usePublicMood";
-import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
+import { useCommentReply, useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
@@ -463,6 +463,8 @@ const CATEGORY_NAMES: Record<string, string> = {
 /** Write a reviewer comment, pinned to a moment, a range of the video, or no time. */
 function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number; hasVideo: boolean }) {
   const { add } = useReviewComments(s.id);
+  // Set by Reply under a comment in the list below; the reply quotes that comment.
+  const { replyTo, setReplyTo } = useCommentReply(s.id);
   const [category, setCategory] = useState<ReviewCommentCategory>("NOTE");
   const [mode, setMode] = useState<"POINT" | "RANGE" | "NONE">(hasVideo ? "POINT" : "NONE");
   const [range, setRange] = useState<{ start: number; end: number }>({ start: 0, end: 5 });
@@ -477,7 +479,15 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
         : mode === "POINT"
         ? { start_sec: at(now), end_sec: null }
         : { start_sec: at(range.start), end_sec: at(Math.max(range.end, range.start + 1)) };
-    add.mutate({ body: body.trim(), category, ...times }, { onSuccess: () => setBody("") });
+    add.mutate(
+      { body: body.trim(), category, ...times, reply_to_id: replyTo?.id ?? null },
+      {
+        onSuccess: () => {
+          setBody("");
+          setReplyTo(null);
+        },
+      }
+    );
   };
 
   const seg = (on: boolean) =>
@@ -541,10 +551,15 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
           <span className="text-muted-foreground">Play to the moment you want, then set the start or end.</span>
         </div>
       )}
+      {replyTo && <ReplyingTo c={replyTo} onCancel={() => setReplyTo(null)} />}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
+          id={commentBoxId(s.id)}
           value={body}
           onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && replyTo) setReplyTo(null);
+          }}
           placeholder={
             !hasVideo || mode === "NONE"
               ? "Add a general reviewer note..."

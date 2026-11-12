@@ -121,7 +121,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type) L218
 
-## src/types/submission.ts (664 lines) - AD: paid social ad.
+## src/types/submission.ts (670 lines) - AD: paid social ad.
 - `ContentType` (export type) L5 - AD: paid social ad.
 - `SubmissionFileKind` (export type) L6
 - `SubmissionStatus` (export type) L7
@@ -150,22 +150,22 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ReviewDecisionRequest` (export interface) L387
 - `ReviewCommentCategory` (export type) L403
 - `ReviewComment` (export interface) L405
-- `ReviewCommentCreate` (export interface) L423
-- `SubmissionEvent` (export interface) L430
-- `SubmissionHistory` (export interface) L439
-- `ReviewQueueItem` (export interface) L445
-- `VersionView` (export interface) L503 - One submitted version as it was: what was sent, its video, its automated check and its decision.
-- `FlagDismissReason` (export type) L520
-- `FlagReview` (export interface) L523 - A reviewer's dismissal of an automated compliance flag on one version.
-- `FlagVerdict` (export interface) L537 - A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm.
-- `RuleFlagStats` (export interface) L550 - Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed.
-- `QueueTab` (export type) L560 - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
-- `ReviewQueueCounts` (export type) L563 - Posts in each Screener tab, plus scripts waiting for a reviewer.
-- `DashboardSummary` (export interface) L566 - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
-- `SubmitResult` (export interface) L588
-- `CheckAttempt` (export interface) L594 - One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback).
-- `DuplicateDetail` (export interface) L609 - One Submission Details dropdown compared with an earlier post that has the same content and caption.
-- `DuplicateMatch` (export interface) L619 - A post already sent for approval with the same content and caption.
-- `DuplicateReport` (export interface) L634 - blocked: a match overlaps on every detail and the publish date.
-- `DelegationDirection` (export type) L641
-- `Delegation` (export interface) L644 - One hand-off of a post in review, with where the post stands now.
+- `ReviewCommentCreate` (export interface) L427
+- `SubmissionEvent` (export interface) L436
+- `SubmissionHistory` (export interface) L445
+- `ReviewQueueItem` (export interface) L451
+- `VersionView` (export interface) L509 - One submitted version as it was: what was sent, its video, its automated check and its decision.
+- `FlagDismissReason` (export type) L526
+- `FlagReview` (export interface) L529 - A reviewer's dismissal of an automated compliance flag on one version.
+- `FlagVerdict` (export interface) L543 - A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm.
+- `RuleFlagStats` (export interface) L556 - Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed.
+- `QueueTab` (export type) L566 - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
+- `ReviewQueueCounts` (export type) L569 - Posts in each Screener tab, plus scripts waiting for a reviewer.
+- `DashboardSummary` (export interface) L572 - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
+- `SubmitResult` (export interface) L594
+- `CheckAttempt` (export interface) L600 - One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback).
+- `DuplicateDetail` (export interface) L615 - One Submission Details dropdown compared with an earlier post that has the same content and caption.
+- `DuplicateMatch` (export interface) L625 - A post already sent for approval with the same content and caption.
+- `DuplicateReport` (export interface) L640 - blocked: a match overlaps on every detail and the publish date.
+- `DelegationDirection` (export type) L647
+- `Delegation` (export interface) L650 - One hand-off of a post in review, with where the post stands now.
