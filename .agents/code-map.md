@@ -169,7 +169,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ACTIVITY_STYLE` (export const) - Each kind of update on a post, with its own icon and colour (same on both dashboards).
 - `ScoreRing` (export function) - An average rulebook score as a ring.
 
-## src/components/script/BatchDetailsForm.tsx (177 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+## src/components/script/BatchDetailsForm.tsx (198 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `toLocalInput` (const) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
@@ -1005,7 +1005,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 
 ## src/main.tsx (51 lines) - Create a client
 
-## src/pages/Auth/Login.tsx (234 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+## src/pages/Auth/Login.tsx (237 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `readSignedOut` (function) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - `safeReturnTo` (const) - Only same-app paths, so a crafted value can't send the user to another site after signing in.
 - `newNonce` (function)
@@ -1315,8 +1315,8 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
 
-## src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
-- `Dashboard` (export function) - Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own.
+## src/pages/Dashboard/Dashboard.tsx (446 lines) - dashboard (pages  dashboard)
+- `Dashboard` (export function) - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
 - `isFailing` (const) - A check that would stop approval or clearly needs work: a red result, or a score under 60.
 - `isOverdue` (const)
 - `QueueRow` (type) - What waits for a reviewer: a post, or a video's script.
@@ -1419,7 +1419,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2620 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2646 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1435,6 +1435,8 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `accounts` (fn)
     - `reviewersQuery` (fn)
     - `reviewerOptions` (fn)
+    - `approverOptions` (fn) - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn)
     - `selectedAccounts` (fn)
     - `brandAccounts` (fn)
     - `scriptStage` (fn) - the script stage (required: false) work as they always did.
@@ -1497,24 +1499,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `toggleDone` (fn)
     - `goToHighlight` (fn) - A highlight card was clicked: find that wording in the script and flash it.
     - `pick` (fn)
-
-## src/pages/Submissions/SubmissionDetailPage.tsx (625 lines) - submission detail page (pages  submissions)
-- `Panel` (function)
-- `LightBadge` (function)
-- `StatusTrack` (function) - Draft → Submitted → In review → Decision, highlighting where this submission is.
-- `DetailRow` (function)
-- `JobCard` (function)
-- `VersionRow` (function)
-- `PreviewVideo` (function) - Main video preview, using the most representative frame as its poster.
-- `SubmissionDetailPage` (export function)
-    - `navigate` (fn)
-    - `queryClient` (fn)
-    - `submissionQuery` (fn)
-    - `optionsQuery` (fn)
-    - `historyQuery` (fn)
-    - `scriptStage` (fn)
-    - `refresh` (fn)
-    - `handleScriptUpload` (fn)
 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
@@ -1649,7 +1633,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - `scriptBatchService` (export const) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 
-## src/services/scriptService.ts (58 lines) - The script stage of video posts (see the backend's script_review_service).
+## src/services/scriptService.ts (61 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
 ## src/services/submissionService.ts (313 lines) - submission service (services)
@@ -1732,7 +1716,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `MatchTestResult` (export interface)
 - `XTrendOpportunity` (export interface)
 
-## src/types/script.ts (117 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
+## src/types/script.ts (149 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - `ScriptStatus` (export type) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...
 - `ScriptVersion` (export interface)
 - `ScriptSuggestion` (export interface) - A suggesting reviewer's own suggestion on a script version: their edited wording and their notes on it.
@@ -1740,6 +1724,9 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `ScriptStage` (export interface)
 - `ScriptQueueItem` (export interface)
 - `ScriptHighlight` (export interface) - Wording the reviewer highlighted (with an optional note) in a script version.
+- `SuggesterItem` (export interface) - A post or script sent to a suggesting reviewer, and what they have done on it so far.
+- `SuggesterActivity` (export interface)
+- `SuggesterDashboard` (export interface)
 
 ## src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - `BatchStatus` (export type) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).

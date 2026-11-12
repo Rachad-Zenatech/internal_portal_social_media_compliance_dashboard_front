@@ -114,3 +114,35 @@ export interface ScriptHighlight {
   done?: boolean;
   updated?: string | null;
 }
+
+/** A post or script sent to a suggesting reviewer, and what they have done on it so far. */
+export interface SuggesterItem {
+  id: string;
+  kind: "post" | "script";
+  reference_code: string;
+  title: string;
+  creator_name?: string | null;
+  brand_code?: string | null;
+  platforms: string[];
+  due_at?: string | null;
+  sent_at?: string | null;
+  batch_id?: string | null;
+  version_number?: number | null;
+  my_comments: number;
+  /** When they last saved a suggestion on the script as it stands now. */
+  my_suggestion_at?: string | null;
+}
+
+export interface SuggesterActivity {
+  kind: "comment" | "suggestion";
+  submission_id: string;
+  reference_code: string;
+  title: string;
+  at: string;
+  snippet?: string | null;
+}
+
+export interface SuggesterDashboard {
+  items: SuggesterItem[];
+  recent: SuggesterActivity[];
+}

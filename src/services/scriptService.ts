@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/apiClient";
-import type { ScriptQueueItem, ScriptStage } from "@/types/script";
+import type { ScriptQueueItem, ScriptStage, SuggesterDashboard } from "@/types/script";
 import type { ScriptHighlight } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
@@ -9,6 +9,9 @@ const quiet = { skipGlobalLoading: true };
 export const scriptService = {
   queue: (tab: "review" | "sent_back" | "done" = "review") =>
     apiClient.get<ScriptQueueItem[]>(`/api/submissions/scripts/queue?tab=${tab}`, quiet),
+
+  /** A suggesting reviewer's dashboard: what is sent to them, and what they have done on it. */
+  suggesterDashboard: () => apiClient.get<SuggesterDashboard>("/api/submissions/scripts/suggester-dashboard", quiet),
 
   get: (id: string) => apiClient.get<ScriptStage>(`/api/submissions/${id}/script`, quiet),
 
