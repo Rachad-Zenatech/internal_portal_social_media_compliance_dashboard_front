@@ -2202,8 +2202,20 @@ export default function NewSubmissionPage() {
               {videoLocked ? (
                 <p className={`flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground ${stepView === "send" ? "hidden" : ""}`}>
                   <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  Your script is checked first: open it from the script card above to see its compliance score. The
-                  compliance check and sentiment analysis of the video and caption open here once the script is approved.
+                  <span>
+                    Your script is checked first: open it from the script card to see its compliance score. The
+                    compliance check and sentiment analysis of the video and caption open here once the script is approved.{" "}
+                    <button
+                      type="button"
+                      className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                      onClick={() => {
+                        goToStep("details");
+                        window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+                      }}
+                    >
+                      Go to script
+                    </button>
+                  </span>
                 </p>
               ) : (
                 <>
