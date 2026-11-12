@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2693 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2696 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L162 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L201
 - `timeOptions` (const) L208
@@ -57,14 +57,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `runComplianceCheck` (fn) L941 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
     - `ranSinceSentBack` (fn) L1015
     - `submit` (fn) L1024
-    - `exec` (fn) L1165 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1173 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1185
-    - `typedTail` (fn) L1190 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1197 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1221 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1237 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1245
+    - `exec` (fn) L1168 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1176 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1188
+    - `typedTail` (fn) L1193 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1200 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1224 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1240 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1248
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
