@@ -47,11 +47,19 @@ export function StatCard({
   value,
   note,
   noteTone = "muted",
+  onClick,
+  active,
+  hint,
 }: {
   label: string;
   value: React.ReactNode;
   note?: string | null;
   noteTone?: "muted" | "amber" | "red" | "green";
+  /** Makes the card a button (a shortcut to what it counts). */
+  onClick?: () => void;
+  /** The card's shortcut is on right now. */
+  active?: boolean;
+  hint?: string;
 }) {
   const tone = {
     muted: "text-muted-foreground",
@@ -59,14 +67,33 @@ export function StatCard({
     red: "text-red-600 dark:text-red-400",
     green: "text-emerald-700 dark:text-emerald-400",
   }[noteTone];
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border/70 bg-card p-4 sm:p-5">
+  const body = (
+    <>
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
       <span className="text-3xl font-semibold leading-none tracking-tight tabular-nums text-foreground">{value}</span>
       {note && <span className={`text-xs font-medium ${tone}`}>{note}</span>}
-    </div>
+    </>
+  );
+  const base = "flex min-w-0 flex-col gap-1.5 rounded-xl border bg-card p-4 text-left sm:p-5";
+  if (!onClick) return <div className={`${base} border-border/70`}>{body}</div>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={hint}
+      className={`${base} cursor-pointer transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        active ? "border-foreground/60 ring-1 ring-foreground/20" : "border-border/70"
+      }`}
+    >
+      {body}
+    </button>
   );
 }
+
+/** Scroll a section of the dashboard into view once the list under it has changed. */
+export const scrollToSection = (id: string) =>
+  window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
 
 /** Who did what to which post, newest first (from GET /api/submissions/dashboard). */
 export function ActivityList({
