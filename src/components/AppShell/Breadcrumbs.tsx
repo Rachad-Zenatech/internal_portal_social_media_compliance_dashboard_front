@@ -64,6 +64,7 @@ export default function Breadcrumbs() {
       "content-calendar": "Content calendar",
       delegations: "Delegations",
       "script-review": "Script review",
+      "script-docs": "Script review",
       "script-batches": "Script review",
       performance: "Post performance",
       socials: "Social accounts",

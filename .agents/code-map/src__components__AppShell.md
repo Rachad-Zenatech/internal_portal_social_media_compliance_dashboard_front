@@ -12,7 +12,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L10
 - `AppShell` (export function) L17
 
-## src/components/AppShell/Breadcrumbs.tsx (158 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
+## src/components/AppShell/Breadcrumbs.tsx (159 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - `BreadcrumbItem` (export interface) L7
 - `Breadcrumbs` (export function) L12
 

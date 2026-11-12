@@ -4,15 +4,18 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/script/BatchDetailsForm.tsx (198 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `toLocalInput` (const) L14 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `BatchDetailsForm` (export function) L27 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
+## src/components/script/BatchDetailsForm.tsx (149 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `toLocalInput` (const) L13 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `BatchDetailsForm` (export function) L26 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
 ## src/components/script/BatchItemCard.tsx (327 lines) - batch item card (components script)
 - `Decision` (export interface) L18
 - `CheckChip` (function) L31 - The state of a script's check as a short chip: its score, or why it has none.
 - `DetailsSummary` (function) L58 - The short form of a script's own details (brand and platforms), with what is missing; opens the form when it can.
 - `BatchItemCard` (export function) L85 - One script of a batch.
+
+## src/components/script/BatchReviewerFields.tsx (81 lines) - batch reviewer fields (components script)
+- `BatchReviewerFields` (export function) L13 - Who a batch goes to: reviewers who approve, and (optionally) suggesting reviewers.
 
 ## src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - `BulkScriptDialog` (export function) L19 - Upload one document that holds several scripts.

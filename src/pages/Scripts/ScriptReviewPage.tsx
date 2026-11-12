@@ -7,6 +7,7 @@ import { FileStack, FileText, Plus } from "lucide-react";
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import ListPager from "@/components/common/ListPager";
 import { usePaged } from "@/hooks/usePaged";
+import ScriptDocHub from "@/components/scriptdoc/ScriptDocHub";
 import { Button } from "@/components/ui/button";
 import { useScriptBatches } from "@/hooks/useScriptBatches";
 import { useAuth } from "@/lib/AuthContext";
@@ -260,6 +261,9 @@ export default function ScriptReviewPage() {
         )}
       </div>
 
+      <ScriptDocHub />
+
+      <h2 className="border-t pt-5 text-lg font-semibold tracking-tight">Uploaded scripts</h2>
       <ScriptReviewTabs reviewer={reviewer} tab={tab} onTab={setTab} filter={filter} onFilter={setFilter} counts={counts} />
 
       {loading ? (

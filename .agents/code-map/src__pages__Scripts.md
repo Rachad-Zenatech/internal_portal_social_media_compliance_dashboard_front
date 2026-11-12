@@ -10,15 +10,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptBatchPage` (export function) L43 - A batch of scripts.
 - `BatchView` (function) L59
 
-## src/pages/Scripts/ScriptReviewPage.tsx (303 lines) - script review page (pages  scripts)
-- `ReviewTab` (type) L26
-- `CreatorFilter` (type) L33
-- `Progress` (function) L46 - How far a batch has got: a bar split by where its scripts are.
-- `BatchCard` (function) L66
-- `ScriptCard` (function) L106 - A script that was uploaded on its own (not in a batch).
-- `Empty` (function) L135
-- `ScriptReviewTabs` (function) L146 - The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter.
-- `ScriptReviewPage` (export function) L203 - Script review: every script, whether it was uploaded alone or in a batch of several.
+## src/pages/Scripts/ScriptDocPage.tsx (328 lines) - The notes document as a list, kept up to date as anyone changes it.
+- `errText` (const) L17
+- `useNotes` (function) L22 - The notes document as a list, kept up to date as anyone changes it.
+- `ScriptDocPage` (export function) L39 - A script open for review.
+
+## src/pages/Scripts/ScriptReviewPage.tsx (307 lines) - script review page (pages  scripts)
+- `ReviewTab` (type) L27
+- `CreatorFilter` (type) L34
+- `Progress` (function) L47 - How far a batch has got: a bar split by where its scripts are.
+- `BatchCard` (function) L67
+- `ScriptCard` (function) L107 - A script that was uploaded on its own (not in a batch).
+- `Empty` (function) L136
+- `ScriptReviewTabs` (function) L147 - The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter.
+- `ScriptReviewPage` (export function) L204 - Script review: every script, whether it was uploaded alone or in a batch of several.
 
 ## src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
 - `ScriptReviewScriptPage` (export function) L12 - One video script, reviewed in the Script review section: the script marked up beside its flags, highlights,  sentiment and history, and t...

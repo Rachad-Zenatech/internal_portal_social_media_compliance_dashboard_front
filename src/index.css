@@ -389,3 +389,20 @@
   font-weight: 600;
 }
 .script-editor .script-doc .script-page-break.ProseMirror-selectednode { border-top-color: var(--color-blue-500); }
+
+/* Script documents: the shared page, other people's cursors and the notes on the wording. */
+.script-doc-page { font-size: 0.9rem; line-height: 1.55; min-height: 24rem; }
+.script-doc-page p { margin: 0.25rem 0; }
+.script-doc-page h1, .script-doc-page h2, .script-doc-page h3 { margin: 0.5rem 0; font-weight: 600; line-height: 1.3; }
+.script-doc-page h2 { font-size: 1.2rem; }
+.script-doc-page ul { list-style: disc; padding-left: 1.5rem; }
+.script-doc-page ol { list-style: decimal; padding-left: 1.5rem; }
+.script-doc-page table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0.75rem 0; }
+.script-doc-page th, .script-doc-page td { border: 1px solid var(--color-border, #d4d4d8); padding: 0.35rem 0.5rem; vertical-align: top; text-align: left; }
+.script-doc-page th { background: color-mix(in oklab, var(--color-muted, #f4f4f5) 90%, transparent); font-weight: 600; }
+.script-doc-page th:first-child, .script-doc-page td:first-child { width: 4.5rem; }
+.script-doc-page .selectedCell { background: color-mix(in oklab, var(--color-blue-500) 16%, transparent); }
+.script-note { border-radius: 2px; cursor: pointer; }
+.script-note-active { outline: 2px solid currentColor; outline-offset: 1px; }
+.collaboration-cursor__caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 1px solid; border-right: 1px solid; word-break: normal; pointer-events: none; }
+.collaboration-cursor__label { position: absolute; top: -1.5em; left: -1px; font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; color: #fff; padding: 2px 6px; border-radius: 4px 4px 4px 0; user-select: none; pointer-events: none; }

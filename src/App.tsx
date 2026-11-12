@@ -33,6 +33,7 @@ const ScriptChangesPage = lazy(() => import("./pages/Submissions/ScriptChangesPa
 const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const DelegationsPage = lazy(() => import("./pages/Delegations/DelegationsPage"));
 const ScriptReviewPage = lazy(() => import("./pages/Scripts/ScriptReviewPage"));
+const ScriptDocPage = lazy(() => import("./pages/Scripts/ScriptDocPage"));
 const ScriptBatchPage = lazy(() => import("./pages/Scripts/ScriptBatchPage"));
 const ScriptReviewScriptPage = lazy(() => import("./pages/Scripts/ScriptReviewScriptPage"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
@@ -49,6 +50,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <PostRedirect /> },
   { path: "/submissions/:id/script", navigationCode: "DASHBOARD", element: <ScriptChangesPage /> },
   { path: "/delegations", navigationCode: "DASHBOARD", element: <DelegationsPage /> },
+  { path: "/script-docs/:id", navigationCode: "DASHBOARD", element: <ScriptDocPage /> },
   { path: "/script-review", navigationCode: "DASHBOARD", element: <ScriptReviewPage /> },
   { path: "/script-review/:id", navigationCode: "DASHBOARD", element: <ScriptBatchPage /> },
   { path: "/script-review/scripts/:id", navigationCode: "DASHBOARD", element: <ScriptReviewScriptPage /> },
