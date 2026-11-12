@@ -12,8 +12,10 @@ export const scriptService = {
 
   get: (id: string) => apiClient.get<ScriptStage>(`/api/submissions/${id}/script`, quiet),
 
-  /** Send the uploaded script for review. */
-  submit: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/submit`, undefined, quiet),
+  /** Send the uploaded script for review. confirmRepost: send the same script again for another publish date (the
+   * server asks with a 409 REPOST_CONFIRM; the same script for the same place and date is a 409 DUPLICATE_SCRIPT). */
+  submit: (id: string, confirmRepost = false) =>
+    apiClient.post<ScriptStage>(`/api/submissions/${id}/script/submit`, { confirm_repost: confirmRepost }, quiet),
 
   /** Reviewer: approve, or send back with a note and/or their edited version (text). */
   decide: (id: string, data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
@@ -23,10 +25,12 @@ export const scriptService = {
   accept: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/accept`, undefined, quiet),
 
   /** Creator: send an edited script back to the reviewer. */
-  revise: (id: string, text: string, note?: string) =>
-    apiClient.post<ScriptStage>(`/api/submissions/${id}/script/revise`, { text, note }, quiet),
+  revise: (id: string, text: string, note?: string, confirmRepost = false) =>
+    apiClient.post<ScriptStage>(`/api/submissions/${id}/script/revise`, { text, note, confirm_repost: confirmRepost }, quiet),
 
   /** Check wording being edited, without saving it. */
+  /** Creator: check the uploaded script against the rulebook before sending it (the result is kept). */
+  precheck: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/precheck`, undefined, quiet),
   check: (id: string, text: string) => apiClient.post<StoredCheck>(`/api/submissions/${id}/script/check`, { text }, quiet),
 
   /** The reviewer's highlights and notes on a script version (the creator sees them too). */

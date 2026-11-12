@@ -104,7 +104,9 @@ export default function PublishDraftPage() {
   }
 
   const publishAt = new Date(item.scheduled_for);
-  const captionLength = item.caption.length;
+  // The caption written for this platform's account, else the post's main caption.
+  const caption = item.captions_by_platform?.[platform] ?? item.caption;
+  const captionLength = caption.length;
   const overLimit = captionLength > info.max_characters;
   const pastDate = isBefore(publishAt, new Date());
   const remaining = item.platforms.filter((p) => p !== platform && !published[publishKey(item.id, p)]);
@@ -131,7 +133,7 @@ export default function PublishDraftPage() {
   };
 
   const copyCaption = () =>
-    navigator.clipboard.writeText(item.caption).then(
+    navigator.clipboard.writeText(caption).then(
       () => toast.success("Caption copied."),
       () => toast.error("Couldn't copy to the clipboard")
     );
@@ -178,7 +180,7 @@ export default function PublishDraftPage() {
               platform={platform}
               account={item.account}
               title={item.title}
-              caption={item.caption}
+              caption={caption}
               media={item.primary_file}
               mediaNode={item.poster_variant ? <DemoPoster variant={item.poster_variant} className="w-full h-full" /> : undefined}
               whenLabel={format(publishAt, "MMM d, h:mm a")}

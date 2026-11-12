@@ -335,6 +335,13 @@
   line-height: 1.7;
   counter-reset: script-page 1;
 }
+/* A script shown to read, as in a batch's cards: the same document, without the editor's height and blue frame. */
+.script-editor.script-readonly .script-doc {
+  min-height: 0;
+  padding: 0.75rem 1rem;
+  border-color: var(--color-border);
+  background: color-mix(in oklab, var(--color-muted) 25%, var(--color-card));
+}
 .script-editor .script-doc:focus-within { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-blue-500) 22%, transparent); }
 .script-editor .script-doc p { margin: 0.25rem 0; }
 .script-editor .script-doc h1, .script-editor .script-doc h2, .script-editor .script-doc h3 { margin: 0.5rem 0; font-weight: 600; line-height: 1.3; }

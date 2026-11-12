@@ -33,11 +33,10 @@ export function DelegateReviewButton({ target, className = "" }: { target: Deleg
   const [note, setNote] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const brands = target.brand_codes?.length ? target.brand_codes : target.brand_code ? [target.brand_code] : [];
-
+  // Any reviewer can take it over, whatever brands they work on.
   const reviewers = useQuery({
-    queryKey: ["reviewers", ...brands],
-    queryFn: () => submissionService.reviewers(brands),
+    queryKey: ["reviewers", "all"],
+    queryFn: () => submissionService.reviewers(),
     enabled: open,
   });
   const options = useMemo(() => {
@@ -74,8 +73,8 @@ export function DelegateReviewButton({ target, className = "" }: { target: Deleg
           <DialogHeader>
             <DialogTitle>Delegate {target.reference_code}</DialogTitle>
             <DialogDescription>
-              Send &ldquo;{target.title}&rdquo; to another reviewer. You stay on it: you'll still see its status and
-              can still approve it or request changes.
+              Send &ldquo;{target.title}&rdquo; to any other reviewer, whatever brand they work on. You stay on it:
+              you'll still see its status and can still approve it or request changes. You can delegate a post once.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -94,7 +93,7 @@ export function DelegateReviewButton({ target, className = "" }: { target: Deleg
                 </SelectContent>
               </Select>
               {!reviewers.isLoading && options.length === 0 && (
-                <p className="text-xs text-muted-foreground">No other reviewers work on this brand.</p>
+                <p className="text-xs text-muted-foreground">There's nobody else to delegate to.</p>
               )}
             </div>
             <div className="space-y-1.5">

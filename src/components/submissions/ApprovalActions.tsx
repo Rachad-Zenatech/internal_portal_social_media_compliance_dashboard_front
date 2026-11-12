@@ -3,8 +3,8 @@ import { format, isPast } from "date-fns";
 import { CalendarClock, Loader2, MessageSquareWarning, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useApprovalActions } from "@/hooks/useReview";
@@ -115,7 +115,7 @@ export default function ApprovalActions({
           {mode === "reschedule" && (
             <div className="space-y-1.5">
               <Label htmlFor="approval-when" className="text-xs font-semibold">Publish on</Label>
-              <Input id="approval-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="text-xs" />
+              <DateTimePicker id="approval-when" withTime disablePast value={when} onChange={setWhen} />
               {planned && <p className="text-[11px] text-muted-foreground">Currently {format(planned, "EEE MMM d, h:mm a")}.</p>}
               {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future.</p>}
             </div>

@@ -13,6 +13,8 @@ import HighlightCards from "@/components/script/HighlightCards";
 import HighlightableText, { type HighlightableHandle } from "@/components/script/HighlightableText";
 import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
+import ScriptBatchBar from "@/components/script/ScriptBatchBar";
+import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { changesOf, diffWords } from "@/lib/wordDiff";
@@ -67,7 +69,7 @@ export default function ScriptChangesPage() {
   if (stage.isError || !stage.data) {
     return <p className="p-8 text-sm text-red-600">Couldn't load the script: {(stage.error as Error | null)?.message ?? "not found"}</p>;
   }
-  return <Changes key={stage.data.versions.length} stage={stage.data} />;
+  return <Changes key={`${stage.data.submission_id}-${stage.data.versions.length}`} stage={stage.data} />;
 }
 
 const noop = () => undefined;
@@ -115,7 +117,10 @@ function Changes({ stage }: { stage: ScriptStage }) {
       if (!next.delete(id)) next.add(id);
       return next;
     });
-  const [tab, setTab] = useState<"request" | "history">("request");
+  // Where the creator has nothing to change (with the reviewer, or approved) the compliance check is what's worth reading.
+  const [tab, setTab] = useState<"compliance" | "request" | "history">(
+    stage.status === "IN_REVIEW" || stage.status === "APPROVED" ? "compliance" : "request"
+  );
   const { highlights, resolve } = useScriptHighlights(stage.submission_id, fromReviewer ? base?.version_number : shown?.version_number, false);
   // Every request from the reviewer must be checked off before the script can go back.
   const unchecked = highlights.filter((h) => !doneIds.has(h.id)).length;
@@ -161,7 +166,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
   const canDecide = status === "EDITS_PROPOSED" && canEdit && fromReviewer && !editing;
 
   return (
-    <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)] lg:flex-row">
+    <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)]">
+      {stage.batch && <ScriptBatchBar batch={stage.batch} reviewer={false} />}
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       {/* ===== The versions ===== */}
       <section aria-label="Script" className="min-w-0 flex-1 overflow-y-auto bg-muted/30">
         <header className="flex flex-col gap-2.5 border-b border-border/70 bg-card px-5 py-4 sm:px-6">
@@ -296,6 +303,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
         <div role="tablist" aria-label="Review sections" className="flex gap-1 border-b border-border/70 px-3 pt-2">
           {(
             [
+              ["compliance", "Compliance", activeFlagCount(shown.check)],
               ["request", "Request changes", highlights.length + (base ? changes.length : 0)],
               ["history", "Script history", stage.versions.length],
             ] as const
@@ -319,7 +327,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
           <p className="text-xs text-muted-foreground">
             {tab === "history"
               ? "Every version and the reviewer's notes."
-              : "What your reviewer marked and changed. Click one to find it in the script."}
+              : tab === "compliance"
+                ? "The rulebook check of the script as it stands."
+                : "What your reviewer marked and changed. Click one to find it in the script."}
             {base?.check?.score != null && shown.check?.score != null && ` Script check: ${base.check.score} → ${shown.check.score}.`}
             {!base && shown.check?.score != null && ` Script check: ${shown.check.score}/100 · ${verdict.text.toLowerCase()}.`}
           </p>
@@ -327,6 +337,8 @@ function Changes({ stage }: { stage: ScriptStage }) {
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
           {tab === "history" ? (
             <VersionHistory versions={stage.versions} />
+          ) : tab === "compliance" ? (
+            <ScriptCompliance check={shown.check} />
           ) : (
             <>
               <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -543,6 +555,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
           )}
         </div>
       </aside>
+      </div>
     </div>
   );
 }

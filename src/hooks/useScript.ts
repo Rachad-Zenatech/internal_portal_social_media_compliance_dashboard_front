@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { ApiError } from "@/services/helper";
+
 import { scriptService } from "@/services/scriptService";
 import type { ScriptHighlight, ScriptStage } from "@/types/script";
 
@@ -47,14 +49,40 @@ export function useScriptActions(submissionId: string) {
     queryClient.invalidateQueries({ queryKey: ["submissions"] });
   };
   const fail = (what: string) => (err: unknown) => toast.error(`Couldn't ${what}: ${(err as Error).message}`);
+  /** A script already sent: refused for the same place and date; for another date, offer to send it anyway. */
+  const duplicate = (err: unknown, again: () => void): boolean => {
+    if (!(err instanceof ApiError) || err.status !== 409 || !err.detail || typeof err.detail !== "object") return false;
+    const detail = err.detail as { code?: string; message?: string };
+    if (detail.code === "REPOST_CONFIRM") {
+      toast(detail.message ?? "The same script was already sent for another date.", {
+        duration: 15000,
+        action: { label: "Send anyway", onClick: again },
+      });
+      return true;
+    }
+    if (detail.code === "DUPLICATE_SCRIPT") {
+      toast.error(detail.message ?? "The same script was already sent for this date.");
+      return true;
+    }
+    return false;
+  };
 
   const submit = useMutation({
-    mutationFn: () => scriptService.submit(submissionId),
+    mutationFn: (opts?: { confirmRepost?: boolean }) => scriptService.submit(submissionId, Boolean(opts?.confirmRepost)),
     onSuccess: (s) => {
       done(s);
       toast.success("Script received. Processing it and calculating the compliance score; it goes to the reviewers when that's done.");
     },
-    onError: (err) => toast.error(`Error sending the script: ${(err as Error).message}`),
+    onError: (err) => {
+      if (!duplicate(err, () => submit.mutate({ confirmRepost: true }))) {
+        toast.error(`Error sending the script: ${(err as Error).message}`);
+      }
+    },
+  });
+  const precheck = useMutation({
+    mutationFn: () => scriptService.precheck(submissionId),
+    onSuccess: (s) => queryClient.setQueryData(["script", submissionId], s),
+    onError: fail("check the script"),
   });
   const decide = useMutation({
     mutationFn: (data: { decision: "APPROVE" | "SEND_BACK"; text?: string; note?: string; due_days?: 1 | 2 | 3 | 5; due_at?: string }) =>
@@ -76,14 +104,19 @@ export function useScriptActions(submissionId: string) {
     onError: fail("accept the changes"),
   });
   const revise = useMutation({
-    mutationFn: ({ text, note }: { text: string; note?: string }) => scriptService.revise(submissionId, text, note),
+    mutationFn: ({ text, note, confirmRepost }: { text: string; note?: string; confirmRepost?: boolean }) =>
+      scriptService.revise(submissionId, text, note, Boolean(confirmRepost)),
     onSuccess: (s) => {
       done(s);
       toast.success("Script sent back to the reviewer.");
     },
-    onError: fail("send the script"),
+    onError: (err, vars) => {
+      if (!duplicate(err, () => revise.mutate({ ...vars, confirmRepost: true }))) fail("send the script")(err);
+    },
   });
-  return { submit, decide, accept, revise };
+  return {
+    precheck,
+    submit, decide, accept, revise };
 }
 
 /** The value, once it has stopped changing for `ms`. */

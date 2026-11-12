@@ -179,6 +179,8 @@ export interface Submission {
   due_kind?: DueKind | null;
   caption_html?: string | null;
   caption_text?: string | null;
+  /** Platforms with their own caption (plain text); the others use caption_text. */
+  platform_captions?: Record<string, string>;
   rule_sets: string[];
   reviewer_route: string[];
   /** The reviewers it's sent to; empty means every reviewer on its brand. */
@@ -287,6 +289,8 @@ export interface SubmissionSummary {
   accounts?: AccountOption[];
   /** First 600 characters of the caption. */
   caption_text?: string | null;
+  /** Platforms with their own caption (plain text); the others use caption_text. */
+  platform_captions?: Record<string, string>;
   /** Video posts with a script: the start of the script, shown on the card until a video is added. */
   script_excerpt?: string | null;
   /** Main video/image, or the first attached image, for the card thumbnail. */
@@ -325,6 +329,7 @@ export interface SubmissionUpdate {
   approval_needed_by?: string;
   caption_html?: string;
   caption_text?: string;
+  platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];
   reviewer_ids?: string[];
@@ -441,6 +446,10 @@ export interface ReviewQueueItem {
   platforms: string[];
   account?: AccountOption | null;
   caption_text?: string | null;
+  /** Platforms with their own caption (plain text); the others use caption_text. */
+  platform_captions?: Record<string, string>;
+  /** Every account it posts through. */
+  accounts?: AccountOption[];
   latest_check?: StoredCheck | null;
   /** While the check is still reading the post: what's left and when the score is expected. */
   analysis_progress?: AnalysisProgress | null;

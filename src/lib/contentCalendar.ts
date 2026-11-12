@@ -250,6 +250,8 @@ export function fromSubmission(s: SubmissionSummary): CalendarItem | null {
     reference_code: s.reference_code,
     title: s.title,
     caption: s.caption_text ?? "",
+    // Platforms with their own caption; the rest publish the main one.
+    captions_by_platform: s.platform_captions ?? {},
     content_type: s.content_type,
     platforms: s.platforms,
     primary_platform: s.platforms[0] ?? "",

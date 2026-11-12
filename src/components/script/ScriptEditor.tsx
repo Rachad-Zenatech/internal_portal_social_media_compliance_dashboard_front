@@ -195,11 +195,14 @@ export default function ScriptEditor({
   onChange,
   ref,
   className = "",
+  readOnly = false,
 }: {
   value: string;
   onChange: (text: string) => void;
   ref?: Ref<ScriptEditorHandle>;
   className?: string;
+  /** Show the script as a formatted document without the toolbar, and don't let it be changed. */
+  readOnly?: boolean;
 }) {
   // The text this editor last handed out: a `value` equal to it is the editor's own change coming back, not a new one.
   const emitted = useRef(value);
@@ -212,6 +215,7 @@ export default function ScriptEditor({
   const editor = useEditor({
     extensions: SCRIPT_EXTENSIONS,
     content: textToDoc(value),
+    editable: !readOnly,
     editorProps: {
       attributes: { class: "script-doc focus:outline-none", spellcheck: "true", "aria-label": "Script", role: "textbox", "aria-multiline": "true" },
     },
@@ -229,12 +233,16 @@ export default function ScriptEditor({
     editor.commands.setContent(textToDoc(value), false);
   }, [editor, value]);
 
+  useEffect(() => {
+    editor?.setEditable(!readOnly);
+  }, [editor, readOnly]);
+
   useImperativeHandle(ref, () => ({ find: (term) => (editor ? findAndSelect(editor, term) : false), focus: () => editor?.commands.focus() }), [editor]);
 
   if (!editor) return null;
   return (
-    <div className={`script-editor flex flex-col gap-2 ${className}`}>
-      <Toolbar editor={editor} />
+    <div className={`script-editor flex flex-col gap-2 ${readOnly ? "script-readonly" : ""} ${className}`}>
+      {!readOnly && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

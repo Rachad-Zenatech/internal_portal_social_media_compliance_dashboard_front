@@ -4,8 +4,8 @@ import { format, formatDistanceToNow, isPast } from "date-fns";
 import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
@@ -258,7 +258,7 @@ export default function ReviewDecisionPanel({
             {mode === "schedule" && (
               <div className="space-y-1.5">
                 <Label htmlFor="review-when" className="text-xs font-semibold">Publish on</Label>
-                <Input id="review-when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="text-xs" />
+                <DateTimePicker id="review-when" withTime disablePast value={when} onChange={setWhen} />
                 {planned && <p className="text-[11px] text-muted-foreground">Planned by the creator for {format(planned, "EEE MMM d, h:mm a")}.</p>}
                 {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future, or use "Approve & post now".</p>}
               </div>
