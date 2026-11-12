@@ -78,9 +78,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
+- src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
@@ -118,7 +116,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - src/hooks/usePublicMood.ts (153 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
 - src/hooks/useReview.ts (143 lines) - Everything that shows a submission's status or review state.
-- src/hooks/useScript.ts (227 lines) - A post's script stage, refreshed while its file is still being read.
+- src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useSentiment.ts (108 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
@@ -155,8 +153,6 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
 - src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
@@ -167,7 +163,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Scripts/ScriptReviewPage.tsx (257 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2620 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2628 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (625 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
@@ -182,8 +178,8 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
-- src/services/scriptService.ts (58 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (313 lines) - submission service (services)
+- src/services/scriptService.ts (59 lines) - The script stage of video posts (see the backend's script_review_service).
+- src/services/submissionService.ts (320 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.

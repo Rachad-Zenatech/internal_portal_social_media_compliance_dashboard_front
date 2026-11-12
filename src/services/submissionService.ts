@@ -98,16 +98,23 @@ export const submissionService = {
   transcribe: (id: string, fileId: string) =>
     apiClient.post<SubmissionFile>(`/api/submissions/${id}/files/${fileId}/transcribe`, undefined, quiet),
 
-  runCheck: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/check`, undefined, quiet),
+  /** Duplicates are checked first (409 DUPLICATE_POST / REPOST_CONFIRM); confirmRepost answers the repost question. */
+  runCheck: (id: string, confirmRepost = false) =>
+    apiClient.post<Submission>(`/api/submissions/${id}/check`, { confirm_repost: confirmRepost }, quiet),
 
   /** The same check, streamed: onAttempt hears each AI model call as it starts and ends (fallbacks included);
    * resolves with the post and its new check once every step is done. */
-  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void): Promise<Submission> {
+  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void, confirmRepost = false): Promise<Submission> {
     const token = sessionStorage.getItem("token");
     const res = await fetch(`${BASE_URL}/api/submissions/${id}/check/stream`, {
       method: "POST",
       credentials: "include",
-      headers: { Accept: "application/x-ndjson", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: {
+        Accept: "application/x-ndjson",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ confirm_repost: confirmRepost }),
     });
     if (!res.ok || !res.body) await handleResponse<never>(res);
     const reader = res.body!.getReader();

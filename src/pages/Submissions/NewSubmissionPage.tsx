@@ -881,6 +881,9 @@ export default function NewSubmissionPage() {
   const [continuing, setContinuing] = useState(false);
   const [dupChecked, setDupChecked] = useState<{ report: DuplicateReport; edit: number } | null>(null);
   const [repostTarget, setRepostTarget] = useState<PostStepKey | null>(null);
+  // The repost question came from the compliance check: once confirmed, the check runs.
+  const [repostForCheck, setRepostForCheck] = useState(false);
+  const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
 
   /** Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate. */
   const leaveDetails = async (target: PostStepKey) => {
@@ -927,8 +930,9 @@ export default function NewSubmissionPage() {
   const openStep = (target: PostStepKey) =>
     onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
 
-  /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again. */
-  const runComplianceCheck = async () => {
+  /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+   * Duplicates are settled first, just before the check: a duplicate is refused, a repost for another date is asked. */
+  const runComplianceCheck = async (confirmRepost = false) => {
     if (!detailsComplete && !videoLocked) {
       toast.error(`Fill in the required fields before running the check: ${detailsMissing.join(", ")}.`);
       setShowErrors(true);
@@ -946,8 +950,11 @@ export default function NewSubmissionPage() {
     try {
       const id = await save({ force: true });
       // Each model call is shown as it happens (fallbacks too); the old result stays hidden until the new one is in.
-      const running = submissionService.runCheckStream(id!, (a) =>
-        setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a]))
+      const repostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
+      const running = submissionService.runCheckStream(
+        id!,
+        (a) => setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a])),
+        repostConfirmed
       );
       // Also on the task list at the bottom right, so it can be left running while you use other tools.
       addJob("Checking for compliance", running, {
@@ -961,7 +968,20 @@ export default function NewSubmissionPage() {
       setCheckedAtEdit(editCounter);
       setLastCheckMs(Date.now() - started);
     } catch (err) {
-      toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
+      if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
+        // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
+        const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
+        setDupChecked({ report: detail.duplicates, edit: editCounter });
+        duplicatesQuery.refetch();
+        if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) {
+          setRepostForCheck(true);
+          setRepostAsk(detail.duplicates.repost);
+        } else {
+          toast.error(detail.message);
+        }
+      } else {
+        toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
+      }
     } finally {
       setChecking(false);
     }
@@ -994,8 +1014,6 @@ export default function NewSubmissionPage() {
     mood: Boolean(mood),
   };
   const changesMade = editCounter > 0 || recheck.compliance;
-
-  const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
 
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -1037,15 +1055,8 @@ export default function NewSubmissionPage() {
         );
         return;
       }
-      if (duplicates?.blocked) {
-        toast.error(`This script is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
-        return;
-      }
+      // Duplicates were settled at the script's compliance check; the server refuses one made by later edits.
       const scriptRepostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
-      if (duplicates?.repost && !scriptRepostConfirmed) {
-        setRepostAsk(duplicates.repost);
-        return;
-      }
       setSubmitting(true);
       try {
         const id = await save({ force: true });
@@ -1101,16 +1112,8 @@ export default function NewSubmissionPage() {
         return;
       }
     }
-    if (duplicates?.blocked) {
-      toast.error(`This is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
-      checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
+    // Duplicates were settled just before the compliance check; the server refuses one made by later edits.
     const repostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
-    if (duplicates?.repost && !repostConfirmed) {
-      setRepostAsk(duplicates.repost);
-      return;
-    }
     setSubmitting(true);
     try {
       const id = await save({ force: true });
@@ -2154,7 +2157,11 @@ export default function NewSubmissionPage() {
           {gated && <StepGate missing={detailsMissing} onBack={() => goToStep("details")} />}
 
           {toolView("compliance") && !videoLocked && (
-            <div id="step-compliance" className="scroll-mt-4">
+            <div id="step-compliance" className="scroll-mt-4 space-y-3">
+              {/* Duplicates are settled here, just before the compliance check runs */}
+              {duplicates && (duplicates.blocked || duplicates.repost) && (
+                <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />
+              )}
               <ComplianceStep
                 sub={checkedSub}
                 title={title}
@@ -2362,12 +2369,9 @@ export default function NewSubmissionPage() {
                       : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                   </p>
                 </Field>
-                {duplicates && <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                   <p className="text-[11px] text-muted-foreground">
-                    {duplicates?.blocked
-                      ? `Duplicate ${videoLocked ? "script" : "post"}: change the submission details above to send it.`
-                      : videoLocked
+                    {videoLocked
                       ? "Sends your script to the reviewers you picked."
                       : !hasCheck
                       ? "You haven't run the compliance check yet. It also runs when you send."
@@ -2378,7 +2382,7 @@ export default function NewSubmissionPage() {
                   <Button
                     type="button"
                     onClick={() => submit()}
-                    disabled={submitting || checking || uploading.length > 0 || !!duplicates?.blocked}
+                    disabled={submitting || checking || uploading.length > 0}
                     className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -2431,6 +2435,7 @@ export default function NewSubmissionPage() {
               if (!open) {
                 setRepostAsk(null);
                 setRepostTarget(null);
+                setRepostForCheck(false);
               }
             }}
           >
@@ -2455,7 +2460,10 @@ export default function NewSubmissionPage() {
                   onClick={() => {
                     if (repostAsk) setRepostOk(repostKey(repostAsk));
                     setRepostAsk(null);
-                    if (repostTarget) {
+                    if (repostForCheck) {
+                      setRepostForCheck(false);
+                      void runComplianceCheck(true);
+                    } else if (repostTarget) {
                       const target = repostTarget;
                       setRepostTarget(null);
                       goToStep(target);

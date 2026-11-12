@@ -258,7 +258,7 @@ function DraftBody({
           checkedAt={stage?.precheck_at}
           checking={precheck.isPending}
           canCheck={canEdit}
-          onCheck={() => precheck.mutate()}
+          onCheck={() => precheck.mutate({})}
         />
       )}
       {/* Like a post: read the sentiment and the public mood before sending, too. */}

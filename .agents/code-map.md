@@ -532,27 +532,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Row` (function)
 - `SourceChecks` (export function) - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
-## src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- `REC_BADGE` (export const)
-- `overallPostDecision` (export function)
-- `TopicRow` (function)
-- `MarketTrendRow` (function)
-- `TopicTrend` (export function) - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
-    - `scrapeTwitter` (fn)
-    - `handleScrape` (fn)
-    - `otherTrends` (fn)
-
-## src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- `REC_BADGE` (export const)
-- `overallPostDecision` (export function)
-- `TopicRow` (function)
-- `MarketTrendRow` (function)
-- `TopicTrend` (export function) - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
-    - `scrapeTwitter` (fn)
-    - `handleScrape` (fn)
-    - `otherTrends` (fn)
-
-## src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
+## src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const)
 - `overallPostDecision` (export function)
 - `TopicRow` (function)
@@ -851,7 +831,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `useReviewDecision` (export function)
 - `useApprovalActions` (export function) - Approved content: a reviewer reschedules it or reopens it for changes.
 
-## src/hooks/useScript.ts (227 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) - A post's script stage, refreshed while its file is still being read.
 - `useScriptActions` (export function) - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
 - `useDebounced` (export function) - The value, once it has stopped changing for `ms`.
@@ -1330,56 +1310,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `send` (fn)
 - `SelectedPost` (function)
 
-## src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- `SproutState` (type)
-- `stateOf` (function)
-- `View` (type)
-- `platformName` (const)
-- `scoreTone` (const)
-- `profileKey` (const)
-- `profileLabel` (const)
-- `Thumb` (function)
-- `Networks` (function)
-- `PostCard` (function) - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
-- `ContentCalendarPage` (export function)
-    - `navigate` (fn)
-    - `sent` (fn)
-    - `published` (fn)
-    - `brandName` (fn)
-    - `items` (fn)
-    - `profiles` (fn)
-    - `platforms` (fn)
-    - `onDay` (fn)
-    - `step` (fn)
-    - `goToday` (fn)
-    - `send` (fn)
-- `SelectedPost` (function)
-
-## src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- `SproutState` (type)
-- `stateOf` (function)
-- `View` (type)
-- `platformName` (const)
-- `scoreTone` (const)
-- `profileKey` (const)
-- `profileLabel` (const)
-- `Thumb` (function)
-- `Networks` (function)
-- `PostCard` (function) - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
-- `ContentCalendarPage` (export function)
-    - `navigate` (fn)
-    - `sent` (fn)
-    - `published` (fn)
-    - `brandName` (fn)
-    - `items` (fn)
-    - `profiles` (fn)
-    - `platforms` (fn)
-    - `onDay` (fn)
-    - `step` (fn)
-    - `goToday` (fn)
-    - `send` (fn)
-- `SelectedPost` (function)
-
 ## src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
 - `platformName` (const)
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
@@ -1489,7 +1419,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `handleMqttSync` (fn)
     - `filteredPosts` (fn)
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2620 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2628 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type)
 - `timeOptions` (const)
@@ -1532,13 +1462,13 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `detailsMissing` (fn) - What the post still needs before its compliance check, sentiment analysis and public mood can be run.
     - `toolView` (fn)
     - `goToStep` (fn)
+    - `repostKey` (fn)
     - `leaveDetails` (fn) - Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate.
     - `wideCompliance` (fn) - The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
     - `backToCaption` (fn)
     - `openStep` (fn)
     - `runComplianceCheck` (fn) - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
     - `ranSinceSentBack` (fn)
-    - `repostKey` (fn)
     - `submit` (fn)
     - `exec` (fn) - ----- Caption editor -----
     - `insertHashtag` (fn) - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
@@ -1719,10 +1649,10 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - `scriptBatchService` (export const) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 
-## src/services/scriptService.ts (58 lines) - The script stage of video posts (see the backend's script_review_service).
+## src/services/scriptService.ts (59 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (313 lines) - submission service (services)
+## src/services/submissionService.ts (320 lines) - submission service (services)
 - `ScrapeStatus` (export interface)
 - `submissionService` (export const)
 

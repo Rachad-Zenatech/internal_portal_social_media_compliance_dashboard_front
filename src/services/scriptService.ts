@@ -40,7 +40,8 @@ export const scriptService = {
   suggestFix: (data: { passage: string; flagged_terms: string[]; rule_title: string; explanation?: string | null; guidance?: string | null }) =>
     apiClient.post<{ rewrite: string; note?: string | null }>("/api/submissions/scripts/suggest-fix", data, quiet),
   /** Creator: check the uploaded script against the rulebook before sending it (the result is kept). */
-  precheck: (id: string) => apiClient.post<ScriptStage>(`/api/submissions/${id}/script/precheck`, undefined, quiet),
+  precheck: (id: string, confirmRepost = false) =>
+    apiClient.post<ScriptStage>(`/api/submissions/${id}/script/precheck`, { confirm_repost: confirmRepost }, quiet),
   check: (id: string, text: string) => apiClient.post<StoredCheck>(`/api/submissions/${id}/script/check`, { text }, quiet),
 
   /** The reviewer's highlights and notes on a script version (the creator sees them too). */
