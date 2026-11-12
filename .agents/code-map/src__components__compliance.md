@@ -4,19 +4,19 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/compliance/BrandVoicePanel.tsx (404 lines) - brand voice panel (components compliance)
-- `BrandVoicePanel` (export function) L30 - Brand voice, brand by brand: each brand has its own manual (PDF) and its own voice, colours, typefaces and logo,  read from the manual an...
-    - `queryClient` (fn) L31
-    - `voices` (fn) L32
-    - `refresh` (fn) L40
-- `BrandCard` (function) L76
-    - `upload` (fn) L81
-    - `reread` (fn) L89
-- `lines` (const) L280
-- `EditDialog` (function) L282
-    - `save` (fn) L292
-    - `setColor` (fn) L313
-    - `setFace` (fn) L314
+## src/components/compliance/BrandVoicePanel.tsx (429 lines) - brand voice panel (components compliance)
+- `BrandVoicePanel` (export function) L33 - Brand voice, brand by brand: each brand has its own manual (PDF) and its own voice, colours, typefaces and logo,  read from the manual an...
+    - `queryClient` (fn) L34
+    - `voices` (fn) L35
+    - `refresh` (fn) L44
+- `BrandCard` (function) L101
+    - `upload` (fn) L106
+    - `reread` (fn) L114
+- `lines` (const) L305
+- `EditDialog` (function) L307
+    - `save` (fn) L317
+    - `setColor` (fn) L338
+    - `setFace` (fn) L339
 
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) L16 - Where the facts come from: the ZenaTech newsroom, read once a day.

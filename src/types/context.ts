@@ -20,6 +20,8 @@ export interface ContextEntry extends ContextEntryInput {
   id: string;
   /** One of the starter entries (editable like any other). */
   is_starter: boolean;
+  /** A platform content policy, kept up to date from the platform's policy pages; only super admins change it. */
+  is_policy?: boolean;
   /** Kept in sync with a source (NEWSROOM: the ZenaTech newsroom); the article it was read from. */
   auto_source?: string | null;
   source_url?: string | null;
@@ -42,6 +44,49 @@ export interface ContextSync {
   failed: number;
   error?: string | null;
   started_by_name?: string | null;
+}
+
+/** An update to a platform content-policy norm, drafted after its official policy page changed. */
+export interface PolicyProposal {
+  id: string;
+  context_id: string;
+  norm_title: string;
+  platforms: string[];
+  source_urls: string[];
+  /** What changed, in short points. */
+  changes: string[];
+  current_body?: string | null;
+  current_do_examples?: string | null;
+  current_dont_examples?: string | null;
+  body: string;
+  do_examples?: string | null;
+  dont_examples?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "SUPERSEDED";
+  created_at: string;
+}
+
+/** One official policy page a norm is kept up to date from, and whether it can be watched. */
+export interface PolicyPageStatus {
+  url: string;
+  norm_title: string;
+  fetched_at?: string | null;
+  changed_at?: string | null;
+  error?: string | null;
+  watching: boolean;
+}
+
+/** The weekly check of the policy pages (super admins only): how it went and the updates waiting for a decision. */
+export interface PolicyWatch {
+  last_check?: ContextSync | null;
+  proposals: PolicyProposal[];
+  watched_pages: number;
+  pages: PolicyPageStatus[];
+}
+
+export interface PolicyProposalApprove {
+  body?: string;
+  do_examples?: string | null;
+  dont_examples?: string | null;
 }
 
 /** NONE: no manual yet. PROCESSING: being read. DONE: read in full. PARTIAL: the AI couldn't read it, so only the

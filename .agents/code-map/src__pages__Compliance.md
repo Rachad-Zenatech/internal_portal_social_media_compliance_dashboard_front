@@ -88,25 +88,26 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `pick` (fn) L1465
 - `FilterChip` (function) L1722
 
-## src/pages/Compliance/MessagingContextPage.tsx (453 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
-- `EMPTY` (const) L58
-- `Chips` (function) L72
-- `MessagingContextPage` (export function) L119 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
-    - `queryClient` (fn) L120
-    - `entries` (fn) L130
-    - `options` (fn) L131
-    - `brandOptions` (fn) L133
-    - `audienceOptions` (fn) L134
-    - `platformOptions` (fn) L138
-    - `nameOf` (fn) L142
-    - `counts` (fn) L143
-    - `ofKind` (fn) L150 - A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
-    - `done` (fn) L155
-    - `save` (fn) L161
-    - `toggle` (fn) L169
-    - `remove` (fn) L174
-    - `open` (fn) L183
-    - `scopeText` (fn) L187
+## src/pages/Compliance/MessagingContextPage.tsx (497 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
+- `EMPTY` (const) L59
+- `Chips` (function) L73
+- `MessagingContextPage` (export function) L120 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
+    - `queryClient` (fn) L121
+    - `canEditEntry` (fn) L126
+    - `entries` (fn) L136
+    - `options` (fn) L137
+    - `brandOptions` (fn) L139
+    - `audienceOptions` (fn) L140
+    - `platformOptions` (fn) L144
+    - `nameOf` (fn) L148
+    - `counts` (fn) L149
+    - `ofKind` (fn) L156 - A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
+    - `done` (fn) L167
+    - `save` (fn) L173
+    - `toggle` (fn) L183
+    - `remove` (fn) L188
+    - `open` (fn) L197
+    - `scopeText` (fn) L201
 
 ## src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - `CommentCategory` (export type) L101

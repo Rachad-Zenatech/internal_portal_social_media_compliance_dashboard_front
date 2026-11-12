@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import NewsroomSyncBar from "@/components/compliance/NewsroomSyncBar";
+import PolicyWatchPanel from "@/components/compliance/PolicyWatchPanel";
 import BrandVoicePanel from "@/components/compliance/BrandVoicePanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -118,14 +119,19 @@ function Chips({
  */
 export default function MessagingContextPage() {
   const queryClient = useQueryClient();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const canEdit = hasPermission("CONFIG_ROLES_UPDATE");
+  // Platform content policies are kept up to date from the platforms' policy pages; only super admins change them.
+  const isSuperAdmin = Boolean(user?.is_super_admin);
+  const canEditEntry = (e: ContextEntry) => canEdit && (!e.is_policy || isSuperAdmin);
   const [kind, setKind] = useState<ContextKind>("BRAND_VOICE");
   const [editing, setEditing] = useState<ContextEntry | "new" | null>(null);
   const [form, setForm] = useState<ContextEntryInput>(EMPTY("BRAND_VOICE"));
   const [deleting, setDeleting] = useState<ContextEntry | null>(null);
   // Facts run to hundreds (one per newsroom article): a search narrows them.
   const [factSearch, setFactSearch] = useState("");
+  // Audience profiles are shown one at a time, picked from a row of buttons.
+  const [profileId, setProfileId] = useState<string | null>(null);
 
   const entries = useQuery({ queryKey: ["messaging-context"], queryFn: contextService.list });
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
@@ -148,8 +154,14 @@ export default function MessagingContextPage() {
   const needle = factSearch.trim().toLowerCase();
   // A brand's voice read from its manual is shown in its brand card above the list, not again in the list.
   const ofKind = (entries.data ?? []).filter((e) => e.kind === kind && e.auto_source !== "BRAND_MANUAL");
+  // The first profile is shown until another is picked (or if the picked one was removed).
+  const selectedProfile = kind === "AUDIENCE_PROFILE" ? ofKind.find((e) => e.id === profileId) ?? ofKind[0] : undefined;
   const shown =
-    kind === "FACT" && needle ? ofKind.filter((e) => `${e.title} ${e.body}`.toLowerCase().includes(needle)) : ofKind;
+    kind === "FACT" && needle
+      ? ofKind.filter((e) => `${e.title} ${e.body}`.toLowerCase().includes(needle))
+      : selectedProfile
+      ? [selectedProfile]
+      : ofKind;
   const current = KINDS.find((k) => k.value === kind)!;
 
   const done = (msg: string) => {
@@ -160,8 +172,10 @@ export default function MessagingContextPage() {
   };
   const save = useMutation({
     mutationFn: () => (editing && editing !== "new" ? contextService.update(editing.id, form) : contextService.create(form)),
-    onSuccess: () => {
+    onSuccess: (saved) => {
       done(editing === "new" ? "Context added" : "Context saved");
+      // Show a newly added audience profile straight away.
+      if (saved?.kind === "AUDIENCE_PROFILE") setProfileId(saved.id);
       setEditing(null);
     },
     onError: (err) => toast.error(`Couldn't save it: ${(err as Error).message}`),
@@ -241,7 +255,28 @@ export default function MessagingContextPage() {
           </span>
         </p>
         {kind === "FACT" && <NewsroomSyncBar canSync={canEdit} />}
+        {kind === "PLATFORM_NORM" && isSuperAdmin && <PolicyWatchPanel />}
         {kind === "BRAND_VOICE" && <BrandVoicePanel />}
+        {kind === "AUDIENCE_PROFILE" && ofKind.length > 0 && (
+          <div role="tablist" aria-label="Audience profile" className="flex flex-wrap gap-1.5 border-b border-border/60 px-4 py-3">
+            {ofKind.map((e) => {
+              const active = e.id === selectedProfile?.id;
+              return (
+                <Button
+                  key={e.id}
+                  role="tab"
+                  aria-selected={active}
+                  size="sm"
+                  variant={active ? "default" : "outline"}
+                  className={`h-8 text-xs ${e.is_active ? "" : "opacity-60"}`}
+                  onClick={() => setProfileId(e.id)}
+                >
+                  {e.title}
+                </Button>
+              );
+            })}
+          </div>
+        )}
         {kind === "FACT" && ofKind.length > 0 && (
           <div className="relative border-b border-border/60 px-4 py-2.5">
             <Search className="pointer-events-none absolute left-6.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -288,7 +323,16 @@ export default function MessagingContextPage() {
                     <p className="text-sm font-semibold text-foreground">
                       {e.title}
                       {!e.is_active && <span className="ml-2 text-[11px] font-normal text-muted-foreground">(off)</span>}
-                      {e.is_starter && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">starter</span>}
+                      {e.is_policy ? (
+                        <span
+                          className="ml-2 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-500/15 dark:text-violet-200"
+                          title="Kept up to date from the platform's policy pages; changed only by super admins"
+                        >
+                          content policy
+                        </span>
+                      ) : (
+                        e.is_starter && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">starter</span>
+                      )}
                       {e.auto_source === "NEWSROOM" && (
                         <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800 dark:bg-sky-500/15 dark:text-sky-200">
                           newsroom
@@ -310,7 +354,7 @@ export default function MessagingContextPage() {
                       )}
                     </p>
                   </div>
-                  {canEdit && (
+                  {canEditEntry(e) && (
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => toggle.mutate(e)} disabled={toggle.isPending}>
                         {e.is_active ? "Turn off" : "Turn on"}

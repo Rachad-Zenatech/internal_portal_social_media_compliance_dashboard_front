@@ -40,17 +40,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `HashtagLibrary` (export interface) L32 - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface) L41
 
-## src/types/context.ts (98 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) L2 - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface) L4
 - `ContextEntry` (export interface) L19
-- `ContextSync` (export interface) L31 - A sync of facts from the newsroom: running, or how the last one went.
-- `BrandVoiceStatus` (export type) L49 - NONE: no manual yet.
-- `BrandColor` (export interface) L51
-- `PaletteRow` (export interface) L58 - A row of swatches in the manual (e.g.
-- `BrandTypeface` (export interface) L64
-- `BrandVoiceInput` (export interface) L71 - What can be edited by hand.
-- `BrandVoice` (export interface) L82 - A brand's voice, read from its brand manual (PDF) or written by hand.
+- `ContextSync` (export interface) L33 - A sync of facts from the newsroom: running, or how the last one went.
+- `PolicyProposal` (export interface) L50 - An update to a platform content-policy norm, drafted after its official policy page changed.
+- `PolicyPageStatus` (export interface) L69 - One official policy page a norm is kept up to date from, and whether it can be watched.
+- `PolicyWatch` (export interface) L79 - The weekly check of the policy pages (super admins only): how it went and the updates waiting for a decision.
+- `PolicyProposalApprove` (export interface) L86
+- `BrandVoiceStatus` (export type) L94 - NONE: no manual yet.
+- `BrandColor` (export interface) L96
+- `PaletteRow` (export interface) L103 - A row of swatches in the manual (e.g.
+- `BrandTypeface` (export interface) L109
+- `BrandVoiceInput` (export interface) L116 - What can be edited by hand.
+- `BrandVoice` (export interface) L127 - A brand's voice, read from its brand manual (PDF) or written by hand.
 
 ## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - `PostHealth` (export type) L3
