@@ -35,7 +35,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { hasPermission, hasRole, user } = useAuth();
+  const { hasPermission, hasRole, user, isSuggester } = useAuth();
   const isSuperAdmin = hasRole("SUPER_ADMIN") || user?.is_super_admin;
 
   const { data: users } = useQuery({
@@ -58,10 +58,11 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   };
 
   // Reviewers and content creators each get their side of the app (super admins switch in the top bar).
-  const view: AppView = hasPermission("CONTENT_REVIEW_APPROVE") ? "reviewer" : "creator";
+  const view: AppView = hasPermission("CONTENT_REVIEW_VIEW") ? "reviewer" : "creator";
 
   const groupedNavigation = navigation.reduce<Record<string, NavigationItem[]>>((acc, item) => {
     if (item.views && !item.views.includes(view)) return acc;
+    if (item.approversOnly && isSuggester) return acc;
     // Pure Role Permission Gating: Check item navigation permission
     if (item.navigationCode) {
       const hasItemAccess =

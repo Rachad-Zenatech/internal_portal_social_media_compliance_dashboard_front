@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Clock, ExternalLink, SlidersHorizontal, Trash2, Undo2 } from "lucide-react";
 
 import BatchDetailsForm from "@/components/script/BatchDetailsForm";
 import ScriptPrecheck from "@/components/script/ScriptPrecheck";
-import ScriptEditor from "@/components/script/ScriptEditor";
+import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
+import ScriptFindings from "@/components/script/ScriptFindings";
+import { replaceInText } from "@/lib/replaceQuote";
 import { displayText } from "@/lib/scriptDoc";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import { Button } from "@/components/ui/button";
@@ -122,6 +124,7 @@ export default function BatchItemCard({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body);
+  const editorRef = useRef<ScriptEditorHandle>(null);
   useEffect(() => {
     setTitle(item.title);
     setBody(item.body);
@@ -203,7 +206,7 @@ export default function BatchItemCard({
       {editable ? (
         // The script as a document (tables, bold, headings), edited like in Word; it is still kept as text.
         <div className="mt-3">
-          <ScriptEditor value={body} onChange={setBody} className="[&_.script-doc]:min-h-[200px]" />
+          <ScriptEditor ref={editorRef} value={body} onChange={setBody} className="[&_.script-doc]:min-h-[200px]" />
         </div>
       ) : (
         <div className="mt-3">
@@ -243,7 +246,23 @@ export default function BatchItemCard({
         </div>
       )}
 
-      {flags.length > 0 && item.status !== "APPROVED" && (
+      {editable && item.check && (
+        <div className="mt-3">
+          <ScriptFindings
+            check={item.check}
+            onFind={(term) => editorRef.current?.find(term)}
+            onReplace={(quote, rewrite) => {
+              const next = replaceInText(body, quote, rewrite);
+              if (next == null) return false;
+              setBody(next);
+              return true;
+            }}
+            onAppend={(text) => setBody((b) => `${b.trimEnd()}\n\n${text}`)}
+          />
+        </div>
+      )}
+
+      {!editable && flags.length > 0 && item.status !== "APPROVED" && (
         <ul className="mt-3 space-y-1.5">
           {flags.slice(0, open ? flags.length : 3).map((v) => (
             <li key={`${v.rule_id}-${v.flagged_terms.join("|")}`} className="flex flex-wrap items-start gap-2 text-xs">

@@ -1,18 +1,29 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { submissionService } from "@/services/submissionService";
 import type { MoodVerdict } from "@/types/publicMood";
 
-/** Public mood for a submission's topics, and the action that writes (or reuses) its summary. */
-export function usePublicMood(submissionId?: string | null, enabled = true) {
+/**
+ * Public mood for a submission's topics, and the action that writes (or reuses) its summary. It does not run by itself:
+ * nothing is fetched until `run()` is called (a Run button), and a result already run in this session shows without
+ * running it again. `hasRun` says whether there is anything to show. With `autoLoad` (a locked post) it loads what is
+ * there to show.
+ */
+export function usePublicMood(submissionId?: string | null, enabled = true, autoLoad = false) {
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
   const key = ["public-mood", submissionId];
+  const [requestedFor, setRequestedFor] = useState<string | null>(null);
+  const requested = Boolean(submissionId) && requestedFor === submissionId;
 
   const query = useQuery({
     queryKey: key,
     queryFn: () => submissionService.getPublicMood(submissionId!),
-    enabled: Boolean(submissionId) && enabled,
+    // autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
+    enabled: Boolean(submissionId) && enabled && (requested || autoLoad),
     // Topic snapshots refresh at most every few hours, so there's no need to refetch on every focus.
     staleTime: 5 * 60_000,
   });
@@ -25,7 +36,16 @@ export function usePublicMood(submissionId?: string | null, enabled = true) {
   });
 
   const summarise = useMutation({
-    mutationFn: () => submissionService.summarisePublicMood(submissionId!),
+    mutationFn: () => {
+      const running = submissionService.summarisePublicMood(submissionId!);
+      addJob("Checking for public mood", running, {
+        type: "check",
+        description: "Public mood summary",
+        link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+        doneMessage: "The public mood summary is done",
+      });
+      return running;
+    },
     onSuccess: (mood) => queryClient.setQueryData(key, mood),
     onError: (err) => toast.error(`Couldn't summarise the public mood: ${(err as Error).message}`),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["ai-usage"] }),
@@ -53,7 +73,20 @@ export function usePublicMood(submissionId?: string | null, enabled = true) {
   return {
     mood: query.data ?? null,
     /** Check the topics again now (the server reuses topic data that's still fresh). */
-    refresh: () => query.refetch(),
+    /** Run it (or run it again): the first time it is the only thing that loads the mood. */
+    run: () => {
+      setRequestedFor(submissionId ?? null);
+      const running = queryClient.fetchQuery({ queryKey: key, queryFn: () => submissionService.getPublicMood(submissionId!), staleTime: 0 });
+      addJob("Checking for public mood", running, {
+        type: "check",
+        description: "Public mood",
+        link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+        doneMessage: "The public mood check is done",
+      });
+      return running;
+    },
+    /** Whether it has been run (now, or earlier in this session). */
+    hasRun: requested || autoLoad || query.data != null,
     dismissTopic,
     rate,
     isLoading: query.isLoading,

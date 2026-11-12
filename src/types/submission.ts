@@ -39,6 +39,8 @@ export interface ReviewerOption {
   name: string;
   email: string;
   is_super_admin: boolean;
+  /** REVIEWER can approve it; SUGGESTER can only comment and suggest edits to its script. */
+  kind?: "REVIEWER" | "SUGGESTER";
 }
 
 /** Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION). */

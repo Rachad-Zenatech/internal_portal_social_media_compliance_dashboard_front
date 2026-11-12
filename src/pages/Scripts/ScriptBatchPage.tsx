@@ -58,7 +58,7 @@ export default function ScriptBatchPage() {
 
 function BatchView({ batch }: { batch: Batch }) {
   const navigate = useNavigate();
-  const { hasPermission, user } = useAuth();
+  const { hasPermission, user, canSwitchView } = useAuth();
   const actions = useBatchActions(batch.id);
   // Scripts being checked now; "Check all" checks two at a time.
   const [checkingIds, setCheckingIds] = useState<string[]>([]);
@@ -95,7 +95,8 @@ function BatchView({ batch }: { batch: Batch }) {
   // Scripts not sent yet whose own details are incomplete (batches with details per script).
   const unsentGaps = sendable.filter((i) => i.missing_details.length > 0);
   // Reviewers open a script in the Content screener; its creator opens it on the post's script page.
-  const reviewerLinks = hasPermission("CONTENT_REVIEW_APPROVE") && batch.created_by !== user?.id;
+  // (Your own scripts too if you're a super admin, who can review them as with posts.)
+  const reviewerLinks = hasPermission("CONTENT_REVIEW_VIEW") && (batch.created_by !== user?.id || canSwitchView);
   const scriptHref = (item: BatchItem) =>
     reviewerLinks ? `/script-review/scripts/${item.submission_id}` : `/submissions/${item.submission_id}/script`;
   const firstWaiting = waiting[0];

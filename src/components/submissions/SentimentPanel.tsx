@@ -44,6 +44,7 @@ import ContextReportView from "@/components/submissions/ContextReportView";
 import { trendSignals } from "@/components/submissions/topicTrendSignals";
 import { usePublicMood } from "@/hooks/usePublicMood";
 import type { PublicMood } from "@/types/publicMood";
+import CheckingNotice from "@/components/common/CheckingNotice";
 import { isSentimentRunning, useSentiment } from "@/hooks/useSentiment";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -921,7 +922,7 @@ export default function SentimentPanel({
         setPreparing(false);
       }
     }
-    if (trends) topics.refresh();
+    if (trends) topics.run();
     run.mutate();
   };
   const ctx: FindingContext | undefined =
@@ -953,12 +954,15 @@ export default function SentimentPanel({
           Not analysed yet.{canRun ? " Run it to check the tone, brand fit and how audiences may read it, including what the video shows." : ""}
         </p>
       ) : running ? (
-        <p className="text-xs text-muted-foreground flex items-center gap-2 rounded-lg border border-dashed border-border p-3">
-          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-          {analysis.status === "WAITING_TRANSCRIPT"
-            ? "Waiting for the video transcript, then the tone analysis starts."
-            : "Analysing tone, brand fit and controversy with Gemini..."}
-        </p>
+        <div className="flex flex-col gap-2">
+          <CheckingNotice what="sentiment" />
+          <p className="text-xs text-muted-foreground flex items-center gap-2 rounded-lg border border-dashed border-border p-3">
+            <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+            {analysis.status === "WAITING_TRANSCRIPT"
+              ? "Waiting for the video transcript, then the tone analysis starts."
+              : "Analysing tone, brand fit and controversy with Gemini..."}
+          </p>
+        </div>
       ) : analysis.status === "SCHEDULED" ? (
         <p className="text-xs text-muted-foreground flex items-start gap-2 rounded-lg border border-dashed border-border p-3">
           <CalendarClock className="w-3.5 h-3.5 shrink-0 mt-px text-violet-500" />
@@ -1205,6 +1209,8 @@ export default function SentimentPanel({
           busy={topics.dismissTopic.isPending}
           onDismiss={(topicId) => topics.dismissTopic.mutate({ topicId })}
           onRestore={(topicId) => topics.dismissTopic.mutate({ topicId, restore: true })}
+          hasRun={topics.hasRun}
+          onRun={() => topics.run()}
         />
       )}
 

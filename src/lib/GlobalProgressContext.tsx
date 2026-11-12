@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { toast } from "sonner";
 
-export type JobType = "document" | "database" | "upload" | "generic";
+// "check": a compliance, sentiment or public mood check, which can take from seconds to minutes.
+export type JobType = "document" | "database" | "upload" | "generic" | "check";
 
 export type GlobalProgressJob = {
   id: string;
@@ -12,7 +14,17 @@ export type GlobalProgressJob = {
   submissionId?: string;
   fileId?: string;
   trackKind?: "doc_text" | "transcript";
+  /** When it started, for "running for 0:42". */
+  startedAt?: number;
+  /** The page it was started on (path and query), so clicking it while it runs goes back there. */
+  startedFrom?: string;
 };
+
+/** Where clicking a running job goes: a check back to the page it was started on (the step it runs on), anything else
+ * to its own link (an upload's post), else where it started. */
+export function jobHref(job: GlobalProgressJob): string | undefined {
+  return job.type === "check" ? job.startedFrom ?? job.link_url : job.link_url ?? job.startedFrom;
+}
 
 type GlobalProgressContextType = {
   activeJobs: GlobalProgressJob[];
@@ -25,6 +37,8 @@ type GlobalProgressContextType = {
       link_url?: string;
       submissionId?: string;
       trackKind?: "doc_text" | "transcript";
+      /** Said in a message when it finishes, so people who went elsewhere know (with a link to link_url). */
+      doneMessage?: string;
     }
   ) => void;
   removeJob: (id: string) => void;
@@ -64,6 +78,7 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
       link_url?: string;
       submissionId?: string;
       trackKind?: "doc_text" | "transcript";
+      doneMessage?: string;
     }
   ) => {
     const id = Math.random().toString(36).substring(7);
@@ -77,11 +92,21 @@ export function GlobalProgressProvider({ children }: { children: ReactNode }) {
         link_url: options?.link_url,
         submissionId: options?.submissionId,
         trackKind: options?.trackKind,
+        startedAt: Date.now(),
+        startedFrom: window.location.pathname + window.location.search,
       },
     ]);
 
     promise
       .then((res) => {
+        if (options?.doneMessage && localStorage.getItem("inAppAlerts") !== "false") {
+          const link = options.link_url;
+          toast.success(options.doneMessage, {
+            action: link
+              ? { label: "View", onClick: () => window.dispatchEvent(new CustomEvent("app:navigate", { detail: link })) }
+              : undefined,
+          });
+        }
         const jobId = res?.backgroundJobId || res?.jobId;
         const fileId = res?.id;
         const docPending =

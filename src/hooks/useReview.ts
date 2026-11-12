@@ -117,18 +117,10 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
   });
 }
 
-/** Approved content: the creator withdraws it for a late fix; a reviewer reschedules it or reopens it. */
+/** Approved content: a reviewer reschedules it or reopens it for changes. */
 export function useApprovalActions(submissionId: string, referenceCode: string) {
   const queryClient = useQueryClient();
   const onSuccess = () => invalidateSubmission(queryClient, submissionId);
-  const withdraw = useMutation({
-    mutationFn: () => submissionService.withdraw(submissionId),
-    onSuccess: () => {
-      onSuccess();
-      toast.success(`${referenceCode} is back in draft and off the calendar. Fix it and resubmit for review.`);
-    },
-    onError: (err) => toast.error(`Couldn't withdraw it: ${(err as Error).message}`),
-  });
   const reopen = useMutation({
     mutationFn: ({ notes, days, at }: { notes: string; days?: 1 | 2 | 3 | 5; at?: string }) =>
       submissionService.reopen(submissionId, notes, { revision_days: days, revision_due_at: at }),
@@ -146,5 +138,5 @@ export function useApprovalActions(submissionId: string, referenceCode: string) 
     },
     onError: (err) => toast.error(`Couldn't reschedule it: ${(err as Error).message}`),
   });
-  return { withdraw, reopen, reschedule };
+  return { reopen, reschedule };
 }

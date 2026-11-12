@@ -29,6 +29,8 @@ export interface NavigationItem {
   /** Which side of the app shows this item: reviewers or content creators (super admins switch between them in
    * the top bar). Unset: shown to both, subject to its permission. */
   views?: AppView[];
+  /** Not for a suggesting reviewer: it is about deciding on content (hand-offs of reviews). */
+  approversOnly?: boolean;
 }
 
 export type AppView = "reviewer" | "creator";
@@ -88,6 +90,7 @@ export const navigation: NavigationItem[] = [
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["reviewer"],
+    approversOnly: true,
   },
   {
     // Reviewers manage it; creators can read it but not change it (see ComplianceRulesPage).

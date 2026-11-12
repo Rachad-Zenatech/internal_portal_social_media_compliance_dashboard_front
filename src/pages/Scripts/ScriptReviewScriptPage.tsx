@@ -13,7 +13,7 @@ export default function ScriptReviewScriptPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { hasPermission, creatorView } = useAuth();
-  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE") && !creatorView;
+  const isReviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 min-[112.5rem]:max-w-[2200px]">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Globe2, HeartPulse, Loader2 } from "lucide-react";
 
+import CheckingNotice from "@/components/common/CheckingNotice";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend from "@/components/submissions/TopicTrend";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export default function ScriptInsights({ submissionId, canRun }: { submissionId:
   const [moodOpen, setMoodOpen] = useState(false);
 
   const { analysis } = useSentiment(submissionId);
-  const { mood, isLoading: moodLoading, refresh: refreshMood, dismissTopic } = usePublicMood(submissionId, moodOpen);
+  const { mood, isLoading: moodLoading, run: runMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, moodOpen);
 
   const sentimentNote = !analysis
     ? "Not run yet"
@@ -61,7 +62,7 @@ export default function ScriptInsights({ submissionId, canRun }: { submissionId:
       : analysis.status === "FAILED"
         ? "Couldn't run"
         : "Running";
-  const moodNote = mood?.topics && mood.topics.length > 0 ? "Done" : "Not run yet";
+  const moodNote = moodHasRun && mood ? "Done" : "Not run yet";
 
   return (
     <div className="flex flex-col gap-2">
@@ -84,10 +85,13 @@ export default function ScriptInsights({ submissionId, canRun }: { submissionId:
       >
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">Live social sentiment and industry news on the topics your script touches.</p>
-          <Button type="button" variant="outline" size="sm" className="h-7 shrink-0 text-xs" onClick={() => refreshMood()} disabled={moodLoading || !canRun}>
-            {moodLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Refresh"}
-          </Button>
+          {moodHasRun && (
+            <Button type="button" variant="outline" size="sm" className="h-7 shrink-0 text-xs" onClick={() => runMood()} disabled={moodLoading || !canRun}>
+              {moodLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Refresh"}
+            </Button>
+          )}
         </div>
+        {moodLoading && <CheckingNotice what="public mood" compact className="mb-2" />}
         <TopicTrend
           submissionId={submissionId}
           mood={mood}
@@ -96,6 +100,8 @@ export default function ScriptInsights({ submissionId, canRun }: { submissionId:
           busy={dismissTopic.isPending}
           onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
           onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+          hasRun={moodHasRun}
+          onRun={() => runMood()}
         />
       </Section>
     </div>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, Flame, Globe2, Loader2, RefreshCw, ShieldAlert, TrendingDown, TrendingUp, Undo2, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 import { SpikeBadge } from "@/components/submissions/MoodVisuals";
 import { ProcessLog } from "@/components/submissions/ProcessLog";
 import { useMarketTrends, useScrapeTwitter } from "@/hooks/usePublicMood";
@@ -77,19 +79,44 @@ function TopicRow({ t, onDismiss, busy }: { t: MatchedTopic; onDismiss?: () => v
       : t.matched_by === "MEANING"
       ? "About it without naming it"
       : `Mentions ${t.matched_terms.map((m) => `"${m}"`).join(", ")}`;
+  // "Around this topic: drone inspection" reads as just the topic.
+  const label = t.name.replace(/^around this topic:\s*/i, "");
   const rec = s?.recommendation ? REC_BADGE[s.recommendation] : null;
   return (
     <li className="py-2 first:pt-0 last:pb-0 text-xs">
-      {/* topic above, its mentions under it, the sentiment bar at the bottom */}
+      {/* The topic's full name on its own line (it can be long), then how its mood reads. */}
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-foreground break-words" title={t.name}>
-            {t.name}
+          <p className="font-semibold leading-snug text-foreground break-words" title={t.name}>
+            {label}
           </p>
-          <p className="text-[10px] text-muted-foreground break-words" title={how}>
-            {how}
-          </p>
+          <p className="text-[10px] text-muted-foreground break-words">{how}</p>
         </div>
+        {s && s.top_posts.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-expanded={open}
+            title={open ? "Hide recent posts about this topic" : "Show recent posts about this topic"}
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        )}
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            disabled={busy}
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+            title="Not what this post is about: leave this topic out"
+            aria-label={`${t.name} isn't what this post is about`}
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      <div className="mt-1.5 flex items-center gap-2">
         {s ? (
           <div className="flex shrink-0 items-center gap-2">
             <span className="tabular-nums text-[11px]">
@@ -277,6 +304,8 @@ export default function TopicTrend({
   busy = false,
   onDismiss,
   onRestore,
+  hasRun = true,
+  onRun,
 }: {
   submissionId?: string | null;
   mood?: PublicMood | null;
@@ -286,8 +315,11 @@ export default function TopicTrend({
   busy?: boolean;
   onDismiss?: (topicId: string) => void;
   onRestore?: (topicId: string) => void;
+  /** Public mood only runs when asked: until it has, this shows a Run button instead of results. */
+  hasRun?: boolean;
+  onRun?: () => void;
 }) {
-  const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(true);
+  const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(hasRun);
   const [showAllTrends, setShowAllTrends] = useState(false);
   const scrapeTwitter = useScrapeTwitter(submissionId);
   const { addJob } = useGlobalProgress();
@@ -368,6 +400,19 @@ export default function TopicTrend({
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking which topics this post touches...
         </p>
+      ) : !hasRun ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-border p-3">
+          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+            {onRun
+              ? "Not run yet. It reads live social sentiment and industry news for the topics in this post, and runs only when you ask."
+              : "Public mood was not run for this post."}
+          </p>
+          {onRun && (
+            <Button type="button" size="sm" className="h-8 shrink-0 gap-1.5 bg-blue-700 text-xs font-semibold text-white hover:bg-blue-800" onClick={onRun} disabled={!canEdit}>
+              <Globe2 className="h-3.5 w-3.5" /> Run public mood
+            </Button>
+          )}
+        </div>
       ) : !mood ? null : mood.topics.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           {mood.message || "None of the tracked topics come up directly in this post's text or transcript."}

@@ -1,5 +1,5 @@
-import { FileText, Loader2, Database, Upload, Settings, ChevronUp, ChevronDown } from "lucide-react";
-import { useGlobalProgress } from "@/lib/GlobalProgressContext";
+import { FileText, Loader2, Database, Upload, Settings, ShieldCheck, ChevronUp, ChevronDown, ArrowUpRight } from "lucide-react";
+import { jobHref, useGlobalProgress, type GlobalProgressJob } from "@/lib/GlobalProgressContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { submissionService } from "@/services/submissionService";
 import { useEffect, useState } from "react";
@@ -15,6 +15,27 @@ export function GlobalProgressOverlay() {
   });
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
+  // A clock for "running for 0:42", only while something runs.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (activeJobs.length === 0) return;
+    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(t);
+  }, [activeJobs.length]);
+  // A message that ends with "View" opens its page from wherever you are.
+  useEffect(() => {
+    const go = (e: Event) => {
+      const url = (e as CustomEvent<string>).detail;
+      if (url) navigate(url.startsWith("/") ? url : `/${url}`);
+    };
+    window.addEventListener("app:navigate", go);
+    return () => window.removeEventListener("app:navigate", go);
+  }, [navigate]);
+  // A check that starts opens the list, so what it is doing (and that you needn't wait) is in view.
+  const checkCount = activeJobs.filter((j) => j.type === "check").length;
+  useEffect(() => {
+    if (checkCount > 0) setIsExpanded(true);
+  }, [checkCount]);
 
   // Match notification-backed background jobs (same pattern as Finance application)
   useEffect(() => {
@@ -126,9 +147,16 @@ export function GlobalProgressOverlay() {
 
   if (activeJobs.length === 0) return null;
 
+  // Clicking a running job opens the page it's for.
+  const open = (job: GlobalProgressJob) => {
+    const href = jobHref(job);
+    if (href) navigate(href.startsWith("/") ? href : `/${href}`);
+  };
+  const only = activeJobs.length === 1 ? activeJobs[0] : null;
+
   return (
     <>
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-3 pointer-events-none">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
         {/* Expanded list of jobs */}
         {isExpanded && (
           <div className="flex flex-col gap-3 animate-in slide-in-from-bottom-2 fade-in duration-200">
@@ -137,10 +165,20 @@ export function GlobalProgressOverlay() {
               if (job.type === "database") Icon = Database;
               else if (job.type === "upload") Icon = Upload;
               else if (job.type === "generic") Icon = Settings;
+              else if (job.type === "check") Icon = ShieldCheck;
+              const seconds = job.startedAt ? Math.max(0, Math.floor((now - job.startedAt) / 1000)) : null;
+              const elapsed = seconds == null ? null : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
+              const href = jobHref(job);
               return (
                 <div key={job.id} className="pointer-events-auto">
-                  <div className="bg-background border shadow-xl rounded-xl p-4 flex items-center gap-4 min-w-[300px] max-w-[400px]">
+                  <button
+                    type="button"
+                    onClick={() => open(job)}
+                    disabled={!href}
+                    title={href ? "Open the page it's running for" : undefined}
+                    className="group w-full text-left bg-background border shadow-xl rounded-xl p-4 flex items-center gap-4 min-w-[300px] max-w-[400px] transition-colors enabled:hover:border-primary/40 enabled:hover:bg-accent/40 disabled:cursor-default"
+                  >
                     <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
                       <Icon className="h-5 w-5" />
                     </div>
@@ -149,34 +187,60 @@ export function GlobalProgressOverlay() {
                         <span className="text-sm font-bold text-foreground truncate mr-2">
                           {job.title}
                         </span>
-                        <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin shrink-0" />
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          {href && (
+                            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary opacity-70 group-hover:opacity-100">
+                              Open <ArrowUpRight className="h-3 w-3" />
+                            </span>
+                          )}
+                          <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
+                        </span>
                       </div>
                       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">
                         {job.description || "Processing..."}
+                        {elapsed ? ` · ${elapsed}` : ""}
                       </p>
+                      {job.type === "check" && (
+                        <>
+                          <div className="relative mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                            <span className="absolute h-full rounded-full bg-primary" style={{ animation: "indeterminate 1.4s ease-in-out infinite" }} />
+                          </div>
+                          <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground normal-case">
+                            A few seconds to a few minutes. You can keep using the site; we&apos;ll tell you when it&apos;s done.
+                          </p>
+                        </>
+                      )}
                     </div>
-                  </div>
+                  </button>
                 </div>
               );
             })}
           </div>
         )}
 
-        {/* Collapsible Trigger */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="pointer-events-auto flex items-center gap-2 bg-background border shadow-xl rounded-full px-4 py-2 hover:bg-accent transition-colors text-foreground"
-        >
-          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          <span className="text-sm font-semibold whitespace-nowrap">
-            {activeJobs.length} {activeJobs.length === 1 ? "task is" : "tasks are"} running...
-          </span>
-          {isExpanded ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
-          ) : (
-            <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" />
-          )}
-        </button>
+        {/* The pill: its label opens the page (one task) or the list (several); the arrow shows or hides the list. */}
+        <div className="pointer-events-auto flex items-center bg-background border shadow-xl rounded-full text-foreground overflow-hidden">
+          <button
+            type="button"
+            onClick={() => (only && jobHref(only) ? open(only) : setIsExpanded(!isExpanded))}
+            title={only && jobHref(only) ? "Open the page it's running for" : undefined}
+            className="flex items-center gap-2 pl-4 pr-2 py-2 hover:bg-accent transition-colors"
+          >
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <span className="text-sm font-semibold whitespace-nowrap">
+              {only && only.type === "check" ? `${only.title}…` : `${activeJobs.length} ${activeJobs.length === 1 ? "task is" : "tasks are"} running...`}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-label={isExpanded ? "Hide running tasks" : "Show running tasks"}
+            aria-expanded={isExpanded}
+            className="self-stretch border-l px-2.5 hover:bg-accent transition-colors"
+          >
+            {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        </div>
       </div>
       <style>{`
         @keyframes indeterminate {

@@ -71,6 +71,8 @@ interface AuthContextType {
   setViewMode: (mode: ViewMode) => void;
   /** A super admin viewing the app as a creator: only their own content, and no review actions. */
   creatorView: boolean;
+  /** A suggesting reviewer: sees the content sent to them, comments and suggests edits to scripts, can't approve. */
+  isSuggester: boolean;
 }
 
 export type ViewMode = "reviewer" | "creator";
@@ -79,7 +81,15 @@ const VIEW_MODE_KEY = "portal.viewMode";
 // What a creator doesn't do: review and approve, see everyone's content, delete other people's drafts. In creator
 // view these read as not granted, so every screen shows the creator's side. It's only a view: the server still
 // allows a super admin everything.
-const REVIEWER_ONLY_PERMISSIONS = new Set(["CONTENT_REVIEW_APPROVE", "CONTENT_SUBMISSIONS_VIEW", "CONTENT_SUBMISSIONS_DELETE"]);
+// CONTENT_REVIEW_VIEW is what every kind of reviewer has (the screens of the reviewer side); APPROVE is what only the
+// ones who can decide have; SUGGEST is the suggesting reviewer's (comments and suggested edits, no deciding).
+const REVIEWER_ONLY_PERMISSIONS = new Set([
+  "CONTENT_REVIEW_VIEW",
+  "CONTENT_REVIEW_APPROVE",
+  "CONTENT_REVIEW_SUGGEST",
+  "CONTENT_SUBMISSIONS_VIEW",
+  "CONTENT_SUBMISSIONS_DELETE",
+]);
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -263,6 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return pageActions.includes(dbActionCode);
   };
 
+  // Suggest but not approve (super admins can do everything, so they are never "only" a suggester).
+  const isSuggester = hasPermission("CONTENT_REVIEW_SUGGEST") && !hasPermission("CONTENT_REVIEW_APPROVE");
+
   const canUseMcpTool = (toolCode: string) => {
     if (!permissions) return false;
     if (permissions.user.is_super_admin) return true;
@@ -315,6 +328,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         viewMode: canSwitchView ? viewMode : "reviewer",
         setViewMode,
         creatorView,
+        isSuggester,
       }}
     >
       {children}

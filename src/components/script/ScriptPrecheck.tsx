@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, ChevronDown, ChevronUp, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
-import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
+import { activeFlagCount } from "@/components/script/ScriptCompliance";
+import ScriptFindings from "@/components/script/ScriptFindings";
+import CheckingNotice from "@/components/common/CheckingNotice";
 import { Button } from "@/components/ui/button";
 import { scriptVerdict } from "@/lib/scriptStage";
 import { cn } from "@/lib/utils";
@@ -12,7 +14,7 @@ import type { StoredCheck } from "@/types/submission";
  * The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the
  * score and every flag, fix the script and run it again. Sending waits for a check of the script as it is now.
  */
-export default function ScriptPrecheck({
+function PrecheckBody({
   check,
   stale = false,
   checkedAt,
@@ -98,9 +100,19 @@ export default function ScriptPrecheck({
       )}
       {open && !compact && (
         <div className="border-t border-border/70 p-3.5">
-          <ScriptCompliance check={check} />
+          <ScriptFindings check={check} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** The check, and while it runs a notice that it can take a while and needn't be waited on. */
+export default function ScriptPrecheck(props: ComponentProps<typeof PrecheckBody>) {
+  return (
+    <div className="flex flex-col gap-2">
+      <PrecheckBody {...props} />
+      {props.checking && <CheckingNotice what="compliance" compact={props.compact} />}
     </div>
   );
 }

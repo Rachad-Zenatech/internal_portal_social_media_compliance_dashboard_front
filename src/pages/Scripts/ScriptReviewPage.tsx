@@ -146,7 +146,7 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
  */
 export default function ScriptReviewPage() {
   const { hasPermission } = useAuth();
-  const reviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const reviewer = hasPermission("CONTENT_REVIEW_VIEW");
   const [tab, setTab] = useState<ReviewTab>("review");
   const [filter, setFilter] = useState<CreatorFilter>("all");
   const [uploadOpen, setUploadOpen] = useState(false);

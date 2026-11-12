@@ -30,7 +30,7 @@ import type { SubmissionSummary } from "@/types/submission";
 /** Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
 export default function Dashboard() {
   const { hasPermission } = useAuth();
-  return hasPermission("CONTENT_REVIEW_APPROVE") ? <ReviewerDashboard /> : <CreatorDashboard />;
+  return hasPermission("CONTENT_REVIEW_VIEW") ? <ReviewerDashboard /> : <CreatorDashboard />;
 }
 
 const REVIEW_PAGE_SIZE = 5;

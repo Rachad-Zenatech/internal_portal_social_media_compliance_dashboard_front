@@ -335,6 +335,13 @@
   line-height: 1.7;
   counter-reset: script-page 1;
 }
+/* The sliding bar of a check that is running (see CheckingNotice and the task pill). */
+@keyframes indeterminate {
+  0% { left: -33%; width: 33%; }
+  50% { width: 50%; }
+  100% { left: 100%; width: 33%; }
+}
+
 /* A script shown to read, as in a batch's cards: the same document, without the editor's height and blue frame. */
 .script-editor.script-readonly .script-doc {
   min-height: 0;

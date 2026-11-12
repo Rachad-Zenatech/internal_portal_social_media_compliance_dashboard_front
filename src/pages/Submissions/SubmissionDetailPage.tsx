@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -16,23 +16,11 @@ import {
   FileText,
   History,
   Loader2,
-  RotateCcw,
   Trash2,
   XCircle,
 } from "lucide-react";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -276,7 +264,7 @@ export default function SubmissionDetailPage() {
   const { user, hasPermission, creatorView } = useAuth();
   const { comments } = useReviewComments(id);
   const isCreator = Boolean(s && user && s.created_by === user.id);
-  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const isReviewer = hasPermission("CONTENT_REVIEW_VIEW");
   // Where "back" goes: reviewers don't have My posts, so they go back to the Content screener.
   const backTo = isReviewer
     ? { label: "Content screener", path: `/compliance/scanner${id ? `?id=${id}` : ""}` }
@@ -321,15 +309,6 @@ export default function SubmissionDetailPage() {
       setUploadingScript(false);
     }
   };
-
-  const withdrawMutation = useMutation({
-    mutationFn: () => submissionService.withdraw(id),
-    onSuccess: (res) => {
-      toast.success(`${res.reference_code} is back in draft. Edit it and submit again to create a new version.`);
-      refresh();
-    },
-    onError: (err: Error) => toast.error(`Couldn't withdraw: ${err.message}`),
-  });
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -408,28 +387,6 @@ export default function SubmissionDetailPage() {
                   <FilePen className="w-3.5 h-3.5" /> Continue Editing
                 </Link>
               </Button>
-            )}
-            {s.status === "IN_REVIEW" && isCreator && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" disabled={withdrawMutation.isPending} className="text-xs gap-1.5 font-semibold">
-                    <RotateCcw className="w-3.5 h-3.5" /> Withdraw to Edit
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Withdraw {s.reference_code} from review?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      It goes back to draft so you can edit it. Version {s.current_version} stays in the history, and submitting
-                      again creates version {s.current_version + 1}.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => withdrawMutation.mutate()}>Withdraw</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             )}
             {s.can_delete && (
               <Button

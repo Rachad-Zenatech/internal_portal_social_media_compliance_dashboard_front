@@ -147,7 +147,6 @@ export const submissionService = {
     }),
 
   /** Back to draft: from review, or after approval for a late fix (the approval then no longer applies). */
-  withdraw: (id: string) => apiClient.post<Submission>(`/api/submissions/${id}/withdraw`, undefined),
 
   /** Reviewer takes back an approval and sends it to the creator as changes requested. */
   reopen: (id: string, notes: string, due: { revision_days?: 1 | 2 | 3 | 5; revision_due_at?: string } = {}) =>

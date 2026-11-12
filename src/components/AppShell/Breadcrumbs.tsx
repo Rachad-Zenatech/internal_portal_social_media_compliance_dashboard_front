@@ -14,7 +14,7 @@ export default function Breadcrumbs() {
   const pathnames = location.pathname.split("/").filter((x) => x);
   // Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
   const { hasPermission } = useAuth();
-  const reviewerView = hasPermission("CONTENT_REVIEW_APPROVE");
+  const reviewerView = hasPermission("CONTENT_REVIEW_VIEW");
   const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
   const [customTrails, setCustomTrails] = useState<Record<string, BreadcrumbItem[]>>({});
 

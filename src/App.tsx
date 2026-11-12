@@ -96,7 +96,7 @@ function PrefixRedirect({ from, to }: { from: string; to: string }) {
 /** My posts is the creators' page; reviewers work from the Content screener, so they're sent there. */
 function PostsListRoute() {
   const { hasPermission } = useAuth();
-  return hasPermission("CONTENT_REVIEW_APPROVE") ? <Navigate to="/compliance/scanner" replace /> : <SubmissionsListPage />;
+  return hasPermission("CONTENT_REVIEW_VIEW") ? <Navigate to="/compliance/scanner" replace /> : <SubmissionsListPage />;
 }
 
 function NotFoundAlert() {
