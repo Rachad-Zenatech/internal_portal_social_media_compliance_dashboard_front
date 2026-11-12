@@ -64,8 +64,6 @@ export default function ReviewerStats({
         label="Reviewed"
         value={summary ? summary.reviews_completed : "–"}
         note={summary ? `Last 30 days · ${summary.approved} approved, ${summary.changes_requested} sent back` : null}
-        hint="See your review activity"
-        onClick={() => scrollToSection("reviewer-activity")}
       />
     </section>
   );

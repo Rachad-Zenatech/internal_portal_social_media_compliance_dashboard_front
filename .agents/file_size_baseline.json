@@ -312,7 +312,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Dashboard/Dashboard.tsx#ReviewerDashboard": {
-      "max_lines": 176,
+      "max_lines": 145,
       "kind": "jsx_return"
     },
     "src/pages/Logs/AuditLog.tsx#AuditLog": {

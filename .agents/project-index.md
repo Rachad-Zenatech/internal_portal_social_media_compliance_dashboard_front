@@ -30,7 +30,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - src/components/dashboard/ReviewSlideshow.tsx (115 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
-- src/components/dashboard/ReviewerStats.tsx (73 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
+- src/components/dashboard/ReviewerStats.tsx (71 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - src/components/dashboard/SuggesterDashboard.tsx (281 lines) - What they have done on an item so far, as a short chip.
 - src/components/dashboard/dashboardParts.tsx (443 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/BatchDetailsForm.tsx (198 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
@@ -84,6 +84,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
 - src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
+- src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
 - src/components/submissions/RevisionWorkspace.tsx (191 lines) - revision workspace (components submissions)
@@ -170,7 +171,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
-- src/pages/Dashboard/Dashboard.tsx (382 lines) - dashboard (pages  dashboard)
+- src/pages/Dashboard/Dashboard.tsx (362 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)

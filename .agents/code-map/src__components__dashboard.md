@@ -40,7 +40,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/dashboard/ReviewSlideshow.tsx (115 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
 - `ReviewSlideshow` (export function) L10 - Cards in a row that slides: arrows move a screenful at a time, the dots show where you are and jump there, and the  row can be swiped or ...
 
-## src/components/dashboard/ReviewerStats.tsx (73 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
+## src/components/dashboard/ReviewerStats.tsx (71 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - `QueueFilter` (export type) L5 - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - `ReviewerStats` (export function) L11 - The reviewer's numbers at a glance.
 

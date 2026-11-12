@@ -179,6 +179,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `GlanceTile` (export interface) L6
 - `ReviewGlance` (export function) L31 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
 
+## src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
+- `ReviewerPicker` (export function) L10 - Who a post goes to: the reviewers who can approve it and, in their own box, suggesting reviewers (who can comment and  suggest edits).
+
 ## src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - `RecheckState` (export type) L7
 - `Mark` (function) L15

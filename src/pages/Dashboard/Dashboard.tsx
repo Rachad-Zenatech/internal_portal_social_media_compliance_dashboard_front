@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import DayAgenda from "@/components/dashboard/DayAgenda";
 import ReviewSlideshow from "@/components/dashboard/ReviewSlideshow";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import ReviewerStats, { type QueueFilter } from "@/components/dashboard/ReviewerStats";
 import SuggesterDashboard from "@/components/dashboard/SuggesterDashboard";
 import {
@@ -37,6 +39,7 @@ export default function Dashboard() {
 }
 
 const ACTIVITY_LIMIT = 5;
+const WAITING_PAGE_SIZE = 6;
 
 /** A check that would stop approval or clearly needs work: a red result, or a score under 60. */
 const isFailing = (s: SubmissionSummary) =>
@@ -105,6 +108,15 @@ function ReviewerDashboard() {
     navigate("/compliance/scanner");
   };
   const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/script-review/scripts/${r.s.id}`) : openInScreener(r.s.id));
+
+  // Sent back for changes and now with the creator: late first, then soonest due back, then those with no date.
+  const sentBack = useMemo(() => {
+    const dueBack = (x: SubmissionSummary) => (x.due_kind === "REVISION" && x.due_at ? new Date(x.due_at).getTime() : Infinity);
+    return all.filter((x) => x.status === "CHANGES_REQUESTED").sort((a, b) => dueBack(a) - dueBack(b));
+  }, [all]);
+  // Six to a page, so the panel never grows past three rows.
+  const waitingPaged = usePaged(sentBack, WAITING_PAGE_SIZE);
+  const lateBack = sentBack.filter((x) => x.due_kind === "REVISION" && x.due_at && isPast(new Date(x.due_at))).length;
 
   // The cards narrow the list to what is overdue or failing.
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
@@ -193,7 +205,6 @@ function ReviewerDashboard() {
     : `${breakdown} ${waiting === 1 ? "is" : "are"} waiting for your review.${overdue ? ` ${overdue} ${overdue === 1 ? "is" : "are"} overdue.` : ""}`;
 
   const s = summary.data;
-  const decided = s ? s.approved + s.changes_requested : 0;
   const waitingNote =
     [
       waitingPosts && waitingScripts ? `${plural(waitingPosts, "post")}, ${plural(waitingScripts, "script")}` : null,
@@ -278,94 +289,63 @@ function ReviewerDashboard() {
           </Section>
           </div>
 
-          {/* How reviewing is going: decisions and the issues that keep coming up */}
-          <div id="reviewer-activity" className="scroll-mt-4">
-          <Section title="Review activity" subtitle="Last 30 days, across the content you review">
-            {summary.isLoading ? (
+          <Section
+            title="Waiting on creators"
+            count={loading || !sentBack.length ? undefined : sentBack.length}
+            subtitle={lateBack ? `Sent back for changes · ${lateBack} late to come back` : "Sent back for changes · soonest due back first"}
+          >
+            {loading ? (
               <Loading />
-            ) : !s ? (
-              <p className="border-t border-border/60 px-4 py-8 text-center text-xs text-muted-foreground">Couldn't load review activity.</p>
+            ) : sentBack.length === 0 ? (
+              <p className="border-t border-border/60 px-4 py-8 text-center text-sm text-muted-foreground">Nothing is with a creator for changes right now.</p>
             ) : (
-              <div className="grid border-t border-border/60 md:grid-cols-2 md:divide-x md:divide-border/60">
-                {/* Decisions: the three numbers, then how they split */}
-                <div className="flex min-w-0 flex-col gap-4 p-5">
-                  <p className="text-sm font-semibold text-foreground">Decisions</p>
-                  {decided === 0 ? (
-                    <p className="text-sm text-muted-foreground">No decisions in the last 30 days.</p>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { label: "Approved", value: s.approved, sub: `${Math.round((s.approved / decided) * 100)}%` },
-                          { label: "Sent back", value: s.changes_requested, sub: `${Math.round((s.changes_requested / decided) * 100)}%` },
-                          { label: "Average score", value: s.average_score ?? "–", sub: s.average_score != null ? "out of 100" : "no scores yet" },
-                        ].map((m) => (
-                          <div key={m.label} className="rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5">
-                            <p className="text-[11px] font-medium text-muted-foreground">{m.label}</p>
-                            <p className="mt-0.5 text-2xl font-semibold leading-none tabular-nums text-foreground">{m.value}</p>
-                            <p className="mt-1 text-[11px] text-muted-foreground">{m.sub}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="space-y-1.5">
-                        <div
-                          className="flex h-2 gap-0.5 overflow-hidden rounded-full"
-                          role="img"
-                          aria-label={`${s.approved} approved, ${s.changes_requested} sent back, of ${decided}`}
-                        >
-                          {s.approved > 0 && <span className="rounded-full bg-blue-600" style={{ width: `${(s.approved / decided) * 100}%` }} />}
-                          {s.changes_requested > 0 && <span className="rounded-full bg-blue-200 dark:bg-blue-500/40" style={{ width: `${(s.changes_requested / decided) * 100}%` }} />}
+              <>
+              <ul className="grid gap-3 border-t border-border/60 p-4 sm:grid-cols-2 min-[112.5rem]:grid-cols-3">
+                {waitingPaged.pageItems.map((x) => {
+                  const due = x.due_kind === "REVISION" ? x.due_at : null;
+                  const late = Boolean(due && isPast(new Date(due)));
+                  return (
+                    <li key={x.id}>
+                      <Link
+                        to={`/submissions/${x.id}`}
+                        className={`flex h-full items-center gap-3 rounded-xl border bg-card p-3 transition-shadow hover:shadow-md ${
+                          late ? "border-red-300 dark:border-red-500/50" : "border-border/70"
+                        }`}
+                      >
+                        <Thumb s={x} className="h-14 w-20 rounded-lg" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground" title={x.title}>
+                            {x.title}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            With {x.created_by_name ?? "the creator"}
+                            {x.current_version > 1 && ` · v${x.current_version}`}
+                          </p>
+                          <p className="truncate text-[11px] text-muted-foreground">
+                            {issuesText(x.issue_count) ?? "Changes requested"} · updated {formatDistanceToNow(new Date(x.updated_at), { addSuffix: true })}
+                          </p>
                         </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          {Math.round((s.approved / decided) * 100)}% approved, of {decided} decision{decided === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* The rulebook issues that come up most, with how often */}
-                <div className="flex min-w-0 flex-col gap-3 border-t border-border/60 p-5 md:border-t-0">
-                  <p className="text-sm font-semibold text-foreground">Most common issues</p>
-                  {s.common_findings.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No rulebook issues found in the last 30 days.</p>
-                  ) : (
-                    <ol className="flex flex-col gap-2.5">
-                      {s.common_findings.slice(0, 5).map((f, i) => {
-                        const most = Math.max(...s.common_findings.slice(0, 5).map((x) => x.count), 1);
-                        return (
-                          <li key={f.rule_number} className="flex items-start gap-3">
-                            <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                              {i + 1}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-baseline justify-between gap-2">
-                                <p className="truncate text-sm text-foreground" title={f.title}>
-                                  {f.title || "Untitled rule"}
-                                </p>
-                                <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground">
-                                  {f.count} {f.count === 1 ? "time" : "times"}
-                                </span>
-                              </div>
-                              <div className="mt-1 flex items-center gap-2">
-                                <span className="shrink-0 text-[11px] text-muted-foreground">
-                                  {/^\d/.test(f.rule_number) ? `Rule ${f.rule_number}` : f.rule_number}
-                                </span>
-                                <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                                  <span className="block h-full rounded-full bg-blue-500/70" style={{ width: `${(f.count / most) * 100}%` }} />
-                                </span>
-                              </div>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  )}
-                </div>
-              </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Due back</span>
+                          <DeadlinePill dueAt={due} />
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              <ListPager
+                className="border-t border-border/60 px-4 py-2.5"
+                page={waitingPaged.page}
+                pageCount={waitingPaged.pageCount}
+                pageSize={waitingPaged.pageSize}
+                total={waitingPaged.total}
+                noun="posts"
+                onPage={waitingPaged.setPage}
+              />
+              </>
             )}
           </Section>
-          </div>
         </div>
 
         {/* Right: the day's schedule, and what the team did */}
