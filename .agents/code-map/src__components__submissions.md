@@ -149,28 +149,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CommentItem` (function) L45
 - `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `formatSec` (export const) L25
-- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L45
-- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
-
-## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `formatSec` (export const) L25
-- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L45
-- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
-
 ## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55

@@ -1,0 +1,89 @@
+{
+  "limit": 500,
+  "files": {
+    "src/components/AppShell/MessageHubStatusDropdown.tsx": {
+      "max_lines": 586,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/AppShell/TopBar.tsx": {
+      "max_lines": 597,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/script/HighlightableText.tsx": {
+      "max_lines": 541,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/script/ScriptReviewWorkspace.tsx": {
+      "max_lines": 1014,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/submissions/SentimentPanel.tsx": {
+      "max_lines": 1333,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/video/VideoUploadQueueDrawer.tsx": {
+      "max_lines": 514,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/context/VideoUploadQueueContext.tsx": {
+      "max_lines": 801,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/ComplianceRulesPage.tsx": {
+      "max_lines": 1702,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx": {
+      "max_lines": 1831,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
+      "max_lines": 2895,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/OAuthIntegrations.tsx": {
+      "max_lines": 801,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/Roles.tsx": {
+      "max_lines": 798,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/Users.tsx": {
+      "max_lines": 691,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/ContentCalendar/ContentCalendarPage.tsx": {
+      "max_lines": 633,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Logs/SystemLogsPage.tsx": {
+      "max_lines": 1064,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Performance/PostPerformancePage.tsx": {
+      "max_lines": 781,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/SocialMedia/SocialMediaPage.tsx": {
+      "max_lines": 831,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/NewSubmissionPage.tsx": {
+      "max_lines": 2695,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/ScriptChangesPage.tsx": {
+      "max_lines": 577,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/SubmissionsListPage.tsx": {
+      "max_lines": 1698,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/types/submission.ts": {
+      "max_lines": 681,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    }
+  }
+}

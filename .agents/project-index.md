@@ -71,8 +71,6 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
@@ -145,8 +143,6 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - src/pages/Compliance/ContentScreenerPage.tsx (1832 lines) - content screener page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1832 lines) - content screener page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1832 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (453 lines) - Each kind keeps its own colour: on its tab, its entries and the help line.
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
@@ -197,6 +193,4 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/script.ts (149 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
-- src/types/submission.ts (682 lines) - AD: paid social ad.
-- src/types/submission.ts (682 lines) - AD: paid social ad.
 - src/types/submission.ts (682 lines) - AD: paid social ad.
