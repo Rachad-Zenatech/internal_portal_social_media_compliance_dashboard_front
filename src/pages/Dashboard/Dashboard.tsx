@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, isPast } from "date-fns";
-import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { CalendarDays, CheckCircle2, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import ReviewSlideshow from "@/components/dashboard/ReviewSlideshow";
 import ReviewerStats, { type QueueFilter } from "@/components/dashboard/ReviewerStats";
 import SuggesterDashboard from "@/components/dashboard/SuggesterDashboard";
 import {
@@ -35,13 +36,11 @@ export default function Dashboard() {
   return hasPermission("CONTENT_REVIEW_VIEW") ? <ReviewerDashboard /> : <CreatorDashboard />;
 }
 
-const REVIEW_PAGE_SIZE = 5;
 const ACTIVITY_LIMIT = 5;
 
 /** A check that would stop approval or clearly needs work: a red result, or a score under 60. */
 const isFailing = (s: SubmissionSummary) =>
   !s.analysis_pending && (s.latest_traffic_light === "RED" || (s.latest_score != null && s.latest_score < 60));
-const isOverdue = (s: SubmissionSummary) => Boolean(s.due_at && isPast(new Date(s.due_at)));
 
 /** What waits for a reviewer: a post, or a video's script. They're counted and listed together. */
 type QueueRow = { kind: "post"; s: SubmissionSummary } | { kind: "script"; s: ScriptQueueItem };
@@ -107,16 +106,74 @@ function ReviewerDashboard() {
   };
   const openRow = (r: QueueRow) => (r.kind === "script" ? navigate(`/script-review/scripts/${r.s.id}`) : openInScreener(r.s.id));
 
-  // The cards narrow the list to what is overdue or failing; the review list shows five at a time, so keep the page in range.
+  // The cards narrow the list to what is overdue or failing.
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
   const queue = queueFilter === "overdue" ? needsMyReview.filter(rowOverdue) : queueFilter === "failing" ? needsMyReview.filter(rowFailing) : needsMyReview;
-  const [rawReviewPage, setReviewPage] = useState(0);
-  const reviewPages = Math.max(1, Math.ceil(queue.length / REVIEW_PAGE_SIZE));
-  const reviewPage = Math.min(rawReviewPage, reviewPages - 1);
-  const reviewRows = queue.slice(reviewPage * REVIEW_PAGE_SIZE, (reviewPage + 1) * REVIEW_PAGE_SIZE);
-  const changeFilter = (f: QueueFilter) => {
-    setQueueFilter(f);
-    setReviewPage(0);
+  const changeFilter = (f: QueueFilter) => setQueueFilter(f);
+
+  /** One slide: the post's picture (or a script's page) with its deadline, then what it is, its score and Review.
+   * Late and failing ones have a red edge so they stand out. */
+  const slide = (row: QueueRow) => {
+    const isScript = row.kind === "script";
+    const urgent = rowOverdue(row) && rowFailing(row);
+    const creator = row.kind === "script" ? row.s.creator_name : row.s.created_by_name;
+    const version = row.kind === "script" ? row.s.version_number : row.s.current_version;
+    return (
+      <article
+        className={`group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md ${
+          urgent ? "border-red-300 ring-1 ring-red-200 dark:border-red-500/50 dark:ring-red-500/30" : "border-border/70"
+        }`}
+      >
+        <button type="button" onClick={() => openRow(row)} aria-label={`Review ${row.s.title}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-muted">
+          {row.kind === "script" ? (
+            <span className="grid h-full w-full place-items-center bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+              <FileText className="h-10 w-10" strokeWidth={1.5} />
+            </span>
+          ) : (
+            <Thumb s={row.s} className="h-full w-full rounded-none transition-transform duration-300 group-hover:scale-[1.03]" />
+          )}
+          <span className="absolute left-2 top-2">
+            <DeadlinePill dueAt={rowDue(row)} />
+          </span>
+        </button>
+        <div className="flex flex-1 flex-col gap-2 p-3.5">
+          <div className="min-w-0">
+            <p className="line-clamp-2 font-semibold leading-snug text-foreground" title={row.s.title}>
+              {row.s.title}
+            </p>
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+              {isScript ? (
+                <span className="rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                  Script
+                </span>
+              ) : (
+                row.kind === "post" && <Platforms platforms={row.s.platforms} />
+              )}
+              <span>
+                by {creator ?? "Unknown"}
+                {version > 1 && ` · v${version}`}
+              </span>
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{audienceName(row.s)}</p>
+          </div>
+          <div className="mt-auto flex items-end justify-between gap-2 border-t border-border/60 pt-2.5">
+            {row.kind === "script" ? (
+              <Score score={row.s.score} unavailable={row.s.ai_unavailable} />
+            ) : (
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <Score score={row.s.latest_score} pending={row.s.analysis_pending} progress={row.s.analysis_progress} unavailable={row.s.ai_unavailable} />
+                {!row.s.analysis_pending && row.s.latest_score != null && (
+                  <span className="truncate text-xs text-muted-foreground">{issuesText(row.s.issue_count)?.replace("to fix", "found") ?? "No issues"}</span>
+                )}
+              </div>
+            )}
+            <Button size="sm" className="h-8 shrink-0 rounded-lg bg-blue-700 px-3.5 text-xs font-medium text-white hover:bg-blue-800" onClick={() => openRow(row)}>
+              Review
+            </Button>
+          </div>
+        </div>
+      </article>
+    );
   };
 
   // The team's activity, minus the reviewer's own actions.
@@ -214,155 +271,8 @@ function ReviewerDashboard() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto border-t border-border/60">
-                <table className="w-full min-w-[760px] table-fixed text-sm">
-                  <colgroup>
-                    <col />
-                    <col className="w-[17%]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[160px]" />
-                    <col className="w-[104px]" />
-                  </colgroup>
-                  <thead>
-                    <tr className="bg-muted/30 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
-                      <th className="py-2 pl-4 pr-3 font-semibold">Post</th>
-                      <th className="px-3 py-2 font-semibold">Audience</th>
-                      <th className="px-3 py-2 font-semibold">Deadline</th>
-                      <th className="px-3 py-2 font-semibold">Compliance</th>
-                      <th className="py-2 pl-3 pr-4 text-right font-semibold">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reviewRows.map((row) => {
-                      if (row.kind === "script") {
-                        const sc = row.s;
-                        const urgent = rowOverdue(row) && rowFailing(row);
-                        return (
-                          <tr
-                            key={`script-${sc.id}`}
-                            className={`border-t border-border/60 transition-colors hover:bg-muted/30 ${urgent ? "shadow-[inset_3px_0_0_var(--color-red-500)]" : ""}`}
-                          >
-                            <td className="py-3 pl-4 pr-3">
-                              <div className="flex items-center gap-3">
-                                <span className="grid h-10 w-14 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
-                                  <FileText className="w-5 h-5" />
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <Link to={`/submissions/${sc.id}/script`} className="block truncate font-semibold text-foreground hover:underline">
-                                    {sc.title}
-                                  </Link>
-                                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                                    <span className="rounded bg-blue-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                                      Script
-                                    </span>
-                                    <span>
-                                      by {sc.creator_name ?? "Unknown"}
-                                      {sc.version_number > 1 && ` · v${sc.version_number}`}
-                                    </span>
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="truncate px-3 py-3 text-sm text-muted-foreground">{audienceName(sc)}</td>
-                            <td className="px-3 py-3">
-                              <DeadlinePill dueAt={sc.approval_needed_by} />
-                            </td>
-                            <td className="px-3 py-3">
-                              <Score score={sc.score} unavailable={sc.ai_unavailable} />
-                            </td>
-                            <td className="py-3 pl-3 pr-4">
-                              <div className="flex justify-end">
-                                <Button
-                                  size="sm"
-                                  className="h-8 rounded-lg bg-blue-700 px-3.5 text-xs font-medium text-white hover:bg-blue-800"
-                                  onClick={() => openRow(row)}
-                                >
-                                  Review
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      }
-                      const r = row.s;
-                      // Only posts that are late AND failing get the red highlight, so they stand out.
-                      const urgent = isOverdue(r) && isFailing(r);
-                      return (
-                        <tr
-                          key={r.id}
-                          className={`border-t border-border/60 transition-colors hover:bg-muted/30 ${urgent ? "shadow-[inset_3px_0_0_var(--color-red-500)]" : ""}`}
-                        >
-                          <td className="py-3 pl-4 pr-3">
-                            <div className="flex items-center gap-3">
-                              <Thumb s={r} className="h-10 w-14" />
-                              <div className="min-w-0 flex-1">
-                                <Link to={`/submissions/${r.id}`} className="block truncate font-semibold text-foreground hover:underline">
-                                  {r.title}
-                                </Link>
-                                <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                                  <Platforms platforms={r.platforms} />
-                                  <span>
-                                    by {r.created_by_name ?? "Unknown"}
-                                    {r.current_version > 1 && ` · v${r.current_version}`}
-                                  </span>
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="truncate px-3 py-3 text-sm text-muted-foreground">{audienceName(r)}</td>
-                          <td className="px-3 py-3">
-                            <DeadlinePill dueAt={r.due_at} />
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="flex flex-col gap-0.5">
-                              <Score score={r.latest_score} pending={r.analysis_pending} progress={r.analysis_progress} unavailable={r.ai_unavailable} />
-                              {!r.analysis_pending && r.latest_score != null && (
-                                <span className="whitespace-nowrap text-xs text-muted-foreground">
-                                  {issuesText(r.issue_count)?.replace("to fix", "found") ?? "No issues"}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 pl-3 pr-4">
-                            <div className="flex justify-end">
-                              <Button
-                                size="sm"
-                                className="h-8 rounded-lg bg-blue-700 px-3.5 text-xs font-medium text-white hover:bg-blue-800"
-                                onClick={() => openInScreener(r.id)}
-                              >
-                                Review
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {reviewPages > 1 && (
-              <div className="flex items-center justify-between gap-2 border-t border-border/60 px-4 py-2 text-xs text-muted-foreground">
-                <span>
-                  Page {reviewPage + 1} of {reviewPages}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setReviewPage(reviewPage - 1)} disabled={reviewPage === 0} aria-label="Previous page">
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setReviewPage(reviewPage + 1)}
-                    disabled={reviewPage >= reviewPages - 1}
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+              <div className="border-t border-border/60 pt-3">
+                <ReviewSlideshow key={queueFilter} label="Needs your review" slides={queue.map((row) => ({ key: `${row.kind}-${row.s.id}`, node: slide(row) }))} />
               </div>
             )}
           </Section>

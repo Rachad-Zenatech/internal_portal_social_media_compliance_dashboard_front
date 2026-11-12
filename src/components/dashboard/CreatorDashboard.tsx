@@ -22,6 +22,7 @@ import {
 } from "@/components/dashboard/dashboardParts";
 import CreatorStats, { type PostFilter } from "@/components/dashboard/CreatorStats";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import ReviewSlideshow from "@/components/dashboard/ReviewSlideshow";
 import PostSteps from "@/components/submissions/PostSteps";
 import { POST_STEPS, ranOnce, stepPath } from "@/lib/postSteps";
 import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
@@ -43,7 +44,6 @@ function dueLabel(dueAt?: string | null) {
   return { text: `Due ${format(due, "EEE, MMM d")}`, urgent: false };
 }
 
-const NEXT_STEP_LIMIT = 3;
 const RECENT_LIMIT = 5;
 const ACTIVITY_LIMIT = 5;
 
@@ -69,21 +69,15 @@ const scriptSent = (s: SubmissionSummary) =>
 /** When it went to a reviewer: the post's submission, or (for a script) when it was last worked on. */
 const sentAt = (s: SubmissionSummary) => new Date((s.submitted_at ?? s.updated_at) as string);
 
-/** How each kind of next step looks: a stripe and a label in its own colour. */
-const NEXT_LOOK = {
-  overdue: { stripe: "border-l-red-500", label: "text-red-700 dark:text-red-300", chip: "bg-red-600 text-white" },
-  changes: { stripe: "border-l-amber-500", label: "text-amber-700 dark:text-amber-300", chip: "bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100" },
-  video: { stripe: "border-l-violet-500", label: "text-violet-700 dark:text-violet-300", chip: "bg-violet-100 text-violet-900 dark:bg-violet-500/20 dark:text-violet-100" },
-  draft: { stripe: "border-l-blue-500", label: "text-blue-700 dark:text-blue-300", chip: "bg-blue-100 text-blue-900 dark:bg-blue-500/20 dark:text-blue-100" },
-} as const;
-
-function NextStepRow({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen: () => void; onOpenStep: (step: string) => void }) {
+/** One thing waiting on the creator, as a slide: its picture with the deadline on it, what to do and why, how far
+ * along its steps are, and one button. Overdue changes have a red edge; everything else is plain. */
+function NextStepCard({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen: () => void; onOpenStep: (step: string) => void }) {
   const scriptChanges = scriptNeedsChanges(s);
   const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
   const video = !changes && s.script_status === "APPROVED";
   // Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
   const due = (changes && s.due_kind === "REVISION") || (video && s.due_kind === "VIDEO") ? dueLabel(s.due_at) : null;
-  const look = due?.urgent && changes ? NEXT_LOOK.overdue : changes ? NEXT_LOOK.changes : video ? NEXT_LOOK.video : NEXT_LOOK.draft;
+  const overdue = Boolean(due?.urgent && changes);
   const kind = scriptChanges
     ? s.script_status === "EDITS_PROPOSED"
       ? "Script edited by your reviewer"
@@ -102,35 +96,52 @@ function NextStepRow({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen: 
     : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`].filter(Boolean).join(" · ");
   const steps = s.steps && !scriptChanges ? ranOnce(s.steps) : null;
   const stepsDone = steps ? POST_STEPS.filter((p) => steps[p.key] === "done").length : 0;
+  const act = changes || video;
   return (
-    <li
-      className={`flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-border/70 border-l-4 bg-card p-3.5 shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md ${look.stripe}`}
+    <article
+      className={`group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md ${
+        overdue ? "border-red-300 ring-1 ring-red-200 dark:border-red-500/50 dark:ring-red-500/30" : "border-border/70"
+      }`}
     >
-      <Thumb s={s} className="h-16 w-24 rounded-lg" />
-      <div className="min-w-[220px] flex-1">
-        <p className={`text-[11px] font-bold uppercase tracking-wide ${look.label}`}>{kind}</p>
-        <p className="mt-0.5 truncate text-base font-semibold text-foreground">{s.title}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">{details}</p>
+      <button type="button" onClick={onOpen} aria-label={`Open ${s.title}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-muted">
+        <Thumb s={s} className="h-full w-full rounded-none transition-transform duration-300 group-hover:scale-[1.03]" />
+        {due && (
+          <span
+            className={`absolute left-2 top-2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm ${
+              overdue ? "bg-red-600 text-white" : "bg-card text-foreground"
+            }`}
+          >
+            {due.text}
+          </span>
+        )}
+      </button>
+      <div className="flex flex-1 flex-col gap-2 p-3.5">
+        <div className="min-w-0">
+          <p className={`text-[11px] font-bold uppercase tracking-wide ${overdue ? "text-red-700 dark:text-red-300" : "text-blue-700 dark:text-blue-300"}`}>{kind}</p>
+          <p className="mt-0.5 line-clamp-2 font-semibold leading-snug text-foreground" title={s.title}>
+            {s.title}
+          </p>
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{details}</p>
+        </div>
         {steps && !steps.locked && (
-          <div className="mt-2 flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <PostSteps steps={steps} onOpen={onOpenStep} />
-            <span className="text-xs text-muted-foreground">
-              {stepsDone} of {POST_STEPS.length} steps done
+            <span className="text-[11px] text-muted-foreground">
+              {stepsDone} of {POST_STEPS.length}
             </span>
           </div>
         )}
+        <div className="mt-auto border-t border-border/60 pt-2.5">
+          <Button
+            onClick={onOpen}
+            variant={act ? "default" : "outline"}
+            className={`h-8 w-full rounded-lg text-xs font-semibold ${act ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
+          >
+            {scriptChanges ? "Review changes" : changes ? "Fix issues" : video ? "Upload video" : "Continue draft"}
+          </Button>
+        </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        {due && <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${look.chip}`}>{due.text}</span>}
-        <Button
-          onClick={onOpen}
-          variant={changes || video ? "default" : "outline"}
-          className={`h-9 rounded-lg px-4 text-sm font-semibold ${changes || video ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
-        >
-          {scriptChanges ? "Review changes" : changes ? "Fix issues" : video ? "Upload video" : "Continue draft"}
-        </Button>
-      </div>
-    </li>
+    </article>
   );
 }
 
@@ -229,7 +240,6 @@ export default function CreatorDashboard() {
   const [filter, setFilter] = useState<PostFilter>("all");
   // "Needs your action" narrows the Needs you list to what is overdue or to film; the list opens to all of it on request.
   const [needsOnly, setNeedsOnly] = useState(false);
-  const [needsOpen, setNeedsOpen] = useState(false);
   const needs = needsOnly ? actions : nextSteps;
   const openPost = (s: SubmissionSummary) => navigate(scriptNeedsChanges(s) ? `/submissions/${s.id}/script` : `/submissions/new?id=${s.id}`);
   const sent = useMemo(
@@ -321,11 +331,9 @@ export default function CreatorDashboard() {
                     Show everything
                   </button>
                 )}
-                {needs.length > NEXT_STEP_LIMIT && (
-                  <button type="button" onClick={() => setNeedsOpen((o) => !o)} className="hover:underline">
-                    {needsOpen ? "Show fewer" : `Show all ${needs.length}`}
-                  </button>
-                )}
+                <Link to="/submissions" className="hover:underline">
+                  View all
+                </Link>
               </div>
             }
           >
@@ -338,16 +346,22 @@ export default function CreatorDashboard() {
                 <p className="text-xs text-muted-foreground">No changes requested and no drafts. Create a post when you're ready.</p>
               </div>
             ) : (
-              <ul className="flex flex-col gap-3 border-t border-border/60 bg-muted/20 p-3">
-                {needs.slice(0, needsOpen ? undefined : NEXT_STEP_LIMIT).map((s) => (
-                  <NextStepRow
-                    key={s.id}
-                    s={s}
-                    onOpen={() => openPost(s)}
-                    onOpenStep={(step) => navigate(stepPath(s.id, step as (typeof POST_STEPS)[number]["key"]))}
-                  />
-                ))}
-              </ul>
+              <div className="border-t border-border/60 pt-3">
+                <ReviewSlideshow
+                  key={String(needsOnly)}
+                  label="Needs you"
+                  slides={needs.map((s) => ({
+                    key: s.id,
+                    node: (
+                      <NextStepCard
+                        s={s}
+                        onOpen={() => openPost(s)}
+                        onOpenStep={(step) => navigate(stepPath(s.id, step as (typeof POST_STEPS)[number]["key"]))}
+                      />
+                    ),
+                  }))}
+                />
+              </div>
             )}
           </Section>
           </div>
