@@ -296,9 +296,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Failed to logout on backend', e);
     }
-    
 
-    
+    // A test sign-in never went through Microsoft, so there is no Microsoft session to end.
+    const signedInWith = sessionStorage.getItem('auth_provider');
+
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('ms_id_token');
@@ -306,7 +307,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearLinkToken();
     setPermissions(null);
     
-    // Always perform SSO logout redirect
+    if (signedInWith === 'test') {
+      window.location.href = '/login';
+      return;
+    }
+    // Microsoft sign-in (or a session from before this was recorded): end the Microsoft session too
     const postLogoutUri = encodeURIComponent(window.location.origin + '/login');
     window.location.href = `https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=${postLogoutUri}`;
   };

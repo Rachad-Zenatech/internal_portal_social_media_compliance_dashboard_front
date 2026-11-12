@@ -150,7 +150,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/RoleGroupPermissions.tsx (488 lines) - role group permissions (pages  configurations)
 - src/pages/Configurations/RoleMcpToolPermissions.tsx (306 lines) - Left panel search
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
-- src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
+- src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
@@ -163,8 +163,6 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (257 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2654 lines) - new submission page (pages  submissions)
-- src/pages/Submissions/NewSubmissionPage.tsx (2654 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/NewSubmissionPage.tsx (2654 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (625 lines) - submission detail page (pages  submissions)

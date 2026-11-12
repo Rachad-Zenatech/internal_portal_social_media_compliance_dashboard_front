@@ -23,7 +23,8 @@ export default function UserRoleAssignment() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [selectedUserId, setSelectedUserId] = useState<string | null>(searchParams.get("userId"));
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  // A person can hold several roles; what they can do is everything those roles allow together.
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const { data: users, isLoading: loadingUsers } = useQuery({
@@ -42,13 +43,9 @@ export default function UserRoleAssignment() {
     enabled: !!selectedUserId,
   });
 
-  // When userRoles is fetched, populate the selectedRoleId state
+  // When userRoles is fetched, select every role the user holds (not just the first)
   useEffect(() => {
-    if (userRoles && userRoles.length > 0) {
-      setSelectedRoleId(userRoles[0].id);
-    } else {
-      setSelectedRoleId(null);
-    }
+    setSelectedRoleIds((userRoles ?? []).map((r) => r.id));
   }, [userRoles]);
 
   // Brands the user works on: they only see other people's content for these. None selected means all brands.
@@ -76,7 +73,7 @@ export default function UserRoleAssignment() {
 
   const saveMutation = useMutation({
     mutationFn: () => apiClient.put(`/api/configuration/users/${selectedUserId}/roles`, {
-      role_ids: selectedRoleId ? [selectedRoleId] : []
+      role_ids: selectedRoleIds
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userRoles", selectedUserId] });
@@ -86,13 +83,9 @@ export default function UserRoleAssignment() {
     onError: () => toast.error("Failed to save role assignment"),
   });
 
-  const setRole = (roleId: string) => {
-    if (selectedRoleId === roleId) {
-      setSelectedRoleId(null); // Allow unselecting
-    } else {
-      setSelectedRoleId(roleId);
-    }
-  };
+  // Clicking a role adds it to the user's roles, or takes it away if they already have it.
+  const setRole = (roleId: string) =>
+    setSelectedRoleIds((prev) => (prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]));
 
   const handleUserSelect = (id: string) => {
     setSelectedUserId(id);
@@ -259,18 +252,18 @@ export default function UserRoleAssignment() {
               {/* Dropdown for role assignment */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                 <div className="flex-1 max-w-sm">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-1.5 block uppercase tracking-wider">Quick Assign Role</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-1.5 block uppercase tracking-wider">Quick Assign Roles (pick as many as needed)</label>
                   <select 
-                    value={selectedRoleId || ""}
+                    value=""
                     onChange={(e) => {
                       if (e.target.value) setRole(e.target.value);
                     }}
                     className="w-full h-10 px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-slate-900 dark:text-zinc-100 text-sm"
                   >
-                    <option value="" disabled>-- Select a role --</option>
+                    <option value="" disabled>-- Add or remove a role --</option>
                     {activeRoles.map(r => (
                       <option key={r.id} value={r.id}>
-                        {selectedRoleId === r.id ? `✓ Selected: ${r.name}` : r.name}
+                        {selectedRoleIds.includes(r.id) ? `✓ ${r.name} (click to remove)` : r.name}
                       </option>
                     ))}
                   </select>
@@ -285,7 +278,7 @@ export default function UserRoleAssignment() {
 
               {/* Tree Diagram Rendering */}
               <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-800 rounded-xl p-6 relative flex flex-col items-start min-h-[300px]">
-                <RoleTree roles={activeRoles} selectedRoleId={selectedRoleId} setRole={setRole} />
+                <RoleTree roles={activeRoles} selectedRoleIds={selectedRoleIds} setRole={setRole} />
               </div>
 
               {hasPermission("CONFIG_USER_ROLE_ASSIGNMENT_UPDATE") && !isSuperAdmin && (
@@ -322,7 +315,7 @@ export default function UserRoleAssignment() {
 const SelectableTreeNode = ({ 
   role, 
   level, 
-  selectedRoleId, 
+  selectedRoleIds,
   onSelect, 
   expandedNodes, 
   toggleNode,
@@ -330,14 +323,14 @@ const SelectableTreeNode = ({
 }: { 
   role: Role; 
   level: number; 
-  selectedRoleId: string | null; 
+  selectedRoleIds: string[];
   onSelect: (roleId: string) => void;
   expandedNodes: Set<string>;
   toggleNode: (id: string, e: React.MouseEvent) => void;
   childrenMap: Map<string | null, Role[]>;
 }) => {
   const isExpanded = expandedNodes.has(role.id);
-  const isSelected = selectedRoleId === role.id;
+  const isSelected = selectedRoleIds.includes(role.id);
   const children = childrenMap.get(role.id) || [];
   const hasChildren = children.length > 0;
   
@@ -387,7 +380,7 @@ const SelectableTreeNode = ({
               key={child.id} 
               role={child} 
               level={level + 1} 
-              selectedRoleId={selectedRoleId} 
+              selectedRoleIds={selectedRoleIds}
               onSelect={onSelect} 
               expandedNodes={expandedNodes} 
               toggleNode={toggleNode} 
@@ -401,7 +394,7 @@ const SelectableTreeNode = ({
 };
 
 // Tree Diagram Component
-function RoleTree({ roles, selectedRoleId, setRole }: { roles: Role[], selectedRoleId: string | null, setRole: (id: string) => void }) {
+function RoleTree({ roles, selectedRoleIds, setRole }: { roles: Role[], selectedRoleIds: string[], setRole: (id: string) => void }) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   const childrenMap = useMemo(() => {
@@ -470,7 +463,7 @@ function RoleTree({ roles, selectedRoleId, setRole }: { roles: Role[], selectedR
             key={root.id}
             role={root}
             level={0}
-            selectedRoleId={selectedRoleId}
+            selectedRoleIds={selectedRoleIds}
             onSelect={setRole}
             expandedNodes={expandedNodes}
             toggleNode={toggleNode}

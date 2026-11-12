@@ -31,6 +31,6 @@ to find the right file.
 | .agents/code-map/src__pages__Performance.md | 1 | 2 KB |
 | .agents/code-map/src__pages__Scripts.md | 3 | 1 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
-| .agents/code-map/src__pages__Submissions.md | 7 | 16 KB |
+| .agents/code-map/src__pages__Submissions.md | 5 | 9 KB |
 | .agents/code-map/src__services.md | 12 | 5 KB |
 | .agents/code-map/src__types.md | 12 | 11 KB |

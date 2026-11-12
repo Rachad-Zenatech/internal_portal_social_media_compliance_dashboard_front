@@ -103,6 +103,8 @@ export default function Login() {
           if (!code || !nonce) throw new Error("This sign-in link can't be used here. Please sign in again.");
           const { token } = await apiClient.post<{ token: string }>("/api/auth/exchange", { code, nonce }, { skipGlobalLoading: true });
           sessionStorage.setItem("token", token);
+          // How they signed in decides how they sign out (see logout in AuthContext).
+          sessionStorage.setItem("auth_provider", "microsoft");
           await refreshPermissions();
           toast.success("Successfully logged in");
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -138,6 +140,8 @@ export default function Login() {
     try {
       const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
       sessionStorage.setItem("token", token);
+      // Never signed in to Microsoft: signing out skips Microsoft's sign-out page.
+      sessionStorage.setItem("auth_provider", "test");
       await refreshPermissions();
       toast.success(`Signed in as the test ${as.replace(/(\d)$/, " $1")}`);
       navigate("/");

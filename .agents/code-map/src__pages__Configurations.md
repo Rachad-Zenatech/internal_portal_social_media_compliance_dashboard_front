@@ -89,19 +89,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `canDrop` (fn) L408
     - `handleMoveRole` (fn) L424
 
-## src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
+## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.
 - `UserRoleAssignment` (export function) L20
     - `queryClient` (fn) L22
-    - `saveBrandsMutation` (fn) L67
-    - `saveMutation` (fn) L77
-    - `setRole` (fn) L89
-    - `handleUserSelect` (fn) L97
-    - `filteredUsers` (fn) L102
-- `SelectableTreeNode` (const) L322 - Recursive component for Tree Node in UserRoleAssignment
-- `RoleTree` (function) L404 - Tree Diagram Component
-    - `childrenMap` (fn) L407
-    - `toggleNode` (fn) L444
+    - `saveBrandsMutation` (fn) L64
+    - `saveMutation` (fn) L74
+    - `setRole` (fn) L87 - Clicking a role adds it to the user's roles, or takes it away if they already have it.
+    - `handleUserSelect` (fn) L90
+    - `filteredUsers` (fn) L95
+- `SelectableTreeNode` (const) L315 - Recursive component for Tree Node in UserRoleAssignment
+- `RoleTree` (function) L397 - Tree Diagram Component
+    - `childrenMap` (fn) L400
+    - `toggleNode` (fn) L437
 
 ## src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - `Users` (export function) L58
