@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Clock, Loader2, MessageSquare, RotateCcw, Send, ShieldCheck, Trash2 } from "lucide-react";
+import { Check, Clock, Loader2, MessageSquare, RotateCcw, ScanSearch, Send, ShieldCheck, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,24 +18,53 @@ export const COMMENT_CATEGORIES: { value: ReviewCommentCategory; label: string; 
 const toneFor = (c: string) => COMMENT_CATEGORIES.find((x) => x.value === c)?.tone ?? "bg-muted text-muted-foreground";
 const labelFor = (c: string) => COMMENT_CATEGORIES.find((x) => x.value === c)?.label ?? c;
 
+/** The numbers shown on image boxes and beside their comments, in the order the comments were written. */
+export const regionNumbers = (comments: ReviewComment[]): Map<string, number> =>
+  new Map(comments.filter((c) => c.file_id && c.region_w != null).map((c, i) => [c.id, i + 1] as const));
+
 export const formatSec = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
 
 function CommentItem({
   c,
+  number,
+  active,
   canResolve,
   onSeek,
+  onShowRegion,
   onResolve,
   onDelete,
 }: {
   c: ReviewComment;
+  /** Its number on the image, when it is about an area of one. */
+  number?: number;
+  active?: boolean;
   canResolve: boolean;
   onSeek?: (sec: number) => void;
+  onShowRegion?: (c: ReviewComment) => void;
   onResolve: (resolved: boolean) => void;
   onDelete: () => void;
 }) {
   const resolved = Boolean(c.resolved_at);
+  // Clicking the card picks it (and shows its area on the image); its own buttons keep their jobs.
+  const pick = onShowRegion
+    ? (e: React.MouseEvent | React.KeyboardEvent) => {
+        if ((e.target as HTMLElement).closest("button, a, input, textarea")) return;
+        onShowRegion(c);
+      }
+    : undefined;
   return (
-    <div className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${resolved ? "border-border/60 opacity-70" : c.from_reviewer ? "border-amber-500/30 bg-amber-500/5" : "border-border/80"}`}>
+    <div
+      id={`comment-${c.id}`}
+      onClick={pick}
+      onKeyDown={pick ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), pick(e)) : undefined}
+      tabIndex={pick ? 0 : undefined}
+      aria-pressed={pick ? Boolean(active) : undefined}
+      className={`rounded-lg border p-2.5 text-xs space-y-1.5 transition-colors ${
+        pick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 hover:border-blue-400/70" : ""
+      } ${
+        active ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500 shadow-sm" : resolved ? "border-border/60 opacity-70" : c.from_reviewer ? "border-amber-500/30 bg-amber-500/5" : "border-border/80"
+      }`}
+    >
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="font-semibold text-foreground">{c.author_name ?? "Someone"}</span>
         {c.from_reviewer && (
@@ -44,6 +73,17 @@ function CommentItem({
           </span>
         )}
         <span className={`rounded px-1 py-px text-[10px] font-semibold ${toneFor(c.category)}`}>{labelFor(c.category)}</span>
+        {number != null && (
+          <button
+            type="button"
+            disabled={!onShowRegion}
+            onClick={() => onShowRegion?.(c)}
+            className="inline-flex items-center gap-0.5 rounded bg-muted px-1 py-px text-[10px] font-semibold text-primary disabled:text-muted-foreground"
+            title={onShowRegion ? "Show this area on the image" : undefined}
+          >
+            <ScanSearch className="w-3 h-3" /> Image area {number}
+          </button>
+        )}
         {c.start_sec != null && (
           <button
             type="button"
@@ -92,6 +132,8 @@ export default function ReviewCommentsPanel({
   canComment,
   currentTime,
   onSeek,
+  activeCommentId,
+  onShowRegion,
   placeholder = "Add a comment...",
   emptyText = "No comments yet.",
   showHeader = true,
@@ -107,6 +149,10 @@ export default function ReviewCommentsPanel({
   /** When set (video playing), a comment can be pinned to this moment. */
   currentTime?: number;
   onSeek?: (sec: number) => void;
+  /** The comment picked on the image, highlighted here. */
+  activeCommentId?: string | null;
+  /** Pick a comment (clicking its card): it is highlighted, and its area shown on the image. */
+  onShowRegion?: (c: ReviewComment) => void;
   placeholder?: string;
   emptyText?: string;
 }) {
@@ -118,6 +164,11 @@ export default function ReviewCommentsPanel({
   const [category, setCategory] = useState<ReviewCommentCategory>("NOTE");
   const [pin, setPin] = useState(false);
   const open = useMemo(() => comments.filter((c) => !c.resolved_at).length, [comments]);
+  const numbers = useMemo(() => regionNumbers(comments), [comments]);
+  // A box picked on the image brings its comment into view.
+  useEffect(() => {
+    if (activeCommentId) document.getElementById(`comment-${activeCommentId}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [activeCommentId]);
 
   const submit = () => {
     if (!body.trim()) return;
@@ -150,8 +201,11 @@ export default function ReviewCommentsPanel({
             <CommentItem
               key={c.id}
               c={c}
+              number={numbers.get(c.id)}
+              active={c.id === activeCommentId}
               canResolve={canComment}
               onSeek={onSeek}
+              onShowRegion={onShowRegion}
               onResolve={(resolved) => resolve.mutate({ id: c.id, resolved })}
               onDelete={() => remove.mutate(c.id)}
             />

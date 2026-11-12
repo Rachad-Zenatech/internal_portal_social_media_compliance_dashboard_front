@@ -1,3 +1,4 @@
+import { ScrollText } from "lucide-react";
 import type { ReactNode } from "react";
 
 export type GlanceTone = "ok" | "warn" | "bad" | "muted";
@@ -12,6 +13,8 @@ export interface GlanceTile {
   tone: GlanceTone;
   /** The reviewer has opened it. */
   seen: boolean;
+  /** Set apart in blue: where the reviewer adds their own part (comments and suggestions). */
+  highlight?: boolean;
 }
 
 const TONE: Record<GlanceTone, { value: string; ring: string }> = {
@@ -57,14 +60,24 @@ export default function ReviewGlance({
               aria-selected={on}
               onClick={() => onPick(t.key)}
               className={`relative flex min-w-0 flex-col items-start gap-0.5 rounded-xl border-2 px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                on ? `${TONE[t.tone].ring} bg-muted/50 shadow-xs` : "border-border/70 bg-card hover:bg-muted/40"
+                t.highlight
+                  ? on
+                    ? "border-blue-600 bg-blue-50 shadow-xs dark:border-blue-400 dark:bg-blue-500/15"
+                    : "border-blue-300 bg-blue-50/60 hover:bg-blue-50 dark:border-blue-500/50 dark:bg-blue-500/10 dark:hover:bg-blue-500/15"
+                  : on
+                  ? `${TONE[t.tone].ring} bg-muted/50 shadow-xs`
+                  : "border-border/70 bg-card hover:bg-muted/40"
               }`}
             >
               <span className="flex w-full items-center justify-between gap-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t.label}</span>
+                <span
+                  className={`text-[11px] font-semibold uppercase tracking-wide ${t.highlight ? "text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}
+                >
+                  {t.label}
+                </span>
                 {!t.seen && <span className="h-2 w-2 rounded-full bg-blue-500" title="Not looked at yet" />}
               </span>
-              <span className={`max-w-full truncate text-lg font-bold leading-tight ${TONE[t.tone].value}`}>{t.value}</span>
+              <span className={`max-w-full truncate text-lg font-bold leading-tight ${t.highlight ? "text-blue-800 dark:text-blue-200" : TONE[t.tone].value}`}>{t.value}</span>
               <span className="max-w-full truncate text-xs text-muted-foreground">{t.sub}</span>
             </button>
           );
@@ -77,8 +90,12 @@ export default function ReviewGlance({
               key={e.key}
               type="button"
               onClick={() => onPick(e.key)}
-              className={`text-xs font-medium hover:underline ${active === e.key ? "text-foreground underline" : "text-muted-foreground"}`}
+              aria-pressed={active === e.key}
+              className={`inline-flex items-center gap-1.5 rounded-lg border-2 px-3 py-1.5 text-xs font-semibold transition-colors ${
+                active === e.key ? "border-foreground/70 bg-muted/50 text-foreground" : "border-border/70 bg-card text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+              }`}
             >
+              <ScrollText className="h-3.5 w-3.5" />
               {e.label}
             </button>
           ))}

@@ -31,6 +31,7 @@ import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGl
 import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
+import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
@@ -460,6 +461,47 @@ const CATEGORY_NAMES: Record<string, string> = {
   BRAND: "Brand",
 };
 
+/** "1:05", "65" or "0:65" as seconds; null when it isn't a time. */
+function parseTime(text: string): number | null {
+  const parts = text.trim().split(":");
+  if (parts.length > 2 || parts.some((p) => !/^\d+$/.test(p))) return null;
+  return parts.length === 2 ? Number(parts[0]) * 60 + Number(parts[1]) : Number(parts[0]);
+}
+
+/** One end of a video range: a time to type (m:ss), or "Now" for where the video is. */
+function TimeField({ label, value, now, onChange }: { label: string; value: number; now: number; onChange: (sec: number) => void }) {
+  const [text, setText] = useState(formatSec(value));
+  // Follows the value when it changes from outside (the other end, or "Now").
+  useEffect(() => setText(formatSec(value)), [value]);
+  const commit = () => {
+    const t = parseTime(text);
+    if (t == null) setText(formatSec(value));
+    else onChange(t);
+  };
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-semibold text-foreground">{label}</span>
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+        }}
+        inputMode="numeric"
+        aria-label={`${label} time`}
+        className="h-7 w-16 px-2 text-center text-xs tabular-nums"
+      />
+      <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => onChange(Math.floor(now))} title={`Use ${formatSec(now)}, where the video is`}>
+        Now
+      </Button>
+    </span>
+  );
+}
+
 /** Write a reviewer comment, pinned to a moment, a range of the video, or no time. */
 function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number; hasVideo: boolean }) {
   const { add } = useReviewComments(s.id);
@@ -525,20 +567,22 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
         )}
       </div>
       {hasVideo && mode === "RANGE" && (
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => setRange((r) => ({ start: Math.floor(now), end: Math.max(r.end, Math.floor(now) + 1) }))}>
-            Set start ({formatSec(now)})
-          </Button>
-          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() =>
-              setRange((r) => {
-                // An end before the start moves the start back, so the range is never empty.
-                const t = Math.ceil(now);
-                return t > r.start ? { start: r.start, end: t } : { start: Math.max(0, t - 3), end: Math.max(t, 1) };
-              })
-            }>
-            Set end ({formatSec(now)})
-          </Button>
-          <span className="text-muted-foreground">Play to the moment you want, then set the start or end.</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
+          <TimeField
+            label="From"
+            value={range.start}
+            now={now}
+            // A start past the end pushes the end along, so the range is never empty.
+            onChange={(t) => setRange((r) => ({ start: t, end: r.end > t ? r.end : t + 1 }))}
+          />
+          <TimeField
+            label="To"
+            value={range.end}
+            now={now}
+            // An end before the start moves the start back.
+            onChange={(t) => setRange((r) => (t > r.start ? { start: r.start, end: t } : { start: Math.max(0, t - 1), end: Math.max(t, 1) }))}
+          />
+          <span className="text-muted-foreground">Type a time (e.g. 1:05), or play to the moment and click "Now".</span>
         </div>
       )}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -547,12 +591,13 @@ function CommentComposer({ s, now, hasVideo }: { s: ReviewQueueItem; now: number
           onChange={(e) => setBody(e.target.value)}
           placeholder={
             !hasVideo || mode === "NONE"
-              ? "Add a general reviewer note..."
+              ? "Suggest a change or leave a note..."
               : mode === "POINT"
               ? `Add a reviewer note at ${formatSec(now)}... (e.g. adjust the disclaimer or cut)`
               : `Add a reviewer note for ${formatSec(range.start)} - ${formatSec(range.end)}... (e.g. cut this section)`
           }
           aria-label="Reviewer note"
+          autoFocus
           className="h-9 min-w-0 flex-1 text-sm"
         />
         <Button type="submit" className="h-9 shrink-0 gap-1.5 px-4 text-xs font-semibold" disabled={!body.trim() || add.isPending}>
@@ -584,6 +629,9 @@ function PostView({
   onPlaying,
   seek,
   onUploadScript,
+  canComment,
+  activeCommentId,
+  onActiveComment,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
@@ -601,10 +649,22 @@ function PostView({
   onPlaying: (p: boolean) => void;
   seek: (t: number) => void;
   onUploadScript?: () => void;
+  /** May leave comments, including on an area of an image. */
+  canComment: boolean;
+  activeCommentId: string | null;
+  onActiveComment: (id: string | null) => void;
 }) {
   const [imageIndex, setImageIndex] = useState(0);
   const images = s.images ?? [];
   const image = images[Math.min(imageIndex, images.length - 1)];
+  const { comments: allComments } = useReviewComments(s.id);
+  // A comment picked in the list shows its image.
+  useEffect(() => {
+    const c = allComments.find((x) => x.id === activeCommentId);
+    const at = c?.file_id ? images.findIndex((i) => i.id === c.file_id) : -1;
+    if (at >= 0) setImageIndex(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCommentId]);
   const account = s.account;
   const needBy = s.approval_needed_by ? new Date(s.approval_needed_by) : null;
   // The frame takes the uploaded video's own shape (width / height), read when it loads. Until then, a guess from
@@ -723,14 +783,23 @@ function PostView({
           </>
         ) : image ? (
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={onComment}
-              title="Click to comment on the image"
-              className="grid cursor-pointer place-items-center overflow-hidden rounded-xl bg-muted"
-            >
-              <img src={authedFileUrl(image.url)} alt={image.original_name} className="max-h-[56vh] w-auto object-contain" />
-            </button>
+            <div className="flex justify-center">
+              <ImageAnnotator
+                key={image.id}
+                imageClassName="max-h-[60vh] w-auto rounded-xl object-contain shadow-md ring-1 ring-border/60"
+                submissionId={s.id}
+                file={image}
+                canDraw={canComment}
+                activeId={activeCommentId}
+                onActive={onActiveComment}
+                onPlainClick={onComment}
+              />
+            </div>
+            {canComment && (
+              <p className="text-xs text-muted-foreground">
+                Drag over the part of the image you mean to comment on it, or use the box on the right for a general comment.
+              </p>
+            )}
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
                 {images.map((img, i) => (
@@ -797,6 +866,8 @@ function ReviewPanel({
   seen,
   picked,
   setPicked,
+  activeComment,
+  setActiveComment,
 }: {
   s: ReviewQueueItem;
   flags: Flag[];
@@ -813,6 +884,9 @@ function ReviewPanel({
   seen: Set<PanelTab>;
   picked: string | null;
   setPicked: (ruleId: string | null) => void;
+  /** The comment picked on the image, and the way to pick one from the list. */
+  activeComment: string | null;
+  setActiveComment: (id: string | null) => void;
 }) {
   const { comments } = useReviewComments(s.id);
   const { analysis: sentiment } = useSentiment(s.id);
@@ -889,11 +963,18 @@ function ReviewPanel({
     },
     {
       key: "comments",
-      label: "Comments",
-      value: comments.length ? String(comments.length) : "None",
-      sub: comments.length ? "To send with your decision" : "Add one only if it needs changes",
+      label: canComment ? "Your input" : "Comments",
+      value: canComment ? (comments.length ? `Comments (${comments.length})` : "Comments") : comments.length ? String(comments.length) : "None",
+      sub: canComment
+        ? comments.length
+          ? "Add more suggestions as needed"
+          : "Suggestions, notes, anything to change"
+        : comments.length
+        ? "Left on this post"
+        : "None were left",
       tone: "muted",
       seen: seen.has("comments"),
+      highlight: canComment,
     },
   ];
   const toLookAt = tiles.filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
@@ -1116,7 +1197,11 @@ function ReviewPanel({
         )}
 
         {tab === "comments" && canComment && (
-          <div className="rounded-xl border-2 border-blue-600 p-3">
+          <div className="rounded-xl border-2 border-blue-600 bg-blue-50/40 p-3 dark:border-blue-400 dark:bg-blue-500/10">
+            <p className="text-sm font-semibold text-foreground">Leave a comment or suggestion</p>
+            <p className="mb-2.5 text-xs text-muted-foreground">
+              Write it here, or click the part of the post it's about. The creator sees every comment with the decision.
+            </p>
             <CommentComposer s={s} now={now} hasVideo={hasVideo} />
           </div>
         )}
@@ -1129,9 +1214,11 @@ function ReviewPanel({
             canComment={canReview || isSuggester}
             currentTime={hasVideo ? now : undefined}
             onSeek={seek}
+            activeCommentId={activeComment}
+            onShowRegion={(c) => setActiveComment(activeComment === c.id ? null : c.id)}
             showHeader={false}
             showComposer={false}
-            emptyText="No comments yet. You don't need one to approve. To ask for a change, click the part of the post it is about, or write it above."
+            emptyText="No comments yet. Add a suggestion above if anything should change."
           />
         )}
 
@@ -1252,12 +1339,17 @@ function Workspace({
 }) {
   const { flags, dismissed, reviews } = useFlags(s);
   // Which panel tab is open, and which flag was picked on the post. Clicking the post drives both.
-  const [tab, setTab] = useState<PanelTab>("compliance");
-  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>(["compliance"]));
+  // Every reviewer (deciding or suggesting) opens a post in review on the comments, to leave their suggestions.
+  const { isSuggester } = useAuth();
+  const startTab: PanelTab = s.status === "IN_REVIEW" && (canReview || isSuggester) ? "comments" : "compliance";
+  const [tab, setTab] = useState<PanelTab>(startTab);
+  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>([startTab]));
   useEffect(() => {
     setSeen((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   }, [tab]);
   const [picked, setPicked] = useState<string | null>(null);
+  // The comment picked on the image or in the list, so each shows the other.
+  const [activeComment, setActiveComment] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -1293,6 +1385,12 @@ function Workspace({
           onPlaying={setPlaying}
           seek={seek}
           onUploadScript={onUploadScript}
+          canComment={(canReview || isSuggester) && s.status === "IN_REVIEW"}
+          activeCommentId={activeComment}
+          onActiveComment={(id) => {
+            setActiveComment(id);
+            if (id) setTab("comments");
+          }}
         />
       </section>
       <ResizablePanel
@@ -1319,6 +1417,8 @@ function Workspace({
           seen={seen}
           picked={picked}
           setPicked={setPicked}
+          activeComment={activeComment}
+          setActiveComment={setActiveComment}
         />
       </ResizablePanel>
     </>

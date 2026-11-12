@@ -133,13 +133,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - `ProcessLog` (export function) L11 - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 
-## src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
+## src/components/submissions/ReviewCommentsPanel.tsx (245 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `COMMENT_CATEGORIES` (export const) L11
 - `toneFor` (const) L18
 - `labelFor` (const) L19
-- `formatSec` (export const) L21
-- `CommentItem` (function) L23
-- `ReviewCommentsPanel` (export function) L90 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `formatSec` (export const) L25
+- `CommentItem` (function) L27
+- `ReviewCommentsPanel` (export function) L117 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
 ## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
@@ -149,10 +150,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
 - `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
 
-## src/components/submissions/ReviewGlance.tsx (90 lines) - The one thing to know at a glance: a score, a verdict, a count.
+## src/components/submissions/ReviewGlance.tsx (102 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L3
 - `GlanceTile` (export interface) L5
-- `ReviewGlance` (export function) L28 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
+- `ReviewGlance` (export function) L30 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
 
 ## src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - `RecheckState` (export type) L7
@@ -169,8 +170,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `pill` (const) L47
 - `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (186 lines) - revision workspace (components submissions)
-- `RevisionWorkspace` (export function) L15 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+## src/components/submissions/RevisionWorkspace.tsx (193 lines) - revision workspace (components submissions)
+- `RevisionWorkspace` (export function) L16 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) L11 - A flag's rule number; hovering it shows the rule that was broken.

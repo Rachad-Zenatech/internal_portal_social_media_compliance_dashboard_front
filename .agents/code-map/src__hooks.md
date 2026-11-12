@@ -50,9 +50,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useBatchActions` (export function) L44 - The creator's actions on a batch: details, edits to its scripts, and sending it.
 - `useReviewBatch` (export function) L88 - The reviewer's decisions on any number of a batch's scripts at once.
 
-## src/hooks/useSentiment.ts (108 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
-- `isSentimentRunning` (export function) L10
-- `useSentiment` (export function) L15 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+## src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+- `isSentimentRunning` (export function) L11
+- `useSentiment` (export function) L16 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 
 ## src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - `SubmitTarget` (interface) L10

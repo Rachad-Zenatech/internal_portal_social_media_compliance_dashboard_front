@@ -3,6 +3,7 @@ import { ArrowRight, FileText, Loader2, PenLine, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
 import { useReviewComments } from "@/hooks/useReview";
@@ -43,6 +44,8 @@ export default function RevisionWorkspace({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  // The area of the image a reviewer commented on, picked here or in the list.
+  const [activeComment, setActiveComment] = useState<string | null>(null);
 
   const open = comments.filter((c) => !c.resolved_at).length;
   const due = dueInfo(dueAt, "REVISION");
@@ -105,7 +108,9 @@ export default function RevisionWorkspace({
                 onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
               />
             ) : isImage ? (
-              <img src={authedFileUrl(mainFile!.url)} alt="" className="w-full max-h-[420px] object-contain bg-black" />
+              <div className="flex justify-center bg-black">
+                <ImageAnnotator submissionId={submissionId} file={mainFile!} canDraw={false} activeId={activeComment} onActive={setActiveComment} imageClassName="max-h-[420px] w-auto object-contain" />
+              </div>
             ) : (
               <div className="aspect-video flex items-center justify-center gap-2 text-xs text-white/70">
                 <FileText className="w-4 h-4" /> {mainFile ? mainFile.original_name : "No main file attached."}
@@ -176,6 +181,8 @@ export default function RevisionWorkspace({
             canComment
             currentTime={isVideo ? currentTime : undefined}
             onSeek={isVideo ? seek : undefined}
+            activeCommentId={activeComment}
+            onShowRegion={(c) => setActiveComment(c.id)}
             placeholder="Reply to the reviewer..."
           />
         </div>
