@@ -20,6 +20,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/common/CheckingNotice.tsx (50 lines) - What is being checked, as it reads in "Checking for …": "compliance", "sentiment", "public mood".
 - src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
 - src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
+- src/components/common/ListPager.tsx (86 lines) - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
 - src/components/compliance/BrandVoicePanel.tsx (404 lines) - brand voice panel (components compliance)
 - src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
@@ -70,7 +71,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PostStepNav.tsx (154 lines) - The steps that can't be opened yet, and why they can't.
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
-- src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- src/components/submissions/ReviewCommentsPanel.tsx (438 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- src/components/submissions/ReviewConversation.tsx (172 lines) - Sent back: the creator can reply.
 - src/components/submissions/ReviewDecisionPanel.tsx (373 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
@@ -115,6 +117,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
+- src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - src/hooks/usePublicMood.ts (153 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
 - src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.

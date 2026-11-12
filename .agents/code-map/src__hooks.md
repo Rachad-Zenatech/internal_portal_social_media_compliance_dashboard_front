@@ -21,6 +21,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useMarkAllNotificationsAsRead` (export function) L52
 - `useClearAllNotifications` (export function) L63
 
+## src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
+- `usePaged` (export function) L7 - One page of a list shown in the browser.
+
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 

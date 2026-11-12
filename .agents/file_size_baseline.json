@@ -1,0 +1,375 @@
+{
+  "limit": 500,
+  "block_limits": {
+    "jsx_return": 80,
+    "py_function": 120
+  },
+  "files": {
+    "src/components/AppShell/MessageHubStatusDropdown.tsx": {
+      "max_lines": 586,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/AppShell/TopBar.tsx": {
+      "max_lines": 597,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/script/HighlightableText.tsx": {
+      "max_lines": 541,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/script/ScriptReviewWorkspace.tsx": {
+      "max_lines": 1014,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/submissions/SentimentPanel.tsx": {
+      "max_lines": 1333,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/components/video/VideoUploadQueueDrawer.tsx": {
+      "max_lines": 514,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/context/VideoUploadQueueContext.tsx": {
+      "max_lines": 801,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/ComplianceRulesPage.tsx": {
+      "max_lines": 1702,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx": {
+      "max_lines": 1831,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
+      "max_lines": 2895,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/OAuthIntegrations.tsx": {
+      "max_lines": 801,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/Roles.tsx": {
+      "max_lines": 798,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Configurations/Users.tsx": {
+      "max_lines": 691,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/ContentCalendar/ContentCalendarPage.tsx": {
+      "max_lines": 633,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Logs/SystemLogsPage.tsx": {
+      "max_lines": 1064,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Performance/PostPerformancePage.tsx": {
+      "max_lines": 781,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/SocialMedia/SocialMediaPage.tsx": {
+      "max_lines": 831,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/NewSubmissionPage.tsx": {
+      "max_lines": 2695,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/ScriptChangesPage.tsx": {
+      "max_lines": 577,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/pages/Submissions/SubmissionsListPage.tsx": {
+      "max_lines": 1698,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    },
+    "src/types/submission.ts": {
+      "max_lines": 681,
+      "reason": "Over the limit when the check was introduced; split it when you next work on it."
+    }
+  },
+  "blocks": {
+    "src/components/AppShell/ConnectionStatusLight.tsx#ConnectionStatusLight": {
+      "max_lines": 93,
+      "kind": "jsx_return"
+    },
+    "src/components/AppShell/GlobalProgressOverlay.tsx#GlobalProgressOverlay": {
+      "max_lines": 97,
+      "kind": "jsx_return"
+    },
+    "src/components/AppShell/MessageHubStatusDropdown.tsx#MessageHubStatusDropdown": {
+      "max_lines": 154,
+      "kind": "jsx_return"
+    },
+    "src/components/AppShell/NotificationDropdown.tsx#NotificationDropdownContent": {
+      "max_lines": 112,
+      "kind": "jsx_return"
+    },
+    "src/components/AppShell/Sidebar.tsx#Sidebar": {
+      "max_lines": 160,
+      "kind": "jsx_return"
+    },
+    "src/components/AppShell/TopBar.tsx#TopBar": {
+      "max_lines": 284,
+      "kind": "jsx_return"
+    },
+    "src/components/compliance/BrandVoicePanel.tsx#BrandCard": {
+      "max_lines": 179,
+      "kind": "jsx_return"
+    },
+    "src/components/compliance/BrandVoicePanel.tsx#EditDialog": {
+      "max_lines": 87,
+      "kind": "jsx_return"
+    },
+    "src/components/dashboard/CreatorDashboard.tsx#CreatorDashboard": {
+      "max_lines": 172,
+      "kind": "jsx_return"
+    },
+    "src/components/dashboard/SuggesterDashboard.tsx#SuggesterDashboard": {
+      "max_lines": 191,
+      "kind": "jsx_return"
+    },
+    "src/components/script/BatchDetailsForm.tsx#BatchDetailsForm": {
+      "max_lines": 132,
+      "kind": "jsx_return"
+    },
+    "src/components/script/BatchItemCard.tsx#BatchItemCard": {
+      "max_lines": 184,
+      "kind": "jsx_return"
+    },
+    "src/components/script/HighlightableText.tsx#HighlightableText": {
+      "max_lines": 141,
+      "kind": "jsx_return"
+    },
+    "src/components/script/ScriptFindings.tsx#ScriptFindings": {
+      "max_lines": 147,
+      "kind": "jsx_return"
+    },
+    "src/components/script/ScriptReviewWorkspace.tsx#Editor": {
+      "max_lines": 435,
+      "kind": "jsx_return"
+    },
+    "src/components/script/ScriptReviewWorkspace.tsx#FlagCard": {
+      "max_lines": 96,
+      "kind": "jsx_return"
+    },
+    "src/components/script/ScriptStageCard.tsx#DraftBody": {
+      "max_lines": 83,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/CanvaImportDialog.tsx#CanvaImportDialog": {
+      "max_lines": 134,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/CheckCoverage.tsx#CheckCoverage": {
+      "max_lines": 113,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ComplianceStep.tsx#ComplianceStep": {
+      "max_lines": 289,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ContextReportView.tsx#ContextReportView": {
+      "max_lines": 285,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/FlagReviewControl.tsx#FlagReviewControl": {
+      "max_lines": 102,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/FormFields.tsx#MultiSelect": {
+      "max_lines": 97,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ImageAnnotator.tsx#ImageAnnotator": {
+      "max_lines": 131,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/PostSteps.tsx#PostSteps": {
+      "max_lines": 81,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ReviewCommentsPanel.tsx#CommentItem": {
+      "max_lines": 87,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ReviewCommentsPanel.tsx#ReviewCommentsPanel": {
+      "max_lines": 82,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/ReviewDecisionPanel.tsx#ReviewDecisionPanel": {
+      "max_lines": 185,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/RevisionGuide.tsx#RevisionGuide": {
+      "max_lines": 97,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/RevisionWorkspace.tsx#RevisionWorkspace": {
+      "max_lines": 128,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/SentimentPanel.tsx#DesignRest": {
+      "max_lines": 99,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/SentimentPanel.tsx#FindingCard": {
+      "max_lines": 101,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/SentimentPanel.tsx#ResultView": {
+      "max_lines": 94,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/submissionUi.tsx#SubmissionFileRow": {
+      "max_lines": 122,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/TopicTrend.tsx#TopicRow": {
+      "max_lines": 133,
+      "kind": "jsx_return"
+    },
+    "src/components/submissions/TopicTrend.tsx#TopicTrend": {
+      "max_lines": 139,
+      "kind": "jsx_return"
+    },
+    "src/components/ui/calendar.tsx#Calendar": {
+      "max_lines": 151,
+      "kind": "jsx_return"
+    },
+    "src/components/ui/date-time-picker.tsx#DateTimePicker": {
+      "max_lines": 98,
+      "kind": "jsx_return"
+    },
+    "src/components/video/VideoUploadQueueDrawer.tsx#VideoUploadQueueDrawer": {
+      "max_lines": 366,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ComplianceRulesPage.tsx#ComplianceRulesPage": {
+      "max_lines": 1143,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx#CommentComposer": {
+      "max_lines": 87,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx#ContentScreenerPage": {
+      "max_lines": 246,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx#FlaggedMoments": {
+      "max_lines": 89,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx#PostView": {
+      "max_lines": 145,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/ContentScreenerPage.tsx#ReviewPanel": {
+      "max_lines": 336,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/MessagingContextPage.tsx#MessagingContextPage": {
+      "max_lines": 256,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/VideoComplianceScannerPage.tsx#TabIcon": {
+      "max_lines": 111,
+      "kind": "jsx_return"
+    },
+    "src/pages/Compliance/VideoComplianceScannerPage.tsx#VideoComplianceScannerPage": {
+      "max_lines": 1557,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/ApprovalPaths.tsx#ApprovalPaths": {
+      "max_lines": 185,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/OAuthIntegrations.tsx#OAuthIntegrations": {
+      "max_lines": 398,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/RoleApiPermissions.tsx#RoleApiPermissions": {
+      "max_lines": 173,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/RoleGroupPermissions.tsx#RoleGroupPermissions": {
+      "max_lines": 323,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/RoleMcpToolPermissions.tsx#RoleMcpToolPermissions": {
+      "max_lines": 158,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/Roles.tsx#Roles": {
+      "max_lines": 354,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/UserRoleAssignment.tsx#UserRoleAssignment": {
+      "max_lines": 195,
+      "kind": "jsx_return"
+    },
+    "src/pages/Configurations/Users.tsx#Users": {
+      "max_lines": 273,
+      "kind": "jsx_return"
+    },
+    "src/pages/ContentCalendar/ContentCalendarPage.tsx#ContentCalendarPage": {
+      "max_lines": 290,
+      "kind": "jsx_return"
+    },
+    "src/pages/ContentCalendar/PublishDraftPage.tsx#PublishDraftPage": {
+      "max_lines": 164,
+      "kind": "jsx_return"
+    },
+    "src/pages/Dashboard/Dashboard.tsx#ReviewerDashboard": {
+      "max_lines": 310,
+      "kind": "jsx_return"
+    },
+    "src/pages/Logs/AuditLog.tsx#AuditLog": {
+      "max_lines": 205,
+      "kind": "jsx_return"
+    },
+    "src/pages/Logs/SystemLogsPage.tsx#SystemLogsPage": {
+      "max_lines": 709,
+      "kind": "jsx_return"
+    },
+    "src/pages/Performance/PostPerformancePage.tsx#PostDetail": {
+      "max_lines": 91,
+      "kind": "jsx_return"
+    },
+    "src/pages/Performance/PostPerformancePage.tsx#PostPerformancePage": {
+      "max_lines": 261,
+      "kind": "jsx_return"
+    },
+    "src/pages/Scripts/ScriptBatchPage.tsx#BatchView": {
+      "max_lines": 243,
+      "kind": "jsx_return"
+    },
+    "src/pages/SocialMedia/SocialMediaPage.tsx#SocialMediaPage": {
+      "max_lines": 479,
+      "kind": "jsx_return"
+    },
+    "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
+      "max_lines": 1426,
+      "kind": "jsx_return"
+    },
+    "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {
+      "max_lines": 402,
+      "kind": "jsx_return"
+    },
+    "src/pages/Submissions/SubmissionsListPage.tsx#PostRow": {
+      "max_lines": 81,
+      "kind": "jsx_return"
+    },
+    "src/pages/Submissions/SubmissionsListPage.tsx#ReviewCard": {
+      "max_lines": 234,
+      "kind": "jsx_return"
+    },
+    "src/pages/Submissions/SubmissionsListPage.tsx#SubmissionsListPage": {
+      "max_lines": 448,
+      "kind": "jsx_return"
+    }
+  }
+}
