@@ -49,7 +49,7 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     addJob("Checking for sentiment", wait(), {
       type: "check",
       description: "Sentiment analysis",
-      link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+      link_url: submissionId ? `/submissions/${submissionId}?step=sentiment` : undefined,
       doneMessage: "The sentiment analysis is done",
     });
   };

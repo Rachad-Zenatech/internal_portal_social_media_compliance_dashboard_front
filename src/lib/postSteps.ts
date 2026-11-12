@@ -43,7 +43,7 @@ export function isStepKey(value: string | null): value is PostStepKey {
 
 /** Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post. */
 export function resumePath(id: string, steps?: SubmissionSteps | null): string {
-  if (!steps || steps.locked || !steps.next) return `/submissions/${id}`;
+  if (!steps || steps.locked || !steps.next) return `/submissions/new?id=${id}`;
   return stepPath(id, steps.next);
 }
 
