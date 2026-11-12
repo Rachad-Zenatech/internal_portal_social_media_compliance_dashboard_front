@@ -1154,6 +1154,9 @@ export default function NewSubmissionPage() {
         duplicatesQuery.refetch();
         if (detail.code === "REPOST_CONFIRM" && detail.duplicates.repost) setRepostAsk(detail.duplicates.repost);
         else toast.error(detail.message);
+      } else {
+        // Anything else (server error, busy draft, network): say so instead of leaving the button looking dead.
+        toast.error(`Couldn't send the post for review: ${(err as Error).message}`);
       }
     } finally {
       setSubmitting(false);
