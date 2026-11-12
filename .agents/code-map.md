@@ -55,20 +55,6 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
 - `pathInView` (export function) - Whether a page belongs to a view.
 
-## src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- `NavigationSubItem` (export interface)
-- `NavigationItem` (export interface)
-- `AppView` (export type)
-- `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) - Whether a page belongs to a view.
-
-## src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- `NavigationSubItem` (export interface)
-- `NavigationItem` (export interface)
-- `AppView` (export type)
-- `navigation` (export const) - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) - Whether a page belongs to a view.
-
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function)
 - `NotificationDropdownContent` (export function)
@@ -392,7 +378,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `CommentItem` (function)
 - `ReviewCommentsPanel` (export function) - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewDecisionPanel.tsx (374 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type)
 - `toLocalInput` (const)
@@ -794,7 +780,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `GlobalProgressProvider` (export function)
 - `useGlobalProgress` (export function)
 
-## src/lib/contentCalendar.ts (427 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+## src/lib/contentCalendar.ts (428 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) - A platform's publish info with its caption limit always set.
 - `PUBLISH_INFO` (export const)
@@ -1195,7 +1181,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `openEditDialog` (fn)
     - `table` (fn)
 
-## src/pages/ContentCalendar/ContentCalendarPage.tsx (621 lines) - content calendar page (pages  content calendar)
+## src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - `SproutState` (type)
 - `stateOf` (function)
 - `View` (type)
@@ -1220,7 +1206,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
     - `send` (fn)
 - `SelectedPost` (function)
 
-## src/pages/ContentCalendar/PublishDraftPage.tsx (295 lines) - publish draft page (pages  content calendar)
+## src/pages/ContentCalendar/PublishDraftPage.tsx (304 lines) - publish draft page (pages  content calendar)
 - `platformName` (const)
 - `stepsFor` (function) - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function)
@@ -1415,7 +1401,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1662 lines) - submissions list page (pages  submissions)
+## src/pages/Submissions/SubmissionsListPage.tsx (1673 lines) - submissions list page (pages  submissions)
 - `Stage` (type) - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
 - `stageOf` (function)
 - `tabOf` (function) - The tab a post is counted under.
@@ -1565,7 +1551,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `AuditLogItem` (export interface)
 - `LoginActivityItem` (export interface)
 
-## src/types/calendar.ts (74 lines) - Approved content placed on the publishing calendar.
+## src/types/calendar.ts (75 lines) - Approved content placed on the publishing calendar.
 - `CalendarItem` (export interface) - Approved content placed on the publishing calendar.
 - `PublishMode` (export type) - What a platform's API lets us create from an approved post.
 - `PublishStyle` (export type) - How the publish step is worded on screen.

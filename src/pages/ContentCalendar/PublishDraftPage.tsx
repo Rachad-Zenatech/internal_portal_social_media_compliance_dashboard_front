@@ -49,7 +49,7 @@ export default function PublishDraftPage() {
   const published = usePublished();
   const record = published[publishKey(itemId, platform)];
 
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
   const isSubmission = itemId.startsWith("sub-");
   const { data: submissions = [], isLoading } = useQuery({
@@ -62,6 +62,9 @@ export default function PublishDraftPage() {
     const s = submissions.find((x) => `sub-${x.id}` === itemId);
     return s ? fromSubmission(s) ?? undefined : undefined;
   }, [isSubmission, itemId, submissions]);
+
+  const rawSub = isSubmission ? submissions.find((x) => "sub-" + x.id === itemId) : null;
+  const isCreator = !isSubmission || (rawSub ? Boolean(user && rawSub.created_by === user.id) : true);
 
   const info = publishInfo(platform);
   const name = platformName(platform);
@@ -273,10 +276,16 @@ export default function PublishDraftPage() {
                     ))}
                   </ol>
                 )}
-                <Button className="w-full gap-1.5 text-xs font-semibold" disabled={running || overLimit} onClick={start}>
-                  {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {running ? "Working..." : info.action}
-                </Button>
+                {isCreator ? (
+                  <Button className="w-full gap-1.5 text-xs font-semibold" disabled={running || overLimit} onClick={start}>
+                    {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {running ? "Working..." : info.action}
+                  </Button>
+                ) : (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200">
+                    This post is approved. As a reviewer, publishing is reserved for the post's creator.
+                  </div>
+                )}
                 {overLimit && <p className="text-[11px] text-red-700 dark:text-red-300">Shorten the caption for {name} before publishing.</p>}
                 <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />

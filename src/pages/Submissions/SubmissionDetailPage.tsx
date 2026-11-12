@@ -515,9 +515,9 @@ export default function SubmissionDetailPage() {
           <Button size="sm" variant="outline" asChild className="text-xs">
             <Link to="/content-calendar">Open calendar</Link>
           </Button>
-          {s.platforms[0] && (
+          {s.platforms[0] && isCreator && (
             <Button size="sm" asChild className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-              <Link to={`/content-calendar/publish/sub-${s.id}/${s.platforms[0]}`}>Publish</Link>
+              <Link to={`/content-calendar/publish/sub-${s.id}/${s.platforms[0]}`}>Publish post</Link>
             </Button>
           )}
           <ApprovalActions target={s} isCreator={isCreator} />

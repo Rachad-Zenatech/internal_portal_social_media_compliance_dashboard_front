@@ -157,7 +157,7 @@ const BAR_FILTER =
 
 export default function ContentCalendarPage() {
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   // Approved content is company-wide for people who can see everyone's content; otherwise their own.
   const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
@@ -513,6 +513,7 @@ export default function ContentCalendarPage() {
               state={stateOf(selected, sent, now)}
               record={sent[selected.id]}
               brand={brandName(selected.brand_code)}
+              isCreator={!selected.submission_id || Boolean(user && selected.created_by === user.id) || !isReviewer}
               onSend={() => send(selected)}
               onPublishDirect={() => navigate(`/content-calendar/publish/${selected.id}/${selected.platforms[0]}`)}
             />
@@ -530,6 +531,7 @@ function SelectedPost({
   state,
   record,
   brand,
+  isCreator,
   onSend,
   onPublishDirect,
 }: {
@@ -537,6 +539,7 @@ function SelectedPost({
   state: SproutState;
   record?: SproutRecord;
   brand: string | null;
+  isCreator: boolean;
   onSend: () => void;
   onPublishDirect: () => void;
 }) {
@@ -593,15 +596,23 @@ function SelectedPost({
         </div>
         <div className={`flex flex-col gap-2.5 rounded-lg p-3 ${st.box}`}>
           <p className="text-[13px] text-foreground/90">{help}</p>
-          {(state === "NOT_SENT" || state === "MISSED") && (
-            <Button className="h-9 gap-1.5 bg-blue-700 text-white hover:bg-blue-800" onClick={onSend}>
-              <Send className="w-4 h-4" /> {state === "MISSED" ? "Send to Sprout now" : "Send to Sprout and schedule"}
-            </Button>
-          )}
-          {(state === "SCHEDULED" || state === "PUBLISHED") && (
-            <Button variant="outline" className="h-9 gap-1.5" disabled title="Available once the Sprout Social API is connected">
-              <ExternalLink className="w-4 h-4" /> Open in Sprout Social
-            </Button>
+          {isCreator ? (
+            <>
+              {(state === "NOT_SENT" || state === "MISSED") && (
+                <Button className="h-9 gap-1.5 bg-blue-700 text-white hover:bg-blue-800" onClick={onSend}>
+                  <Send className="w-4 h-4" /> {state === "MISSED" ? "Send to Sprout now" : "Send to Sprout and schedule"}
+                </Button>
+              )}
+              {(state === "SCHEDULED" || state === "PUBLISHED") && (
+                <Button variant="outline" className="h-9 gap-1.5" disabled title="Available once the Sprout Social API is connected">
+                  <ExternalLink className="w-4 h-4" /> Open in Sprout Social
+                </Button>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Approved · ready for the post's creator to publish or schedule.
+            </p>
           )}
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
@@ -610,9 +621,11 @@ function SelectedPost({
               Open details
             </Link>
           )}
-          <button type="button" onClick={onPublishDirect} className="font-medium text-muted-foreground hover:text-foreground hover:underline">
-            Publish on each platform without Sprout
-          </button>
+          {isCreator && (
+            <button type="button" onClick={onPublishDirect} className="font-medium text-muted-foreground hover:text-foreground hover:underline">
+              Publish on each platform without Sprout
+            </button>
+          )}
         </div>
       </div>
     </div>

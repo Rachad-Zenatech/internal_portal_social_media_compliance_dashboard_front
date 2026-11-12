@@ -13,8 +13,6 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/AppShell/GlobalProgressOverlay.tsx (192 lines) - Match notification-backed background jobs (same pattern as Finance application)
 - src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
 - src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
-- src/components/AppShell/Navigation.tsx (141 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (260 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
@@ -54,7 +52,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/PostStepNav.tsx (154 lines) - The steps that can't be opened yet, and why they can't.
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/ReviewCommentsPanel.tsx (204 lines) - review comments panel (components submissions)
-- src/components/submissions/ReviewDecisionPanel.tsx (374 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+- src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (90 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
@@ -105,7 +103,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/lib/AuthContext.tsx (332 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (140 lines) - global progress context (lib)
-- src/lib/contentCalendar.ts (427 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+- src/lib/contentCalendar.ts (428 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
@@ -134,8 +132,8 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (621 lines) - content calendar page (pages  content calendar)
-- src/pages/ContentCalendar/PublishDraftPage.tsx (295 lines) - publish draft page (pages  content calendar)
+- src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
+- src/pages/ContentCalendar/PublishDraftPage.tsx (304 lines) - publish draft page (pages  content calendar)
 - src/pages/Dashboard/Dashboard.tsx (453 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
@@ -146,7 +144,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Submissions/ScriptChangesPage.tsx (549 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionDetailPage.tsx (666 lines) - submission detail page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1662 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1673 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
@@ -160,7 +158,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/services/submissionService.ts (292 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
-- src/types/calendar.ts (74 lines) - Approved content placed on the publishing calendar.
+- src/types/calendar.ts (75 lines) - Approved content placed on the publishing calendar.
 - src/types/canva.ts (20 lines) - The user's Canva account.
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
 - src/types/context.ts (26 lines) - Kinds of Messaging Context the content analysis is given.

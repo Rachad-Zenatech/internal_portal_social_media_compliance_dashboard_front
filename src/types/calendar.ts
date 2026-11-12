@@ -29,6 +29,7 @@ export interface CalendarItem {
   /** The rulebook score it was approved with. */
   score?: number | null;
   approved_by?: string | null;
+  created_by?: string | null;
   /** The approved submission this item comes from (absent for sample items). */
   submission_id?: string;
 }
