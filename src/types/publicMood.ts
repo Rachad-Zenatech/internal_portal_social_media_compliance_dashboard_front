@@ -38,6 +38,8 @@ export interface MatchedTopic {
   /** How close the post is to the topic in meaning (0-1), when matched by meaning too. */
   similarity?: number | null;
   matched_by: "KEYWORD" | "MEANING" | "BOTH";
+  /** own: searched from this post. context: the wider topic (the vibe; not part of the post's recommendation). */
+  kind?: "own" | "context" | "other";
   snapshot?: TopicSnapshot | null;
 }
 
@@ -68,6 +70,13 @@ export interface PublicMoodSummary {
   my_verdict?: MoodVerdict | null;
 }
 
+export interface ProcessStep {
+  title: string;
+  status: "ok" | "warn" | "none" | "info";
+  summary: string;
+  lines: string[];
+}
+
 export interface PublicMood {
   source: string;
   is_mock: boolean;
@@ -78,6 +87,8 @@ export interface PublicMood {
   /** Topics someone said this post isn't about; left out until put back. */
   dismissed: DismissedTopic[];
   summary?: PublicMoodSummary | null;
+  /** How this was made, step by step. */
+  process?: ProcessStep[];
 }
 
 export type MoodVerdict = "USEFUL" | "NOT_USEFUL";

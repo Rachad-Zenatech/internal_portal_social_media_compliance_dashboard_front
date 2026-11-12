@@ -195,6 +195,9 @@ function buildAllOfflineFallback(previous?: MessageHubStatusResponse): MessageHu
   };
 }
 
+const HUB_POLL_WITH_STREAM_MS = 60_000;
+const HUB_POLL_WITHOUT_STREAM_MS = 10_000;
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 1800): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -207,6 +210,8 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
 
 export function MessageHubStatusDropdown({ className = "" }: { className?: string }) {
   const [isTesting, setIsTesting] = useState(false);
+  // While the live stream is connected it pushes every change, so polling is only a slow safety net.
+  const [streamOpen, setStreamOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, refetch } = useQuery<MessageHubStatusResponse>({
@@ -256,7 +261,9 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
       return buildAllOfflineFallback(previous);
     },
     staleTime: 1500,
-    refetchInterval: 3000,
+    // Was every 3s on every page (each poll a request, plus up to three to other portals when this backend failed).
+    refetchInterval: streamOpen ? HUB_POLL_WITH_STREAM_MS : HUB_POLL_WITHOUT_STREAM_MS,
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     retry: false,
   });
@@ -265,8 +272,13 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
   useEffect(() => {
     const streamUrl = `${BASE_URL || ""}/api/message-hub/stream`;
     let es: EventSource | null = null;
+    let open = false;
     try {
       es = new EventSource(streamUrl, { withCredentials: true });
+      es.onopen = () => {
+        open = true;
+        setStreamOpen(true);
+      };
       es.onmessage = (evt) => {
         try {
           const payload = JSON.parse(evt.data) as MessageHubStatusResponse;
@@ -278,14 +290,18 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
         }
       };
       es.onerror = () => {
-        // When This App's server stops, SSE drops immediately — trigger refetch to flip This App to OFFLINE
-        refetch();
+        // When This App's server stops, SSE drops immediately — refetch once to flip This App to OFFLINE. Not on
+        // every failed reconnect (the browser retries every few seconds), which only repeated the same request.
+        if (open) refetch();
+        open = false;
+        setStreamOpen(false);
       };
     } catch {
       // EventSource not available
     }
     return () => {
       if (es) es.close();
+      setStreamOpen(false);
     };
   }, [queryClient, refetch]);
 

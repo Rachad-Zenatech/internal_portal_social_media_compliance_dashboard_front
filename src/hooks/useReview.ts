@@ -110,7 +110,7 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
     onSuccess: (_, data) => {
       invalidateSubmission(queryClient, submissionId);
       if (data.decision === "REQUEST_CHANGES") toast.success(`${referenceCode} sent back with your comments. The creator has been notified.`);
-      else if (data.publish_now) toast.success(`${referenceCode} approved. Opening the publish page...`);
+      else if (data.publish_now) toast.success(`${referenceCode} approved and ready for the creator to publish.`);
       else toast.success(`${referenceCode} approved and added to the content calendar.`);
     },
     onError: (err) => toast.error(`Couldn't save your decision: ${(err as Error).message}`),

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
 
@@ -84,7 +84,6 @@ export default function ReviewDecisionPanel({
   // A check that wasn't read in full has no score to hold to the minimum, so nothing is approved on it.
   const checkNotReady = Boolean(target.ai_unavailable || target.analysis_pending);
   const mayApprove = target.can_approve !== false && openCritical === 0 && !scoreTooLow && !checkNotReady;
-  const navigate = useNavigate();
   const decide = useReviewDecision(target.id, target.reference_code);
   const { creatorView } = useAuth();
   const { comments } = useReviewComments(target.id);
@@ -137,7 +136,6 @@ export default function ReviewDecisionPanel({
         {
           onSuccess: () => {
             setMode(null);
-            if (target.platforms[0]) navigate(`/content-calendar/publish/sub-${target.id}/${target.platforms[0]}`);
           },
         }
       );
@@ -211,21 +209,21 @@ export default function ReviewDecisionPanel({
       ) : bar ? (
         // The main action gets its own row so no label is cut off, however narrow the side panel is.
         <div className="grid grid-cols-2 gap-2">
-          <Button className="col-span-2 h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
-            Approve & publish
+          <Button className="col-span-2 h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("schedule")} disabled={!mayApprove}>
+            Approve content
           </Button>
           <Button variant="outline" className={barOutline} onClick={() => start("changes")}>
             Request changes
           </Button>
-          <Button variant="outline" className={barOutline} onClick={() => start("schedule")} disabled={!mayApprove}>
-            Add to calendar
+          <Button variant="outline" className={barOutline} onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
+            Approve & post now
           </Button>
         </div>
       ) : (
       // Three across when the panel is wide enough; otherwise the main action takes its own row.
       <div className="grid grid-cols-2 @lg:grid-cols-3 gap-2">
         <Button size="sm" className="col-span-2 @lg:col-span-1 text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
-          <CalendarPlus className="w-3.5 h-3.5" /> Approve & schedule
+          <CalendarPlus className="w-3.5 h-3.5" /> Approve content
         </Button>
         <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
           <Send className="w-3.5 h-3.5" /> Approve & post now
@@ -245,14 +243,14 @@ export default function ReviewDecisionPanel({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base">
-              {mode === "changes" ? `Send ${target.reference_code} back for changes` : mode === "now" ? `Approve ${target.reference_code} and post now` : `Approve ${target.reference_code} for the calendar`}
+              {mode === "changes" ? `Send ${target.reference_code} back for changes` : mode === "now" ? `Approve ${target.reference_code} for immediate publish` : `Approve ${target.reference_code} for creator to publish`}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {mode === "changes"
                 ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
                 : mode === "now"
-                ? "It's approved and you go straight to the publish page for its platform."
-                : "It's approved and goes on the content calendar for this time. You or the team publish it from there."}
+                ? "It's approved and marked ready for the creator to publish immediately."
+                : "It's approved and placed on the content calendar for the creator to publish."}
             </DialogDescription>
           </DialogHeader>
 
@@ -326,7 +324,7 @@ export default function ReviewDecisionPanel({
               onClick={confirm}
             >
               {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "changes" ? "Send back for changes" : mode === "now" ? "Approve & open publish page" : "Approve & schedule"}
+              {mode === "changes" ? "Send back for changes" : mode === "now" ? "Approve for immediate publish" : "Approve & send to creator"}
             </Button>
           </DialogFooter>
         </DialogContent>

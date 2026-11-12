@@ -5,6 +5,7 @@ import { ChevronDown, Flame, Globe2, Loader2, RefreshCw, ShieldAlert, TrendingDo
 import { Button } from "@/components/ui/button";
 
 import { SpikeBadge } from "@/components/submissions/MoodVisuals";
+import { ProcessLog } from "@/components/submissions/ProcessLog";
 import { useMarketTrends, useScrapeTwitter } from "@/hooks/usePublicMood";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import type { MatchedTopic, PublicMood, PublishingRecommendation, XTrendOpportunity } from "@/types/publicMood";
@@ -44,7 +45,8 @@ export function overallPostDecision(mood?: PublicMood | null): {
         "Based on live market & news sentiment for the topics in this post.",
     };
   }
-  const snaps = mood.topics.filter((t) => t.snapshot).map((t) => ({ name: t.name, s: t.snapshot! }));
+  // The wider topic around the post is shown, but only the post's own and company topics decide its recommendation.
+  const snaps = mood.topics.filter((t) => t.snapshot && t.kind !== "context").map((t) => ({ name: t.name, s: t.snapshot! }));
   if (snaps.length === 0) return null;
   const holds = snaps.filter((x) => x.s.recommendation === "HOLD");
   if (holds.length > 0) {
@@ -57,7 +59,7 @@ export function overallPostDecision(mood?: PublicMood | null): {
   if (waits.length > 0) {
     return {
       recommendation: "WAIT",
-      reason: `Mixed sentiment on ${waits.map((w) => w.name).join(", ")}. Review angle and timing before posting.`,
+      reason: `${waits.map((w) => w.name).join(", ")}: ${waits[0].s.recommendation_reason || "not enough positive evidence yet"}`,
     };
   }
   return {
@@ -71,7 +73,12 @@ const compact = new Intl.NumberFormat(undefined, { notation: "compact", maximumF
 function TopicRow({ t, onDismiss, busy }: { t: MatchedTopic; onDismiss?: () => void; busy: boolean }) {
   const [open, setOpen] = useState(false);
   const s = t.snapshot;
-  const how = t.matched_by === "MEANING" ? "About it without naming it" : `Mentions ${t.matched_terms.map((m) => `"${m}"`).join(", ")}`;
+  const how =
+    t.kind === "context"
+      ? `The wider topic around this post: what the news and public are saying about it`
+      : t.matched_by === "MEANING"
+      ? "About it without naming it"
+      : `Mentions ${t.matched_terms.map((m) => `"${m}"`).join(", ")}`;
   // "Around this topic: drone inspection" reads as just the topic.
   const label = t.name.replace(/^around this topic:\s*/i, "");
   const rec = s?.recommendation ? REC_BADGE[s.recommendation] : null;
@@ -111,41 +118,80 @@ function TopicRow({ t, onDismiss, busy }: { t: MatchedTopic; onDismiss?: () => v
       </div>
       <div className="mt-1.5 flex items-center gap-2">
         {s ? (
-          <>
-            <div
-              className="flex h-2 flex-1 min-w-12 overflow-hidden rounded-full bg-muted"
-              role="img"
-              aria-label={`${s.positive_pct}% positive, ${s.neutral_pct}% neutral, ${s.negative_pct}% negative`}
-            >
-              <span className="bg-emerald-500" style={{ width: `${s.positive_pct}%` }} />
-              <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${s.neutral_pct}%` }} />
-              <span className="bg-red-500" style={{ width: `${s.negative_pct}%` }} />
-            </div>
-            <span className="shrink-0 tabular-nums text-[11px]">
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="tabular-nums text-[11px]">
               <span className="text-emerald-700 dark:text-emerald-300">{s.positive_pct}%+</span>{" "}
               <span className="text-red-700 dark:text-red-300">{s.negative_pct}%−</span>
             </span>
             {rec && (
               <span
-                className={`shrink-0 rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${rec.cls}`}
+                className={`rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide ${rec.cls}`}
                 title={s.recommendation_reason || undefined}
               >
                 {rec.label}
               </span>
             )}
             {s.volume_change_pct != null && (
-              <span className="hidden @sm:inline-flex shrink-0 items-center gap-0.5 tabular-nums text-[11px] text-muted-foreground" title={`${compact.format(s.volume)} mentions, last ${s.window_days} days`}>
+              <span className="hidden @sm:inline-flex items-center gap-0.5 tabular-nums text-[11px] text-muted-foreground" title={`${compact.format(s.volume)} mentions, last ${s.window_days} days`}>
                 {s.volume_change_pct >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {s.volume_change_pct > 0 ? "+" : ""}
                 {s.volume_change_pct}%
               </span>
             )}
             {s.is_spike && <SpikeBadge />}
-          </>
+            {s.top_posts.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-expanded={open}
+                title={open ? "Hide recent posts about this topic" : "Show recent posts about this topic"}
+              >
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+              </button>
+            )}
+            {onDismiss && (
+              <button
+                type="button"
+                onClick={onDismiss}
+                disabled={busy}
+                className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                title="Not what this post is about: leave this topic out"
+                aria-label={`${t.name} isn't what this post is about`}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         ) : (
-          <span className="flex-1 text-[11px] text-muted-foreground">No data right now</span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">No data right now</span>
+            {onDismiss && (
+              <button
+                type="button"
+                onClick={onDismiss}
+                disabled={busy}
+                className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                title="Not what this post is about: leave this topic out"
+                aria-label={`${t.name} isn't what this post is about`}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         )}
       </div>
+      {s && (
+        <div
+          className="mt-1.5 flex h-2 w-full overflow-hidden rounded-full bg-muted"
+          role="img"
+          aria-label={`${s.positive_pct}% positive, ${s.neutral_pct}% neutral, ${s.negative_pct}% negative`}
+        >
+          <span className="bg-emerald-500" style={{ width: `${s.positive_pct}%` }} />
+          <span className="bg-slate-300 dark:bg-slate-600" style={{ width: `${s.neutral_pct}%` }} />
+          <span className="bg-red-500" style={{ width: `${s.negative_pct}%` }} />
+        </div>
+      )}
       {open && s && (
         <ul className="mt-2 ml-1 space-y-1.5">
           {s.recommendation_reason && (
@@ -281,7 +327,7 @@ export default function TopicTrend({
   const handleScrape = () => {
     const promise = scrapeTwitter.mutateAsync();
     addJob("Scrape X (Twitter) & News", promise, {
-      description: "Scraping live X posts & VADER sentiment...",
+      description: "Searching news and X from your drafts' content, then re-scoring public mood (a few minutes)...",
       type: "upload",
       link_url: submissionId ? `/submissions/new?id=${submissionId}` : undefined,
     });
@@ -329,7 +375,7 @@ export default function TopicTrend({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground">
-          VADER sentiment on scraped news & X posts over the last week
+          Sentiment on scraped news & X posts over the last week
           {oldest ? ` · updated ${formatDistanceToNow(new Date(oldest), { addSuffix: true })}` : ""}
         </p>
       </div>
@@ -347,6 +393,8 @@ export default function TopicTrend({
           <span className="font-semibold">{decision.recommendation}:</span> {decision.reason}
         </div>
       )}
+
+      <ProcessLog steps={mood?.process} />
 
       {isLoading ? (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -111,9 +111,33 @@ export function useScrapeTwitter(submissionId?: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => submissionService.triggerScrapeTwitter(),
-    onSuccess: (res) => {
-      toast.success(res?.message || "Started live X scrape & sentiment analysis.");
+    // The server scrapes in the background, so wait for it to finish before refreshing: refreshing straight
+    // after "started" just shows the old data again.
+    mutationFn: async () => {
+      try {
+        await submissionService.triggerScrapeTwitter();
+      } catch (err) {
+        // 409: one is already running (started elsewhere): wait for that one instead.
+        if (!/already running/i.test((err as Error).message)) throw err;
+      }
+      const deadline = Date.now() + 12 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const status = await submissionService.scrapeStatus();
+        if (status.state === "failed") throw new Error(status.error || "The scrape failed.");
+        if (status.state === "finished") return status;
+      }
+      throw new Error("The scrape is still running after 12 minutes; check again later.");
+    },
+    onSuccess: (status) => {
+      const sources = status.collection?.sources ?? [];
+      const drafts = sources.filter((s) => s.kind === "post:news");
+      const found = sources.reduce((n, s) => n + (s.items || 0), 0);
+      toast.success(
+        `Scrape finished: ${found} items from ${sources.length} searches` +
+          (drafts.length ? ` (${drafts.length} from this app's drafts)` : " (no draft was searched)") +
+          `, ${status.collection?.topics ?? 0} topics.`,
+      );
       // Invalidate both current submission mood and global market trends
       queryClient.invalidateQueries({ queryKey: ["listening-trends"] });
       queryClient.invalidateQueries({ queryKey: ["listening-topics"] });
@@ -122,7 +146,7 @@ export function useScrapeTwitter(submissionId?: string | null) {
       }
     },
     onError: (err) => {
-      toast.error(`Couldn't trigger Twitter scraper: ${(err as Error).message}`);
+      toast.error(`Scrape failed: ${(err as Error).message}`);
     },
   });
 }

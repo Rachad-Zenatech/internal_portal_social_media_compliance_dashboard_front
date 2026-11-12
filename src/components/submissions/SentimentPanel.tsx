@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -39,6 +40,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import TopicTrend from "@/components/submissions/TopicTrend";
+import ContextReportView from "@/components/submissions/ContextReportView";
 import { trendSignals } from "@/components/submissions/topicTrendSignals";
 import { usePublicMood } from "@/hooks/usePublicMood";
 import type { PublicMood } from "@/types/publicMood";
@@ -726,14 +728,19 @@ const READING: Record<string, { label: string; cls: string }> = {
 
 /** Audiences, the controversy dial and what was flagged, each in its own card, as in the design. */
 function DesignRest({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: number) => void; ctx?: FindingContext }) {
+  // A report on the messaging context has the audience readings in it; older analyses keep their own section.
+  const hasReport = Boolean(r.context_report);
   const c = r.controversy;
   const findings = bySeverity(r.findings);
   return (
     <>
-      {(r.audience_interpretations.length > 0 || (c.applies && c.level)) && (
-        <section className={`${CARD} flex flex-col gap-3.5`}>
-          <h2 className="text-lg font-bold text-foreground">How each audience may read it</h2>
-          {r.audience_interpretations.length > 0 && (
+      {((!hasReport && r.audience_interpretations.length > 0) || (c.applies && c.level)) && (
+        <details className={`${CARD} group flex flex-col gap-3.5`}>
+          <summary className="cursor-pointer list-none text-lg font-bold text-foreground marker:hidden">
+            {hasReport ? "Controversy" : "How each audience may read it"}
+            <span className="ml-2 text-xs font-normal text-muted-foreground group-open:hidden">Show</span>
+          </summary>
+          {!hasReport && r.audience_interpretations.length > 0 && (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {r.audience_interpretations.map((ai, i) => {
                 const reading = READING[ai.concern_level] ?? READING.LOW;
@@ -800,7 +807,7 @@ function DesignRest({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: num
               {c.explanation && <p className="text-xs leading-relaxed text-muted-foreground">{c.explanation}</p>}
             </div>
           ) : null}
-        </section>
+        </details>
       )}
       {r.precedents && r.precedents.length > 0 && <PrecedentsView precedents={r.precedents} />}
 
@@ -872,6 +879,7 @@ export default function SentimentPanel({
   beforeAnalyse,
   showTopicTrends = true,
   design = false,
+  post,
   className = "",
 }: {
   submissionId?: string | null;
@@ -889,6 +897,8 @@ export default function SentimentPanel({
   showTopicTrends?: boolean;
   /** The editor's layout: cards and a side column, as in the design. */
   design?: boolean;
+  /** The post itself (picture and captions), shown with the messaging context report. */
+  post?: ReactNode;
   className?: string;
 }) {
   const { analysis, isLoading, run, scheduleAfterReset, rate, saveTestCase, usage } = useSentiment(submissionId, version);
@@ -1125,6 +1135,16 @@ export default function SentimentPanel({
             )}
             {statusChain}
           </section>
+          {result?.context_report ? (
+            <ContextReportView
+              report={result.context_report}
+              visual={result.visual_alignment}
+              entries={analysis?.context_entries ?? []}
+              post={post}
+            />
+          ) : (
+            post
+          )}
           {result && <DesignRest r={result} onSeek={onSeek} ctx={ctx} />}
         </div>
         <DesignAside analysis={analysis} result={result} />

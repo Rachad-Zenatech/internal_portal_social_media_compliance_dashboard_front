@@ -43,6 +43,33 @@ export interface SentimentPrecedent {
   same_post?: boolean;
 }
 
+/** The Messaging Context entry a judgement came from. */
+export interface EntryRef {
+  ref: string;
+  entry_id?: string | null;
+  title?: string | null;
+}
+
+export interface VoiceLine extends EntryRef {
+  quote: string;
+  why: string;
+  rule?: string | null;
+  rewrite?: string | null;
+}
+
+/** A Messaging Context entry and what the analysis did with it (the transparency table). */
+export interface ContextUse {
+  id: string;
+  title: string;
+  kind: string;
+  applies_to: string[];
+  as_of?: string | null;
+  source?: string | null;
+  source_url?: string | null;
+  status: "USED" | "USED_OLD" | "NOT_APPLIED";
+  note?: string | null;
+}
+
 export interface SentimentResult {
   summary: string;
   overall_assessment: SentimentAssessment;
@@ -62,6 +89,35 @@ export interface SentimentResult {
   };
   findings: SentimentFinding[];
   information_gaps: string[];
+  /** How the post measures against its Messaging Context, kind by kind; each judgement names its entry. */
+  context_report?: {
+    brand_voice: {
+      verdict: "ON_VOICE" | "MOSTLY_ON_VOICE" | "OFF_VOICE" | "NO_GUIDE";
+      headline: string;
+      summary: string;
+      follows: VoiceLine[];
+      drifts: VoiceLine[];
+    };
+    facts: {
+      verdict: "CHECKS_OUT" | "NEEDS_FIX" | "UNVERIFIED" | "NO_CLAIMS";
+      summary: string;
+      claims: (EntryRef & { claim: string; result: "MATCHES" | "CONFLICTS" | "NO_FACT"; note: string })[];
+      fix?: string | null;
+    };
+    platform_norms: {
+      verdict: "FITS" | "MOSTLY_FITS" | "NEEDS_WORK" | "NO_NORMS";
+      summary: string;
+      checks: (EntryRef & { aspect: string; norm: string; observation: string; status: "FITS" | "ADJUST" })[];
+    };
+    audiences: {
+      verdict: "RESONATES" | "MIXED" | "CAUTIOUS" | "NO_PROFILES";
+      summary: string;
+      readings: (EntryRef & { audience: string; reading: string; reaction: "RESONATES" | "NEUTRAL" | "CAUTIOUS" | "NEGATIVE" })[];
+    };
+    gaps: string[];
+  } | null;
+  /** The graphic against the captions (null without an image or video). */
+  visual_alignment?: { verdict: "ALIGNED" | "PARTIAL" | "MISMATCH"; explanation: string; mismatches: string[] } | null;
   /** How the video sounds (null without a video). */
   audio?: {
     voiceover?: string | null;
@@ -93,6 +149,8 @@ export interface SentimentAnalysis {
   is_current: boolean;
   /** The Messaging Context entries it was given (e.g. "LinkedIn", "Investors"). */
   context_used?: string[];
+  /** The entries it was given (scope, date, source; flagged when old) and those that didn't apply. */
+  context_entries?: ContextUse[];
   /** Shaun's or investor-facing content, analysed with the stronger model. */
   high_stakes?: boolean;
   /** A video was analysed, so findings with a time can show that frame. */

@@ -825,9 +825,20 @@ function ReviewCard({
     );
   } else if (summary.status === "APPROVED" && (mine || summary.can_manage_approval)) {
     footerTitle = "Approved";
-    footerNote = "It's on the content calendar. Reschedule it or reopen it if something changes.";
+    footerNote = mine
+      ? "Your post is approved! You can now publish it directly to your channels or view it on the calendar."
+      : "It's on the content calendar. Reschedule it or reopen it if something changes.";
     actions = (
       <div className="flex flex-wrap justify-end gap-2">
+        {mine && summary.platforms[0] && (
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => navigate(`/content-calendar/publish/sub-${summary.id}/${summary.platforms[0]}`)}
+          >
+            <Send className="w-3.5 h-3.5" /> Publish post
+          </Button>
+        )}
         <ApprovalActions target={sub ?? summary} isCreator={mine} buttonClassName="h-9 text-xs font-semibold gap-1.5" />
       </div>
     );
