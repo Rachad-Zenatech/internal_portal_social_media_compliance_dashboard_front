@@ -1,5 +1,6 @@
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 import type { ScriptStatus } from "@/types/script";
+import type { SubmissionSourceFields } from "@/types/sourceLink";
 
 /** AD: paid social ad. Ad-specific fields and rules are still to be defined. */
 export type ContentType = "VIDEO" | "SOCIAL_POST" | "CAROUSEL" | "IMAGE" | "BLOG" | "AD";
@@ -10,7 +11,6 @@ export interface BrandOption {
   code: string;
   name: string;
 }
-
 export interface AccountOption {
   id: string;
   label: string;
@@ -153,7 +153,7 @@ export interface AnalysisProgress {
   from_history?: boolean;
 }
 
-export interface Submission {
+export interface Submission extends SubmissionSourceFields {
   /** The saved check was made before the rulebook last changed. */
   check_outdated?: boolean;
   id: string;
@@ -318,7 +318,7 @@ export interface SubmissionSummary {
   can_manage_approval?: boolean;
 }
 
-export interface SubmissionUpdate {
+export interface SubmissionUpdate extends SubmissionSourceFields {
   title?: string;
   content_type?: ContentType;
   brand_code?: string;

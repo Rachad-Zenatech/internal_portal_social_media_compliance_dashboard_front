@@ -146,11 +146,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type) L218
 
+## src/types/sourceLink.ts (29 lines) - source link (types)
+- `SubmissionSourceFields` (export interface) L1
+- `SourceLinkClaim` (export interface) L5
+- `SourceLinkCheck` (export interface) L15
+
 ## src/types/submission.ts (682 lines) - AD: paid social ad.
-- `ContentType` (export type) L5 - AD: paid social ad.
-- `SubmissionFileKind` (export type) L6
-- `SubmissionStatus` (export type) L7
-- `BrandOption` (export interface) L9
+- `ContentType` (export type) L6 - AD: paid social ad.
+- `SubmissionFileKind` (export type) L7
+- `SubmissionStatus` (export type) L8
+- `BrandOption` (export interface) L10
 - `AccountOption` (export interface) L14
 - `SubmissionOptions` (export interface) L26
 - `ReviewerOption` (export interface) L37 - Someone a creator can send content to for review: a reviewer or a super admin.
