@@ -16,17 +16,19 @@ import {
   Search,
   SkipBack,
   SkipForward,
-  SlidersHorizontal,
-  X,
 } from "lucide-react";
 
+import {
+  ActiveFilterChips,
+  NO_FILTERS,
+  QueueFiltersButton,
+  platformName,
+  type Filters,
+  type SortOrder,
+} from "@/components/compliance/screener/QueueFilters";
 import { Button } from "@/components/ui/button";
-import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
@@ -91,36 +93,8 @@ const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
   AD: { label: "Paid Ad", cls: "bg-muted text-muted-foreground" },
 };
 
-type DueFilter = "any" | "overdue" | "today" | "week" | "none";
-type CheckFilter = "any" | "failing" | "critical" | "passing";
-interface Filters {
-  /** Brand codes and platforms to show; none picked means all. */
-  brands: string[];
-  platforms: string[];
-  due: DueFilter;
-  check: CheckFilter;
-}
-const NO_FILTERS: Filters = { brands: [], platforms: [], due: "any", check: "any" };
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
-const DUE_LABELS: Record<DueFilter, string> = {
-  any: "Any deadline",
-  overdue: "Overdue",
-  today: "Due today",
-  week: "Due this week",
-  none: "No deadline",
-};
-// The list is ordered by when each item was sent for review (deadlines have their own filter).
-type SortOrder = "newest" | "oldest";
-const SORT_LABELS: Record<SortOrder, string> = { newest: "Newest first", oldest: "Oldest first" };
-const CHECK_LABELS: Record<CheckFilter, string> = {
-  any: "Any result",
-  failing: "Failing (red or under 60)",
-  critical: "Has a critical flag",
-  passing: "Passing",
-};
-
-const platformName = (p: string) => PLATFORM_LABELS[p as SocialPlatform] ?? p;
 const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending || s.latest_check?.ai_unavailable ? null : s.latest_check?.score ?? null);
 const isFailing = (s: ReviewQueueItem) => {
   const score = scoreOf(s);
@@ -1437,8 +1411,7 @@ export default function ContentScreenerPage() {
 
   const brands = useMemo(() => [...new Set(items.flatMap((s) => brandCodes(s)).filter((b): b is string => Boolean(b)))].sort(), [items]);
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
-  // How many of the four filters are in use (brand and platform count once each, however many values they hold).
-  const activeFilters = [filters.brands.length > 0, filters.platforms.length > 0, filters.due !== "any", filters.check !== "any"].filter(Boolean).length;
+  const brandLabel = (b: string) => labels.brand(b) ?? b;
 
   // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
@@ -1539,109 +1512,18 @@ export default function ContentScreenerPage() {
                 className="h-8 pl-8 text-[13px]"
               />
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="relative h-8 gap-1.5 px-2.5 text-xs" aria-label="Filters">
-                  <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
-                  {activeFilters > 0 && (
-                    <span className="grid h-4 min-w-4 place-items-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">{activeFilters}</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-72 gap-3 p-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="f-sort" className="text-xs font-medium text-muted-foreground">
-                    Date sent
-                  </Label>
-                  <Select value={sort} onValueChange={(v) => setSort(v as SortOrder)}>
-                    <SelectTrigger id="f-sort" size="sm" className="h-8 w-full text-[13px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(["newest", "oldest"] as const).map((o) => (
-                        <SelectItem key={o} value={o} className="text-[13px]">
-                          {SORT_LABELS[o]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Brand</Label>
-                  <MultiSelectFilter
-                    options={brands.map((b) => ({ value: b, label: labels.brand(b) ?? b }))}
-                    value={filters.brands}
-                    onChange={(next) => setFilters((f) => ({ ...f, brands: next }))}
-                    allLabel="All brands"
-                    noun="brand"
-                    ariaLabel="Brand"
-                    className="h-8 w-full text-[13px]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Platform</Label>
-                  <MultiSelectFilter
-                    options={platforms.map((p) => ({ value: p, label: platformName(p) }))}
-                    value={filters.platforms}
-                    onChange={(next) => setFilters((f) => ({ ...f, platforms: next }))}
-                    allLabel="All platforms"
-                    noun="platform"
-                    ariaLabel="Platform"
-                    className="h-8 w-full text-[13px]"
-                  />
-                </div>
-                {[
-                  {
-                    id: "f-due",
-                    label: tab === "sent_back" ? "Creator's deadline" : "Deadline",
-                    value: filters.due,
-                    set: (v: string) => setFilters((f) => ({ ...f, due: v as DueFilter })),
-                    options: Object.entries(DUE_LABELS),
-                  },
-                  {
-                    id: "f-check",
-                    label: "Compliance check",
-                    value: filters.check,
-                    set: (v: string) => setFilters((f) => ({ ...f, check: v as CheckFilter })),
-                    options: Object.entries(CHECK_LABELS),
-                  },
-                ].map((f) => (
-                  <div key={f.id} className="flex flex-col gap-1.5">
-                    <Label htmlFor={f.id} className="text-xs font-medium text-muted-foreground">
-                      {f.label}
-                    </Label>
-                    <Select value={f.value} onValueChange={f.set}>
-                      <SelectTrigger id={f.id} size="sm" className="h-8 w-full text-[13px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {f.options.map(([value, text]) => (
-                          <SelectItem key={value} value={value} className="text-[13px]">
-                            {text}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
-                <Button variant="ghost" size="sm" className="h-8 self-end text-xs" onClick={() => setFilters(NO_FILTERS)} disabled={!activeFilters}>
-                  Clear filters
-                </Button>
-              </PopoverContent>
-            </Popover>
+            <QueueFiltersButton
+              filters={filters}
+              setFilters={setFilters}
+              sort={sort}
+              setSort={setSort}
+              brands={brands}
+              platforms={platforms}
+              brandLabel={brandLabel}
+              sentBack={tab === "sent_back"}
+            />
           </div>
-          {activeFilters > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {filters.brands.map((b) => (
-                <FilterChip key={`brand-${b}`} text={labels.brand(b) ?? b} onClear={() => setFilters((f) => ({ ...f, brands: f.brands.filter((x) => x !== b) }))} />
-              ))}
-              {filters.platforms.map((p) => (
-                <FilterChip key={`platform-${p}`} text={platformName(p)} onClear={() => setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) }))} />
-              ))}
-              {filters.due !== "any" && <FilterChip text={DUE_LABELS[filters.due]} onClear={() => setFilters((f) => ({ ...f, due: "any" }))} />}
-              {filters.check !== "any" && <FilterChip text={CHECK_LABELS[filters.check]} onClear={() => setFilters((f) => ({ ...f, check: "any" }))} />}
-            </div>
-          )}
+          <ActiveFilterChips filters={filters} setFilters={setFilters} brandLabel={brandLabel} />
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
@@ -1696,16 +1578,5 @@ export default function ContentScreenerPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function FilterChip({ text, onClear }: { text: string; onClear: () => void }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-      {text}
-      <button type="button" onClick={onClear} aria-label={`Remove filter: ${text}`} className="text-muted-foreground hover:text-foreground">
-        <X className="w-3 h-3" />
-      </button>
-    </span>
   );
 }

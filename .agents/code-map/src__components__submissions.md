@@ -166,13 +166,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
 - `ReviewConversation` (export function) L13 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
 
-## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (419 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55
 - `toLocalInput` (const) L57
 - `defaultPublishTime` (function) L60 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
-- `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
+    - `decide` (fn) L87
+    - `start` (fn) L103
+    - `toggleConfirmed` (fn) L110
+    - `confirm` (fn) L121
+- `ApprovalBlockers` (function) L308 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
+- `ManualRulesChecklist` (function) L350 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
+- `ChangesRequestedBanner` (export function) L387 - For the creator: the reviewer sent it back.
+    - `navigate` (fn) L398
 
 ## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L4
@@ -197,8 +204,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `pill` (const) L47
 - `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (191 lines) - revision workspace (components submissions)
+## src/components/submissions/RevisionWorkspace.tsx (203 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) L16 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+- `CommentMarks` (function) L161 - Where the comments are, on the video's timeline: blue open, grey resolved; a click jumps there.
+- `CaptionCard` (function) L188
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) L11 - A flag's rule number; hovering it shows the rule that was broken.

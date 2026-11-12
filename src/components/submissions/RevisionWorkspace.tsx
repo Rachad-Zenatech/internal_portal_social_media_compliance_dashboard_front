@@ -7,7 +7,7 @@ import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
 import { useReviewComments } from "@/hooks/useReview";
-import type { SubmissionFile } from "@/types/submission";
+import type { ReviewComment, SubmissionFile } from "@/types/submission";
 
 /**
  * What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by
@@ -114,29 +114,7 @@ export default function RevisionWorkspace({
           </div>
 
           {/* Where the comments are, on the video's timeline */}
-          {isVideo && duration > 0 && pinned.length > 0 && (
-            <div>
-              <div className="relative h-5 rounded bg-muted">
-                <div className="absolute inset-y-0 left-0 rounded bg-primary/15" style={{ width: `${Math.min(100, (currentTime / duration) * 100)}%` }} />
-                {pinned.map((c) => {
-                  const left = Math.min(100, (c.start_sec! / duration) * 100);
-                  const width = c.end_sec != null && c.end_sec > c.start_sec! ? Math.max(1.5, ((c.end_sec - c.start_sec!) / duration) * 100) : 0;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => seek(c.start_sec!)}
-                      title={`${formatSec(c.start_sec!)} · ${c.body}`}
-                      aria-label={`Jump to comment at ${formatSec(c.start_sec!)}`}
-                      className={`absolute top-0.5 bottom-0.5 rounded-sm ${c.resolved_at ? "bg-muted-foreground/40" : "bg-blue-500/70 hover:bg-blue-600"}`}
-                      style={{ left: `${left}%`, width: width ? `${width}%` : "6px", marginLeft: width ? 0 : -3 }}
-                    />
-                  );
-                })}
-              </div>
-              <p className="mt-1 text-[10px] text-muted-foreground">Blue marks are open comments, grey are resolved. Click one to jump there.</p>
-            </div>
-          )}
+          {isVideo && <CommentMarks pinned={pinned} now={currentTime} duration={duration} onSeek={seek} />}
 
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -156,17 +134,7 @@ export default function RevisionWorkspace({
             {mainFile && <span className="text-[11px] text-muted-foreground truncate min-w-0">{mainFile.original_name}</span>}
           </div>
 
-          <div className="rounded-lg border border-border/80 p-3 space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-foreground">Caption / copy</p>
-              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onEditCaption}>
-                <PenLine className="w-3.5 h-3.5" /> Edit caption
-              </Button>
-            </div>
-            <p className="text-xs text-foreground whitespace-pre-wrap break-words line-clamp-6">
-              {caption.trim() || <span className="text-muted-foreground">No caption.</span>}
-            </p>
-          </div>
+          <CaptionCard caption={caption} onEdit={onEditCaption} />
         </div>
 
         {/* Comments */}
@@ -186,5 +154,49 @@ export default function RevisionWorkspace({
         </div>
       </div>
     </Card>
+  );
+}
+
+/** Where the comments are, on the video's timeline: blue open, grey resolved; a click jumps there. */
+function CommentMarks({ pinned, now, duration, onSeek }: { pinned: ReviewComment[]; now: number; duration: number; onSeek: (sec: number) => void }) {
+  if (duration <= 0 || pinned.length === 0) return null;
+  return (
+    <div>
+      <div className="relative h-5 rounded bg-muted">
+        <div className="absolute inset-y-0 left-0 rounded bg-primary/15" style={{ width: `${Math.min(100, (now / duration) * 100)}%` }} />
+        {pinned.map((c) => {
+          const left = Math.min(100, (c.start_sec! / duration) * 100);
+          const width = c.end_sec != null && c.end_sec > c.start_sec! ? Math.max(1.5, ((c.end_sec - c.start_sec!) / duration) * 100) : 0;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onSeek(c.start_sec!)}
+              title={`${formatSec(c.start_sec!)} · ${c.body}`}
+              aria-label={`Jump to comment at ${formatSec(c.start_sec!)}`}
+              className={`absolute top-0.5 bottom-0.5 rounded-sm ${c.resolved_at ? "bg-muted-foreground/40" : "bg-blue-500/70 hover:bg-blue-600"}`}
+              style={{ left: `${left}%`, width: width ? `${width}%` : "6px", marginLeft: width ? 0 : -3 }}
+            />
+          );
+        })}
+      </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">Blue marks are open comments, grey are resolved. Click one to jump there.</p>
+    </div>
+  );
+}
+
+function CaptionCard({ caption, onEdit }: { caption: string; onEdit: () => void }) {
+  return (
+    <div className="rounded-lg border border-border/80 p-3 space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold text-foreground">Caption / copy</p>
+        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onEdit}>
+          <PenLine className="w-3.5 h-3.5" /> Edit caption
+        </Button>
+      </div>
+      <p className="text-xs text-foreground whitespace-pre-wrap break-words line-clamp-6">
+        {caption.trim() || <span className="text-muted-foreground">No caption.</span>}
+      </p>
+    </div>
   );
 }

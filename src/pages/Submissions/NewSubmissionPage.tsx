@@ -2423,10 +2423,7 @@ export default function NewSubmissionPage() {
                   locked={lockedReviewerIds}
                   pickedApprovers={pickedApprovers}
                   pickedSuggesters={pickedSuggesters}
-                  onChange={(ids) => {
-                    setReviewerIds(ids);
-                    markEdited();
-                  }}
+                  onChange={(ids) => { setReviewerIds(ids); markEdited(); }}
                   status={reviewersQuery}
                   brandCount={brands.length}
                   invalid={isMissing("reviewer_ids")}

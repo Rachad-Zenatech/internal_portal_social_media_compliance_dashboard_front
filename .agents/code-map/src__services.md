@@ -45,8 +45,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `VideoJob` (export interface) L296
 - `complianceService` (export const) L315
 
-## src/services/contextService.ts (26 lines) - The newsroom sync running now, or the last one (null before the first).
-- `contextService` (export const) L4
+## src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
+- `contextService` (export const) L12
 
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
 - `ClientErrorType` (export type) L3

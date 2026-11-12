@@ -23,6 +23,9 @@ const STATUS: Record<BrandVoice["status"], { label: string; className: string }>
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 
+/** The brand shown first when the panel opens. */
+const DEFAULT_BRAND = "ZENATECH";
+
 /**
  * Brand voice, brand by brand: each brand has its own manual (PDF) and its own voice, colours, typefaces and logo,
  * read from the manual and editable by hand. It's what the content analysis gets as the brand's voice.
@@ -36,6 +39,7 @@ export default function BrandVoicePanel() {
     refetchInterval: (q) => (q.state.data?.some((v) => v.status === "PROCESSING") ? 3000 : false),
   });
   const [editing, setEditing] = useState<BrandVoice | null>(null);
+  const [selected, setSelected] = useState<string>(DEFAULT_BRAND);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["brand-voices"] });
@@ -54,6 +58,10 @@ export default function BrandVoicePanel() {
     return <p className="p-6 text-xs text-red-600">Couldn't load brand voices: {(voices.error as Error).message}</p>;
   }
 
+  const list = voices.data ?? [];
+  // Fall back to the first brand if the selected one isn't in the list (e.g. it was retired).
+  const current = list.find((v) => v.brand_code === selected) ?? list[0];
+
   return (
     <div className="border-b border-border/60 p-4 space-y-3">
       <div>
@@ -63,11 +71,28 @@ export default function BrandVoicePanel() {
           content for that brand is analysed. You can edit anything that was read.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {(voices.data ?? []).map((v) => (
-          <BrandCard key={v.brand_code} voice={v} onChanged={refresh} onEdit={() => setEditing(v)} />
-        ))}
-      </div>
+      {list.length > 0 && (
+        <div role="tablist" aria-label="Brand" className="flex flex-wrap gap-1.5">
+          {list.map((v) => {
+            const active = v.brand_code === current?.brand_code;
+            return (
+              <Button
+                key={v.brand_code}
+                role="tab"
+                aria-selected={active}
+                size="sm"
+                variant={active ? "default" : "outline"}
+                className="h-8 gap-1.5 text-xs"
+                onClick={() => setSelected(v.brand_code)}
+              >
+                {v.status === "PROCESSING" && <Loader2 className="h-3 w-3 animate-spin" />}
+                {v.brand_name}
+              </Button>
+            );
+          })}
+        </div>
+      )}
+      {current && <BrandCard key={current.brand_code} voice={current} onChanged={refresh} onEdit={() => setEditing(current)} />}
       {editing && <EditDialog voice={editing} onClose={() => setEditing(null)} onSaved={refresh} />}
     </div>
   );

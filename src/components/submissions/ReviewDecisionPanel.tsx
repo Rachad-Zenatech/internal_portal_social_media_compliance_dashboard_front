@@ -163,25 +163,14 @@ export default function ReviewDecisionPanel({
           {target.due_kind === "REVIEW" && <DueBadge dueAt={target.due_at} kind="REVIEW" className="mt-1.5" />}
         </div>
       )}
-      {checkNotReady && (
-        <p className="rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
-          {target.analysis_pending
-            ? "The post is still being read, so it has no compliance score yet. You can approve it once the check has finished."
-            : "The AI review couldn't run, so this has no compliance score and can't be approved yet. It's re-checked automatically once the AI is back. You can still request changes."}
-        </p>
-      )}
-      {openCritical > 0 && (
-        <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
-          {openCritical} critical flag{openCritical === 1 ? " is" : "s are"} still open. Request changes to fix{" "}
-          {openCritical === 1 ? "it" : "them"}, or dismiss {openCritical === 1 ? "it" : "them"} as a false alarm in the flags list, before approving.
-        </p>
-      )}
-      {scoreTooLow && (
-        <p className="rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
-          The rulebook score is {approvalScore}/100; approval needs at least {minScore}. Request changes to fix the
-          flagged wording, or dismiss flags that are false alarms in the flags list (each gives its points back).
-        </p>
-      )}
+      <ApprovalBlockers
+        checkNotReady={checkNotReady}
+        analysisPending={Boolean(target.analysis_pending)}
+        openCritical={openCritical}
+        scoreTooLow={scoreTooLow}
+        approvalScore={approvalScore}
+        minScore={minScore}
+      />
       {target.approver_names && target.approver_names.length > 0 && (
         <p className={`text-[11px] ${target.can_approve === false ? "rounded-md bg-amber-500/10 px-2 py-1.5 text-amber-900 dark:text-amber-100" : "text-muted-foreground"}`}>
           {target.can_approve === false
@@ -263,27 +252,7 @@ export default function ReviewDecisionPanel({
                 {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future, or use "Approve & post now".</p>}
               </div>
             )}
-            {mode !== "changes" && manualRules.length > 0 && (
-              <fieldset className="space-y-1.5 rounded-md border border-border/70 p-2.5">
-                <legend className="px-1 text-xs font-semibold text-foreground">Checked by you</legend>
-                <p className="text-[11px] text-muted-foreground">
-                  The automated check can't test these from the text. Confirm you've checked each one; it's recorded with your approval.
-                </p>
-                {manualRules.map((r) => (
-                  <label key={r.rule_number} className="flex items-start gap-2 text-xs text-foreground cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-3.5 w-3.5 accent-blue-600"
-                      checked={confirmed.has(r.rule_number)}
-                      onChange={() => toggleConfirmed(r.rule_number)}
-                    />
-                    <span>
-                      <RuleNumberBadge v={r} /> {r.title}
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
-            )}
+            {mode !== "changes" && <ManualRulesChecklist rules={manualRules} confirmed={confirmed} onToggle={toggleConfirmed} />}
             {mode === "changes" && openComments > 0 && (
               <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Your {openComments} open comment{openComments === 1 ? " is" : "s are"} sent along with this.
@@ -330,6 +299,84 @@ export default function ReviewDecisionPanel({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+const WARN_AMBER = "rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100";
+
+/** Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low. */
+function ApprovalBlockers({
+  checkNotReady,
+  analysisPending,
+  openCritical,
+  scoreTooLow,
+  approvalScore,
+  minScore,
+}: {
+  checkNotReady: boolean;
+  analysisPending: boolean;
+  openCritical: number;
+  scoreTooLow: boolean;
+  approvalScore: number | null;
+  minScore: number;
+}) {
+  const one = openCritical === 1;
+  return (
+    <>
+      {checkNotReady && (
+        <p className={WARN_AMBER}>
+          {analysisPending
+            ? "The post is still being read, so it has no compliance score yet. You can approve it once the check has finished."
+            : "The AI review couldn't run, so this has no compliance score and can't be approved yet. It's re-checked automatically once the AI is back. You can still request changes."}
+        </p>
+      )}
+      {openCritical > 0 && (
+        <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
+          {openCritical} critical flag{one ? " is" : "s are"} still open. Request changes to fix {one ? "it" : "them"}, or dismiss{" "}
+          {one ? "it" : "them"} as a false alarm in the flags list, before approving.
+        </p>
+      )}
+      {scoreTooLow && (
+        <p className={WARN_AMBER}>
+          The rulebook score is {approvalScore}/100; approval needs at least {minScore}. Request changes to fix the
+          flagged wording, or dismiss flags that are false alarms in the flags list (each gives its points back).
+        </p>
+      )}
+    </>
+  );
+}
+
+/** Rules the automated check can't test from text: the reviewer ticks each one off when approving. */
+function ManualRulesChecklist({
+  rules,
+  confirmed,
+  onToggle,
+}: {
+  rules: { rule_number: string; title: string }[];
+  confirmed: Set<string>;
+  onToggle: (ruleNumber: string) => void;
+}) {
+  if (rules.length === 0) return null;
+  return (
+    <fieldset className="space-y-1.5 rounded-md border border-border/70 p-2.5">
+      <legend className="px-1 text-xs font-semibold text-foreground">Checked by you</legend>
+      <p className="text-[11px] text-muted-foreground">
+        The automated check can't test these from the text. Confirm you've checked each one; it's recorded with your approval.
+      </p>
+      {rules.map((r) => (
+        <label key={r.rule_number} className="flex items-start gap-2 text-xs text-foreground cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-3.5 w-3.5 accent-blue-600"
+            checked={confirmed.has(r.rule_number)}
+            onChange={() => onToggle(r.rule_number)}
+          />
+          <span>
+            <RuleNumberBadge v={r} /> {r.title}
+          </span>
+        </label>
+      ))}
+    </fieldset>
   );
 }
 

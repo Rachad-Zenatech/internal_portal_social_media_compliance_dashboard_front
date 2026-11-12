@@ -13,6 +13,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
+## src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
+- `nameOf` (const) L13
+- `useScopeOptions` (function) L16 - The brand, audience and platform names the pickers and "Applies to" lines use.
+- `useEntryMutations` (function) L27 - Saving, turning on/off and removing entries, each refreshing the list and the analyses that used it.
+- `useMessagingContext` (export function) L64 - Everything the Messaging Context page shows and does: the entries of the open kind, the audience profile picked,  the fact search, and ad...
+
 ## src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - `Notification` (export interface) L4
 - `useNotifications` (export function) L22 - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
