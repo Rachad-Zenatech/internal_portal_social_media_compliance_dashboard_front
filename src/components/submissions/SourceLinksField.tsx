@@ -177,7 +177,7 @@ export default function SourceLinksField({ links, submissionId, ensureSubmission
   };
 
   return (
-    <div className="rounded-xl border border-border bg-muted/20 p-3.5 space-y-2.5">
+    <div className="mt-4 rounded-xl border border-border bg-muted/20 p-3.5 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           <Link2 className="h-3.5 w-3.5 text-primary" />
