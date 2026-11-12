@@ -45,10 +45,12 @@ export default function BatchDetailsForm({
     staleTime: 60_000,
   });
   const { user } = useAuth();
-  // Nobody approves their own script (a super admin included), so the creator isn't offered as its reviewer.
+  // Nobody approves their own script (a super admin included), so the creator isn't offered as its reviewer. In
+  // development a super admin may review their own scripts (the backend's ALLOW_SUPER_ADMIN_SELF_REVIEW decides).
+  const ownAllowed = import.meta.env.DEV && Boolean(user?.is_super_admin);
   const reviewers = useMemo(
-    () => (reviewersQuery.data ?? []).filter((r) => r.id !== user?.id),
-    [reviewersQuery.data, user?.id]
+    () => (reviewersQuery.data ?? []).filter((r) => ownAllowed || r.id !== user?.id),
+    [reviewersQuery.data, user?.id, ownAllowed]
   );
   const accounts = useMemo(
     () => (options?.accounts ?? []).filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
