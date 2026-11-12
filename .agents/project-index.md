@@ -78,9 +78,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
-- src/components/submissions/TopicTrend.tsx (484 lines) - topic trend (components submissions)
+- src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
@@ -154,8 +152,6 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (484 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
 - src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
