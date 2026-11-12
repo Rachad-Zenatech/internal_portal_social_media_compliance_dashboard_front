@@ -41,7 +41,7 @@ export function usePublicMood(submissionId?: string | null, enabled = true, auto
       addJob("Checking for public mood", running, {
         type: "check",
         description: "Public mood summary",
-        link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+        link_url: submissionId ? `/submissions/${submissionId}?step=mood` : undefined,
         doneMessage: "The public mood summary is done",
       });
       return running;
@@ -80,7 +80,7 @@ export function usePublicMood(submissionId?: string | null, enabled = true, auto
       addJob("Checking for public mood", running, {
         type: "check",
         description: "Public mood",
-        link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+        link_url: submissionId ? `/submissions/${submissionId}?step=mood` : undefined,
         doneMessage: "The public mood check is done",
       });
       return running;

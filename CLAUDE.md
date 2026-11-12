@@ -60,6 +60,14 @@ These rules apply to every AI coding agent working in this repository.
 - Do not perform unnecessary browser research.
 - Do not automatically expand the scope of an assignment.
 
+### 0.4.1 Search and Read With Built-in Tools, Not the Shell
+
+- Claude Code: search code with the **Grep** tool; never Bash with `grep`, `rg`, `findstr` or `Select-String`.
+- Read files with the **Read** tool and `offset`/`limit` set to the line range the code map gives; never `cat`, `head`, `type` or `Get-Content`.
+- Find files with the **Glob** tool, not `ls`, `find` or `Get-ChildItem`.
+- Use **Bash** only for work that needs a shell: tests, builds, type checks, running servers, installs and git.
+- Why: built-in tools run without an approval prompt and return trimmed results; shell searches can wait for approval and flood the context.
+
 ### 0.5 Implementation Scope
 
 - Modify only files necessary for the assignment.

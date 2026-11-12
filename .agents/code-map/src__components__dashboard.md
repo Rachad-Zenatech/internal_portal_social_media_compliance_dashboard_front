@@ -32,6 +32,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `dayName` (const) L11
 - `DayAgenda` (export function) L15 - One day of posts at a time, in time order, with arrows to step through days.
 
+## src/components/dashboard/SuggesterDashboard.tsx (281 lines) - What they have done on an item so far, as a short chip.
+- `touched` (const) L18
+- `plural` (const) L19
+- `Progress` (function) L22 - What they have done on an item so far, as a short chip.
+- `SuggesterDashboard` (export function) L43 - A suggesting reviewer's dashboard: what was sent to them by name and is still in review, and what they have done on it.
+
 ## src/components/dashboard/dashboardParts.tsx (416 lines) - Pieces shared by the reviewer and creator dashboards.
 - `UPCOMING_DAYS` (export const) L35
 - `greeting` (export function) L37

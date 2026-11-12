@@ -7,6 +7,7 @@ import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, FileText } from 
 import { Button } from "@/components/ui/button";
 import CreatorDashboard from "@/components/dashboard/CreatorDashboard";
 import DayAgenda from "@/components/dashboard/DayAgenda";
+import SuggesterDashboard from "@/components/dashboard/SuggesterDashboard";
 import {
   ActivityList,
   DeadlinePill,
@@ -27,9 +28,10 @@ import { submissionService } from "@/services/submissionService";
 import type { ScriptQueueItem } from "@/types/script";
 import type { SubmissionSummary } from "@/types/submission";
 
-/** Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
+/** Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
 export default function Dashboard() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, isSuggester } = useAuth();
+  if (isSuggester) return <SuggesterDashboard />;
   return hasPermission("CONTENT_REVIEW_VIEW") ? <ReviewerDashboard /> : <CreatorDashboard />;
 }
 

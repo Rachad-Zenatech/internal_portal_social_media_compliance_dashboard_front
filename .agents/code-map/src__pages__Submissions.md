@@ -66,6 +66,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `charLimit` (fn) L1236 - The main caption only has to fit the platforms that post it (not those with their own).
     - `hashtagLibrary` (fn) L1244
 
+## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
+- `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
+
 ## src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - `View` (type) L26
 - `initials` (const) L28
@@ -84,24 +87,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `toggleDone` (fn) L121
     - `goToHighlight` (fn) L148 - A highlight card was clicked: find that wording in the script and flash it.
     - `pick` (fn) L154
-
-## src/pages/Submissions/SubmissionDetailPage.tsx (625 lines) - submission detail page (pages  submissions)
-- `Panel` (function) L66
-- `LightBadge` (function) L80
-- `StatusTrack` (function) L96 - Draft → Submitted → In review → Decision, highlighting where this submission is.
-- `DetailRow` (function) L131
-- `JobCard` (function) L140
-- `VersionRow` (function) L207
-- `PreviewVideo` (function) L245 - Main video preview, using the most representative frame as its poster.
-- `SubmissionDetailPage` (export function) L250
-    - `navigate` (fn) L252
-    - `queryClient` (fn) L253
-    - `submissionQuery` (fn) L258
-    - `optionsQuery` (fn) L259
-    - `historyQuery` (fn) L260
-    - `scriptStage` (fn) L263
-    - `refresh` (fn) L283
-    - `handleScriptUpload` (fn) L290
 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) L4 - One content area: the portal and the new-submission form.

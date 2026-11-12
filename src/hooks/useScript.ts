@@ -88,7 +88,7 @@ export function useScriptActions(submissionId: string) {
       addJob("Checking for compliance", running, {
         type: "check",
         description: "Script compliance check",
-        link_url: `/submissions/${submissionId}`,
+        link_url: `/submissions/${submissionId}?step=compliance`,
         doneMessage: "The compliance check of your script is done",
       });
       return running;

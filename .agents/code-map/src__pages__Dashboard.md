@@ -4,25 +4,25 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
-- `Dashboard` (export function) L31 - Reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own.
-- `isFailing` (const) L40 - A check that would stop approval or clearly needs work: a red result, or a score under 60.
-- `isOverdue` (const) L42
-- `QueueRow` (type) L45 - What waits for a reviewer: a post, or a video's script.
-- `rowDue` (const) L46
-- `rowSent` (const) L47
-- `rowOverdue` (const) L48
-- `rowFailing` (const) L49
-- `ReviewerDashboard` (function) L52
-    - `navigate` (fn) L54
-    - `now` (fn) L56
-    - `submissions` (fn) L59 - Reviewers see everyone's content on their brands, as in the Content Screener.
-    - `summary` (fn) L65
-    - `scripts` (fn) L71 - Scripts waiting for a review are part of the queue too.
-    - `options` (fn) L76
-    - `audienceName` (fn) L77
-    - `all` (fn) L79
-    - `openInScreener` (fn) L102
-    - `openRow` (fn) L106
-    - `activity` (fn) L115 - The team's activity, minus the reviewer's own actions.
-    - `plural` (fn) L119
+## src/pages/Dashboard/Dashboard.tsx (446 lines) - dashboard (pages  dashboard)
+- `Dashboard` (export function) L32 - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
+- `isFailing` (const) L42 - A check that would stop approval or clearly needs work: a red result, or a score under 60.
+- `isOverdue` (const) L44
+- `QueueRow` (type) L47 - What waits for a reviewer: a post, or a video's script.
+- `rowDue` (const) L48
+- `rowSent` (const) L49
+- `rowOverdue` (const) L50
+- `rowFailing` (const) L51
+- `ReviewerDashboard` (function) L54
+    - `navigate` (fn) L56
+    - `now` (fn) L58
+    - `submissions` (fn) L61 - Reviewers see everyone's content on their brands, as in the Content Screener.
+    - `summary` (fn) L67
+    - `scripts` (fn) L73 - Scripts waiting for a review are part of the queue too.
+    - `options` (fn) L78
+    - `audienceName` (fn) L79
+    - `all` (fn) L81
+    - `openInScreener` (fn) L104
+    - `openRow` (fn) L108
+    - `activity` (fn) L117 - The team's activity, minus the reviewer's own actions.
+    - `plural` (fn) L121

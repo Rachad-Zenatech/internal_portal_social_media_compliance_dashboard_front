@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/lib/AuthContext.tsx (346 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
+## src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `SIGNED_OUT_KEY` (export const) L8 - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `clearStoredSession` (const) L18
 - `User` (export interface) L26
@@ -14,7 +14,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ViewMode` (export type) L78
 - `AuthContext` (const) L94
 - `AuthProvider` (export function) L96
-- `useAuth` (export function) L339
+- `useAuth` (export function) L344
 
 ## src/lib/GlobalProgressContext.tsx (165 lines) - When it started, for "running for 0:42".
 - `JobType` (export type) L5 - check": a compliance, sentiment or public mood check, which can take from seconds to minutes.

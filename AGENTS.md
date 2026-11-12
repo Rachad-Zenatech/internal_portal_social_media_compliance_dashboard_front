@@ -60,6 +60,14 @@ These rules apply to every AI coding agent working in this repository.
 - Do not perform unnecessary browser research.
 - Do not automatically expand the scope of an assignment.
 
+### 0.4.1 Search and Read With Built-in Tools, Not the Shell
+
+- Search, read and find files with your agent's own built-in tools when it has them (e.g. Cursor: codebase search and read file; Copilot: search and read tools), not the shell.
+- Read only the line range the code map gives, never whole files over 400 lines.
+- If your agent only has a shell, search with `rg` (or `git grep`) limited to the paths you need, and print only the lines you need (`sed -n 'START,ENDp'`), never whole files or the whole map.
+- Use the shell for work that needs it: tests, builds, type checks, running servers, installs and git.
+- Why: built-in tools run without an approval prompt and return trimmed results; shell searches can wait for approval and flood the context.
+
 ### 0.5 Implementation Scope
 
 - Modify only files necessary for the assignment.

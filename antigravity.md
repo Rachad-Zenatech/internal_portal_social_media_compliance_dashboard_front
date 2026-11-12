@@ -60,6 +60,14 @@ These rules apply to every AI coding agent working in this repository.
 - Do not perform unnecessary browser research.
 - Do not automatically expand the scope of an assignment.
 
+### 0.4.1 Search and Read With Built-in Tools, Not the Shell
+
+- Antigravity: search code with **`grep_search`**; never `run_command` with `Select-String`, `grep`, `rg`, `findstr` or `Get-ChildItem -Recurse`.
+- Read files with **`view_file`** and a start/end line (the range the code map gives); never `Get-Content`, `cat` or `type`.
+- Find files with **`find_by_name`** or **`list_dir`**, not shell listings.
+- Use **`run_command`** only for work that needs a shell: tests, builds, type checks, running servers, installs and git.
+- Why: built-in tools run without an approval prompt and return trimmed results; shell searches can wait for approval and flood the context.
+
 ### 0.5 Implementation Scope
 
 - Modify only files necessary for the assignment.

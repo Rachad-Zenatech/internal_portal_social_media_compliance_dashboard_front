@@ -28,7 +28,7 @@ const ContentScreenerPage = lazy(() => import("./pages/Compliance/ContentScreene
 const VideoComplianceScannerPage = lazy(() => import("./pages/Compliance/VideoComplianceScannerPage"));
 const NewSubmissionPage = lazy(() => import("./pages/Submissions/NewSubmissionPage"));
 const SubmissionsListPage = lazy(() => import("./pages/Submissions/SubmissionsListPage"));
-const SubmissionDetailPage = lazy(() => import("./pages/Submissions/SubmissionDetailPage"));
+const PostRedirect = lazy(() => import("./pages/Submissions/PostRedirect"));
 const ScriptChangesPage = lazy(() => import("./pages/Submissions/ScriptChangesPage"));
 const SubmissionsLayout = lazy(() => import("./pages/Submissions/SubmissionsLayout"));
 const DelegationsPage = lazy(() => import("./pages/Delegations/DelegationsPage"));
@@ -46,7 +46,7 @@ const PendingAccess = lazy(() => import("./pages/Auth/PendingAccess"));
 const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/dashboard", navigationCode: "DASHBOARD", element: <Dashboard /> },
   { path: "/socials", navigationCode: "DASHBOARD", element: <SocialMediaPage /> },
-  { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <SubmissionDetailPage /> },
+  { path: "/submissions/:id", navigationCode: "DASHBOARD", element: <PostRedirect /> },
   { path: "/submissions/:id/script", navigationCode: "DASHBOARD", element: <ScriptChangesPage /> },
   { path: "/delegations", navigationCode: "DASHBOARD", element: <DelegationsPage /> },
   { path: "/script-review", navigationCode: "DASHBOARD", element: <ScriptReviewPage /> },
