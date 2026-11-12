@@ -71,23 +71,46 @@ export function StatusPill({ status, critical = false }: { status: FindingStatus
 }
 
 /** How the AI read a finding in context: what it's about, why, and how sure it was. */
-export function ContextNote({ v }: { v: Pick<ComplianceViolation, "evaluation"> }) {
+export function ContextNote({
+  v,
+  onLocate,
+}: {
+  v: Pick<ComplianceViolation, "evaluation">;
+  onLocate?: (text: string) => void;
+}) {
   const e = v.evaluation;
   if (!e) return null;
   if (e.source === "UNAVAILABLE") {
     return <p className="text-xs text-muted-foreground">{e.reasoning}</p>;
   }
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2 text-[13px] text-foreground/85">
+    <div
+      className={`flex flex-col gap-1 rounded-lg border border-border/70 bg-background/60 px-2.5 py-2 text-[13px] text-foreground/85 ${
+        onLocate ? "cursor-pointer hover:border-sky-400/70 hover:bg-muted/40 transition-colors" : ""
+      }`}
+      onClick={
+        onLocate
+          ? (event) => {
+              event.stopPropagation();
+              onLocate(e.matched_text || e.subject || "");
+            }
+          : undefined
+      }
+      title={onLocate ? "Click to jump to this section in the script" : undefined}
+    >
       <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <Sparkles className="w-3 h-3" /> Read in context
+        <Sparkles className="w-3 h-3 text-sky-500" /> Read in context
         {e.subject && <span className="font-medium normal-case tracking-normal">· about {e.subject}</span>}
         <span className="ml-auto font-medium normal-case tracking-normal" title={`Decided by ${e.model ?? "a model"}. Confidence is the model's own estimate.`}>
           {Math.round(e.confidence * 100)}% sure
         </span>
       </p>
       <p>{e.reasoning}</p>
-      {e.matched_text && <p className="text-xs text-muted-foreground">Based on: “{e.matched_text}”</p>}
+      {e.matched_text && (
+        <p className="text-xs text-muted-foreground">
+          Based on: <span className={onLocate ? "underline decoration-sky-400/50 underline-offset-2 text-foreground font-medium" : ""}>“{e.matched_text}”</span>
+        </p>
+      )}
       {e.rule_decision !== e.decision && (
         <p className="text-xs text-muted-foreground">The wording alone would have been a {FINDING_META[e.rule_decision].label.toLowerCase()}.</p>
       )}

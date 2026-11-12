@@ -30,7 +30,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/BatchItemCard.tsx (308 lines) - batch item card (components script)
 - src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
-- src/components/script/HighlightableText.tsx (504 lines) - Scroll to the n-th place any of these phrases appears and flash it.
+- src/components/script/HighlightableText.tsx (515 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - src/components/script/NoteField.tsx (42 lines) - Called when the box becomes empty or gets text.
 - src/components/script/ScriptBatchBar.tsx (80 lines) - Reviewers open scripts in the Content screener; the creator on the post's script page.
 - src/components/script/ScriptCompliance.tsx (71 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
@@ -38,7 +38,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
 - src/components/script/ScriptInsights.tsx (104 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
 - src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
-- src/components/script/ScriptReviewWorkspace.tsx (926 lines) - script review workspace (components script)
+- src/components/script/ScriptReviewWorkspace.tsx (948 lines) - script review workspace (components script)
 - src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/submissions/ApprovalActions.tsx (157 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -53,7 +53,7 @@ For detailed function and route definitions, see `.agents/code-map.md`.
 - src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
-- src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+- src/components/submissions/FindingStatus.tsx (194 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)

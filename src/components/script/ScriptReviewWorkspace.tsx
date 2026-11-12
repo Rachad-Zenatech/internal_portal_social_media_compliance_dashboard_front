@@ -250,11 +250,18 @@ function Editor({
     window.setTimeout(() => editorRef.current?.find(term), 60);
   };
   /** A flag card was clicked: take the reviewer to its wording in the script (the next place each time). */
-  const goToFlag = (v: ComplianceViolation) => {
+  const goToFlag = (v: ComplianceViolation, specificTerm?: string) => {
     const missing = v.kind === "MISSING_DISCLAIMER";
-    const terms = missing ? [] : v.flagged_terms;
+    const matched = v.evaluation?.matched_text?.trim();
+    const candidateTerms = specificTerm
+      ? [specificTerm]
+      : [
+          ...(matched ? [matched] : []),
+          ...(missing ? [] : v.flagged_terms),
+        ].filter(Boolean);
+
     if (mode === "edit") {
-      if (terms[0]) findInScript(terms[0]);
+      if (candidateTerms[0]) findInScript(candidateTerms[0]);
       return;
     }
     if (compare !== "mine") setCompare("mine");
@@ -262,7 +269,9 @@ function Editor({
     locateCount.current[v.rule_id] = n + 1;
     // The script may need a render first when the view just changed.
     window.setTimeout(() => {
-      if (terms.length === 0 || textRef.current?.locate(terms, n) === 0) textRef.current?.toEnd();
+      if (candidateTerms.length === 0 || textRef.current?.locate(candidateTerms, n) === 0) {
+        textRef.current?.toEnd();
+      }
     }, compare !== "mine" ? 60 : 0);
   };
   /** A highlight card was clicked: take the reviewer to that wording. */
@@ -579,7 +588,7 @@ function Editor({
                         canEdit={canReview}
                         added
                         onFind={findInScript}
-                        onGo={() => goToFlag(v)}
+                        onGo={(term) => goToFlag(v, term)}
                         onAddDisclaimer={(text) => addDisclaimer(v, text)}
                         onDiscard={() => discardDisclaimer(v.rule_id)}
                       />
@@ -596,7 +605,7 @@ function Editor({
                           v={v}
                           canEdit={canReview}
                           onFind={findInScript}
-                          onGo={() => goToFlag(v)}
+                          onGo={(term) => goToFlag(v, term)}
                           onAddDisclaimer={(text) => addDisclaimer(v, text)}
                           onDiscard={() => discardDisclaimer(v.rule_id)}
                         />
@@ -797,7 +806,7 @@ export function FlagCard({
   onDiscard?: () => void;
   onFind?: (term: string) => void;
   /** Go to this flag's wording in the script. Without it the card is just information (as on the creator's page). */
-  onGo?: () => void;
+  onGo?: (specificTerm?: string) => void;
   onAddDisclaimer?: (text: string) => void;
 }) {
   const critical = v.traffic_light === "RED";
@@ -809,7 +818,7 @@ export function FlagCard({
       role={onGo ? "button" : undefined}
       tabIndex={onGo ? 0 : undefined}
       title={onGo ? "Show in the script" : undefined}
-      onClick={onGo}
+      onClick={onGo ? () => onGo() : undefined}
       onKeyDown={(e) => {
         if (onGo && e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
@@ -826,7 +835,20 @@ export function FlagCard({
         <RuleNumberBadge v={v} />
         <p className={`mt-1 text-sm font-semibold text-foreground ${struck}`}>{v.title}</p>
       </div>
-      {v.evaluation ? <ContextNote v={v} /> : <p className={`text-[13px] text-foreground/80 ${struck}`}>{v.explanation}</p>}
+      {v.evaluation ? (
+        <ContextNote
+          v={v}
+          onLocate={
+            onGo
+              ? (term) => {
+                  onGo(term || undefined);
+                }
+              : undefined
+          }
+        />
+      ) : (
+        <p className={`text-[13px] text-foreground/80 ${struck}`}>{v.explanation}</p>
+      )}
       {!missing && !cleared && v.flagged_terms.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {v.flagged_terms.map((t) => (

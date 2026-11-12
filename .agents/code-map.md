@@ -186,7 +186,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `HighlightCards` (export function) - The reviewer's highlights and notes as cards; clicking one takes you to that wording in the script.
 - `AddressedCards` (export function) - What the creator did about the reviewer's earlier highlights: the old wording, an arrow, and the new wording.
 
-## src/components/script/HighlightableText.tsx (504 lines) - Scroll to the n-th place any of these phrases appears and flash it.
+## src/components/script/HighlightableText.tsx (515 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - `Highlight` (export type)
 - `HighlightableHandle` (export type)
 - `HIGHLIGHT_COLORS` (export const)
@@ -269,7 +269,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 ## src/components/script/ScriptPrecheck.tsx (107 lines) - The script (or its details) changed since this check.
 - `ScriptPrecheck` (export function) - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
 
-## src/components/script/ScriptReviewWorkspace.tsx (926 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (948 lines) - script review workspace (components script)
 - `PanelTab` (type)
 - `Compare` (type)
 - `sameText` (const)
@@ -372,7 +372,7 @@ How to use: check `.agents/project-index.md` first to locate the file, then insp
 - `Details` (function) - Each dropdown: what both posts share, and what only this post adds.
 - `DuplicateNotice` (export function) - Posts already sent for approval with the same content and caption as this one.
 
-## src/components/submissions/FindingStatus.tsx (171 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+## src/components/submissions/FindingStatus.tsx (194 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `statusOf` (export const) - What a finding amounts to; checks saved before statuses existed only had violations.
 - `isWarning` (export const)
 - `Meta` (interface)

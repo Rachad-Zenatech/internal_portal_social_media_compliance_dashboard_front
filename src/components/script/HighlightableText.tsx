@@ -323,17 +323,28 @@ const HighlightableText = forwardRef<
         const { nodes, text } = textNodes(root);
         const lower = text.toLowerCase();
         const hits: { at: number; len: number }[] = [];
-        for (const t of terms.filter(Boolean)) {
-          const needle = t.toLowerCase();
-          for (let i = lower.indexOf(needle); i !== -1; i = lower.indexOf(needle, i + needle.length)) hits.push({ at: i, len: needle.length });
+        for (const raw of terms.filter(Boolean)) {
+          // Normalize whitespace and strip enclosing quotes if present
+          const clean = raw.trim().replace(/^["“'”]+|["“'”]+$/g, "");
+          const candidateTerms = [clean, clean.replace(/\s+/g, " ")].filter(Boolean);
+          for (const t of new Set(candidateTerms)) {
+            const needle = t.toLowerCase();
+            for (let i = lower.indexOf(needle); i !== -1; i = lower.indexOf(needle, i + needle.length)) {
+              hits.push({ at: i, len: needle.length });
+            }
+          }
         }
         if (hits.length === 0) return 0;
-        hits.sort((a, b) => a.at - b.at);
-        const hit = hits[((nth % hits.length) + hits.length) % hits.length];
+        // Deduplicate overlapping/identical hits
+        const uniqueHits = hits.filter(
+          (h, idx, self) => self.findIndex((o) => o.at === h.at && o.len === h.len) === idx
+        );
+        uniqueHits.sort((a, b) => a.at - b.at);
+        const hit = uniqueHits[((nth % uniqueHits.length) + uniqueHits.length) % uniqueHits.length];
         const r = rangeAt(nodes, hit.at, hit.at + hit.len);
         if (!r) return 0;
         reveal(r);
-        return hits.length;
+        return uniqueHits.length;
       },
       goTo: (id) => {
         const root = contentRef.current;
