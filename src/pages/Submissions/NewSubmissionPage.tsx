@@ -364,6 +364,8 @@ export default function NewSubmissionPage() {
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
   // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
   const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
+  // The repost (same post, another date) the creator already said yes to, so sending doesn't ask again.
+  const [repostOk, setRepostOk] = useState<string | null>(null);
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -416,10 +418,12 @@ export default function NewSubmissionPage() {
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
   // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
+  const scriptUploaded = Boolean(scriptStage.data?.file_name);
   const duplicatesQuery = useQuery({
-    queryKey: ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(",")],
+    queryKey: ["submission-duplicates", submissionId, checkedSub?.updated_at, files.map((f) => f.id).join(","), savedAt?.getTime() ?? 0],
     queryFn: () => submissionService.duplicates(submissionId!),
-    enabled: !!submissionId && !videoLocked,
+    // A video post at its script stage is compared by its script, once there is one.
+    enabled: !!submissionId && (!videoLocked || scriptUploaded),
     staleTime: 0,
   });
   const duplicates = duplicatesQuery.data;
@@ -428,7 +432,7 @@ export default function NewSubmissionPage() {
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
   // Live public mood & news sentiment for the post's topics.
-  const { mood, isLoading: moodLoading, refresh: refreshMood, dismissTopic } = usePublicMood(submissionId, Boolean(submissionId));
+  const { mood, isLoading: moodLoading, run: refreshMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
   // The same query the sentiment panel uses, so the step bar knows when it has run (no extra request).
   const { analysis: sentimentAnalysis } = useSentiment(submissionId);
 
@@ -493,8 +497,9 @@ export default function NewSubmissionPage() {
       .get(routeId)
       .then((s) => {
         if (cancelled) return;
-        if (!s.can_edit && s.status !== "IN_REVIEW") {
-          toast.info(`${s.reference_code} is ${s.status.replace("_", " ").toLowerCase()}. Withdraw it to make changes.`);
+        // A post in review or approved opens in the same steps as a draft, locked: look through, but change and run nothing.
+        if (!s.can_edit && s.status !== "IN_REVIEW" && s.status !== "APPROVED") {
+          toast.info(`${s.reference_code} is ${s.status.replace("_", " ").toLowerCase()}, so it can't be edited.`);
           navigate(`/submissions/${s.id}`, { replace: true });
           return;
         }
@@ -885,7 +890,7 @@ export default function NewSubmissionPage() {
     setContinuing(true);
     try {
       const id = await save({ force: true });
-      if (!videoLocked) {
+      if (!videoLocked || scriptUploaded) {
         const report = await submissionService.duplicates(id!);
         setDupChecked({ report, edit: editCounter });
         if (report.blocked) {
@@ -893,7 +898,11 @@ export default function NewSubmissionPage() {
           return;
         }
         if (report.repost) {
-          // The same post went out before, on another date: ask before going on.
+          // The same post went out before, on another date: ask before going on (the answer holds when it is sent).
+          if (repostOk === repostKey(report.repost)) {
+            goToStep(target);
+            return;
+          }
           setRepostTarget(target);
           setRepostAsk(report.repost);
           return;
@@ -934,9 +943,17 @@ export default function NewSubmissionPage() {
     try {
       const id = await save({ force: true });
       // Each model call is shown as it happens (fallbacks too); the old result stays hidden until the new one is in.
-      const updated = await submissionService.runCheckStream(id!, (a) =>
+      const running = submissionService.runCheckStream(id!, (a) =>
         setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a]))
       );
+      // Also on the task list at the bottom right, so it can be left running while you use other tools.
+      addJob("Checking for compliance", running, {
+        type: "check",
+        description: "Compliance check",
+        link_url: `/submissions/new?id=${id}`,
+        doneMessage: "The compliance check is done",
+      });
+      const updated = await running;
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
       setLastCheckMs(Date.now() - started);
@@ -974,6 +991,8 @@ export default function NewSubmissionPage() {
     mood: Boolean(mood),
   };
   const changesMade = editCounter > 0 || recheck.compliance;
+
+  const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
 
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -1015,10 +1034,19 @@ export default function NewSubmissionPage() {
         );
         return;
       }
+      if (duplicates?.blocked) {
+        toast.error(`This script is a duplicate of ${duplicates.blocking?.reference_code}. Change the submission details first.`);
+        return;
+      }
+      const scriptRepostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
+      if (duplicates?.repost && !scriptRepostConfirmed) {
+        setRepostAsk(duplicates.repost);
+        return;
+      }
       setSubmitting(true);
       try {
         const id = await save({ force: true });
-        const next = await scriptService.submit(id!, confirmRepost);
+        const next = await scriptService.submit(id!, scriptRepostConfirmed);
         queryClient.setQueryData(["script", id], next);
         queryClient.invalidateQueries({ queryKey: ["script-queue"] });
         queryClient.invalidateQueries({ queryKey: ["submission", id] });
@@ -1075,14 +1103,15 @@ export default function NewSubmissionPage() {
       checkSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    if (duplicates?.repost && !confirmRepost) {
+    const repostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
+    if (duplicates?.repost && !repostConfirmed) {
       setRepostAsk(duplicates.repost);
       return;
     }
     setSubmitting(true);
     try {
       const id = await save({ force: true });
-      const result = await submissionService.submit(id!, confirmRepost);
+      const result = await submissionService.submit(id!, repostConfirmed);
       // Videos show up in the Content Screener from the server; open this one there next time.
       if (result.submission.files.some((f) => f.kind === "MAIN" && f.mime_type.startsWith("video/"))) {
         queryClient.invalidateQueries({ queryKey: ["review-queue"] });
@@ -1249,7 +1278,9 @@ export default function NewSubmissionPage() {
       {readOnly && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3.5 dark:border-blue-500/30 dark:bg-blue-500/10">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-blue-950 dark:text-blue-100">In review: this post is locked</p>
+            <p className="text-sm font-semibold text-blue-950 dark:text-blue-100">
+              {status === "APPROVED" ? "Approved: this post is locked" : "In review: this post is locked"}
+            </p>
             <p className="text-[13px] text-blue-950/80 dark:text-blue-100/80">
               You can look through every step and the results you ran before sending, but nothing can be changed or run again.
             </p>
@@ -2077,7 +2108,7 @@ export default function NewSubmissionPage() {
                       disabled={moodLoading}
                       hidden={readOnly}
                     >
-                      {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+                      {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Refresh" : "Run public mood"}
                     </Button>
                   </div>
                 </div>
@@ -2090,6 +2121,8 @@ export default function NewSubmissionPage() {
                   busy={dismissTopic.isPending}
                   onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
                   onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+                  hasRun={moodHasRun}
+                  onRun={readOnly ? undefined : () => refreshMood()}
                 />
               </div>
             ) : (
@@ -2177,7 +2210,8 @@ export default function NewSubmissionPage() {
                         variant={hasCheck && !checkStale ? "outline" : "default"}
                         className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
                         onClick={() => void runComplianceCheck()}
-                        disabled={checking || uploading.length > 0}
+                        disabled={checking || uploading.length > 0 || readOnly}
+                        hidden={readOnly}
                       >
                         {checking ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2244,9 +2278,14 @@ export default function NewSubmissionPage() {
 
               {readOnly && toolView("send") && (
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
-                  <p className="font-semibold">Sent for review{sentAt ? ` on ${format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a")}` : ""}</p>
+                  <p className="font-semibold">
+                    {status === "APPROVED" ? "Approved" : "Sent for review"}
+                    {sentAt ? ` (sent ${format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a")})` : ""}
+                  </p>
                   <p className="mt-1 text-[13px] text-blue-950/80 dark:text-blue-100/80">
-                    It's with the reviewer now. You'll get a notification when they decide.
+                    {status === "APPROVED"
+                      ? "It's on the content calendar. A reviewer can reschedule it or reopen it if something changes."
+                      : "It's with the reviewer now. You'll get a notification when they decide."}
                   </p>
                 </div>
               )}
@@ -2283,7 +2322,7 @@ export default function NewSubmissionPage() {
                       }
                       getLabel={(id) => {
                         const r = reviewerOptions.find((x) => x.id === id);
-                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
+                        return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}${r.kind === "SUGGESTER" ? " · Suggests only" : ""}` : "Reviewer";
                       }}
                       getSearchText={(id) => reviewerOptions.find((x) => x.id === id)?.email ?? ""}
                       renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -2298,11 +2337,11 @@ export default function NewSubmissionPage() {
                       : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                   </p>
                 </Field>
-                {!videoLocked && duplicates && <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />}
+                {duplicates && <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                   <p className="text-[11px] text-muted-foreground">
-                    {!videoLocked && duplicates?.blocked
-                      ? "Duplicate post: change the submission details above to send it."
+                    {duplicates?.blocked
+                      ? `Duplicate ${videoLocked ? "script" : "post"}: change the submission details above to send it.`
                       : videoLocked
                       ? "Sends your script to the reviewers you picked."
                       : !hasCheck
@@ -2314,7 +2353,7 @@ export default function NewSubmissionPage() {
                   <Button
                     type="button"
                     onClick={() => submit()}
-                    disabled={submitting || checking || uploading.length > 0 || (!videoLocked && !!duplicates?.blocked)}
+                    disabled={submitting || checking || uploading.length > 0 || !!duplicates?.blocked}
                     className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -2326,9 +2365,13 @@ export default function NewSubmissionPage() {
           </Section>
           </div>
 
-          {/* Details: the duplicate check happens on the way to the compliance step */}
-          {onDetails && dupChecked && dupChecked.edit === editCounter && (dupChecked.report.blocked || dupChecked.report.repost) && (
-            <DuplicateNotice report={dupChecked.report} publishAt={publishDate ?? null} />
+          {/* Details: the duplicate check runs as soon as the details are filled in and saved, so it is known before sending */}
+          {onDetails && detailsComplete && duplicates && (duplicates.blocked || duplicates.repost) ? (
+            <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />
+          ) : (
+            onDetails && dupChecked && dupChecked.edit === editCounter && (dupChecked.report.blocked || dupChecked.report.repost) && (
+              <DuplicateNotice report={dupChecked.report} publishAt={publishDate ?? null} />
+            )
           )}
           {onDetails && (
             <StepFooter
@@ -2385,6 +2428,7 @@ export default function NewSubmissionPage() {
                 <AlertDialogCancel>Not now</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => {
+                    if (repostAsk) setRepostOk(repostKey(repostAsk));
                     setRepostAsk(null);
                     if (repostTarget) {
                       const target = repostTarget;

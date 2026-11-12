@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { submissionService } from "@/services/submissionService";
 import type { FindingVerdict, SentimentAnalysis, SentimentStatus } from "@/types/sentiment";
 
@@ -13,6 +14,7 @@ export function isSentimentRunning(a?: SentimentAnalysis | null) {
 /** Latest sentiment analysis for a submission, checking back every few seconds while one is running. */
 export function useSentiment(submissionId?: string | null, version?: number) {
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
   const key = version != null ? ["sentiment", submissionId, version] : ["sentiment", submissionId];
 
   const query = useQuery({
@@ -32,9 +34,32 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     staleTime: 30_000,
   });
 
+  // Until the analysis finishes (it runs on the server, often for a minute or more), on the task list at the bottom right.
+  const trackUntilDone = () => {
+    const wait = async () => {
+      const until = Date.now() + 15 * 60_000;
+      while (Date.now() < until) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const latest = await submissionService.getSentiment(submissionId!, version);
+        queryClient.setQueryData(key, latest);
+        if (!isSentimentRunning(latest)) return latest;
+      }
+      return null;
+    };
+    addJob("Checking for sentiment", wait(), {
+      type: "check",
+      description: "Sentiment analysis",
+      link_url: submissionId ? `/submissions/${submissionId}` : undefined,
+      doneMessage: "The sentiment analysis is done",
+    });
+  };
+
   const run = useMutation({
     mutationFn: () => submissionService.requestSentiment(submissionId!),
-    onSuccess: (analysis) => queryClient.setQueryData(key, analysis),
+    onSuccess: (analysis) => {
+      queryClient.setQueryData(key, analysis);
+      if (isSentimentRunning(analysis)) trackUntilDone();
+    },
     onError: (err) => toast.error(`Couldn't start sentiment analysis: ${(err as Error).message}`),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["ai-usage"] }),
   });

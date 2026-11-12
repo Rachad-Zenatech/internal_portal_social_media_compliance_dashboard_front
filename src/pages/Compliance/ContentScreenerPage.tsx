@@ -816,8 +816,10 @@ function ReviewPanel({
 }) {
   const { comments } = useReviewComments(s.id);
   const { analysis: sentiment } = useSentiment(s.id);
-  const { mood, isLoading: moodLoading, dismissTopic } = usePublicMood(s.id, true);
-  const canComment = canReview && s.status === "IN_REVIEW";
+  const { mood, isLoading: moodLoading, dismissTopic, hasRun: moodHasRun, run: runMood } = usePublicMood(s.id, true);
+  // A suggesting reviewer comments but doesn't decide.
+  const { isSuggester } = useAuth();
+  const canComment = (canReview || isSuggester) && s.status === "IN_REVIEW";
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1108,6 +1110,8 @@ function ReviewPanel({
             busy={dismissTopic.isPending}
             onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
             onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+            hasRun={moodHasRun}
+            onRun={() => runMood()}
           />
         )}
 
@@ -1122,7 +1126,7 @@ function ReviewPanel({
         {tab === "comments" && (
           <ReviewCommentsPanel
             submissionId={s.id}
-            canComment={canReview}
+            canComment={canReview || isSuggester}
             currentTime={hasVideo ? now : undefined}
             onSeek={seek}
             showHeader={false}
@@ -1197,7 +1201,11 @@ function ReviewPanel({
               }}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">Waiting for a reviewer's decision.</p>
+            <p className="text-sm text-muted-foreground">
+              {isSuggester
+                ? "You're a suggesting reviewer: comment on it, and a reviewer decides."
+                : "Waiting for a reviewer's decision."}
+            </p>
           )
         ) : s.status === "APPROVED" && s.can_manage_approval ? (
           <ApprovalActions
@@ -1323,7 +1331,7 @@ function Workspace({
 
 export default function ContentScreenerPage() {
   const { creatorView, hasPermission } = useAuth();
-  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE") && !creatorView;
+  const isReviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
   const scope = isReviewer ? "all" : "mine";
   const [params, setParams] = useSearchParams();
   const { activeVideoId } = useVideoUploadQueue();

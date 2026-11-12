@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { ArrowLeft, Check, CheckCircle2, Download, Loader2, PencilLine, Undo2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAuth } from "@/lib/AuthContext";
+
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";
 import ScriptEditor from "@/components/script/ScriptEditor";
@@ -15,6 +17,7 @@ import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
+import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { changesOf, diffWords } from "@/lib/wordDiff";
@@ -76,6 +79,10 @@ const noop = () => undefined;
 
 function Changes({ stage }: { stage: ScriptStage }) {
   const navigate = useNavigate();
+  const { hasPermission, canSwitchView } = useAuth();
+  // A reviewer looking at a script they uploaded themselves: the review tools belong to someone else (see below).
+  // A super admin reviews their own from the reviewer view, as with posts.
+  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE") && !canSwitchView;
   const pair = comparison(stage);
   const status = stage.status ?? "DRAFT";
   const [view, setView] = useState<View>("inline");
@@ -118,7 +125,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
       return next;
     });
   // Where the creator has nothing to change (with the reviewer, or approved) the compliance check is what's worth reading.
-  const [tab, setTab] = useState<"compliance" | "request" | "history">(
+  const [tab, setTab] = useState<"compliance" | "request" | "sentiment" | "history">(
     stage.status === "IN_REVIEW" || stage.status === "APPROVED" ? "compliance" : "request"
   );
   const { highlights, resolve } = useScriptHighlights(stage.submission_id, fromReviewer ? base?.version_number : shown?.version_number, false);
@@ -208,6 +215,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
           {status === "IN_REVIEW" && (
             <p className="rounded-xl border border-border bg-card px-4 py-3 text-[13px] text-muted-foreground">
               Version {shown.version_number} is with a reviewer. You'll get a notification when they reply.
+              {isReviewer && " You uploaded this script, so you can't review it yourself: another reviewer has to edit it, comment on it and approve it."}
             </p>
           )}
           {status === "APPROVED" && (
@@ -304,8 +312,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
           {(
             [
               ["compliance", "Compliance", activeFlagCount(shown.check)],
-              ["request", "Request changes", highlights.length + (base ? changes.length : 0)],
-              ["history", "Script history", stage.versions.length],
+              ["request", "Reviewer comments", highlights.length + (base ? changes.length : 0)],
+              ["sentiment", "Sentiment", null],
+              ["history", "History", stage.versions.length],
             ] as const
           ).map(([value, label, count]) => (
             <button
@@ -319,7 +328,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
               }`}
             >
               {label}
-              <span className="min-w-[18px] rounded-full bg-muted px-1.5 text-[11px] font-semibold text-foreground/70">{count}</span>
+              {count != null && (
+                <span className="min-w-[18px] rounded-full bg-muted px-1.5 text-[11px] font-semibold text-foreground/70">{count}</span>
+              )}
             </button>
           ))}
         </div>
@@ -329,7 +340,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
               ? "Every version and the reviewer's notes."
               : tab === "compliance"
                 ? "The rulebook check of the script as it stands."
-                : "What your reviewer marked and changed. Click one to find it in the script."}
+                : tab === "sentiment"
+                  ? "How the script is likely to land with its audience: tone, brand fit and wording that could be misread. Run it before you send."
+                  : "What your reviewer highlighted, commented on and changed. Click one to find it in the script."}
             {base?.check?.score != null && shown.check?.score != null && ` Script check: ${base.check.score} → ${shown.check.score}.`}
             {!base && shown.check?.score != null && ` Script check: ${shown.check.score}/100 · ${verdict.text.toLowerCase()}.`}
           </p>
@@ -339,6 +352,9 @@ function Changes({ stage }: { stage: ScriptStage }) {
             <VersionHistory versions={stage.versions} />
           ) : tab === "compliance" ? (
             <ScriptCompliance check={shown.check} />
+          ) : tab === "sentiment" ? (
+            // The creator runs it while the script is theirs to change; once sent, it shows the last result.
+            <SentimentPanel submissionId={stage.submission_id} canRun={stage.can_submit || stage.can_respond} />
           ) : (
             <>
               <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -432,7 +448,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
               />
               {!allChecked && (
                 <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                  Check off {unchecked} more request{unchecked === 1 ? "" : "s"} in Request changes to send this back.
+                  Check off {unchecked} more comment{unchecked === 1 ? "" : "s"} in Reviewer comments to send this back.
                 </p>
               )}
               <div className="flex gap-2">
@@ -442,7 +458,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
                 <Button
                   className="h-10 flex-1"
                   disabled={revise.isPending || resolve.isPending || !text.trim() || !allChecked}
-                  title={allChecked ? undefined : "Check every request in Request changes first"}
+                  title={allChecked ? undefined : "Check off every comment in Reviewer comments first"}
                   onClick={async () => {
                     // Record what the checked highlights read now, so the reviewer sees old wording → new wording.
                     const reviewed = fromReviewer ? base : shown;

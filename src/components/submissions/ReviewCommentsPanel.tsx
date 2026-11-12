@@ -113,7 +113,7 @@ export default function ReviewCommentsPanel({
   const { comments, isLoading, add, resolve, remove } = useReviewComments(submissionId);
   // Reviewers file feedback under a category (legal, editorial...). Creators just leave the reviewer a note.
   const { hasPermission } = useAuth();
-  const asReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const asReviewer = hasPermission("CONTENT_REVIEW_VIEW");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<ReviewCommentCategory>("NOTE");
   const [pin, setPin] = useState(false);

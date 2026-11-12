@@ -6,6 +6,7 @@ import { Field, MultiSelect } from "@/components/submissions/FormFields";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
+import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import type { BatchDetails } from "@/types/scriptBatch";
 
@@ -43,7 +44,9 @@ export default function BatchDetailsForm({
     queryFn: () => submissionService.reviewers(brands),
     staleTime: 60_000,
   });
-  const reviewers = reviewersQuery.data ?? [];
+  // Nobody but a super admin reviews their own script, so the person uploading isn't offered as its reviewer.
+  const { user, canSwitchView } = useAuth();
+  const reviewers = (reviewersQuery.data ?? []).filter((r) => canSwitchView || r.id !== user?.id);
   const accounts = useMemo(
     () => (options?.accounts ?? []).filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
     [options, brands]
@@ -147,7 +150,7 @@ export default function BatchDetailsForm({
             placeholder={reviewersQuery.isLoading ? "Loading reviewers..." : reviewersQuery.isError ? "Couldn't load reviewers" : "Pick reviewers"}
             getLabel={(id) => {
               const r = reviewers.find((x) => x.id === id);
-              return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
+              return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}${r.kind === "SUGGESTER" ? " · Suggests only" : ""}` : "Reviewer";
             }}
             getSearchText={(id) => reviewers.find((x) => x.id === id)?.email ?? ""}
             renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}

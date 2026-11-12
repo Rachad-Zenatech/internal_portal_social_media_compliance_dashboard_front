@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, isPast } from "date-fns";
-import { CalendarClock, Loader2, MessageSquareWarning, RotateCcw } from "lucide-react";
+import { CalendarClock, Loader2, MessageSquareWarning } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,24 +22,25 @@ export interface ApprovalTarget {
   can_manage_approval?: boolean;
 }
 
-type Mode = "withdraw" | "reopen" | "reschedule" | null;
+type Mode = "reopen" | "reschedule" | null;
 
 const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
 
 /**
- * What can still happen to approved content before it goes out: its creator withdraws it for a late fix, or a
- * reviewer reschedules it or reopens it for changes. Renders nothing for anyone else or any other status.
+ * What can still happen to approved content before it goes out: a reviewer reschedules it or reopens it for changes.
+ * Its creator can't pull it back (content sent for review isn't withdrawn). Renders nothing for anyone else or any
+ * other status.
  */
 export default function ApprovalActions({
   target,
-  isCreator,
   buttonClassName = "text-xs gap-1.5",
 }: {
   target: ApprovalTarget;
-  isCreator: boolean;
+  /** Not used: only reviewers get actions on approved content. */
+  isCreator?: boolean;
   buttonClassName?: string;
 }) {
-  const { withdraw, reopen, reschedule } = useApprovalActions(target.id, target.reference_code);
+  const { reopen, reschedule } = useApprovalActions(target.id, target.reference_code);
   const [mode, setMode] = useState<Mode>(null);
   const [notes, setNotes] = useState("");
   const [when, setWhen] = useState("");
@@ -48,12 +49,12 @@ export default function ApprovalActions({
 
   // A super admin viewing the app as a creator gets the creator's actions only.
   const isReviewer = Boolean(target.can_manage_approval) && !creatorView;
-  if (target.status !== "APPROVED" || (!isCreator && !isReviewer)) return null;
+  if (target.status !== "APPROVED" || !isReviewer) return null;
 
   const planned = target.publish_at ? new Date(target.publish_at) : null;
   const whenDate = when ? new Date(when) : null;
   const whenInPast = Boolean(whenDate && isPast(whenDate));
-  const pending = withdraw.isPending || reopen.isPending || reschedule.isPending;
+  const pending = reopen.isPending || reschedule.isPending;
   const close = () => setMode(null);
 
   const start = (m: Mode) => {
@@ -64,8 +65,7 @@ export default function ApprovalActions({
   };
 
   const confirm = () => {
-    if (mode === "withdraw") withdraw.mutate(undefined, { onSuccess: close });
-    else if (mode === "reopen" && notes.trim()) reopen.mutate({ notes: notes.trim(), ...timelineFields(timeline) }, { onSuccess: close });
+    if (mode === "reopen" && notes.trim()) reopen.mutate({ notes: notes.trim(), ...timelineFields(timeline) }, { onSuccess: close });
     else if (mode === "reschedule" && whenDate && !whenInPast) reschedule.mutate(whenDate.toISOString(), { onSuccess: close });
   };
 
@@ -87,26 +87,15 @@ export default function ApprovalActions({
           </Button>
         </>
       )}
-      {isCreator && (
-        <Button type="button" variant="outline" size="sm" className={buttonClassName} onClick={() => start("withdraw")}>
-          <RotateCcw className="w-3.5 h-3.5" /> Withdraw to fix
-        </Button>
-      )}
 
       <Dialog open={mode !== null} onOpenChange={(o) => !o && close()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base">
-              {mode === "withdraw"
-                ? `Withdraw ${target.reference_code} to fix it?`
-                : mode === "reopen"
-                ? `Reopen ${target.reference_code} for changes`
-                : `Reschedule ${target.reference_code}`}
+              {mode === "reopen" ? `Reopen ${target.reference_code} for changes` : `Reschedule ${target.reference_code}`}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {mode === "withdraw"
-                ? `It goes back to draft and comes off the calendar. The approval of version ${target.current_version} no longer applies: once you've made the fix, resubmit it and a reviewer approves it again.`
-                : mode === "reopen"
+              {mode === "reopen"
                 ? "The approval is taken back and it comes off the calendar. The creator gets your note, makes the changes and resubmits it for review."
                 : "The approval stands; only the publish time changes. The creator is told about the new time."}
             </DialogDescription>
@@ -146,7 +135,7 @@ export default function ApprovalActions({
               onClick={confirm}
             >
               {pending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "withdraw" ? "Withdraw to draft" : mode === "reopen" ? "Reopen for changes" : "Reschedule"}
+              {mode === "reopen" ? "Reopen for changes" : "Reschedule"}
             </Button>
           </DialogFooter>
         </DialogContent>

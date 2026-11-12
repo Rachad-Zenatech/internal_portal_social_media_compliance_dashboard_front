@@ -158,7 +158,7 @@ const BAR_FILTER =
 export default function ContentCalendarPage() {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
-  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const isReviewer = hasPermission("CONTENT_REVIEW_VIEW");
   // Approved content is company-wide for people who can see everyone's content; otherwise their own.
   const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
 

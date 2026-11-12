@@ -712,6 +712,8 @@ function ReviewCard({
   const showScreener = isVideo(summary) && summary.status !== "DRAFT";
   const check = sub?.latest_check;
   const canRunCheck = Boolean(sub?.can_edit);
+  // In review or approved: its checks can be read, but not run again.
+  const locked = !canRunCheck && (summary.status === "IN_REVIEW" || summary.status === "APPROVED");
   const sentimentDone = analysis?.status === "COMPLETED";
   const sentimentRunning = isSentimentRunning(analysis);
   const facts: [string, React.ReactNode][] = [
@@ -952,6 +954,16 @@ function ReviewCard({
           <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
           <p className="text-[11px] text-muted-foreground">Analysis does not approve or publish content.</p>
         </div>
+        {locked && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-3 dark:border-blue-500/30 dark:bg-blue-500/10">
+            <p className="min-w-0 flex-1 text-xs text-blue-950/85 dark:text-blue-100/85">
+              Go through every step the way it was prepared: details, compliance, sentiment and public mood. It is read-only; nothing can be changed or run again.
+            </p>
+            <Button asChild size="sm" variant="outline" className="h-8 shrink-0 bg-card text-xs font-semibold">
+              <Link to={`/submissions/new?id=${summary.id}`}>Open all checks</Link>
+            </Button>
+          </div>
+        )}
         <div className="mt-3 grid gap-3 @xl:grid-cols-2">
           <CheckCard
             icon={ShieldCheck}
@@ -990,10 +1002,10 @@ function ReviewCard({
           <CheckCard
             icon={BarChart3}
             title="Sentiment Analysis"
-            status={sentimentDone ? "Results ready" : sentimentRunning ? "Running..." : "No results yet"}
+            status={sentimentDone ? "Results ready" : sentimentRunning ? "Running..." : locked ? "Not run before it was sent" : "No results yet"}
             statusTone={sentimentDone ? "text-emerald-700 dark:text-emerald-300" : undefined}
             description="Assess tone and messaging for the intended audience. Review the analysis before making a decision."
-            action={openCheck === "sentiment" ? "Hide analysis" : sentimentDone ? "View analysis" : "Analyze sentiment"}
+            action={openCheck === "sentiment" ? "Hide analysis" : sentimentDone ? "View analysis" : locked ? null : "Analyze sentiment"}
             onAction={() => setOpenCheck((o) => (o === "sentiment" ? null : "sentiment"))}
           />
         </div>
@@ -1007,7 +1019,7 @@ function ReviewCard({
         )}
         {openCheck === "sentiment" && (
           <div className="mt-3 rounded-xl border border-border/70 p-4">
-            <SentimentPanel submissionId={summary.id} onSeek={seek} />
+            <SentimentPanel submissionId={summary.id} onSeek={seek} canRun={!locked} />
           </div>
         )}
       </section>
@@ -1088,8 +1100,8 @@ export default function SubmissionsListPage() {
   // Super admins, Content Managers and reviewers can switch to everyone's content.
   const { hasPermission, user, creatorView } = useAuth();
   // Admins keep "Everyone's" even when viewing the app as a creator (the server allows them every post).
-  const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_APPROVE") || creatorView;
-  const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
+  const canSeeAll = hasPermission("CONTENT_SUBMISSIONS_VIEW") || hasPermission("CONTENT_REVIEW_VIEW") || creatorView;
+  const isReviewer = hasPermission("CONTENT_REVIEW_VIEW");
   // Creators browse a gallery and open details in a side sheet; reviewers keep the list beside the review panel.
   const gallery = !isReviewer;
 
@@ -1645,7 +1657,7 @@ export default function SubmissionsListPage() {
                 <strong>{confirming?.title}</strong> is submitted for compliance review as version {(confirming?.current_version ?? 0) + 1}. The
                 rulebook check runs right away.
               </span>
-              <span className="block">You can withdraw it later if you need to make changes.</span>
+              <span className="block">Once it is submitted it can't be withdrawn or edited; a reviewer asks for changes if it needs any.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
