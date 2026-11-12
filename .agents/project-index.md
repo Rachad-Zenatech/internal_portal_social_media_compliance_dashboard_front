@@ -164,7 +164,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (257 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (39 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2654 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2666 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
