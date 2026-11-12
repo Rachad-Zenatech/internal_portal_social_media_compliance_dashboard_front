@@ -24,9 +24,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
 - src/components/compliance/BrandVoicePanel.tsx (404 lines) - brand voice panel (components compliance)
 - src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
-- src/components/dashboard/CreatorDashboard.tsx (426 lines) - creator dashboard (components dashboard)
+- src/components/compliance/ScreenerCommentComposer.tsx (201 lines) - screener comment composer (components compliance)
+- src/components/dashboard/CreatorDashboard.tsx (440 lines) - creator dashboard (components dashboard)
+- src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
+- src/components/dashboard/ReviewerStats.tsx (73 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - src/components/dashboard/SuggesterDashboard.tsx (281 lines) - What they have done on an item so far, as a short chip.
 - src/components/dashboard/dashboardParts.tsx (443 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/BatchDetailsForm.tsx (198 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
@@ -53,9 +56,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CaptionSuggester.tsx (144 lines) - caption suggester (components submissions)
 - src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
 - src/components/submissions/CheckProgress.tsx (144 lines) - What each AI step of the check is, in the creator's words.
+- src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - src/components/submissions/ComplianceStep.tsx (484 lines) - Where in the post it was found.
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
+- src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
 - src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
@@ -65,8 +71,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
+- src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
+- src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
 - src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (158 lines) - The steps that can't be opened yet, and why they can't.
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
@@ -82,7 +90,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
+- src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+- src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
@@ -159,7 +169,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
-- src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
+- src/pages/Dashboard/Dashboard.tsx (354 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)

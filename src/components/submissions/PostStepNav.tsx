@@ -11,23 +11,27 @@ type TabState = "done" | "stale" | "todo";
  * The five steps along the top of the post editor, the one you're on lit. Each says what it's for when you point at it.
  * The steps after the details stay shut until the details are filled in (the page then says what is missing).
  */
-export default function PostStepNav({
+export default function PostStepNav<K extends string = PostStepKey>({
   current,
   states,
   shut,
   onGo,
+  steps,
 }: {
-  current: PostStepKey;
-  states: Partial<Record<PostStepKey, TabState>>;
+  current: K;
+  states: Partial<Record<K, TabState>>;
   /** The steps that can't be opened yet, and why they can't. */
-  shut?: Partial<Record<PostStepKey, string>>;
-  onGo: (step: PostStepKey) => void;
+  shut?: Partial<Record<K, string>>;
+  onGo: (step: K) => void;
+  /** Another set of steps (a post sent back has six); the usual five by default. */
+  steps?: { key: K; label: string; purpose: string }[];
 }) {
+  const list = steps ?? (POST_STEPS as unknown as { key: K; label: string; purpose: string }[]);
   return (
     <TooltipProvider delayDuration={150}>
       <nav aria-label="Steps" className="rounded-2xl border border-border/70 bg-card p-3 shadow-xs">
-        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {POST_STEPS.map((step, i) => {
+        <ol className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${list.length === 6 ? "xl:grid-cols-6" : "lg:grid-cols-5"}`}>
+          {list.map((step, i) => {
             const active = step.key === current;
             const state = states[step.key] ?? "todo";
             const why = shut?.[step.key];

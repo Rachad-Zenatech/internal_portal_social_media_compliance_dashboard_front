@@ -4,26 +4,30 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/dashboard/CreatorDashboard.tsx (426 lines) - creator dashboard (components dashboard)
-- `dueLabel` (function) L37 - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
+## src/components/dashboard/CreatorDashboard.tsx (440 lines) - creator dashboard (components dashboard)
+- `dueLabel` (function) L38 - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
 - `needsChanges` (const) L62 - A reviewer asked for changes to the post, or sent its script back (with or without edits).
 - `awaitingVideo` (const) L64 - The script is approved and the video is the creator's next step.
 - `scriptSent` (const) L67 - A post that's still a draft, but whose script has been sent to a reviewer.
 - `sentAt` (const) L70 - When it went to a reviewer: the post's submission, or (for a script) when it was last worked on.
-- `NextStepRow` (function) L80
-    - `due` (fn) L85 - Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
-- `PostRow` (function) L137
-- `CreatorDashboard` (export function) L184 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
-    - `navigate` (fn) L186
-    - `now` (fn) L187
-    - `submissions` (fn) L190
-    - `summary` (fn) L196
-    - `mine` (fn) L202
-    - `nextSteps` (fn) L205 - Changes to make (soonest due first), then drafts (latest first).
-    - `due` (fn) L206
-    - `openPost` (fn) L234
-    - `sent` (fn) L235
-    - `activity` (fn) L246 - What reviewers did on their posts; their own actions (sending for review) aren't news to them.
+- `NextStepCard` (function) L74 - One thing waiting on the creator, as a slide: its picture with the deadline on it, what to do and why, how far  along its steps are, and ...
+    - `due` (fn) L79 - Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
+- `PostRow` (function) L148
+- `CreatorDashboard` (export function) L195 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
+    - `navigate` (fn) L197
+    - `now` (fn) L198
+    - `submissions` (fn) L201
+    - `summary` (fn) L207
+    - `mine` (fn) L213
+    - `nextSteps` (fn) L216 - Changes to make (soonest due first), then drafts (latest first).
+    - `due` (fn) L217
+    - `openPost` (fn) L244
+    - `sent` (fn) L245
+    - `activity` (fn) L256 - What reviewers did on their posts; their own actions (sending for review) aren't news to them.
+
+## src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
+- `PostFilter` (export type) L7
+- `CreatorStats` (export function) L13 - The creator's numbers at a glance.
 
 ## src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - `DashboardHeader` (export function) L2 - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
@@ -31,6 +35,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - `dayName` (const) L11
 - `DayAgenda` (export function) L15 - One day of posts at a time, in time order, with arrows to step through days.
+
+## src/components/dashboard/ReviewerStats.tsx (73 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
+- `QueueFilter` (export type) L5 - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
+- `ReviewerStats` (export function) L11 - The reviewer's numbers at a glance.
 
 ## src/components/dashboard/SuggesterDashboard.tsx (281 lines) - What they have done on an item so far, as a short chip.
 - `touched` (const) L18

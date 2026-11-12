@@ -4,26 +4,12 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Dashboard/Dashboard.tsx (444 lines) - dashboard (pages  dashboard)
-- `Dashboard` (export function) L32 - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
+## src/pages/Dashboard/Dashboard.tsx (354 lines) - dashboard (pages  dashboard)
+- `Dashboard` (export function) L33 - Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) thei...
 - `isFailing` (const) L42 - A check that would stop approval or clearly needs work: a red result, or a score under 60.
-- `isOverdue` (const) L44
-- `QueueRow` (type) L47 - What waits for a reviewer: a post, or a video's script.
-- `rowDue` (const) L48
-- `rowSent` (const) L49
-- `rowOverdue` (const) L50
-- `rowFailing` (const) L51
-- `ReviewerDashboard` (function) L54
-    - `navigate` (fn) L56
-    - `now` (fn) L58
-    - `submissions` (fn) L61 - Reviewers see everyone's content on their brands, as in the Content Screener.
-    - `summary` (fn) L67
-    - `scripts` (fn) L73 - Scripts waiting for a review are part of the queue too.
-    - `options` (fn) L78
-    - `audienceName` (fn) L79
-    - `all` (fn) L81
-    - `openInScreener` (fn) L104
-    - `openRow` (fn) L108
-    - `changeFilter` (fn) L117
-    - `activity` (fn) L123 - The team's activity, minus the reviewer's own actions.
-    - `plural` (fn) L127
+- `QueueRow` (type) L46 - What waits for a reviewer: a post, or a video's script.
+- `rowDue` (const) L47
+- `rowSent` (const) L48
+- `rowOverdue` (const) L49
+- `rowFailing` (const) L50
+- `ReviewerDashboard` (function) L53

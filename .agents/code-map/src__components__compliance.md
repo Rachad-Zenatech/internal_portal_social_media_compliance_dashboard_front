@@ -20,3 +20,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - `NewsroomSyncBar` (export function) L16 - Where the facts come from: the ZenaTech newsroom, read once a day.
+
+## src/components/compliance/ScreenerCommentComposer.tsx (201 lines) - screener comment composer (components compliance)
+- `parseTime` (function) L20 - 1:05", "65" or "0:65" as seconds; null when it isn't a time.
+- `TimeField` (function) L27 - One end of a video range: a time to type (m:ss), or "Now" for where the video is.
+- `Mode` (type) L60
+- `Range` (type) L61
+- `TimeModePicker` (function) L64 - Pin the comment to the moment the video is at, to a stretch of it, or to no time.
+- `RangeFields` (function) L90 - The two ends of a range comment, each typed in or taken from where the video is.
+- `CommentComposer` (export function) L113 - Write a reviewer comment, pinned to a moment, a range of the video, or no time.

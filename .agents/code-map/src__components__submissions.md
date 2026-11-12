@@ -38,6 +38,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CheckModelsUsed` (export function) L110 - After a check: which models answered, and how many fallbacks it took.
 - `SavedCheckModels` (export function) L131 - The models a saved check used, read from the saved result, so it shows after a reload too.
 
+## src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `ReplyingTo` (export function) L10 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `CommentHeader` (function) L34 - Who wrote it and what kind it is, where it points (an image area or a video moment), and when.
+- `ReplyQuote` (function) L73 - The comment this one replies to, as in a chat app; a click goes to it.
+- `CommentFooter` (function) L94 - Resolved by whom, and the buttons: reply, mark resolved or reopen, delete.
+- `CommentItem` (export function) L135
+
+## src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
+- `CommentThread` (export function) L11 - A comment and the replies that follow it, indented under it with a line down the side; long threads fold up.
+
 ## src/components/submissions/ComplianceStep.tsx (484 lines) - Where in the post it was found.
 - `escapeRe` (const) L17
 - `Finding` (interface) L19
@@ -63,6 +73,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Tile` (function) L85
 - `CardHead` (function) L95
 - `ContextReportView` (export function) L112 - How the post measures against the Messaging Context its brand, audiences and platforms bring in: four summary  tiles, then brand voice, f...
+
+## src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
+- `ConversationImages` (export function) L9 - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
+- `ConversationVideo` (export function) L70 - The post's video, with a bar marking where each comment is.
 
 ## src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - `DelegateTarget` (interface) L16
@@ -109,11 +123,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `MoodBar` (export function) L18 - Positive / neutral / negative share of mentions.
 - `SpikeBadge` (export function) L39
 
+## src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
+- `PanelComposer` (export function) L13 - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
+
 ## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - `PlatformCaptions` (export function) L10 - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...
 
 ## src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - `PlatformCaptionsView` (export function) L5 - Read-only: the caption each platform publishes, for reviewers and the post page.
+
+## src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
+- `HistoryView` (export function) L7
+- `CheckCard` (export function) L39 - One of the two analysis cards: what it checks, its result so far, and a way to open or run it.
 
 ## src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
 - `formatDuration` (function) L26
@@ -218,6 +239,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Row` (function) L31
 - `SourceChecks` (export function) L111 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
+## src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
+- `StageTabs` (export function) L4 - The row of status pills above a list, each with its count; click the chosen one again to clear it.
+
 ## src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const) L19
 - `overallPostDecision` (export function) L34
@@ -227,6 +251,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `scrapeTwitter` (fn) L324
     - `handleScrape` (fn) L327
     - `otherTrends` (fn) L344
+
+## src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `COMMENT_CATEGORIES` (export const) L5
+- `toneFor` (export const) L12
+- `labelFor` (export const) L13
+- `regionNumbers` (export const) L16 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `formatSec` (export const) L19
+- `commentBoxId` (export const) L22 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
+- `AreaTag` (export function) L25 - A small tag for a comment on an area of an image, in the quotes and the reply strip as on the card itself.
 
 ## src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) L39 - Whether the post is still being read (video transcript, text in images): no score is shown until it has.

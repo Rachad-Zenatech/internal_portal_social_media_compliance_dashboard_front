@@ -30,6 +30,7 @@ import {
   List,
   ListOrdered,
   Loader2,
+  Lock,
   Megaphone,
   MessageSquareText,
   Redo2,
@@ -62,6 +63,7 @@ import {
   audienceCodes,
   audienceNames,
   brandCodes,
+  dueInfo,
   isAnalysing,
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
@@ -88,7 +90,6 @@ import PlatformCaptions from "@/components/submissions/PlatformCaptions";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
-import RevisionGuide from "@/components/submissions/RevisionGuide";
 import { useReviewComments } from "@/hooks/useReview";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
@@ -256,6 +257,39 @@ const STEP_DESCRIPTION: Record<PostStepKey, string> = {
   send: "Pick your reviewers and send it. Once it is sent the post is locked.",
 };
 
+/** Who sent the post back, their note, and when it is due back. */
+function SentBackHeader({ reviewer, note, dueAt }: { reviewer?: string | null; note?: string | null; dueAt?: string | null }) {
+  const due = dueInfo(dueAt, "REVISION");
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-base font-bold text-foreground">{reviewer ?? "Your reviewer"} asked for changes</p>
+        {note && <p className="mt-1 text-sm text-muted-foreground">“{note}”</p>}
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Click a comment to see where it is on the post, and reply to any of them. Then make the changes.
+        </p>
+      </div>
+      {due && (
+        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${due.overdue ? "bg-red-600 text-white" : "bg-muted text-foreground"}`}>
+          {due.overdue ? `Overdue · was due ${due.exact}` : `Resubmit by ${due.exact}`}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last. */
+type EditorStep = PostStepKey | "suggestions";
+const REVISION_STEPS: { key: EditorStep; label: string; purpose: string }[] = [
+  { key: "suggestions", label: "Check the suggestions", purpose: "Read what the reviewers said and see where each comment is on the post. Reply to any of them." },
+  { key: "details", label: "Make the changes", purpose: "Change the post as asked: upload a new image, video or script, and edit the caption or details." },
+  { key: "compliance", label: "Compliance", purpose: "Check the changed post against the rulebook again." },
+  { key: "sentiment", label: "Sentiment", purpose: "Run the sentiment analysis again on the changed post." },
+  { key: "mood", label: "Public mood", purpose: "See what people online are saying now about the post's topics." },
+  { key: "send", label: "Reviewers", purpose: "The reviewers stay on the post. Add more people if you like, then resubmit." },
+];
+const REVISION_TITLE = Object.fromEntries(REVISION_STEPS.map((s) => [s.key, s.label])) as Record<EditorStep, string>;
+
 function Section({ title, description, children, id }: { step?: number; title: string; description?: string; children: ReactNode; id?: string }) {
   return (
     <Card id={id} className="py-0 gap-0 rounded-2xl border-border/70 shadow-xs scroll-mt-4">
@@ -333,6 +367,8 @@ export default function NewSubmissionPage() {
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
   const [reviewerIds, setReviewerIds] = useState<string[]>([]);
+  // On a post sent back: the reviewers and suggesting reviewers it was sent to. They stay on it; more can be added.
+  const [lockedReviewerIds, setLockedReviewerIds] = useState<string[]>([]);
 
   // Files, checks and save status
   const [files, setFiles] = useState<SubmissionFile[]>([]);
@@ -526,6 +562,9 @@ export default function NewSubmissionPage() {
         setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
         setReviewerIds(s.reviewer_ids ?? []);
+        setLockedReviewerIds(s.status === "CHANGES_REQUESTED" ? s.reviewer_ids ?? [] : []);
+        // Sent back: every detail is open, so any file (image, video, script) can be uploaded again.
+        if (s.status === "CHANGES_REQUESTED") setShowAllDetails(true);
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
@@ -867,7 +906,12 @@ export default function NewSubmissionPage() {
 
   // ---- The five steps: one at a time (?step=), and the later ones wait until the details are filled in ----
   const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? stepParam : "details";
-  const onDetails = stepView === "details";
+  // Sent back, the first step is the reviewers' suggestions (where it opens unless another step is asked for).
+  const onSuggestions = resubmitting && Boolean(submissionId) && (stepParam === "suggestions" || !stepParam);
+  const currentStep: EditorStep = onSuggestions ? "suggestions" : stepView;
+  const onDetails = stepView === "details" && !onSuggestions;
+  /** A step's name as the step bar shows it (a post sent back has its own six). */
+  const titleOf = (step: EditorStep) => (resubmitting ? REVISION_TITLE[step] : STEP_TITLE[step as PostStepKey]);
   const SENDING_FIELDS = ["reviewer_ids", "approval_needed_by", "publish_at"];
   // What the post still needs before its compliance check, sentiment analysis and public mood can be run.
   const detailsMissing = (Object.entries(clientMissing) as [keyof typeof clientMissing, boolean][])
@@ -877,7 +921,7 @@ export default function NewSubmissionPage() {
   // A video's script is approved first; until then its own flow handles the later steps.
   const gated = !onDetails && !videoLocked && !detailsComplete;
   const toolView = (step: PostStepKey) => stepView === step && !gated;
-  const goToStep = (step: PostStepKey) =>
+  const goToStep = (step: EditorStep) =>
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set("step", step);
@@ -933,8 +977,8 @@ export default function NewSubmissionPage() {
     goToStep("details");
     window.setTimeout(() => captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
   };
-  const openStep = (target: PostStepKey) =>
-    onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
+  const openStep = (target: EditorStep) =>
+    target !== "suggestions" && onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
 
   /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
    * Duplicates are settled first, just before the check: a duplicate is refused, a repost for another date is asked. */
@@ -1306,6 +1350,20 @@ export default function NewSubmissionPage() {
         </div>
       )}
 
+      {resubmitting && submissionId ? (
+        <PostStepNav<EditorStep>
+          steps={REVISION_STEPS}
+          current={currentStep}
+          states={{
+            suggestions: reviewComments.some((c) => !c.resolved_at) ? "todo" : "done",
+            details: changesMade ? "done" : "stale",
+            compliance: recheck.compliance ? "done" : "stale",
+            sentiment: recheck.sentiment ? "done" : "stale",
+            mood: recheck.mood ? "done" : "stale",
+          }}
+          onGo={openStep}
+        />
+      ) : (
       <PostStepNav
         current={stepView}
         states={{
@@ -1324,44 +1382,34 @@ export default function NewSubmissionPage() {
         }}
         onGo={openStep}
       />
-
-      {resubmitting && submissionId && (
-        <RevisionGuide
-          reviewer={sentBack?.decided_by_name}
-          note={sentBack?.decision_notes}
-          dueAt={dueAt}
-          openComments={reviewComments.filter((c) => !c.resolved_at).length}
-          changesMade={changesMade}
-          rechecked={recheck}
-          submitting={submitting}
-          onOpenStep={openStep}
-          onResubmit={() => submit()}
-        />
       )}
 
       {/* Once decided, the creator gets a copy of the review conversation (reviewers and suggesting reviewers) on
           every step: read-only once approved; sent back, they can reply. On the details step of a post sent back it
           is beside the edits instead (RevisionWorkspace), so it isn't shown twice. */}
-      {submissionId && (status === "APPROVED" || (status === "CHANGES_REQUESTED" && !onDetails)) && (
+      {submissionId && (status === "APPROVED" || onSuggestions) && (
         <ReviewConversation
           submissionId={submissionId}
           files={files}
           canReply={status === "CHANGES_REQUESTED"}
           emptyText="The reviewers didn't leave any comments on this post."
           header={
-            <div>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <MessageSquareText className="w-4 h-4" /> Review conversation
-              </p>
-              <p className="text-[12px] text-muted-foreground">
-                {status === "APPROVED"
-                  ? "What the reviewers and suggesting reviewers said while reviewing this post, for your reference."
-                  : "What the reviewers and suggesting reviewers said. Click a comment to see where it is on the post, and reply to any of them."}
-              </p>
-            </div>
+            status === "APPROVED" ? (
+              <div>
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <MessageSquareText className="w-4 h-4" /> Review conversation
+                </p>
+                <p className="text-[12px] text-muted-foreground">
+                  What the reviewers and suggesting reviewers said while reviewing this post, for your reference.
+                </p>
+              </div>
+            ) : (
+              <SentBackHeader reviewer={sentBack?.decided_by_name} note={sentBack?.decision_notes} dueAt={dueAt} />
+            )
           }
         />
       )}
+      {onSuggestions && <StepFooter next={{ label: "Continue to make the changes", onClick: () => goToStep("details") }} />}
 
       {/* The reviewer's comments beside the content, where the edits are made: on the details step only. */}
       {resubmitting && submissionId && onDetails && (
@@ -1385,7 +1433,7 @@ export default function NewSubmissionPage() {
         <CanvaReimportBar file={canvaMain} resubmitting busy={reimporting || submitting} onReimport={reimportCanva} />
       )}
 
-      <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${wideCompliance ? "" : "xl:grid-cols-[minmax(0,1fr)_360px]"}`}>
+      <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${wideCompliance ? "" : "xl:grid-cols-[minmax(0,1fr)_360px]"} ${onSuggestions ? "hidden" : ""}`}>
         {/* ---------------- Form ---------------- */}
         <div id="step-details" className="space-y-4 min-w-0 scroll-mt-4">
           {/* Sent for review: the details can be read, not changed. */}
@@ -2223,8 +2271,8 @@ export default function NewSubmissionPage() {
           <div ref={checkSectionRef} className={`scroll-mt-4 ${onDetails || stepView === "mood" || gated || (toolView("compliance") && !videoLocked) ? "hidden" : ""}`}>
           <Section
             step={STEP_NUMBER[stepView]}
-            title={STEP_TITLE[stepView]}
-            description={STEP_DESCRIPTION[stepView]}
+            title={titleOf(stepView)}
+            description={resubmitting && stepView === "send" ? "The reviewers stay on the post. Add more people if you like, then resubmit." : STEP_DESCRIPTION[stepView]}
           >
             <div className="flex flex-col gap-4">
               {videoLocked ? (
@@ -2369,9 +2417,27 @@ export default function NewSubmissionPage() {
 
               {/* Who it goes to, and the send itself */}
               <div id="step-send" className={`scroll-mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3 ${toolView("send") && !readOnly ? "" : "hidden"}`}>
+                {lockedReviewerIds.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[13px] font-semibold text-foreground">Already reviewing</p>
+                    <ul className="flex flex-wrap gap-1.5">
+                      {lockedReviewerIds.map((id) => {
+                        const r = reviewerOptions.find((x) => x.id === id);
+                        return (
+                          <li key={id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-foreground">
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                            {r?.name ?? "A reviewer"}
+                            <span className="text-muted-foreground">{r?.kind === "SUGGESTER" ? "· Suggesting" : "· Reviewer"}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="text-[11px] text-muted-foreground">They asked for these changes, so they stay on the post. You can add more people below.</p>
+                  </div>
+                )}
                 <Field
-                  label="Send to reviewers"
-                  required
+                  label={lockedReviewerIds.length ? "Add reviewers (optional)" : "Send to reviewers"}
+                  required={lockedReviewerIds.length === 0}
                   error={errorFor("reviewer_ids", "Pick at least one reviewer")}
                 >
                   {reviewersQuery.isSuccess && approverOptions.length === 0 ? (
@@ -2384,10 +2450,10 @@ export default function NewSubmissionPage() {
                     </div>
                   ) : (
                     <MultiSelect<string>
-                      options={approverOptions.map((r) => r.id)}
-                      value={pickedApprovers}
+                      options={approverOptions.map((r) => r.id).filter((id) => !lockedReviewerIds.includes(id))}
+                      value={pickedApprovers.filter((id) => !lockedReviewerIds.includes(id))}
                       onChange={(ids) => {
-                        setReviewerIds([...ids, ...pickedSuggesters]);
+                        setReviewerIds([...new Set([...lockedReviewerIds, ...ids, ...pickedSuggesters])]);
                         markEdited();
                       }}
                       placeholder={
@@ -2395,6 +2461,8 @@ export default function NewSubmissionPage() {
                           ? "Loading reviewers..."
                           : reviewersQuery.isError
                           ? "Couldn't load reviewers"
+                          : lockedReviewerIds.length
+                          ? "Add another reviewer"
                           : "Pick reviewers"
                       }
                       getLabel={(id) => {
@@ -2414,13 +2482,13 @@ export default function NewSubmissionPage() {
                       : "Only the people you pick see this post and get its notifications. Final approvers for its brands are always included."}
                   </p>
                 </Field>
-                {suggesterOptions.length > 0 && (
-                  <Field label="Suggesting reviewers (optional)">
+                {suggesterOptions.some((r) => !lockedReviewerIds.includes(r.id)) && (
+                  <Field label={lockedReviewerIds.length ? "Add suggesting reviewers (optional)" : "Suggesting reviewers (optional)"}>
                     <MultiSelect<string>
-                      options={suggesterOptions.map((r) => r.id)}
-                      value={pickedSuggesters}
+                      options={suggesterOptions.map((r) => r.id).filter((id) => !lockedReviewerIds.includes(id))}
+                      value={pickedSuggesters.filter((id) => !lockedReviewerIds.includes(id))}
                       onChange={(ids) => {
-                        setReviewerIds([...pickedApprovers, ...ids]);
+                        setReviewerIds([...new Set([...lockedReviewerIds, ...pickedApprovers, ...ids])]);
                         markEdited();
                       }}
                       placeholder="Pick suggesting reviewers"
@@ -2473,7 +2541,11 @@ export default function NewSubmissionPage() {
               busy={continuing}
               onSave={readOnly ? undefined : saveNow}
               saving={saveState === "saving"}
-              next={{ label: "Continue to compliance rules", onClick: () => (readOnly ? goToStep("compliance") : void leaveDetails("compliance")) }}
+              back={resubmitting ? { label: `Back: ${titleOf("suggestions").toLowerCase()}`, onClick: () => goToStep("suggestions") } : undefined}
+              next={{
+                label: `Continue to ${titleOf("compliance").toLowerCase()}`,
+                onClick: () => (readOnly ? goToStep("compliance") : void leaveDetails("compliance")),
+              }}
             />
           )}
           {!onDetails && !gated && (
@@ -2481,14 +2553,14 @@ export default function NewSubmissionPage() {
               onSave={readOnly ? undefined : saveNow}
               saving={saveState === "saving"}
               back={{
-                label: `Back: ${STEP_TITLE[POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key]}`,
+                label: `Back: ${titleOf(POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key)}`,
                 onClick: () => goToStep(POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key),
               }}
               next={
                 stepView === "send"
                   ? undefined
                   : {
-                      label: `Continue to ${STEP_TITLE[POST_STEPS[STEP_NUMBER[stepView]].key].toLowerCase()}`,
+                      label: `Continue to ${titleOf(POST_STEPS[STEP_NUMBER[stepView]].key).toLowerCase()}`,
                       onClick: () => goToStep(POST_STEPS[STEP_NUMBER[stepView]].key),
                     }
               }

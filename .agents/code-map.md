@@ -12,10 +12,10 @@ to find the right file.
 | .agents/code-map/src.md | 2 | 1 KB |
 | .agents/code-map/src__components__AppShell.md | 11 | 4 KB |
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
-| .agents/code-map/src__components__compliance.md | 2 | 1 KB |
-| .agents/code-map/src__components__dashboard.md | 5 | 5 KB |
+| .agents/code-map/src__components__compliance.md | 3 | 2 KB |
+| .agents/code-map/src__components__dashboard.md | 7 | 6 KB |
 | .agents/code-map/src__components__script.md | 17 | 11 KB |
-| .agents/code-map/src__components__submissions.md | 39 | 20 KB |
+| .agents/code-map/src__components__submissions.md | 46 | 23 KB |
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
