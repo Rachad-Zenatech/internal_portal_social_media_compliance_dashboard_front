@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpenText, ExternalLink, Loader2, Megaphone, Pencil, Plus, ScrollText, Search, Smartphone, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -151,6 +153,8 @@ export default function MessagingContextPage() {
   const shown =
     kind === "FACT" && needle ? ofKind.filter((e) => `${e.title} ${e.body}`.toLowerCase().includes(needle)) : ofKind;
   const current = KINDS.find((k) => k.value === kind)!;
+  // 20 to a page (the newsroom alone adds a couple of hundred facts); a new tab or search starts from the first page.
+  const paged = usePaged(shown, 20, [kind, needle]);
 
   const done = (msg: string) => {
     queryClient.invalidateQueries({ queryKey: ["messaging-context"] });
@@ -278,7 +282,7 @@ export default function MessagingContextPage() {
           </div>
         ) : (
           <ul className="divide-y divide-border/60">
-            {shown.map((e) => (
+            {paged.pageItems.map((e) => (
               <li key={e.id} className={`px-4 py-3 space-y-1.5 ${e.is_active ? "" : "opacity-60"}`}>
                 <div className="flex flex-wrap items-start gap-3">
                   <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${current.tone}`}>
@@ -345,6 +349,15 @@ export default function MessagingContextPage() {
             ))}
           </ul>
         )}
+        <ListPager
+          className="border-t border-border/60 px-4 py-2.5"
+          page={paged.page}
+          pageCount={paged.pageCount}
+          pageSize={paged.pageSize}
+          total={paged.total}
+          noun={kind === "FACT" ? "facts" : "entries"}
+          onPage={paged.setPage}
+        />
       </Card>
 
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>

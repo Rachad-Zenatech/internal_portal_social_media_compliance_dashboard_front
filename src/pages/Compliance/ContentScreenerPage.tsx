@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
@@ -82,12 +84,12 @@ const TABS: { value: QueueTab; label: string }[] = [
 ];
 
 const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
-  VIDEO: { label: "Video", cls: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300" },
-  SOCIAL_POST: { label: "Post", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
-  CAROUSEL: { label: "Carousel", cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
-  IMAGE: { label: "Image", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" },
-  BLOG: { label: "Article", cls: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" },
-  AD: { label: "Paid Ad", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" },
+  VIDEO: { label: "Video", cls: "bg-muted text-muted-foreground" },
+  SOCIAL_POST: { label: "Post", cls: "bg-muted text-muted-foreground" },
+  CAROUSEL: { label: "Carousel", cls: "bg-muted text-muted-foreground" },
+  IMAGE: { label: "Image", cls: "bg-muted text-muted-foreground" },
+  BLOG: { label: "Article", cls: "bg-muted text-muted-foreground" },
+  AD: { label: "Paid Ad", cls: "bg-muted text-muted-foreground" },
 };
 
 type DueFilter = "any" | "overdue" | "today" | "week" | "none";
@@ -158,7 +160,7 @@ function dueText(s: ReviewQueueItem, tab: QueueTab): { text: string; tone: strin
   const due = deadlineOf(s);
   if (!due) return { text: "No deadline", tone: muted };
   const who = tab === "sent_back" ? "Creator " : "";
-  if (isPast(due)) return { text: `${who}overdue ${formatDistanceToNow(due)}`, tone: tab === "review" ? "text-red-600 dark:text-red-400" : muted };
+  if (isPast(due)) return { text: `${who}overdue ${formatDistanceToNow(due)}`, tone: tab === "review" ? "text-red-700/80 dark:text-red-300/80" : muted };
   if (isToday(due)) return { text: `${who}due today, ${format(due, "h:mm a")}`, tone: tab === "review" ? "text-amber-700 dark:text-amber-400" : muted };
   return { text: `${who}due ${format(due, "EEE, MMM d")}`, tone: muted };
 }
@@ -179,13 +181,14 @@ function CheckingBadge({ s }: { s: ReviewQueueItem }) {
 function ScoreBadge({ s }: { s: ReviewQueueItem }) {
   const score = scoreOf(s);
   if (score == null) return <CheckingBadge s={s} />;
-  const tone =
-    score >= 80 && !hasCritical(s)
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-      : score >= 60 && !hasCritical(s)
-      ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-      : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
-  return <span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${tone}`}>{score}</span>;
+  // A quiet chip with a coloured dot, rather than a bright filled pill.
+  const dot = score >= 80 && !hasCritical(s) ? "bg-emerald-500" : score >= 60 && !hasCritical(s) ? "bg-amber-500" : "bg-red-500";
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 text-xs font-semibold tabular-nums text-foreground">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {score}
+    </span>
+  );
 }
 
 function Thumb({ s }: { s: ReviewQueueItem }) {
@@ -1501,8 +1504,18 @@ export default function ContentScreenerPage() {
       .sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)))
       .map((r) => r.s);
   }, [visible, sort]);
-  // Whatever was picked last, else the first post in the list.
-  const selected = visible.find((s) => s.id === selectedId) ?? rows[0] ?? null;
+  // 20 to a page; a new tab, search, filter or order starts from the first page.
+  const paged = usePaged(rows, 20, [postTab, scope, q, filters, sort]);
+  // A post opened from a link (?id=...) shows on its page once the queue has loaded.
+  const shownLinked = useRef(false);
+  useEffect(() => {
+    if (shownLinked.current || !selectedId || rows.length === 0) return;
+    shownLinked.current = true;
+    paged.showItem((s) => s.id === selectedId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, selectedId]);
+  // Whatever was picked last, else the first post on the page.
+  const selected = visible.find((s) => s.id === selectedId) ?? paged.pageItems[0] ?? null;
   const listCount = visible.length;
   const renderPostRow = (s: ReviewQueueItem) => {
         const due = dueText(s, postTab);
@@ -1781,7 +1794,7 @@ export default function ContentScreenerPage() {
               } first`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
-          {rows.map(renderPostRow)}
+          {paged.pageItems.map(renderPostRow)}
           {queue.isLoading ? (
             <li className="flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading the queue...
@@ -1796,6 +1809,16 @@ export default function ContentScreenerPage() {
             null
           )}
         </ul>
+        <ListPager
+          compact
+          className="border-t border-border/70 px-4 py-2"
+          page={paged.page}
+          pageCount={paged.pageCount}
+          pageSize={paged.pageSize}
+          total={paged.total}
+          noun="posts"
+          onPage={paged.setPage}
+        />
       </ResizablePanel>
 
       {/* ===== The post and the review panel ===== */}

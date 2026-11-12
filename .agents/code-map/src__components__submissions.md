@@ -149,35 +149,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CommentItem` (function) L45
 - `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
-## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `formatSec` (export const) L25
-- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L45
-- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
-
-## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `COMMENT_CATEGORIES` (export const) L11
-- `toneFor` (const) L18
-- `labelFor` (const) L19
-- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
-- `formatSec` (export const) L25
-- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
-- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
-- `CommentItem` (function) L45
-- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
-
-## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (373 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55
 - `toLocalInput` (const) L57
 - `defaultPublishTime` (function) L60 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
-- `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
+- `ChangesRequestedBanner` (export function) L341 - For the creator: the reviewer sent it back.
 
 ## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L4
@@ -199,7 +177,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `pill` (const) L47
 - `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
 
-## src/components/submissions/RevisionWorkspace.tsx (193 lines) - revision workspace (components submissions)
+## src/components/submissions/RevisionWorkspace.tsx (196 lines) - revision workspace (components submissions)
 - `RevisionWorkspace` (export function) L16 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)

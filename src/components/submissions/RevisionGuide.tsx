@@ -16,7 +16,7 @@ function Mark({ n, done }: { n: number; done: boolean }) {
   return (
     <span
       className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
-        done ? "bg-emerald-600 text-white" : "border-2 border-amber-500 bg-card text-amber-700"
+        done ? "bg-blue-600 text-white" : "border-2 border-blue-600 bg-card text-blue-700 dark:text-blue-300"
       }`}
     >
       {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : n}
@@ -56,16 +56,16 @@ export default function RevisionGuide({
   const nextCheck = CHECKS.find((c) => !rechecked[c.key]);
 
   return (
-    <section aria-label="Changes requested" className="overflow-hidden rounded-2xl border border-amber-300 bg-card shadow-xs dark:border-amber-500/40">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-amber-200 bg-amber-50 px-5 py-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+    <section aria-label="Changes requested" className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/70 px-5 py-4">
         <div className="min-w-0">
-          <p className="text-base font-bold text-amber-950 dark:text-amber-100">{reviewer ?? "Your reviewer"} asked for changes</p>
-          {note && <p className="mt-1 text-sm text-amber-950/90 dark:text-amber-100/90">“{note}”</p>}
+          <p className="text-base font-bold text-foreground">{reviewer ?? "Your reviewer"} asked for changes</p>
+          {note && <p className="mt-1 text-sm text-muted-foreground">“{note}”</p>}
         </div>
         {due && (
           <span
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-              due.overdue ? "bg-red-600 text-white" : "bg-amber-200/70 text-amber-950 dark:bg-amber-500/25 dark:text-amber-100"
+              due.overdue ? "bg-red-600 text-white" : "bg-muted text-foreground"
             }`}
           >
             {due.overdue ? `Overdue · was due ${due.exact}` : `Resubmit by ${due.exact}`}
@@ -106,11 +106,11 @@ export default function RevisionGuide({
                 >
                   <span className="text-foreground">{c.label}</span>
                   {rechecked[c.key] ? (
-                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                    <span className="inline-flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-300">
                       <Check className="h-3.5 w-3.5" strokeWidth={3} /> Done
                     </span>
                   ) : (
-                    <span className="font-semibold text-amber-700 dark:text-amber-300">Run again</span>
+                    <span className="font-semibold text-muted-foreground">Run again</span>
                   )}
                 </button>
               </li>

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
@@ -1219,9 +1221,26 @@ export default function SubmissionsListPage() {
     return sortItems(filtered, prefs.sort);
   }, [inView, stage, platforms, brands, audiences, search, prefs.sort]);
 
+  // 25 to a page; a new filter, search or sort starts again from the first page.
+  const paged = usePaged(visible, 25, [stage, platforms, brands, audiences, search, prefs.sort, scope]);
+  const pager = (compact = false) => (
+    <ListPager
+      page={paged.page}
+      pageCount={paged.pageCount}
+      pageSize={paged.pageSize}
+      total={paged.total}
+      noun="posts"
+      compact={compact}
+      onPage={(p) => {
+        paged.setPage(p);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    />
+  );
+
   // Wide screens always show something in the panel: the picked item, or the first one in the list.
   const picked = visible.find((s) => s.id === selectedId) ?? null;
-  const selected = picked ?? (isWide && !gallery ? visible[0] ?? null : null);
+  const selected = picked ?? (isWide && !gallery ? paged.pageItems[0] ?? null : null);
 
   const filtersActive = Boolean(stage || search || platforms.length || brands.length || audiences.length);
   const clearFilters = () => {
@@ -1462,10 +1481,11 @@ export default function SubmissionsListPage() {
           ) : (
             <>
               <ul className="flex flex-col gap-3">
-                {visible.map((s) => (
+                {paged.pageItems.map((s) => (
                   <PostRow key={s.id} s={s} labels={labels} onOpen={openPost} onOpenStep={openStep} onDelete={setDeleting} />
                 ))}
               </ul>
+              {pager()}
             </>
           )}
         </>
@@ -1606,7 +1626,7 @@ export default function SubmissionsListPage() {
             ) : (
               <>
                 <div className={isWide ? "space-y-3" : "grid gap-3 sm:grid-cols-2"}>
-                  {visible.map((s) => (
+                  {paged.pageItems.map((s) => (
                     <SubmissionCard
                       key={s.id}
                       s={s}
@@ -1617,6 +1637,7 @@ export default function SubmissionsListPage() {
                     />
                   ))}
                 </div>
+                {pager(isWide)}
                 <p className="pt-1 text-center text-[11px] text-muted-foreground">
                   {visible.length === data.length ? `Showing all ${data.length} submissions` : `Showing ${visible.length} of ${data.length} submissions`}
                 </p>

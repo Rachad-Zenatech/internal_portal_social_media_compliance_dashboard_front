@@ -62,16 +62,16 @@ export default function RevisionWorkspace({
   };
 
   return (
-    <Card className="py-0 gap-0 border-amber-500/40 shadow-xs overflow-hidden">
-      <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 bg-amber-500/5 border-b border-amber-500/20">
+    <Card className="py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 border-b border-border/70">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">The reviewer's comments</p>
-          <p className="text-xs text-amber-900/80 dark:text-amber-100/80">
+          <p className="text-sm font-semibold text-foreground">The reviewer's comments</p>
+          <p className="text-xs text-muted-foreground">
             {open > 0 ? `${open} open comment${open === 1 ? "" : "s"}. ` : "All comments resolved. "}
-            Click a comment's time to jump to that moment and fix it here. When you're done, run the checks again.
+            Click a comment to see where it is on the post, then fix it here. When you're done, run the checks again.
           </p>
           {due && (
-            <p className={`mt-1 text-xs font-semibold ${due.overdue ? "text-red-700 dark:text-red-300" : "text-amber-900 dark:text-amber-100"}`}>
+            <p className={`mt-1 text-xs font-semibold ${due.overdue ? "text-red-700 dark:text-red-300" : "text-foreground"}`}>
               {due.overdue ? `Overdue: this was due ${due.exact}. Resubmit as soon as you can.` : `Resubmit by ${due.exact} (${due.text.toLowerCase()}).`}
             </p>
           )}
@@ -108,7 +108,7 @@ export default function RevisionWorkspace({
                 onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
               />
             ) : isImage ? (
-              <div className="flex justify-center bg-black">
+              <div className="flex justify-center bg-muted p-2">
                 <ImageAnnotator submissionId={submissionId} file={mainFile!} canDraw={false} activeId={activeComment} onActive={setActiveComment} imageClassName="max-h-[420px] w-auto object-contain" />
               </div>
             ) : (
@@ -133,13 +133,13 @@ export default function RevisionWorkspace({
                       onClick={() => seek(c.start_sec!)}
                       title={`${formatSec(c.start_sec!)} · ${c.body}`}
                       aria-label={`Jump to comment at ${formatSec(c.start_sec!)}`}
-                      className={`absolute top-0.5 bottom-0.5 rounded-sm ${c.resolved_at ? "bg-emerald-500/70" : "bg-amber-500"} hover:ring-2 hover:ring-amber-300`}
+                      className={`absolute top-0.5 bottom-0.5 rounded-sm ${c.resolved_at ? "bg-muted-foreground/40" : "bg-blue-500/70 hover:bg-blue-600"}`}
                       style={{ left: `${left}%`, width: width ? `${width}%` : "6px", marginLeft: width ? 0 : -3 }}
                     />
                   );
                 })}
               </div>
-              <p className="mt-1 text-[10px] text-muted-foreground">Amber marks are open comments, green are resolved. Click one to jump there.</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Blue marks are open comments, grey are resolved. Click one to jump there.</p>
             </div>
           )}
 
@@ -182,7 +182,10 @@ export default function RevisionWorkspace({
             currentTime={isVideo ? currentTime : undefined}
             onSeek={isVideo ? seek : undefined}
             activeCommentId={activeComment}
-            onShowRegion={(c) => setActiveComment(c.id)}
+            onShowRegion={(c) => {
+              setActiveComment(activeComment === c.id ? null : c.id);
+              if (c.start_sec != null) seek(c.start_sec);
+            }}
             placeholder="Reply to the reviewer..."
           />
         </div>

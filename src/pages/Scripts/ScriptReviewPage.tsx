@@ -5,6 +5,8 @@ import { formatDistanceToNow } from "date-fns";
 import { FileStack, FileText, Plus } from "lucide-react";
 
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
+import ListPager from "@/components/common/ListPager";
+import { usePaged } from "@/hooks/usePaged";
 import { Button } from "@/components/ui/button";
 import { useScriptBatches } from "@/hooks/useScriptBatches";
 import { useAuth } from "@/lib/AuthContext";
@@ -171,6 +173,17 @@ export default function ScriptReviewPage() {
     return Object.fromEntries(TABS.map((t) => [t.value, all.filter((b) => b.status === t.status).length])) as Record<ReviewTab, number>;
   }, [batches.data]);
 
+  // Batches and single scripts together, 24 to a page; a new tab or filter starts from the first page.
+  type ListCard = { kind: "batch"; b: BatchSummary } | { kind: "single"; s: ScriptQueueItem };
+  const cards = useMemo<ListCard[]>(
+    () => [
+      ...shownBatches.map((b) => ({ kind: "batch" as const, b })),
+      ...(reviewer ? shownSingles.map((s) => ({ kind: "single" as const, s })) : []),
+    ],
+    [shownBatches, shownSingles, reviewer]
+  );
+  const paged = usePaged(cards, 24, [tab, filter]);
+
   const loading = batches.isLoading || (reviewer && singles.isLoading);
   const error = batches.error ?? (reviewer ? singles.error : null);
   const nothing = shownBatches.length === 0 && (!reviewer || shownSingles.length === 0);
@@ -242,12 +255,24 @@ export default function ScriptReviewPage() {
           hint={reviewer ? undefined : "Use Upload scripts to start. One document can hold as many scripts as you like."}
         />
       ) : (
-        <ul className={GRID}>
-          {shownBatches.map((b) => (
-            <BatchCard key={b.id} batch={b} showCreator={reviewer} />
-          ))}
-          {reviewer && shownSingles.map((s) => <ScriptCard key={s.id} s={s} />)}
-        </ul>
+        <>
+          <ul className={GRID}>
+            {paged.pageItems.map((c) =>
+              c.kind === "batch" ? <BatchCard key={c.b.id} batch={c.b} showCreator={reviewer} /> : <ScriptCard key={c.s.id} s={c.s} />
+            )}
+          </ul>
+          <ListPager
+            page={paged.page}
+            pageCount={paged.pageCount}
+            pageSize={paged.pageSize}
+            total={paged.total}
+            noun="items"
+            onPage={(p) => {
+              paged.setPage(p);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </>
       )}
 
       <BulkScriptDialog open={uploadOpen} onOpenChange={setUploadOpen} />
