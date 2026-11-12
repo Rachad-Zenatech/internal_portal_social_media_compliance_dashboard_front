@@ -424,6 +424,10 @@ export interface ReviewComment {
   resolved_by_name?: string | null;
   created_at: string;
   can_delete: boolean;
+  /** The comment this replies to, quoted above it (author and text; the text is null once that comment was deleted). */
+  reply_to_id?: string | null;
+  reply_to_author?: string | null;
+  reply_to_body?: string | null;
 }
 
 export interface ReviewCommentCreate {
@@ -437,6 +441,8 @@ export interface ReviewCommentCreate {
   region_y?: number | null;
   region_w?: number | null;
   region_h?: number | null;
+  /** Replying to another comment on the same post. */
+  reply_to_id?: string | null;
 }
 
 export interface SubmissionEvent {

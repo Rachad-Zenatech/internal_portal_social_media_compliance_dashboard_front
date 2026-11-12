@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Clock, Loader2, MessageSquare, RotateCcw, ScanSearch, Send, ShieldCheck, Trash2 } from "lucide-react";
+import { Check, Clock, Loader2, MessageSquare, Reply, RotateCcw, ScanSearch, Send, ShieldCheck, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useReviewComments } from "@/hooks/useReview";
+import { useCommentReply, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import type { ReviewComment, ReviewCommentCategory } from "@/types/submission";
 
@@ -24,25 +24,52 @@ export const regionNumbers = (comments: ReviewComment[]): Map<string, number> =>
 
 export const formatSec = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
 
+/** The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it. */
+export const commentBoxId = (submissionId: string) => `comment-box-${submissionId}`;
+
+/** Above a comment box while replying: who and what is being replied to, with a way to stop replying. */
+export function ReplyingTo({ c, onCancel }: { c: ReviewComment; onCancel: () => void }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border-l-4 border-primary bg-primary/5 px-2.5 py-1.5 text-[11px]">
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-primary">Replying to {c.author_name ?? "a comment"}</p>
+        <p className="truncate text-muted-foreground">{c.body}</p>
+      </div>
+      <button type="button" onClick={onCancel} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Stop replying">
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 function CommentItem({
   c,
   number,
   active,
   canResolve,
+  highlighted,
   onSeek,
   onShowRegion,
   onResolve,
   onDelete,
+  onReply,
+  onJump,
 }: {
   c: ReviewComment;
   /** Its number on the image, when it is about an area of one. */
   number?: number;
   active?: boolean;
   canResolve: boolean;
+  /** Just jumped to from a reply's quote: briefly ringed so it's easy to spot. */
+  highlighted: boolean;
   onSeek?: (sec: number) => void;
   onShowRegion?: (c: ReviewComment) => void;
   onResolve: (resolved: boolean) => void;
   onDelete: () => void;
+  /** Reply to this comment (only for people who can comment). */
+  onReply?: () => void;
+  /** Go to the comment this one replies to. */
+  onJump: (id: string) => void;
 }) {
   const resolved = Boolean(c.resolved_at);
   // Clicking the card picks it (and shows its area on the image); its own buttons keep their jobs.
@@ -59,9 +86,9 @@ function CommentItem({
       onKeyDown={pick ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), pick(e)) : undefined}
       tabIndex={pick ? 0 : undefined}
       aria-pressed={pick ? Boolean(active) : undefined}
-      className={`rounded-lg border p-2.5 text-xs space-y-1.5 transition-colors ${
+      className={`scroll-mt-4 rounded-lg border p-2.5 text-xs space-y-1.5 transition-colors duration-300 ${
         pick ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 hover:border-blue-400/70" : ""
-      } ${
+      } ${highlighted ? "ring-2 ring-primary ring-offset-1" : ""} ${
         active ? "border-blue-500 bg-blue-500/10 ring-2 ring-blue-500 shadow-sm" : resolved ? "border-border/60 opacity-70" : c.from_reviewer ? "border-amber-500/30 bg-amber-500/5" : "border-border/80"
       }`}
     >
@@ -100,6 +127,19 @@ function CommentItem({
           {c.version_number > 0 ? `v${c.version_number}` : "draft"} · {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
         </span>
       </div>
+      {c.reply_to_id && (
+        // The comment this replies to, as in a chat app; a click goes to it.
+        <button
+          type="button"
+          onClick={() => c.reply_to_body != null && onJump(c.reply_to_id!)}
+          disabled={c.reply_to_body == null}
+          className="block w-full rounded-md border-l-4 border-primary/60 bg-muted/60 px-2 py-1 text-left hover:bg-muted disabled:cursor-default"
+          title={c.reply_to_body != null ? "Go to this message" : undefined}
+        >
+          <span className="block text-[10px] font-semibold text-primary">{c.reply_to_author ?? "Someone"}</span>
+          <span className="line-clamp-2 text-[11px] text-muted-foreground">{c.reply_to_body ?? "This message was deleted."}</span>
+        </button>
+      )}
       <p className={`whitespace-pre-wrap break-words text-foreground ${resolved ? "line-through decoration-muted-foreground/50" : ""}`}>{c.body}</p>
       <div className="flex items-center gap-2 text-[10px]">
         {resolved ? (
@@ -108,6 +148,11 @@ function CommentItem({
           </span>
         ) : null}
         <span className="flex-1" />
+        {onReply && (
+          <button type="button" onClick={onReply} className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:text-foreground">
+            <Reply className="w-3 h-3" /> Reply
+          </button>
+        )}
         {canResolve && (
           <button type="button" onClick={() => onResolve(!resolved)} className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:text-foreground">
             {resolved ? <RotateCcw className="w-3 h-3" /> : <Check className="w-3 h-3" />} {resolved ? "Reopen" : "Mark resolved"}
@@ -169,12 +214,42 @@ export default function ReviewCommentsPanel({
   useEffect(() => {
     if (activeCommentId) document.getElementById(`comment-${activeCommentId}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [activeCommentId]);
+  const { replyTo, setReplyTo } = useCommentReply(submissionId);
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const flashTimer = useRef<number | undefined>(undefined);
+
+  /** Scroll to a comment (from a reply's quote) and ring it for a moment. */
+  const jumpTo = (id: string) => {
+    document.getElementById(`comment-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlashId(id);
+    window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlashId(null), 1800);
+  };
+  /** Reply: quote the comment in the comment box and put the cursor there (the page's own box, if it has one). */
+  const replyToComment = (c: ReviewComment) => {
+    setReplyTo(c);
+    window.setTimeout(() => {
+      const box = document.getElementById(commentBoxId(submissionId));
+      box?.scrollIntoView({ behavior: "smooth", block: "center" });
+      box?.focus();
+    }, 50);
+  };
 
   const submit = () => {
     if (!body.trim()) return;
     add.mutate(
-      { body: body.trim(), category: asReviewer ? category : "NOTE", start_sec: pin && currentTime != null ? Math.round(currentTime * 10) / 10 : null },
-      { onSuccess: () => setBody("") }
+      {
+        body: body.trim(),
+        category: asReviewer ? category : "NOTE",
+        start_sec: pin && currentTime != null ? Math.round(currentTime * 10) / 10 : null,
+        reply_to_id: replyTo?.id ?? null,
+      },
+      {
+        onSuccess: () => {
+          setBody("");
+          setReplyTo(null);
+        },
+      }
     );
   };
 
@@ -204,10 +279,13 @@ export default function ReviewCommentsPanel({
               number={numbers.get(c.id)}
               active={c.id === activeCommentId}
               canResolve={canComment}
+              highlighted={flashId === c.id}
               onSeek={onSeek}
               onShowRegion={onShowRegion}
               onResolve={(resolved) => resolve.mutate({ id: c.id, resolved })}
               onDelete={() => remove.mutate(c.id)}
+              onReply={canComment ? () => replyToComment(c) : undefined}
+              onJump={jumpTo}
             />
           ))}
         </div>
@@ -215,7 +293,9 @@ export default function ReviewCommentsPanel({
 
       {canComment && showComposer && (
         <div className="space-y-2 rounded-lg border border-border/80 p-2.5">
+          {replyTo && <ReplyingTo c={replyTo} onCancel={() => setReplyTo(null)} />}
           <Textarea
+            id={commentBoxId(submissionId)}
             rows={2}
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -223,6 +303,7 @@ export default function ReviewCommentsPanel({
             className="text-xs"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
+              if (e.key === "Escape" && replyTo) setReplyTo(null);
             }}
           />
           <div className="flex flex-wrap items-center gap-1.5">

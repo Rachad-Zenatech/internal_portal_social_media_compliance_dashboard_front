@@ -99,6 +99,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - `HashtagPicker` (export function) L10 - The Hashtags picker: tags suited to the post's brand, audience and platforms (already screened by the rulebook),  plus the company cashta...
 
+## src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- `Box` (type) L13 - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- `clamp` (const) L18
+- `ImageAnnotator` (export function) L24 - An image post's picture, with comments on areas of it, as in Google Docs: drag a box over the part you mean and write  the comment there.
+
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.
 - `MoodBar` (export function) L18 - Positive / neutral / negative share of mentions.
@@ -133,14 +138,38 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - `ProcessLog` (export function) L11 - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 
-## src/components/submissions/ReviewCommentsPanel.tsx (245 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `COMMENT_CATEGORIES` (export const) L11
 - `toneFor` (const) L18
 - `labelFor` (const) L19
 - `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `formatSec` (export const) L25
-- `CommentItem` (function) L27
-- `ReviewCommentsPanel` (export function) L117 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
+- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `CommentItem` (function) L45
+- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+
+## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `COMMENT_CATEGORIES` (export const) L11
+- `toneFor` (const) L18
+- `labelFor` (const) L19
+- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `formatSec` (export const) L25
+- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
+- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `CommentItem` (function) L45
+- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
+
+## src/components/submissions/ReviewCommentsPanel.tsx (339 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `COMMENT_CATEGORIES` (export const) L11
+- `toneFor` (const) L18
+- `labelFor` (const) L19
+- `regionNumbers` (export const) L22 - The numbers shown on image boxes and beside their comments, in the order the comments were written.
+- `formatSec` (export const) L25
+- `commentBoxId` (export const) L28 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
+- `ReplyingTo` (export function) L31 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
+- `CommentItem` (function) L45
+- `ReviewCommentsPanel` (export function) L175 - Saved review comments: what the reviewer wants changed and the creator's replies, kept per version.
 
 ## src/components/submissions/ReviewDecisionPanel.tsx (372 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
@@ -150,10 +179,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
 - `ChangesRequestedBanner` (export function) L340 - For the creator: the reviewer sent it back.
 
-## src/components/submissions/ReviewGlance.tsx (102 lines) - The one thing to know at a glance: a score, a verdict, a count.
-- `GlanceTone` (export type) L3
-- `GlanceTile` (export interface) L5
-- `ReviewGlance` (export function) L30 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
+## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
+- `GlanceTone` (export type) L4
+- `GlanceTile` (export interface) L6
+- `ReviewGlance` (export function) L31 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
 
 ## src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - `RecheckState` (export type) L7

@@ -1,8 +1,30 @@
+import { useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { submissionService } from "@/services/submissionService";
-import type { FlagVerdict, FlagDismissReason, FlagReview, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
+import type { FlagVerdict, FlagDismissReason, FlagReview, ReviewComment, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
+
+// The comment being replied to, per post. Shared so a Reply clicked in the comment list reaches whichever comment box
+// the page shows (the list's own, or the Content screener's box under the video).
+const replyingTo = new Map<string, ReviewComment>();
+const replyListeners = new Set<() => void>();
+const subscribeReply = (cb: () => void) => {
+  replyListeners.add(cb);
+  return () => replyListeners.delete(cb);
+};
+
+/** The comment being replied to on this post, and setting or clearing it. */
+export function useCommentReply(submissionId?: string | null) {
+  const replyTo = useSyncExternalStore(subscribeReply, () => (submissionId ? replyingTo.get(submissionId) ?? null : null));
+  const setReplyTo = (c: ReviewComment | null) => {
+    if (!submissionId) return;
+    if (c) replyingTo.set(submissionId, c);
+    else replyingTo.delete(submissionId);
+    replyListeners.forEach((l) => l());
+  };
+  return { replyTo, setReplyTo };
+}
 
 /** Everything that shows a submission's status or review state. */
 function invalidateSubmission(queryClient: ReturnType<typeof useQueryClient>, id: string) {

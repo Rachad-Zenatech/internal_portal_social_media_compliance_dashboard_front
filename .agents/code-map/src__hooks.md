@@ -29,12 +29,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useMarketTrends` (export function) L100 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
 - `useScrapeTwitter` (export function) L110 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
 
-## src/hooks/useReview.ts (143 lines) - Everything that shows a submission's status or review state.
-- `invalidateSubmission` (function) L8 - Everything that shows a submission's status or review state.
-- `useReviewComments` (export function) L16 - Saved review comments for a submission, with add / resolve / delete.
-- `useFlagReviews` (export function) L50 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
-- `useReviewDecision` (export function) L106
-- `useApprovalActions` (export function) L121 - Approved content: a reviewer reschedules it or reopens it for changes.
+## src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
+- `subscribeReply` (const) L12
+- `useCommentReply` (export function) L18 - The comment being replied to on this post, and setting or clearing it.
+- `invalidateSubmission` (function) L30 - Everything that shows a submission's status or review state.
+- `useReviewComments` (export function) L38 - Saved review comments for a submission, with add / resolve / delete.
+- `useFlagReviews` (export function) L72 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
+- `useReviewDecision` (export function) L128
+- `useApprovalActions` (export function) L143 - Approved content: a reviewer reschedules it or reopens it for changes.
 
 ## src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L12 - A post's script stage, refreshed while its file is still being read.
