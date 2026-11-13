@@ -148,10 +148,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `go` (fn) L873 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
 - `VersionHistory` (export function) L985 - Every version of the script, newest first, with the reviewer's call and note on each.
 
-## src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
-- `ScriptStageCard` (export function) L16 - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
-- `Body` (function) L95
-- `DraftBody` (function) L169 - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
+## src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
+- `ScriptStageCard` (export function) L17 - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
+- `Body` (function) L96
+- `DraftBody` (function) L170 - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
 
 ## src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - `same` (const) L9

@@ -59,7 +59,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/ScriptInsights.tsx (110 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
 - src/components/script/ScriptPrecheck.tsx (119 lines) - script precheck (components script)
 - src/components/script/ScriptReviewWorkspace.tsx (1015 lines) - script review workspace (components script)
-- src/components/script/ScriptStageCard.tsx (285 lines) - The script is missing and the creator tried to send: outline the card in red.
+- src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
 - src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/scriptdoc/CollabEditor.tsx (318 lines) - collab editor (components scriptdoc)
@@ -169,7 +169,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/locateOnPage.ts (159 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
-- src/lib/postSteps.ts (99 lines) - post steps (lib)
+- src/lib/postSteps.ts (106 lines) - post steps (lib)
 - src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)
@@ -197,17 +197,17 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
-- src/pages/Dashboard/Dashboard.tsx (362 lines) - dashboard (pages  dashboard)
+- src/pages/Dashboard/Dashboard.tsx (356 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
-- src/pages/Scripts/ScriptBatchPage.tsx (398 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
+- src/pages/Scripts/ScriptBatchPage.tsx (399 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (335 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (307 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (50 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2691 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2692 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.

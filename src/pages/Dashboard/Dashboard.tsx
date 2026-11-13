@@ -239,16 +239,8 @@ function ReviewerDashboard() {
         </div>
       </div>
 
-      <ReviewerStats
-        loading={loading}
-        waiting={waiting}
-        waitingNote={waitingNote}
-        overdue={overdue}
-        failing={failing}
-        summary={s}
-        filter={queueFilter}
-        onFilter={changeFilter}
-      />
+      <ReviewerStats loading={loading} waiting={waiting} waitingNote={waitingNote} overdue={overdue} failing={failing}
+        summary={s} filter={queueFilter} onFilter={changeFilter} />
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: the queue, and how reviewing is going */}

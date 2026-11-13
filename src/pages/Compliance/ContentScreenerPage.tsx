@@ -1413,15 +1413,12 @@ export default function ContentScreenerPage() {
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
   const brandLabel = (b: string) => labels.brand(b) ?? b;
 
-  // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser. Until it has
-  // been set, it starts folded on laptops (under 1536px wide), where the queue, post and review panel don't all fit.
+  // The queue folds to a strip of thumbnails (remembered on this browser); until set it starts folded under 1536px wide.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
     try {
       const saved = localStorage.getItem(COLLAPSE_KEY);
       if (saved != null) return saved === "1";
-    } catch {
-      // storage unavailable: fall back to the screen size
-    }
+    } catch { /* storage unavailable: fall back to the screen size */ }
     return typeof window !== "undefined" && window.innerWidth < 1536;
   });
   const setCollapsed = (v: boolean) => {

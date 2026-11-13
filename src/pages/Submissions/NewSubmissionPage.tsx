@@ -1440,8 +1440,7 @@ export default function NewSubmissionPage() {
         {/* ---------------- Form ---------------- */}
         <div id="step-details" className="space-y-4 min-w-0 scroll-mt-4">
           {/* Sent for review: the details can be read, not changed. */}
-          {/* A real box (not "contents"), so its sections get the same gap as the rest of the page. Everything in it
-              belongs to the details step, so it is hidden on the others (an empty box would add a stray gap). */}
+          {/* A real box (not "contents") so its sections get the page's gap; hidden off the details step (empty, it adds a stray gap). */}
           <fieldset disabled={readOnly} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
           {showDetails && (
           <div className={onDetails ? "space-y-4" : "hidden"}>

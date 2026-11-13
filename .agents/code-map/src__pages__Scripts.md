@@ -4,11 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Scripts/ScriptBatchPage.tsx (398 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- `looksApprovable` (const) L17
-- `Banner` (function) L30
-- `ScriptBatchPage` (export function) L43 - A batch of scripts.
-- `BatchView` (function) L59
+## src/pages/Scripts/ScriptBatchPage.tsx (399 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
+- `looksApprovable` (const) L18
+- `Banner` (function) L31
+- `ScriptBatchPage` (export function) L44 - A batch of scripts.
+- `BatchView` (function) L60
 
 ## src/pages/Scripts/ScriptDocPage.tsx (335 lines) - The notes document as a list, kept up to date as anyone changes it.
 - `errText` (const) L17

@@ -132,7 +132,7 @@
       "kind": "jsx_return"
     },
     "src/components/script/BatchDetailsForm.tsx#BatchDetailsForm": {
-      "max_lines": 132,
+      "max_lines": 95,
       "kind": "jsx_return"
     },
     "src/components/script/BatchItemCard.tsx#BatchItemCard": {
@@ -308,7 +308,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Dashboard/Dashboard.tsx#ReviewerDashboard": {
-      "max_lines": 145,
+      "max_lines": 139,
       "kind": "jsx_return"
     },
     "src/pages/Logs/AuditLog.tsx#AuditLog": {
@@ -336,7 +336,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1378,
+      "max_lines": 1375,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {

@@ -87,14 +87,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `readSignals` (export function) L26
 - `hasTag` (export function) L35 - Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife").
 
-## src/lib/postSteps.ts (99 lines) - post steps (lib)
+## src/lib/postSteps.ts (106 lines) - post steps (lib)
 - `POST_STEPS` (export const) L7 - The five steps a creator works through, in order.
-- `stepPath` (export function) L36 - Where each step opens.
-- `isStepKey` (export function) L40
-- `resumePath` (export function) L45 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
-- `ranOnce` (export function) L54 - Steps 2 to 4 as the progress dots show them: done once they have run at least once, even if the post changed since.
-- `stepStatusText` (export function) L63 - What a step is up to, as a sentence for the hover.
-- `missingText` (export function) L95
+- `RECHECK_AFTER_EDITS` (export const) L40 - Whether an edit after a check has to be checked again before sending: a post's compliance check and sentiment  analysis (and both again a...
+- `stepPath` (export function) L43 - Where each step opens.
+- `isStepKey` (export function) L47
+- `resumePath` (export function) L52 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
+- `ranOnce` (export function) L61 - Steps 2 to 4 as the progress dots show them: done once they have run at least once, even if the post changed since.
+- `stepStatusText` (export function) L70 - What a step is up to, as a sentence for the hover.
+- `missingText` (export function) L102
 
 ## src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9
