@@ -48,6 +48,8 @@ export interface DocPost {
 
 export interface DocDetail {
   id: string;
+  /** Set when the script is edited in the Share Document portal's editor (shown in an iframe) instead of this portal's. */
+  share_document_id?: string | null;
   title: string;
   template_key: string;
   status: DocStatus;

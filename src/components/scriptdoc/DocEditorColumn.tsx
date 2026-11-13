@@ -2,6 +2,8 @@ import type { Ref } from "react";
 import { Highlighter, Loader2, MessageSquarePlus } from "lucide-react";
 
 import CollabEditor, { type CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
+import ScriptMirrorEditor from "@/components/scriptdoc/ScriptMirrorEditor";
+import SharedEditorFrame from "@/components/scriptdoc/SharedEditorFrame";
 import { Button } from "@/components/ui/button";
 import type { LiveProvider } from "@/lib/scriptDocLive";
 import type { DocNote } from "@/types/scriptDoc";
@@ -36,6 +38,9 @@ export default function DocEditorColumn({
   onChange,
   onSelectNote,
   onStartNote,
+  sharedDocId,
+  mirrorHtml,
+  bar,
 }: {
   provider: LiveProvider | null;
   ready: boolean;
@@ -49,7 +54,36 @@ export default function DocEditorColumn({
   onChange: () => void;
   onSelectNote: (id: string) => void;
   onStartNote: (kind: "highlight" | "comment") => void;
+  /** This script's id when it is edited in the Share Document portal: that editor is shown here instead of this one. */
+  sharedDocId?: string | null;
+  /** For a reviewer of a script written in the Share Document portal: its text, shown read-only to highlight and comment on. */
+  mirrorHtml?: string | null;
+  /** A strip above the shared editor (see EditorLayoutBar). */
+  bar?: React.ReactNode;
 }) {
+  if (sharedDocId) {
+    return (
+      <div className="flex min-h-[24rem] min-w-0 flex-1 flex-col">
+        {bar}
+        <SharedEditorFrame docId={sharedDocId} />
+      </div>
+    );
+  }
+  if (mirrorHtml != null) {
+    return (
+      <div className="flex min-h-[24rem] min-w-0 flex-1 flex-col">
+        {bar}
+        <ScriptMirrorEditor
+          ref={editorRef}
+          html={mirrorHtml}
+          notes={notes}
+          activeNoteId={activeNoteId}
+          onSelectNote={onSelectNote}
+          toolbarExtra={canNote && <NoteButtons onStart={onStartNote} />}
+        />
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-[24rem] min-w-0 flex-1 flex-col">
       {provider && ready ? (

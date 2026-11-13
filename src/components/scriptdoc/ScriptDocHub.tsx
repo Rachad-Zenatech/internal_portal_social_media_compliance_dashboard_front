@@ -284,7 +284,8 @@ export default function ScriptDocHub() {
         onOpenChange={setAttachOpen}
         onUpload={async (file) => {
           const { created } = await scriptDocService.attach(file);
-          queryClient.invalidateQueries({ queryKey: ["script-docs"] });
+          // Wait for the lists to be read again, so the hub already shows the new document when the dialog closes.
+          await queryClient.refetchQueries({ queryKey: ["script-docs"] });
           toast.success(`Attached ${created.length} script${created.length === 1 ? "" : "s"}`);
           if (created[0]) navigate(`/script-docs/${created[0].id}`);
         }}

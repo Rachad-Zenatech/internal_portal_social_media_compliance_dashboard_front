@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type Ref } from "react";
-import { EditorContent, Extension, useEditor, type Editor } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ListItem from "@tiptap/extension-list-item";
 import Table from "@tiptap/extension-table";
@@ -8,94 +8,14 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { ySyncPluginKey } from "y-prosemirror";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import type { Node as PMNode } from "@tiptap/pm/model";
 import { Bold, Columns3, Italic, List, ListOrdered, Redo2, Rows3, Trash2, Undo2 } from "lucide-react";
 
 import type { LiveProvider } from "@/lib/scriptDocLive";
 import type { DocNote } from "@/types/scriptDoc";
-
-class LatestProps {
-  notes: DocNote[];
-  active: string | null;
-  change: () => void;
-  constructor(notes: DocNote[], active: string | null, change: () => void) {
-    this.notes = notes;
-    this.active = active;
-    this.change = change;
-  }
-  set(notes: DocNote[], active: string | null, change: () => void) {
-    this.notes = notes;
-    this.active = active;
-    this.change = change;
-  }
-}
+import { LatestProps, NoteMarks, findAndSelect, locate, notesKey } from "@/components/scriptdoc/scriptNoteMarks";
 
 const FlatListItem = ListItem.extend({ content: "paragraph" });
-const notesKey = new PluginKey<DecorationSet>("scriptDocNotes");
-
-/** Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit). */
-function locate(doc: PMNode, note: DocNote): { from: number; to: number } | null {
-  let best: { from: number; to: number } | null = null;
-  doc.descendants((node, pos) => {
-    if (!node.isTextblock) return true;
-    const text = node.textContent;
-    let at = text.indexOf(note.quote);
-    while (at >= 0) {
-      const from = pos + 1 + at;
-      if (!best || Math.abs(from - note.start) < Math.abs(best.from - note.start)) best = { from, to: from + note.quote.length };
-      at = text.indexOf(note.quote, at + 1);
-    }
-    return false;
-  });
-  return best;
-}
-
-interface NoteOptions {
-  getNotes: () => DocNote[];
-  getActive: () => string | null;
-}
-
-/** Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it. */
-const NoteMarks = Extension.create<NoteOptions>({
-  name: "scriptDocNotes",
-  addOptions: () => ({ getNotes: () => [], getActive: () => null }),
-  addProseMirrorPlugins() {
-    const opts = this.options;
-    const build = (doc: PMNode) => {
-      const active = opts.getActive();
-      const decos: Decoration[] = [];
-      for (const n of opts.getNotes()) {
-        if (n.resolved) continue;
-        const at = locate(doc, n);
-        if (!at) continue;
-        const strong = n.id === active;
-        decos.push(
-          Decoration.inline(at.from, at.to, {
-            class: `script-note script-note-${n.kind}${strong ? " script-note-active" : ""}`,
-            style: n.kind === "highlight"
-              ? `background:${n.color}${strong ? "55" : "33"}`
-              : `border-bottom:2px solid ${n.color};background:${n.color}${strong ? "33" : "14"}`,
-            "data-note": n.id,
-          }),
-        );
-      }
-      return DecorationSet.create(doc, decos);
-    };
-    return [
-      new Plugin<DecorationSet>({
-        key: notesKey,
-        state: {
-          init: (_c, state) => build(state.doc),
-          apply: (tr, old, _o, state) => (tr.docChanged || tr.getMeta(notesKey) ? build(state.doc) : old),
-        },
-        props: { decorations: (state) => notesKey.getState(state) },
-      }),
-    ];
-  },
-});
 
 export interface CollabEditorHandle {
   find: (term: string) => boolean;
@@ -299,19 +219,5 @@ const CollabEditor = forwardRef(function CollabEditor(
     </div>
   );
 });
-
-function findAndSelect(editor: Editor, term: string): boolean {
-  const needle = term.toLowerCase();
-  let found: { from: number; to: number } | null = null;
-  editor.state.doc.descendants((node, pos) => {
-    if (found || !node.isText || !node.text) return !found;
-    const at = node.text.toLowerCase().indexOf(needle);
-    if (at >= 0) found = { from: pos + at, to: pos + at + term.length };
-    return !found;
-  });
-  if (!found) return false;
-  editor.chain().focus().setTextSelection(found).scrollIntoView().run();
-  return true;
-}
 
 export default CollabEditor;

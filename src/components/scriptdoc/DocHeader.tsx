@@ -111,7 +111,7 @@ export default function DocHeader({
           {role !== "CREATOR" && <span>· you are {role === "VIEWER" ? "viewing and adding notes" : role.toLowerCase()}</span>}
         </p>
       </div>
-      <Presence live={live} people={people} />
+      {!doc.share_document_id && <Presence live={live} people={people} />}{/* co-editing presence: only the portal's own editor has it */}
       <HeaderButtons doc={doc} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
     </header>
   );

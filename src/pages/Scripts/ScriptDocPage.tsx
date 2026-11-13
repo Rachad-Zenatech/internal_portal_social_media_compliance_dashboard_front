@@ -7,6 +7,7 @@ import { type CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
 import DocDetailsDialog from "@/components/scriptdoc/DocDetailsPanel";
 import DocDialogs, { type DialogName } from "@/components/scriptdoc/DocDialogs";
 import DocEditorColumn from "@/components/scriptdoc/DocEditorColumn";
+import EditorLayoutBar from "@/components/scriptdoc/EditorLayoutBar";
 import DocHeader, { DocStatusStrip } from "@/components/scriptdoc/DocHeader";
 import DocSidePanel, { type PanelTab } from "@/components/scriptdoc/DocSidePanel";
 import PagesRail from "@/components/scriptdoc/PagesRail";
@@ -68,7 +69,16 @@ export default function ScriptDocPage() {
   const level2Dismissed = useRef(false);
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // A script written in the Share Document portal keeps its text there: this portal's connection then carries only the notes
+  // (highlights and comments). The writer sees that portal's editor; reviewers a read-only copy of the text to mark up.
+  const live = Boolean(doc);
+  const shared = Boolean(doc?.share_document_id);
+  const writerSide = shared && doc?.access.role === "CREATOR";
+  // The writer edits in the Share Document portal's editor, or looks at the reviewers' highlights on a read-only copy.
+  const [writerView, setWriterView] = useState<"edit" | "marks">("edit");
+  const inEditor = writerSide && writerView === "edit";
   useEffect(() => {
+    if (!live) return;
     const p = new LiveProvider(id, {
       onReady: ({ seed: s }) => {
         setSeed(s);
@@ -93,7 +103,7 @@ export default function ScriptDocPage() {
           if (cur && cur.access.can_check_in) setOpen("checkIn", true);
         }, IDLE_BEFORE_ASKING_MS);
       },
-    });
+    }, { notesOnly: shared });
     setProvider(p);
     setReady(false);
     p.connect();
@@ -103,7 +113,7 @@ export default function ScriptDocPage() {
       p.destroy();
       setProvider(null);
     };
-  }, [id, qc, setOpen]);
+  }, [id, live, shared, qc, setOpen]);
 
   // Who has the script open right now (from the cursors).
   useEffect(() => {
@@ -145,7 +155,7 @@ export default function ScriptDocPage() {
 
   // Save the script as it reads (for lists, flags and history) a moment after someone stops typing.
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canEdit = Boolean(doc?.access.can_edit);
+  const canEdit = Boolean(doc?.access.can_edit) && !shared; // a shared script is saved from its own editor
   const onEdited = useCallback(() => {
     if (!canEdit) return;
     if (snapTimer.current) clearTimeout(snapTimer.current);
@@ -189,11 +199,18 @@ export default function ScriptDocPage() {
   // The creator's pages: every script is its own page with its own review.
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
+  // The pages list and the review panel can be hidden to give the editor the room (the choice is kept for next time).
+  const [showPages, setShowPages] = useState(() => localStorage.getItem("script-doc-pages") !== "off");
+  const [showPanel, setShowPanel] = useState(() => localStorage.getItem("script-doc-panel") !== "off");
+  const toggle = (key: string, set: (v: boolean) => void, now: boolean) => {
+    set(!now);
+    localStorage.setItem(key, now ? "off" : "on");
+  };
   const [pageBusy, setPageBusy] = useState(false);
   /** Keep what is on screen: the page being edited is saved before leaving it or sending. */
   const flush = async () => {
     const h = editor.current;
-    if (h && doc?.access.can_edit) await scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
+    if (h && doc?.access.can_edit && !shared) await scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
   };
   const addPage = async () => {
     setPageBusy(true);
@@ -292,7 +309,7 @@ export default function ScriptDocPage() {
       <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {doc.pages.length > 0 && (
+        {doc.pages.length > 0 && showPages && (
           <PagesRail doc={doc} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}
         <DocEditorColumn
@@ -308,8 +325,22 @@ export default function ScriptDocPage() {
           onChange={onEdited}
           onSelectNote={(nid) => { setActiveNote(nid); setTab("notes"); }}
           onStartNote={startNote}
+          sharedDocId={inEditor ? id : null}
+          mirrorHtml={shared && !inEditor ? doc.body_html : null}
+          bar={
+            <EditorLayoutBar
+              position={Math.max(1, doc.pages.findIndex((p) => p.id === id) + 1)}
+              total={doc.pages.length}
+              showPages={showPages}
+              showPanel={showPanel}
+              onTogglePages={() => toggle("script-doc-pages", setShowPages, showPages)}
+              onTogglePanel={() => toggle("script-doc-panel", setShowPanel, showPanel)}
+              view={writerSide ? writerView : undefined}
+              onView={writerSide ? setWriterView : undefined}
+            />
+          }
         />
-        <DocSidePanel
+        {(showPanel || !writerSide) && <DocSidePanel
           doc={doc}
           tab={tab}
           onTab={setTab}
@@ -325,7 +356,7 @@ export default function ScriptDocPage() {
           onDelete={(nid) => provider?.notes.getMap<DocNote>("notes").delete(nid)}
           onCompose={(text) => { if (composer) addNote("comment", text, composer); setComposer(null); }}
           onCancelCompose={() => setComposer(null)}
-        />
+        />}
       </div>
 
       <DocDialogs doc={doc} open={open} onOpen={onOpen} busy={run.isPending || pageBusy} changedBy={changedBy} handlers={handlers} />

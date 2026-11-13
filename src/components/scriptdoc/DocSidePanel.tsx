@@ -41,6 +41,7 @@ function NotesTab({
   notes,
   activeId,
   canNote,
+  shared,
   me,
   onPick,
   onReply,
@@ -53,6 +54,8 @@ function NotesTab({
   notes: DocNote[];
   activeId: string | null;
   canNote: boolean;
+  /** The script is edited in the Share Document portal's editor, where its comments are made. */
+  shared?: boolean;
   me: string;
   onPick: (n: DocNote) => void;
   onReply: (id: string, text: string) => void;
@@ -73,7 +76,7 @@ function NotesTab({
       {composer && <NoteComposer quote={composer.quote} onCompose={onCompose} onCancel={onCancelCompose} />}
       {shown.length === 0 && !composer && (
         <p className="text-sm text-muted-foreground">
-          {canNote ? "Select wording in the script, then use Highlight or Comment above it." : "No notes yet."}
+          {shared ? "This script is edited in the shared editor; its comments are made there." : canNote ? "Select wording in the script, then use Highlight or Comment above it." : "No notes yet."}
         </p>
       )}
       {shown.map((n) => (
@@ -313,6 +316,7 @@ export default function DocSidePanel(props: {
             notes={props.notes}
             activeId={props.activeId}
             canNote={doc.access.can_note}
+            shared={Boolean(doc.share_document_id)}
             me={props.me}
             onPick={props.onPick}
             onReply={props.onReply}

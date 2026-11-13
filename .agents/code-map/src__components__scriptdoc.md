@@ -43,6 +43,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ReviewersTab` (function) L225
 - `DocSidePanel` (export function) L267 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
 
+## src/components/scriptdoc/EditorLayoutBar.tsx (60 lines) - For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text.
+- `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
+
 ## src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - `sendable` (export const) L26
 - `UploadPagesDialog` (export function) L32 - Upload a file with one script or several: it is split into scripts, each added as its own page.
@@ -64,3 +67,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `TemplateGrid` (function) L161 - Start from a template, or attach a script from a file.
 - `DocLists` (function) L201 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
 - `ScriptDocHub` (export function) L239 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+
+## src/components/scriptdoc/ScriptMirrorEditor.tsx (117 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
+- `Props` (interface) L16
+- `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
+
+## src/components/scriptdoc/SharedEditorFrame.tsx (76 lines) - The sign-in the server hands out lasts 15 minutes; a fresh one is sent to the editor well before then.
+- `SharedEditorFrame` (export function) L18 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
+
+## src/components/scriptdoc/scriptNoteMarks.ts (102 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `LatestProps` (export class) L9 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `notesKey` (export const) L25
+- `locate` (export function) L28 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
+- `NoteOptions` (interface) L44
+- `NoteMarks` (export const) L50 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
+- `findAndSelect` (export function) L89 - Select the first occurrence of `term` (any case) and scroll to it.

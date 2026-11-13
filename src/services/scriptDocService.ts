@@ -29,6 +29,9 @@ export const scriptDocService = {
   createPosts: (id: string) => apiClient.post<DocDetail>(`/api/script-docs/${id}/posts`, undefined, quiet),
   removeSet: (id: string) => apiClient.delete<void>(`/api/script-docs/sets/${id}`, quiet),
   remove: (id: string) => apiClient.delete<void>(`/api/script-docs/${id}`, quiet),
+  /** Where the shared editor for this script is, and the short-lived sign-in for it. */
+  sharedEditor: (id: string) =>
+    apiClient.get<{ share_document_id: string; url: string; origin: string; token: string; expires_in: number }>(`/api/script-docs/${id}/shared-editor`, quiet),
   snapshot: (id: string, html: string, text: string) => apiClient.put<void>(`/api/script-docs/${id}/snapshot`, { html, text }, quiet),
   reviewers: (id: string) => apiClient.get<ReviewerOption[]>(`/api/script-docs/${id}/reviewers`, quiet),
   submit: (id: string, data: { reviewers: { user_id: string; capacity: Capacity }[]; note?: string; html?: string; text?: string }) =>

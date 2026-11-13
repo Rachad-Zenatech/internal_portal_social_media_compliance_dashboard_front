@@ -69,9 +69,13 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DocEditorColumn.tsx (112 lines) - Highlight and Comment, in the editor's toolbar.
 - src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
 - src/components/scriptdoc/DocSidePanel.tsx (337 lines) - The box for the comment on the wording that was selected.
+- src/components/scriptdoc/EditorLayoutBar.tsx (60 lines) - For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text.
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (320 lines) - script doc hub (components scriptdoc)
+- src/components/scriptdoc/ScriptMirrorEditor.tsx (117 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
+- src/components/scriptdoc/SharedEditorFrame.tsx (76 lines) - The sign-in the server hands out lasts 15 minutes; a fresh one is sent to the editor well before then.
+- src/components/scriptdoc/scriptNoteMarks.ts (102 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
 - src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".

@@ -45,12 +45,15 @@ export class LiveProvider {
 
   private docId: string;
   private handlers: LiveHandlers;
+  /** For a script written in the Share Document portal: only the notes are carried, never the text. */
+  private notesOnly: boolean;
 
-  constructor(docId: string, handlers: LiveHandlers) {
+  constructor(docId: string, handlers: LiveHandlers, opts: { notesOnly?: boolean } = {}) {
     this.docId = docId;
     this.handlers = handlers;
+    this.notesOnly = Boolean(opts.notesOnly);
     this.doc.on("update", (u: Uint8Array, origin: unknown) => {
-      if (origin !== this) this.send({ type: "update", ch: "text", d: b64(u) });
+      if (origin !== this && !this.notesOnly) this.send({ type: "update", ch: "text", d: b64(u) });
     });
     this.notes.on("update", (u: Uint8Array, origin: unknown) => {
       if (origin !== this) this.send({ type: "update", ch: "notes", d: b64(u) });
@@ -69,7 +72,7 @@ export class LiveProvider {
     this.closed = false;
     this.handlers.onStatus("connecting");
     const base = (BASE_URL || window.location.origin).replace(/^http/, "ws");
-    const ws = new WebSocket(`${base}/api/script-docs/${this.docId}/live`);
+    const ws = new WebSocket(`${base}/api/script-docs/${this.docId}/live${this.notesOnly ? "?notes_only=1" : ""}`);
     this.ws = ws;
     ws.onopen = () => {
       this.retry = 0;
@@ -111,12 +114,13 @@ export class LiveProvider {
         this.handlers.onReady({ seed: m.seed, canEdit: this.canEdit, canNote: this.canNote });
         // An empty script nobody has given its starting text yet: keep asking until someone has.
         this.stopSeedAsk();
-        if (!m.seed && (m.updates.text as string[]).length === 0) {
+        if (!this.notesOnly && !m.seed && (m.updates.text as string[]).length === 0) {
           this.seedTimer = setInterval(() => this.send({ type: "claim_seed" }), 1500);
         }
         break;
       }
       case "update": {
+        if (m.ch === "text" && this.notesOnly) break;
         if (m.ch === "text") this.stopSeedAsk();
         const target = m.ch === "notes" ? this.notes : this.doc;
         Y.applyUpdate(target, unb64(m.d), this);
