@@ -117,7 +117,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (243 lines) - source links field (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
-- src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+- src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
@@ -156,7 +156,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
-- src/hooks/usePublicMood.ts (153 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
+- src/hooks/usePublicMood.ts (152 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
 - src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
 - src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.

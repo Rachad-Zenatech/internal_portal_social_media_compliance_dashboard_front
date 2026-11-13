@@ -107,7 +107,7 @@ export function useMarketTrends(enabled = true) {
 }
 
 /** Trigger live scraping of X / Twitter & news trends and refresh listening queries. */
-export function useScrapeTwitter(submissionId?: string | null) {
+export function useScrapeTwitter(_submissionId?: string | null, onAfterScrape?: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -138,12 +138,11 @@ export function useScrapeTwitter(submissionId?: string | null) {
           (drafts.length ? ` (${drafts.length} from this app's drafts)` : " (no draft was searched)") +
           `, ${status.collection?.topics ?? 0} topics.`,
       );
-      // Invalidate both current submission mood and global market trends
+      // Invalidate all public mood queries and global market trends
       queryClient.invalidateQueries({ queryKey: ["listening-trends"] });
       queryClient.invalidateQueries({ queryKey: ["listening-topics"] });
-      if (submissionId) {
-        queryClient.invalidateQueries({ queryKey: ["public-mood", submissionId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["public-mood"] });
+      onAfterScrape?.();
     },
     onError: (err) => {
       toast.error(`Scrape failed: ${(err as Error).message}`);

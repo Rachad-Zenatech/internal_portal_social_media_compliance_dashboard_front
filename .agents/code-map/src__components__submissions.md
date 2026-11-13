@@ -265,15 +265,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - `StageTabs` (export function) L4 - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 
-## src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+## src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const) L19
 - `overallPostDecision` (export function) L34
 - `TopicRow` (function) L73
 - `MarketTrendRow` (function) L220
 - `TopicTrend` (export function) L299 - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
-    - `scrapeTwitter` (fn) L324
-    - `handleScrape` (fn) L327
-    - `otherTrends` (fn) L344
+    - `scrapeTwitter` (fn) L328
+    - `handleScrape` (fn) L331
+    - `otherTrends` (fn) L348
 
 ## src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `COMMENT_CATEGORIES` (export const) L5
