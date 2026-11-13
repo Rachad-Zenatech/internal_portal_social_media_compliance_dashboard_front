@@ -21,7 +21,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const) L7
 
-## src/services/complianceService.ts (355 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (361 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type) L4
 - `TrafficLight` (export type) L5
 - `ComplianceRule` (export interface) L7
@@ -34,16 +34,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ComplianceCheckResponse` (export interface) L150
 - `SourceVerdict` (export type) L190 - SUPPORTED: the source says it.
 - `SourceClaim` (export interface) L192
-- `SourceCheck` (export interface) L204
-- `CheckSignals` (export interface) L223 - What the check read from the post's symbols, before its wording was matched against the rules.
-- `ManualReviewRule` (export interface) L238 - An applicable rule the automated check can't test from text (e.g.
-- `RuleExampleResult` (export interface) L246 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
-- `RuleSelfTest` (export interface) L256
-- `ComplianceCheckRequest` (export interface) L267 - Who and where the content is for; only rules whose scope matches are run.
-- `ComplianceStats` (export interface) L278
-- `VideoJobStage` (export interface) L290
-- `VideoJob` (export interface) L296
-- `complianceService` (export const) L315
+- `SourceCheck` (export interface) L210
+- `CheckSignals` (export interface) L229 - What the check read from the post's symbols, before its wording was matched against the rules.
+- `ManualReviewRule` (export interface) L244 - An applicable rule the automated check can't test from text (e.g.
+- `RuleExampleResult` (export interface) L252 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
+- `RuleSelfTest` (export interface) L262
+- `ComplianceCheckRequest` (export interface) L273 - Who and where the content is for; only rules whose scope matches are run.
+- `ComplianceStats` (export interface) L284
+- `VideoJobStage` (export interface) L296
+- `VideoJob` (export interface) L302
+- `complianceService` (export const) L321
 
 ## src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L12
@@ -88,6 +88,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptService.ts (62 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) L9 - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (325 lines) - submission service (services)
-- `ScrapeStatus` (export interface) L45
-- `submissionService` (export const) L59
+## src/services/submissionService.ts (359 lines) - submission service (services)
+- `ScrapeStatus` (export interface) L46
+- `submissionService` (export const) L60

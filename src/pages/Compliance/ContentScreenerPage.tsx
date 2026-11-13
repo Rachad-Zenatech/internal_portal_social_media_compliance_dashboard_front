@@ -841,7 +841,7 @@ function ReviewPanel({
                 {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
               </p>
             )}
-            <SourceChecks checks={check?.source_checks} />
+            <SourceChecks checks={check?.source_checks} submissionId={s.id} />
           </div>
         </div>
         )}

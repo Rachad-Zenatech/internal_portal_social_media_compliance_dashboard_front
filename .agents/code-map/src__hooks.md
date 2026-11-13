@@ -74,6 +74,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Wire` (type) L20
 - `useSharedEventSource` (export function) L22
 
+## src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
+- `hostOf` (export function) L8 - A site as source trust keys it: lower case, without "www.".
+- `claimKey` (function) L17 - The claim as the server keys it: case, spacing and punctuation don't matter.
+- `SourceConfirmationsApi` (export interface) L21
+- `useSourceConfirmations` (export function) L33 - Everyone's calls on a post's sources and each source's standing with reviewers, and a way to add one's own.
+
 ## src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - `SubmitTarget` (interface) L10
 - `useSubmitForReview` (export function) L18 - Quick "send for review" for a draft (or resubmit after changes), outside the New Submission form.

@@ -2125,9 +2125,8 @@ export default function NewSubmissionPage() {
             />
             <CaptionExtras
               platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
-              limitFor={(p) => CHAR_LIMITS[p]}
-              sourceLinks={sourceLinks}
-              submissionId={submissionId} readOnly={readOnly}
+              limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
+              submissionId={submissionId} readOnly={readOnly} uploadedFiles={files}
               ensureSubmissionId={() => save({ force: true })}
               onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
               onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}

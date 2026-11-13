@@ -140,6 +140,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SOURCE_LABELS` (export const) L4
 - `scriptVerdict` (export function) L11 - Score ring colours and the verdict line for a script check.
 
+## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
+- `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).
+- `textFragmentUrl` (export function) L16 - The page's address with a text fragment for the quote, or the plain address when there is no quote.
+
 ## src/lib/userDepartment.ts (162 lines) - user department (lib)
 - `isGenericRole` (function) L14
 - `resolveUserDepartment` (export function) L25 - Resolves a user's department by matching their assigned roles against the configured Roles list.

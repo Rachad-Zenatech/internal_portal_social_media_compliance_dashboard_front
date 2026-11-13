@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileText, Link2, XCircle } from "lucide-react";
 
+import ClaimVsSource from "@/components/submissions/ClaimVsSource";
+import SourceTrustBar from "@/components/submissions/SourceTrustBar";
+import { SourceConfirmationsProvider } from "@/components/submissions/sourceConfirmationsContext";
 import type { SourceCheck, SourceClaim, SourceVerdict } from "@/services/complianceService";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
@@ -26,6 +29,22 @@ const WHERE: Record<SourceCheck["where"], string> = {
 function counts(claims: SourceClaim[]) {
   const n = (v: SourceVerdict) => claims.filter((c) => c.verdict === v).length;
   return { ok: n("SUPPORTED"), wrong: n("CONTRADICTED"), open: n("NOT_FOUND") + n("UNCLEAR") };
+}
+
+/** The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm. */
+function ClaimRow({ claim, sourceUrl }: { claim: SourceClaim; sourceUrl?: string | null }) {
+  return (
+    <div className="space-y-0.5 rounded-md border border-border/40 p-1.5">
+      <p className="flex flex-wrap items-center gap-1.5">
+        <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${VERDICT[claim.verdict].tone}`}>
+          AI: {VERDICT[claim.verdict].label}
+        </span>
+        {claim.where === "image" && <span className="text-[10px] text-muted-foreground">(on the image)</span>}
+      </p>
+      <ClaimVsSource item={claim} sourceUrl={sourceUrl} />
+      {claim.note && claim.verdict !== "SUPPORTED" && <p className="ml-1 text-foreground/80">{claim.note}</p>}
+    </div>
+  );
 }
 
 function Row({ source }: { source: SourceCheck }) {
@@ -86,17 +105,10 @@ function Row({ source }: { source: SourceCheck }) {
       </button>
       {open && hasDetail && (
         <div className="mt-1.5 space-y-1.5 border-t border-border/50 pt-1.5">
+          {source.status === "READ" && <SourceTrustBar url={source.url} />}
           {source.message && <p className="text-amber-800 dark:text-amber-300">{source.message}</p>}
           {source.claims.map((c, i) => (
-            <div key={`${c.claim}-${i}`} className="space-y-0.5">
-              <p className="flex flex-wrap items-center gap-1.5">
-                <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${VERDICT[c.verdict].tone}`}>{VERDICT[c.verdict].label}</span>
-                <span className="font-medium text-foreground">“{c.claim}”</span>
-                {c.where === "image" && <span className="text-[10px] text-muted-foreground">(on the image)</span>}
-              </p>
-              {c.evidence && <p className="ml-1 text-muted-foreground">The source says: {c.evidence}</p>}
-              {c.note && c.verdict !== "SUPPORTED" && <p className="ml-1 text-foreground/80">{c.note}</p>}
-            </div>
+            <ClaimRow key={`${c.claim}-${i}`} claim={c} sourceUrl={source.url} />
           ))}
         </div>
       )}
@@ -108,10 +120,21 @@ function Row({ source }: { source: SourceCheck }) {
  * The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one
  * which of the post's claims it backs up, contradicts or doesn't settle. Nothing shows when the post cites no source.
  */
-export default function SourceChecks({ checks, className = "" }: { checks?: SourceCheck[] | null; className?: string }) {
+export default function SourceChecks({
+  checks,
+  submissionId,
+  className = "",
+}: {
+  checks?: SourceCheck[] | null;
+  /** The post: with it, calls on the sources are saved and each source's standing with reviewers is shown. */
+  submissionId?: string | null;
+  className?: string;
+}) {
   if (!checks || checks.length === 0) return null;
   const links = checks.filter((c) => c.kind === "URL").length;
+  const urls = [...new Set(checks.flatMap((c) => [c.url, ...c.claims.map((k) => k.source_url)]).filter(Boolean) as string[])];
   return (
+    <SourceConfirmationsProvider submissionId={submissionId} urls={urls}>
     <div className={`space-y-1.5 text-[11px] ${className}`}>
       <p className="flex items-center gap-1.5 font-semibold text-foreground">
         {links > 0 ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
@@ -123,5 +146,6 @@ export default function SourceChecks({ checks, className = "" }: { checks?: Sour
         ))}
       </ul>
     </div>
+    </SourceConfirmationsProvider>
   );
 }

@@ -196,6 +196,12 @@ export interface SourceClaim {
   where: 'caption' | 'image';
   /** What the source says about it (not always word for word). */
   evidence?: string | null;
+  /** Where in the source it is: the section and paragraph. */
+  source_location?: string | null;
+  /** The source's own words at that place, word for word, for a person to read and confirm. */
+  source_quote?: string | null;
+  /** The page the quote is on, when another source than the check's own backed the claim. */
+  source_url?: string | null;
   /** What to change or check, when the verdict isn't SUPPORTED. */
   note?: string | null;
   confidence: number;

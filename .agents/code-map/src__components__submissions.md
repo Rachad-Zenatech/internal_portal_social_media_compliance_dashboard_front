@@ -19,9 +19,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
 - `CanvaReimportBar` (export function) L14 - For content imported from Canva: which design and revision it is, and a one-click way to bring in the latest  version after editing it in...
 
-## src/components/submissions/CaptionExtras.tsx (42 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
-- `Props` (interface) L4
-- `CaptionExtras` (export function) L18 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+## src/components/submissions/CaptionExtras.tsx (45 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+- `Props` (interface) L5
+- `CaptionExtras` (export function) L20 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 
 ## src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - `CaptionSignalsBar` (export function) L12 - Live feedback under the caption: the hashtags, cashtags and mentions in it, whether there are more hashtags than  the platforms suit, and...
@@ -41,6 +41,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CheckProgress` (export function) L88 - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
 - `CheckModelsUsed` (export function) L110 - After a check: which models answered, and how many fallbacks it took.
 - `SavedCheckModels` (export function) L131 - The models a saved check used, read from the saved result, so it shows after a reload too.
+
+## src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
+- `ClaimLike` (export interface) L8 - What both the quick check and the reviewer's view know about a claim.
+- `Confirmation` (type) L17
+- `SourceWords` (function) L25
+- `WhereLink` (function) L37
+- `ConfirmButtons` (function) L57
+- `ClaimVsSource` (export function) L82 - What the post says next to what the source says, word for word where it could be found, with a link to that spot in  the source and butto...
+- `useSavedConfirmation` (function) L100 - The reader's own call on the claim: saved with the post when there is a provider, kept on the page otherwise.
+- `ReviewerCalls` (function) L112 - What reviewers (other than the reader) said about this claim against this source.
 
 ## src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - `ReplyingTo` (export function) L10 - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
@@ -130,6 +140,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - `PanelComposer` (export function) L13 - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 
+## src/components/submissions/PastedArticleCheck.tsx (103 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
+- `Props` (interface) L14
+- `PasteForm` (function) L19
+- `PastedArticleCheck` (export function) L59 - Check the post against an article pasted in whole: for pages the checker can't open, or a copy someone has.
+
 ## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - `PlatformCaptions` (export function) L10 - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...
 
@@ -216,6 +231,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - `RuleNumberBadge` (export function) L11 - A flag's rule number; hovering it shows the rule that was broken.
 
+## src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
+- `Props` (interface) L12
+- `ScanImageButton` (export function) L20
+
 ## src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - `ScoreBreakdown` (export function) L11 - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...
 
@@ -250,17 +269,26 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `statusChain` (fn) L944
 - `SaveTestCaseDialog` (function) L1238 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
 
-## src/components/submissions/SourceChecks.tsx (128 lines) - source checks (components submissions)
-- `counts` (function) L26
-- `Row` (function) L31
-- `SourceChecks` (export function) L111 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+## src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
+- `ClaimResultRow` (export function) L19 - One claim from the post next to what the source says, with the AI's verdict and a link to that spot in the source.
+- `ResultHeading` (function) L32
+- `SourceCheckResult` (export function) L44 - What checking one source showed: its title, any message, and each claim's verdict.
 
-## src/components/submissions/SourceLinksField.tsx (243 lines) - source links field (components submissions)
-- `Props` (interface) L8
-- `normalizeDraftUrl` (function) L24
-- `ClaimResultRow` (function) L37
-- `SourceLinkRow` (function) L58
-- `SourceLinksField` (export function) L139 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
+## src/components/submissions/SourceChecks.tsx (152 lines) - source checks (components submissions)
+- `counts` (function) L29
+- `ClaimRow` (function) L35 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
+- `Row` (function) L50
+- `SourceChecks` (export function) L123 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+
+## src/components/submissions/SourceLinksField.tsx (350 lines) - source links field (components submissions)
+- `Props` (interface) L13
+- `normalizeDraftUrl` (function) L22
+- `SourceLinkRow` (function) L35
+- `SourceLinkInputBar` (function) L90
+- `SourceLinksField` (export function) L164 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
+
+## src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
+- `SourceTrustBar` (export function) L17 - A source's standing with reviewers (from every post checked against its site), and buttons to rate it a good or a  poor source.
 
 ## src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - `StageTabs` (export function) L4 - The row of status pills above a list, each with its count; click the chosen one again to clear it.
@@ -283,6 +311,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `formatSec` (export const) L19
 - `commentBoxId` (export const) L22 - The id of a post's comment box, so a Reply can put the cursor in it wherever the page shows it.
 - `AreaTag` (export function) L25 - A small tag for a comment on an area of an image, in the quotes and the reply strip as on the card itself.
+
+## src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
+- `Context` (const) L5
+- `SourceConfirmationsProvider` (export function) L8 - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
+- `useSourceCalls` (export function) L22 - The saved calls, or null outside a provider (then calls aren't saved).
 
 ## src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) L39 - Whether the post is still being read (video transcript, text in images): no score is shown until it has.

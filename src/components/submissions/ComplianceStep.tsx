@@ -366,7 +366,7 @@ export default function ComplianceStep({
         {(check.source_checks?.length ?? 0) > 0 && (
           <section className={`${card} flex flex-col gap-3`}>
             <h2 className="text-lg font-bold text-foreground">Sources checked</h2>
-            <SourceChecks checks={check.source_checks} />
+            <SourceChecks checks={check.source_checks} submissionId={sub?.id} />
           </section>
         )}
       </div>

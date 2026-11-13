@@ -146,10 +146,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type) L218
 
-## src/types/sourceLink.ts (29 lines) - source link (types)
+## src/types/sourceLink.ts (63 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - `SubmissionSourceFields` (export interface) L1
 - `SourceLinkClaim` (export interface) L5
-- `SourceLinkCheck` (export interface) L15
+- `SourceLinkCheck` (export interface) L20
+- `ImageSourceCitation` (export interface) L35
+- `ImageSourceScanResponse` (export interface) L41
+- `PastedSourceRequest` (export interface) L53 - A whole article pasted in as the source, for pages the checker can't open.
+- `ImageSourceScanJob` (export interface) L59
+
+## src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
+- `SourceConfirmation` (export interface) L3
+- `SourceTrust` (export interface) L14
+- `SourceConfirmationsResponse` (export interface) L25
+- `SourceConfirmationRequest` (export interface) L35 - One call: with a claim, does it match the page (null takes it back); without, is the page a good source.
 
 ## src/types/submission.ts (682 lines) - AD: paid social ad.
 - `ContentType` (export type) L6 - AD: paid social ad.

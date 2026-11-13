@@ -1,7 +1,8 @@
 import { BASE_URL, apiClient } from "@/services/apiClient";
 import { ApiError, handleResponse } from "@/services/helper";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
-import type { SourceLinkCheck } from "@/types/sourceLink";
+import type { PastedSourceRequest, SourceLinkCheck } from "@/types/sourceLink";
+import type { SourceConfirmationRequest, SourceConfirmationsResponse } from "@/types/sourceTrust";
 import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
 import type {
   AiUsage,
@@ -86,6 +87,39 @@ export const submissionService = {
   /** Quickly fetch a source URL and check whether it supports the post's current material. */
   checkSourceLink: (id: string, url: string) =>
     apiClient.post<SourceLinkCheck>(`/api/submissions/${id}/check-source-link`, { url }, quiet),
+
+  /** Check the post's claims against a whole article pasted in, and where in it each claim is found. */
+  checkPastedSource: (id: string, data: PastedSourceRequest) =>
+    apiClient.post<SourceLinkCheck>(`/api/submissions/${id}/check-pasted-source`, data, quiet),
+
+  /** Everyone's calls on this post's sources, and what reviewers have said about each source's site. */
+  getSourceConfirmations: (id: string, urls: string[]) => {
+    const qs = urls.map((u) => `url=${encodeURIComponent(u)}`).join("&");
+    return apiClient.get<SourceConfirmationsResponse>(`/api/submissions/${id}/source-confirmations${qs ? `?${qs}` : ""}`, quiet);
+  },
+
+  /** Confirm (or take back) whether a claim matches its source, or rate the source itself. */
+  confirmSource: (id: string, data: SourceConfirmationRequest) =>
+    apiClient.post<SourceConfirmationsResponse>(`/api/submissions/${id}/source-confirmations`, data, quiet),
+
+  /** Queue an image source scan + web scrape as a background job. */
+  scanImageForSources: (id: string, file?: File, fileId?: string) => {
+    const form = new FormData();
+    if (file) form.append("file", file);
+    const qs = fileId ? `?file_id=${encodeURIComponent(fileId)}` : "";
+    return apiClient.post<import("@/types/sourceLink").ImageSourceScanJob>(
+      `/api/submissions/${id}/scan-image-sources${qs}`,
+      form,
+      quiet,
+    );
+  },
+
+  /** Poll the status/result of a background image source scan job. */
+  getImageSourceScanJob: (id: string, jobId: string) =>
+    apiClient.get<import("@/types/sourceLink").ImageSourceScanJob>(
+      `/api/submissions/${id}/scan-image-sources/${jobId}`,
+      quiet,
+    ),
 
   deleteDraft: (id: string) => apiClient.delete<null>(`/api/submissions/${id}`),
 

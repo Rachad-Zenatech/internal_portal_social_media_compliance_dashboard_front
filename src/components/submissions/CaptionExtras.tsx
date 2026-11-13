@@ -1,5 +1,6 @@
 import PlatformCaptions from "@/components/submissions/PlatformCaptions";
 import SourceLinksField from "@/components/submissions/SourceLinksField";
+import type { SubmissionFile } from "@/types/submission";
 
 interface Props {
   platforms: string[];
@@ -12,6 +13,7 @@ interface Props {
   readOnly?: boolean;
   onPlatformCaptionsChange: (next: Record<string, string>) => void;
   onSourceLinksChange: (next: string[]) => void;
+  uploadedFiles?: SubmissionFile[];
 }
 
 /** Per-platform caption overrides and source links placed at the bottom of the Details caption section. */
@@ -34,6 +36,7 @@ export default function CaptionExtras(props: Props) {
         ensureSubmissionId={props.ensureSubmissionId}
         readOnly={props.readOnly}
         onChange={props.onSourceLinksChange}
+        uploadedFiles={props.uploadedFiles}
       />
     </>
   );
