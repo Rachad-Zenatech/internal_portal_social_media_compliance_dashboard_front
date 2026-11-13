@@ -250,7 +250,7 @@ function ReviewerDashboard() {
         onFilter={changeFilter}
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: the queue, and how reviewing is going */}
         <div className="flex min-w-0 flex-col gap-6">
           <div id="reviewer-queue" className="scroll-mt-4">
@@ -300,7 +300,8 @@ function ReviewerDashboard() {
               <p className="border-t border-border/60 px-4 py-8 text-center text-sm text-muted-foreground">Nothing is with a creator for changes right now.</p>
             ) : (
               <>
-              <ul className="grid gap-3 border-t border-border/60 p-4 sm:grid-cols-2 min-[112.5rem]:grid-cols-3">
+              <div className="@container border-t border-border/60">
+              <ul className="grid gap-3 p-4 @2xl:grid-cols-2 @6xl:grid-cols-3">
                 {waitingPaged.pageItems.map((x) => {
                   const due = x.due_kind === "REVISION" ? x.due_at : null;
                   const late = Boolean(due && isPast(new Date(due)));
@@ -334,6 +335,7 @@ function ReviewerDashboard() {
                   );
                 })}
               </ul>
+              </div>
               <ListPager
                 className="border-t border-border/60 px-4 py-2.5"
                 page={waitingPaged.page}

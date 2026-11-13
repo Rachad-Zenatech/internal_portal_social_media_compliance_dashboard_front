@@ -557,7 +557,7 @@ export default function ComplianceRulesPage() {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="mx-auto w-full max-w-[1400px] space-y-6 pb-8 min-[112.5rem]:max-w-[2200px]">
       {/* Page Header */}
       <DashboardHeader
         title="Compliance Rulebook"
@@ -800,7 +800,7 @@ export default function ComplianceRulesPage() {
 
           {/* Rules List / Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-[112.5rem]:grid-cols-3 min-[150rem]:grid-cols-4">
               {[1, 2, 3, 4].map((i) => (
                 <Card key={i} className="p-6 space-y-4">
                   <Skeleton className="h-6 w-1/3" />
@@ -826,7 +826,7 @@ export default function ComplianceRulesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-[112.5rem]:grid-cols-3 min-[150rem]:grid-cols-4">
               {rules.map((rule) => {
                 const tone = TRAFFIC_LIGHT_TONE[rule.traffic_light] ?? TRAFFIC_LIGHT_TONE.YELLOW;
                 const look = severityLook(rule);

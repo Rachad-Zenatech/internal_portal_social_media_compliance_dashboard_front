@@ -1222,7 +1222,7 @@ function Workspace({
         min={320}
         max={900}
         className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
-        defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
+        defaultWidth="lg:w-[360px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <ReviewPanel
           s={s}
@@ -1413,13 +1413,16 @@ export default function ContentScreenerPage() {
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
   const brandLabel = (b: string) => labels.brand(b) ?? b;
 
-  // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser.
+  // The queue can fold to a strip of thumbnails to give the post more room; remembered on this browser. Until it has
+  // been set, it starts folded on laptops (under 1536px wide), where the queue, post and review panel don't all fit.
   const [queueCollapsed, setQueueCollapsed] = useState(() => {
     try {
-      return localStorage.getItem(COLLAPSE_KEY) === "1";
+      const saved = localStorage.getItem(COLLAPSE_KEY);
+      if (saved != null) return saved === "1";
     } catch {
-      return false;
+      // storage unavailable: fall back to the screen size
     }
+    return typeof window !== "undefined" && window.innerWidth < 1536;
   });
   const setCollapsed = (v: boolean) => {
     setQueueCollapsed(v);

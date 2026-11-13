@@ -77,7 +77,7 @@ export default function ReviewConversation({
       {!hasMedia ? (
         list
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,440px)]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] min-[112.5rem]:grid-cols-[minmax(0,1fr)_520px]">
           {/* The post, with where each comment is */}
           <div className="flex min-w-0 flex-col gap-2">
             {image ? (
@@ -101,7 +101,7 @@ export default function ReviewConversation({
           </div>
 
           {/* The comments */}
-          <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">{list}</div>
+          <div className="min-w-0 xl:max-h-[70vh] xl:overflow-y-auto">{list}</div>
         </div>
       )}
     </div>

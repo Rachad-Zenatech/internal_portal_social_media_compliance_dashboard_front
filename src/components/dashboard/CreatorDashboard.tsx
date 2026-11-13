@@ -323,7 +323,7 @@ export default function CreatorDashboard() {
         onFilter={setFilter}
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_380px] min-[112.5rem]:grid-cols-[minmax(0,1fr)_480px]">
         {/* Left: what needs them, and what they've sent */}
         <div className="flex min-w-0 flex-col gap-6">
           <div id="creator-needs" className="scroll-mt-4">

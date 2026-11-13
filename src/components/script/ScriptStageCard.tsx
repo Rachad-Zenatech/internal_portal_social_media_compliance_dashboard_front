@@ -8,6 +8,7 @@ import ScriptInsights from "@/components/script/ScriptInsights";
 import ScriptPrecheck from "@/components/script/ScriptPrecheck";
 import { useScriptActions } from "@/hooks/useScript";
 import type { ScriptStage } from "@/types/script";
+import { RECHECK_AFTER_EDITS } from "@/lib/postSteps";
 
 /**
  * The script step at the top of a video post's upload section: upload the script, send it for review, and see where
@@ -197,7 +198,8 @@ function DraftBody({
   const failed = stage?.file_status === "FAILED";
   // Like a post: check compliance, fix what it finds, then send. Sending waits for a check of the script as it is now.
   const checkable = hasFile && !reading && !failed && !stage?.processing && Boolean(stage?.can_submit);
-  const checked = Boolean(stage?.precheck) && !stage?.precheck_stale;
+  // Checked: once is enough while RECHECK_AFTER_EDITS is off.
+  const checked = Boolean(stage?.precheck) && (!RECHECK_AFTER_EDITS || !stage?.precheck_stale);
   return (
     <div className="flex flex-col gap-2.5">
       {status === "CHANGES_REQUESTED" && (

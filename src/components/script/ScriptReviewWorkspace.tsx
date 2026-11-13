@@ -554,7 +554,7 @@ function Editor({
         min={320}
         max={900}
         className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
-        defaultWidth="lg:w-[400px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
+        defaultWidth="lg:w-[360px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <div className="flex items-center gap-4 border-b border-border/70 px-5 py-4">
           <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring} ${stale ? "opacity-50" : ""}`}>

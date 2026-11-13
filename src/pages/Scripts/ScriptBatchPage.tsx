@@ -11,6 +11,7 @@ import { useBatchActions, useReviewBatch, useScriptBatch } from "@/hooks/useScri
 import { useAuth } from "@/lib/AuthContext";
 import { scriptBatchService } from "@/services/scriptBatchService";
 import type { Batch, BatchDetails, BatchItem } from "@/types/scriptBatch";
+import { RECHECK_AFTER_EDITS } from "@/lib/postSteps";
 
 /** What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it. */
 const MIN_SCORE = 70;
@@ -90,7 +91,7 @@ function BatchView({ batch }: { batch: Batch }) {
   // Scripts not sent yet: the batch's own edit and send apply to these; a sent script is worked on its own page.
   const sendable = batch.items.filter((i) => i.status === "DRAFT");
   // Like a post: each script is checked (and fixed) before it's sent; a script changed since its check is checked again.
-  const unchecked = sendable.filter((i) => !i.check || i.check_stale);
+  const unchecked = sendable.filter((i) => !i.check || (RECHECK_AFTER_EDITS && i.check_stale));
   const hasPosts = batch.items.some((i) => i.submission_id);
   // Scripts not sent yet whose own details are incomplete (batches with details per script).
   const unsentGaps = sendable.filter((i) => i.missing_details.length > 0);

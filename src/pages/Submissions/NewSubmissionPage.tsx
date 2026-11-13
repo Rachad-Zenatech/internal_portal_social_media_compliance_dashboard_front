@@ -101,7 +101,7 @@ import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
-import { POST_STEPS, isStepKey } from "@/lib/postSteps";
+import { POST_STEPS, RECHECK_AFTER_EDITS, isStepKey } from "@/lib/postSteps";
 import PostStepNav, { StepFooter, StepGate } from "@/components/submissions/PostStepNav";
 import type { PostStepKey, SubmissionSummary } from "@/types/submission";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
@@ -1097,7 +1097,7 @@ export default function NewSubmissionPage() {
         );
         return;
       }
-      if (stage && (!stage.precheck || stage.precheck_stale)) {
+      if (stage && (!stage.precheck || (RECHECK_AFTER_EDITS && stage.precheck_stale))) {
         toast.info(
           stage.precheck
             ? "The script changed since its compliance check. Check it again on the script card, then send it."
@@ -1131,24 +1131,24 @@ export default function NewSubmissionPage() {
       }
       return;
     }
-    // Sent back by a reviewer: the changes are checked again before the new version goes back.
-    if (resubmitting && !recheck.compliance) {
+    // Sent back by a reviewer: the changes are checked again before the new version goes back (see RECHECK_AFTER_EDITS).
+    if (RECHECK_AFTER_EDITS && resubmitting && !recheck.compliance) {
       toast.error("Run the compliance check on your changes before resubmitting.");
       openStep("compliance");
       return;
     }
-    if (resubmitting && !recheck.sentiment) {
+    if (RECHECK_AFTER_EDITS && resubmitting && !recheck.sentiment) {
       toast.error("Run the sentiment analysis on your changes before resubmitting.");
       openStep("sentiment");
       return;
     }
     // The steps count once they've run, but what's sent has to be what was checked: anything edited since is run again.
-    if (checkStale) {
+    if (RECHECK_AFTER_EDITS && checkStale) {
       toast.error("You've edited the post since the compliance check. Run the compliance check again before sending.");
       openStep("compliance");
       return;
     }
-    if (submissionId) {
+    if (RECHECK_AFTER_EDITS && submissionId) {
       const saved = await submissionService.list(undefined, "mine").catch(() => [] as SubmissionSummary[]);
       const steps = saved.find((s) => s.id === submissionId)?.steps;
       if (steps?.compliance === "stale") {
@@ -1433,11 +1433,13 @@ export default function NewSubmissionPage() {
         <CanvaReimportBar file={canvaMain} resubmitting busy={reimporting || submitting} onReimport={reimportCanva} />
       )}
 
-      <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${wideCompliance ? "" : "xl:grid-cols-[minmax(0,1fr)_360px]"} ${onSuggestions ? "hidden" : ""}`}>
+      <div className={`grid grid-cols-1 gap-4 sm:gap-5 items-start ${wideCompliance ? "" : "xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px]"} ${onSuggestions ? "hidden" : ""}`}>
         {/* ---------------- Form ---------------- */}
         <div id="step-details" className="space-y-4 min-w-0 scroll-mt-4">
           {/* Sent for review: the details can be read, not changed. */}
-          <fieldset disabled={readOnly} className="contents">
+          {/* A real box (not "contents"), so its sections get the same gap as the rest of the page. Everything in it
+              belongs to the details step, so it is hidden on the others (an empty box would add a stray gap). */}
+          <fieldset disabled={readOnly} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
           {showDetails && (
           <div className={onDetails ? "space-y-4" : "hidden"}>
           <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">

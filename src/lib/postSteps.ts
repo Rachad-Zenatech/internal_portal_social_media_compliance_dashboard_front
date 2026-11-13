@@ -32,6 +32,13 @@ export const POST_STEPS: { key: PostStepKey; label: string; purpose: string }[] 
   },
 ];
 
+/**
+ * Whether an edit after a check has to be checked again before sending: a post's compliance check and sentiment
+ * analysis (and both again after a reviewer sends it back), and a script's compliance check. Off for now: a check only
+ * has to have run once. The server still runs its own check when the post is sent.
+ */
+export const RECHECK_AFTER_EDITS = false;
+
 /** Where each step opens. Every step of a post is a page of its own; the editor reads ?step= to land on the right one. */
 export function stepPath(id: string, step: PostStepKey): string {
   return `/submissions/new?id=${id}&step=${step}`;
