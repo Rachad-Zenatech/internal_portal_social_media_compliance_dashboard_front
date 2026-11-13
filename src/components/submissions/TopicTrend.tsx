@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, Flame, Globe2, Loader2, RefreshCw, ShieldAlert, TrendingDown, TrendingUp, Undo2, X } from "lucide-react";
 
@@ -321,7 +321,11 @@ export default function TopicTrend({
 }) {
   const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(hasRun);
   const [showAllTrends, setShowAllTrends] = useState(false);
-  const scrapeTwitter = useScrapeTwitter(submissionId);
+  const afterScrapeRef = useRef<() => void>(() => {});
+  afterScrapeRef.current = () => {
+    if (!hasRun) onRun?.();
+  };
+  const scrapeTwitter = useScrapeTwitter(submissionId, () => afterScrapeRef.current());
   const { addJob } = useGlobalProgress();
 
   const handleScrape = () => {
