@@ -6,9 +6,10 @@ import SourceCheckResult from "@/components/submissions/SourceCheckResult";
 import { submissionService } from "@/services/submissionService";
 import type { SourceLinkCheck } from "@/types/sourceLink";
 
-/** The server needs at least this much text to check against (a whole article, not a sentence). */
-const MIN_CHARS = 200;
-const MAX_CHARS = 250000;
+/** The server needs at least this much text to check against (a whole article, not a sentence). Set these to match
+ *  the server's SOURCE_MIN_CHARS / SOURCE_MAX_CHARS. */
+const MIN_CHARS = Number(import.meta.env.VITE_SOURCE_MIN_CHARS ?? 200);
+const MAX_CHARS = Number(import.meta.env.VITE_SOURCE_MAX_CHARS ?? 250000);
 const FIELD = "w-full rounded-lg border border-input bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
 interface Props {

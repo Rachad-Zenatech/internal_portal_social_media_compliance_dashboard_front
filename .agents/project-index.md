@@ -97,7 +97,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
-- src/components/submissions/PastedArticleCheck.tsx (103 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
+- src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)

@@ -140,10 +140,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - `PanelComposer` (export function) L13 - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 
-## src/components/submissions/PastedArticleCheck.tsx (103 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
-- `Props` (interface) L14
-- `PasteForm` (function) L19
-- `PastedArticleCheck` (export function) L59 - Check the post against an article pasted in whole: for pages the checker can't open, or a copy someone has.
+## src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
+- `Props` (interface) L15
+- `PasteForm` (function) L20
+- `PastedArticleCheck` (export function) L60 - Check the post against an article pasted in whole: for pages the checker can't open, or a copy someone has.
 
 ## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - `PlatformCaptions` (export function) L10 - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...
