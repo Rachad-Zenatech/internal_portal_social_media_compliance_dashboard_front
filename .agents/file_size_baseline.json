@@ -6,11 +6,7 @@
   },
   "files": {
     "src/components/AppShell/MessageHubStatusDropdown.tsx": {
-      "max_lines": 586,
-      "reason": "Over the limit when the check was introduced; split it when you next work on it."
-    },
-    "src/components/AppShell/TopBar.tsx": {
-      "max_lines": 597,
+      "max_lines": 570,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/script/HighlightableText.tsx": {

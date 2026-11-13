@@ -24,23 +24,23 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
 - `GlobalProgressOverlay` (export function) L10
 
-## src/components/AppShell/MessageHubStatusDropdown.tsx (587 lines) - message hub status dropdown (components  app shell)
-- `HubQueueOrStreamItem` (export interface) L26
-- `HubChannelGroupStatus` (export interface) L35
-- `HubConnectedServer` (export interface) L44
-- `MessageHubStatusResponse` (export interface) L60
-- `forceServerOffline` (function) L87
-- `buildOfflineServer` (function) L128
-    - `q` (fn) L129
-- `buildAllOfflineFallback` (function) L166
-- `fetchWithTimeout` (function) L201
-- `MessageHubStatusDropdown` (export function) L211
-    - `queryClient` (fn) L215
-    - `handleActiveTest` (fn) L308
-    - `getStatusDot` (fn) L336
-    - `getServerBadge` (fn) L348
-    - `formatLastSeen` (fn) L382
-    - `renderMetric` (fn) L404
+## src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
+- `HubQueueOrStreamItem` (export interface) L27
+- `HubChannelGroupStatus` (export interface) L36
+- `HubConnectedServer` (export interface) L45
+- `MessageHubStatusResponse` (export interface) L61
+- `forceServerOffline` (function) L88
+- `buildOfflineServer` (function) L129
+    - `q` (fn) L130
+- `buildAllOfflineFallback` (function) L167
+- `fetchWithTimeout` (function) L202
+- `MessageHubStatusDropdown` (export function) L212
+    - `queryClient` (fn) L216
+    - `handleActiveTest` (fn) L292
+    - `getStatusDot` (fn) L320
+    - `getServerBadge` (fn) L332
+    - `formatLastSeen` (fn) L366
+    - `renderMetric` (fn) L388
 
 ## src/components/AppShell/Navigation.tsx (154 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface) L16
@@ -61,14 +61,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - `ThemeSwitch` (export function) L5
 
-## src/components/AppShell/TopBar.tsx (598 lines) - top bar (components  app shell)
-- `ViewModeToggle` (function) L45 - Super admins only: switch between seeing the app as a reviewer and as a content creator.
-- `TopBarClock` (function) L73
-- `sendWindowsNotification` (function) L103
-- `TopBar` (export function) L141
-    - `handleToggleWindowsNotifications` (fn) L155
-    - `handleTestWindowsNotification` (fn) L199
-    - `navigate` (fn) L219
-    - `location` (fn) L220
-    - `queryClient` (fn) L237
-    - `linkToken` (fn) L239 - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+## src/components/AppShell/TopBar.tsx (488 lines) - top bar (components  app shell)
+- `ViewModeToggle` (function) L46 - Super admins only: switch between seeing the app as a reviewer and as a content creator.
+- `TopBarClock` (function) L74
+- `TopBar` (export function) L104
+    - `handleToggleWindowsNotifications` (fn) L118
+    - `handleTestWindowsNotification` (fn) L162
+    - `navigate` (fn) L182
+    - `location` (fn) L183

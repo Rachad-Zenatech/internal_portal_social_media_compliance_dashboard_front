@@ -11,12 +11,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/AppShell/Breadcrumbs.tsx (165 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
 - src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
-- src/components/AppShell/MessageHubStatusDropdown.tsx (587 lines) - message hub status dropdown (components  app shell)
+- src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
 - src/components/AppShell/Navigation.tsx (154 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (261 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
-- src/components/AppShell/TopBar.tsx (598 lines) - top bar (components  app shell)
+- src/components/AppShell/TopBar.tsx (488 lines) - top bar (components  app shell)
 - src/components/common/CheckingNotice.tsx (50 lines) - What is being checked, as it reads in "Checking for …": "compliance", "sentiment", "public mood".
 - src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
 - src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
@@ -153,6 +153,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
+- src/hooks/useNotificationStream.tsx (72 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
@@ -161,10 +162,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+- src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - src/lib/contentCalendar.ts (430 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+- src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/locateOnPage.ts (159 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.

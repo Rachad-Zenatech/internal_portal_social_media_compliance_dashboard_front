@@ -19,6 +19,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useEntryMutations` (function) L27 - Saving, turning on/off and removing entries, each refreshing the list and the analyses that used it.
 - `useMessagingContext` (export function) L64 - Everything the Messaging Context page shows and does: the entries of the open kind, the audience profile picked,  the fact search, and ad...
 
+## src/hooks/useNotificationStream.tsx (72 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+- `LiveNotification` (type) L12
+- `useNotificationStream` (export function) L19 - Live notifications: refresh the lists and counts, show a toast (inAppAlerts) and a desktop alert  (windowsNotifications).
+
 ## src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - `Notification` (export interface) L4
 - `useNotifications` (export function) L22 - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
@@ -64,6 +68,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - `isSentimentRunning` (export function) L11
 - `useSentiment` (export function) L16 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+
+## src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
+- `SharedStreamHandlers` (export interface) L14 - One server-sent-events connection shared by every open tab of the app.
+- `Wire` (type) L20
+- `useSharedEventSource` (export function) L22
 
 ## src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - `SubmitTarget` (interface) L10

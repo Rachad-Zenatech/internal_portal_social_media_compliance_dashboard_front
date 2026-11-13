@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, BASE_URL } from "@/services/apiClient";
+import { useSharedEventSource } from "@/hooks/useSharedEventSource";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -268,42 +269,25 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
     retry: false,
   });
 
-  // Real-time SSE listener: receives instant cross-server disconnect/reconnect pushes
-  useEffect(() => {
-    const streamUrl = `${BASE_URL || ""}/api/message-hub/stream`;
-    let es: EventSource | null = null;
-    let open = false;
-    try {
-      es = new EventSource(streamUrl, { withCredentials: true });
-      es.onopen = () => {
-        open = true;
-        setStreamOpen(true);
-      };
-      es.onmessage = (evt) => {
-        try {
-          const payload = JSON.parse(evt.data) as MessageHubStatusResponse;
-          if (payload && Array.isArray(payload.servers)) {
-            queryClient.setQueryData(["message-hub-live-status"], payload);
-          }
-        } catch {
-          // Ignore malformed event
-        }
-      };
-      es.onerror = () => {
-        // When This App's server stops, SSE drops immediately — refetch once to flip This App to OFFLINE. Not on
-        // every failed reconnect (the browser retries every few seconds), which only repeated the same request.
-        if (open) refetch();
-        open = false;
-        setStreamOpen(false);
-      };
-    } catch {
-      // EventSource not available
-    }
-    return () => {
-      if (es) es.close();
+  // Real-time cross-server disconnect/reconnect pushes, on one connection shared by every open tab.
+  useSharedEventSource("message-hub", `${BASE_URL || ""}/api/message-hub/stream`, {
+    onOpen: () => setStreamOpen(true),
+    onMessage: (data) => {
+      setStreamOpen(true); // A tab that opened after the stream did still hears it.
+      try {
+        const payload = JSON.parse(data) as MessageHubStatusResponse;
+        if (payload && Array.isArray(payload.servers)) queryClient.setQueryData(["message-hub-live-status"], payload);
+      } catch {
+        // Ignore malformed event
+      }
+    },
+    // When This App's server stops, the stream drops at once: refetch once to flip This App to OFFLINE. Not on every
+    // failed reconnect (the browser retries every few seconds), which only repeated the same request.
+    onError: () => {
+      if (streamOpen) refetch();
       setStreamOpen(false);
-    };
-  }, [queryClient, refetch]);
+    },
+  });
 
   const handleActiveTest = async () => {
     setIsTesting(true);

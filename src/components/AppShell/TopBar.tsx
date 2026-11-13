@@ -25,13 +25,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient, BASE_URL } from "@/services/apiClient";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/apiClient";
 import ThemeSwitch from "./ThemeSwitch";
 import { useAuth, type Role, type ViewMode } from "@/lib/AuthContext";
-import { useLinkToken } from "@/lib/linkToken";
+import { sendWindowsNotification } from "@/lib/desktopNotification";
 import { resolveUserDepartment } from "@/lib/userDepartment";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
+import { useNotificationStream } from "@/hooks/useNotificationStream";
 import { NotificationDropdownContent } from "./NotificationDropdown";
 import { pathInView } from "./Navigation";
 
@@ -98,44 +99,6 @@ function TopBarClock() {
       </span>
     </div>
   );
-}
-
-function sendWindowsNotification(
-  title: string,
-  message: string,
-  linkUrl?: string,
-  onNavigate?: (url: string) => void
-) {
-  if (typeof window === "undefined" || !("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
-
-  try {
-    const notif = new Notification(title, {
-      body: message,
-      icon: "/favicon.svg",
-      tag: `app-${Date.now()}`,
-      silent: false,
-    });
-
-    notif.onclick = (e) => {
-      e.preventDefault();
-      try {
-        window.focus();
-      } catch {
-        // Ignored
-      }
-      if (linkUrl) {
-        if (onNavigate) {
-          onNavigate(linkUrl);
-        } else {
-          window.location.href = linkUrl;
-        }
-      }
-      notif.close();
-    };
-  } catch (err) {
-    console.warn("Failed to show Windows desktop notification:", err);
-  }
 }
 
 export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
@@ -234,81 +197,8 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
   const { data: unreadCountData } = useUnreadNotificationCount();
   const unreadCount = unreadCountData?.count ?? 0;
 
-  const queryClient = useQueryClient();
-  // EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
-  const linkToken = useLinkToken();
-
-  useEffect(() => {
-    if (!linkToken) return;
-    const eventSource = new EventSource(`${BASE_URL || ""}/api/notifications/stream?token=${encodeURIComponent(linkToken)}`, {
-      withCredentials: true,
-    });
-    // The server ends each stream every couple of minutes and the browser reconnects; catch up on anything sent between.
-    let connectedBefore = false;
-    eventSource.onopen = () => {
-      if (connectedBefore) queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      connectedBefore = true;
-    };
-
-    eventSource.onmessage = (event) => {
-      try {
-        const newNotif = JSON.parse(event.data);
-        // Invalidate queries
-        queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
-
-        // Only display toast/desktop alerts if targeted to current user
-        const currentUserId = user?.id || (user as any)?.sub;
-        const isTargetUser =
-          !newNotif.user_id ||
-          newNotif.user_id === "*" ||
-          (currentUserId && String(newNotif.user_id).toLowerCase() === String(currentUserId).toLowerCase()) ||
-          (user?.email && String(newNotif.user_id).toLowerCase() === String(user.email).toLowerCase());
-
-        if (!isTargetUser) {
-          return;
-        }
-
-        const capitalizedTitle = newNotif.title ? newNotif.title.charAt(0).toUpperCase() + newNotif.title.slice(1) : "System Notification";
-
-        if (inAppAlerts) {
-          toast(
-            <div
-              className="cursor-pointer w-full flex flex-col gap-1"
-              onClick={() => newNotif.link_url && navigate(newNotif.link_url)}
-            >
-              <div className="font-medium">{capitalizedTitle}</div>
-              <div className="text-sm text-slate-500 dark:text-zinc-400 whitespace-pre-line">{newNotif.message}</div>
-            </div>,
-            {
-              position: "bottom-right",
-              duration: 5000,
-              closeButton: true,
-            }
-          );
-        }
-
-        if (windowsNotifications && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          sendWindowsNotification(
-            capitalizedTitle,
-            newNotif.message || "New notification received",
-            newNotif.link_url,
-            (url) => navigate(url)
-          );
-        }
-      } catch (err) {
-        console.error("Failed to parse SSE notification:", err);
-      }
-    };
-
-    eventSource.onerror = (err) => {
-      console.error("EventSource failed:", err);
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [inAppAlerts, windowsNotifications, navigate, queryClient, user, linkToken]);
+  // Live notifications: toasts, desktop alerts and fresh counts (one connection shared by every open tab).
+  useNotificationStream({ inAppAlerts, windowsNotifications });
 
   return (
     <header className="h-14 border-b border-border bg-card text-card-foreground flex items-center justify-between px-3 sm:px-6 shrink-0 transition-all duration-300 gap-3 sm:gap-4 relative z-40">

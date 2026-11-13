@@ -52,6 +52,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `recordSproutSend` (export function) L421
 - `clearSproutSends` (export function) L427
 
+## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
+- `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
+
 ## src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - `Change` (type) L3
 - `plain` (const) L5
