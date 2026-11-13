@@ -4,15 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/scriptdoc/CollabEditor.tsx (318 lines) - collab editor (components scriptdoc)
-- `LatestProps` (class) L20
-- `locate` (function) L40 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
-- `NoteOptions` (interface) L56
-- `CollabEditorHandle` (export interface) L100
-- `Tool` (function) L114
-- `Props` (interface) L132
-- `CollabEditor` (const) L150 - The script as a shared page: everyone with it open edits the same text, and sees each other's cursor with their name  above it in their o...
-- `findAndSelect` (function) L303
+## src/components/scriptdoc/CollabEditor.tsx (224 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
+- `CollabEditorHandle` (export interface) L20
+- `Tool` (function) L34
+- `Props` (interface) L52
+- `CollabEditor` (const) L70 - The script as a shared page: everyone with it open edits the same text, and sees each other's cursor with their name  above it in their o...
 
 ## src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - `DeleteScriptMenu` (export function) L16 - The three dots on a script (or a document of scripts) with a Delete script action.
@@ -26,9 +22,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (78 lines) - Highlight and Comment, in the editor's toolbar.
-- `NoteButtons` (function) L10 - Highlight and Comment, in the editor's toolbar.
-- `DocEditorColumn` (export function) L26 - The script page itself, once the live connection is up (until then, a short wait).
+## src/components/scriptdoc/DocEditorColumn.tsx (112 lines) - Highlight and Comment, in the editor's toolbar.
+- `NoteButtons` (function) L12 - Highlight and Comment, in the editor's toolbar.
+- `DocEditorColumn` (export function) L28 - The script page itself, once the live connection is up (until then, a short wait).
 
 ## src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
 - `DOC_STATUS` (export const) L10
@@ -38,14 +34,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (333 lines) - The box for the comment on the wording that was selected.
+## src/components/scriptdoc/DocSidePanel.tsx (337 lines) - The box for the comment on the wording that was selected.
 - `PanelTab` (export type) L18
 - `NoteComposer` (function) L21 - The box for the comment on the wording that was selected.
 - `NotesTab` (function) L40 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L142 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L185
-- `ReviewersTab` (function) L222
-- `DocSidePanel` (export function) L264 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+- `ChecksTab` (function) L145 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L188
+- `ReviewersTab` (function) L225
+- `DocSidePanel` (export function) L267 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
 
 ## src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - `sendable` (export const) L26
@@ -60,7 +56,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (319 lines) - script doc hub (components scriptdoc)
+## src/components/scriptdoc/ScriptDocHub.tsx (320 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L26
 - `DocCard` (function) L28
 - `SetCard` (function) L68 - A creator's document: its scripts (pages) and where each stands.

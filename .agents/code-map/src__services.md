@@ -82,7 +82,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - `scriptBatchService` (export const) L7 - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 
-## src/services/scriptDocService.ts (46 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
+## src/services/scriptDocService.ts (49 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - `scriptDocService` (export const) L10 - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 
 ## src/services/scriptService.ts (62 lines) - The script stage of video posts (see the backend's script_review_service).
