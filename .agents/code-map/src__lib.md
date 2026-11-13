@@ -125,6 +125,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `cellText` (function) L181
 - `docToText` (export function) L187 - A script's text for the editor's content.
 
+## src/lib/scriptDocLive.ts (163 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
+- `LiveStatus` (export type) L7
+- `b64` (const) L9
+- `unb64` (const) L14
+- `LiveHandlers` (export interface) L16
+- `LiveProvider` (export class) L32 - The browser's side of a script's live editing connection: two shared documents (the script's text, and its notes),  and the cursors and n...
+
 ## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const) L4
 - `scriptVerdict` (export function) L11 - Score ring colours and the verdict line for a script check.

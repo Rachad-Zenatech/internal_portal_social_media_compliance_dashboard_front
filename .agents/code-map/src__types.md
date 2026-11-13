@@ -107,6 +107,27 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ItemResult` (export interface) L85
 - `BatchReviewResult` (export interface) L94
 
+## src/types/scriptDoc.ts (184 lines) - script doc (types)
+- `DocStatus` (export type) L3
+- `Capacity` (export type) L4
+- `Vote` (export type) L5
+- `ScriptTemplate` (export interface) L7
+- `DocReviewer` (export interface) L16
+- `DocAccess` (export interface) L28
+- `DocDetails` (export type) L39
+- `DocPost` (export interface) L42 - A post made from one script of an approved document.
+- `DocDetail` (export interface) L49
+- `DocPage` (export interface) L82 - One script (page) of a creator's document.
+- `DocSetSummary` (export interface) L93 - A creator's document in the hub.
+- `BulkResult` (export interface) L106
+- `DocSummary` (export interface) L111
+- `DocEvent` (export interface) L127
+- `DocVersion` (export interface) L136
+- `DocHistory` (export interface) L146
+- `ReviewerOption` (export interface) L151
+- `DocLiveState` (export interface) L160 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
+- `DocNote` (export interface) L170 - A highlight or comment on a stretch of the script, shared live through the notes document.
+
 ## src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type) L3
 - `SentimentAssessment` (export type) L4
@@ -125,11 +146,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type) L218
 
+## src/types/sourceLink.ts (29 lines) - source link (types)
+- `SubmissionSourceFields` (export interface) L1
+- `SourceLinkClaim` (export interface) L5
+- `SourceLinkCheck` (export interface) L15
+
 ## src/types/submission.ts (682 lines) - AD: paid social ad.
-- `ContentType` (export type) L5 - AD: paid social ad.
-- `SubmissionFileKind` (export type) L6
-- `SubmissionStatus` (export type) L7
-- `BrandOption` (export interface) L9
+- `ContentType` (export type) L6 - AD: paid social ad.
+- `SubmissionFileKind` (export type) L7
+- `SubmissionStatus` (export type) L8
+- `BrandOption` (export interface) L10
 - `AccountOption` (export interface) L14
 - `SubmissionOptions` (export interface) L26
 - `ReviewerOption` (export interface) L37 - Someone a creator can send content to for review: a reviewer or a super admin.

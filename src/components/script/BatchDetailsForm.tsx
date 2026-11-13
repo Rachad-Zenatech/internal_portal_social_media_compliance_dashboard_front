@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users } from "lucide-react";
 
+import BatchReviewerFields from "@/components/script/BatchReviewerFields";
 import { Field, MultiSelect } from "@/components/submissions/FormFields";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import type { BatchDetails } from "@/types/scriptBatch";
 
@@ -28,31 +27,20 @@ export default function BatchDetailsForm({
   details,
   missing,
   disabled,
+  hideReviewers,
   onChange,
 }: {
   details: BatchDetails;
   /** Details still empty, by name (as the server names them): those fields are outlined in red. */
   missing: string[];
   disabled?: boolean;
+  /** Leave out the reviewers: the caller picks them when it sends. */
+  hideReviewers?: boolean;
   onChange: (next: BatchDetails) => void;
 }) {
   const optionsQuery = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 60_000 });
   const options = optionsQuery.data;
   const brands = useMemo(() => details.brand_codes ?? [], [details.brand_codes]);
-  const reviewersQuery = useQuery({
-    queryKey: ["submission-reviewers", [...brands].sort()],
-    queryFn: () => submissionService.reviewers(brands),
-    staleTime: 60_000,
-  });
-  // Nobody but a super admin reviews their own script, so the person uploading isn't offered as its reviewer.
-  const { user, canSwitchView } = useAuth();
-  const reviewers = (reviewersQuery.data ?? []).filter((r) => canSwitchView || r.id !== user?.id);
-  // Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-  const approvers = reviewers.filter((r) => r.kind !== "SUGGESTER");
-  const suggesters = reviewers.filter((r) => r.kind === "SUGGESTER");
-  const pickedAll = details.reviewer_ids ?? [];
-  const pickedApprovers = pickedAll.filter((id) => approvers.some((r) => r.id === id));
-  const pickedSuggesters = pickedAll.filter((id) => suggesters.some((r) => r.id === id));
   const accounts = useMemo(
     () => (options?.accounts ?? []).filter((a) => brands.length === 0 || !a.brand_code || brands.includes(a.brand_code)),
     [options, brands]
@@ -143,44 +131,7 @@ export default function BatchDetailsForm({
           invalid={isMissing("Rule sets")}
         />
       </Field>
-      <Field label="Send to reviewers" required error={error("Send to reviewers", "Pick at least one reviewer")}>
-        {reviewersQuery.isSuccess && approvers.length === 0 ? (
-          <div className={`flex h-11 items-center rounded-xl border px-3 text-sm text-muted-foreground ${isMissing("Send to reviewers") ? "border-red-500" : "border-input"}`}>
-            No reviewers yet{brands.length ? ` for ${brands.length === 1 ? "this brand" : "these brands"}` : ""}
-          </div>
-        ) : (
-          <MultiSelect<string>
-            options={approvers.map((r) => r.id)}
-            value={pickedApprovers}
-            onChange={(v) => onChange({ ...details, reviewer_ids: [...v, ...pickedSuggesters] })}
-            placeholder={reviewersQuery.isLoading ? "Loading reviewers..." : reviewersQuery.isError ? "Couldn't load reviewers" : "Pick reviewers"}
-            getLabel={(id) => {
-              const r = approvers.find((x) => x.id === id);
-              return r ? `${r.name}${r.is_super_admin ? " · Super admin" : ""}` : "Reviewer";
-            }}
-            getSearchText={(id) => approvers.find((x) => x.id === id)?.email ?? ""}
-            renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
-            invalid={isMissing("Send to reviewers")}
-            searchable
-            selectAll
-          />
-        )}
-      </Field>
-      {suggesters.length > 0 && (
-        <Field label="Suggesting reviewers (optional)">
-          <MultiSelect<string>
-            options={suggesters.map((r) => r.id)}
-            value={pickedSuggesters}
-            onChange={(v) => onChange({ ...details, reviewer_ids: [...pickedApprovers, ...v] })}
-            placeholder="Pick suggesting reviewers"
-            getLabel={(id) => suggesters.find((x) => x.id === id)?.name ?? "Reviewer"}
-            getSearchText={(id) => suggesters.find((x) => x.id === id)?.email ?? ""}
-            renderIcon={() => <Users className="w-3.5 h-3.5 text-muted-foreground" />}
-            searchable
-            selectAll
-          />
-        </Field>
-      )}
+      {!hideReviewers && <BatchReviewerFields details={details} missing={missing} onChange={onChange} />}
       <Field label="Need approval by" required error={error("Need approval by", "Pick a date in the future")}>
         <DateTimePicker
           id="batch-needed-by"
