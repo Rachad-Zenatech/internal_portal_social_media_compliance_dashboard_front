@@ -166,11 +166,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Caption` (function) L217
 - `PostPreview` (export function) L236 - Approximate look of the post on a platform: who it posts as, the caption and the media.
 
-## src/components/submissions/PostStepNav.tsx (158 lines) - The steps that can't be opened yet, and why they can't.
-- `TabState` (type) L8
-- `PostStepNav` (export function) L14 - The five steps along the top of the post editor, the one you're on lit.
-- `StepGate` (export function) L86 - Shown in place of a step's tool until the post's details are filled in.
-- `StepFooter` (export function) L113 - The back and next buttons under a step.
+## src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
+- `TabState` (type) L9
+- `PostStepNav` (export function) L21
+- `StepGate` (export function) L98 - Shown in place of a step's tool until the post's details are filled in.
+- `StepFooter` (export function) L125 - The back and next buttons under a step.
 
 ## src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - `PostSteps` (export function) L12 - The five steps of a post as five dots, in order.

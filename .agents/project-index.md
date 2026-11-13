@@ -102,7 +102,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
 - src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
-- src/components/submissions/PostStepNav.tsx (158 lines) - The steps that can't be opened yet, and why they can't.
+- src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - src/components/submissions/ReviewCommentsPanel.tsx (167 lines) - What other pages import from here.

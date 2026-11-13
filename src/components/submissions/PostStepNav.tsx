@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { ArrowLeft, ArrowRight, Check, Loader2, Lock, Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,13 @@ type TabState = "done" | "stale" | "todo";
 /**
  * The five steps along the top of the post editor, the one you're on lit. Each says what it's for when you point at it.
  * The steps after the details stay shut until the details are filled in (the page then says what is missing).
+ * It stays pinned to the top while the page scrolls, so the steps are always in view; on a phone it's one row that
+ * scrolls sideways, so the pinned bar stays short.
  */
+// Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
+// the content scrolling past doesn't show above it.
+const STICKY =
+  "sticky -top-2.5 sm:-top-3.5 md:-top-4 z-30 rounded-2xl border border-border/70 bg-card p-3 shadow-md shadow-black/5";
 export default function PostStepNav<K extends string = PostStepKey>({
   current,
   states,
@@ -27,16 +34,21 @@ export default function PostStepNav<K extends string = PostStepKey>({
   steps?: { key: K; label: string; purpose: string }[];
 }) {
   const list = steps ?? (POST_STEPS as unknown as { key: K; label: string; purpose: string }[]);
+  const row = useRef<HTMLOListElement>(null);
+  // On a phone the row scrolls sideways: keep the step you're on in view.
+  useEffect(() => {
+    row.current?.querySelector('[aria-current="step"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [current]);
   return (
     <TooltipProvider delayDuration={150}>
-      <nav aria-label="Steps" className="rounded-2xl border border-border/70 bg-card p-3 shadow-xs">
-        <ol className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${list.length === 6 ? "xl:grid-cols-6" : "lg:grid-cols-5"}`}>
+      <nav aria-label="Steps" className={STICKY}>
+        <ol ref={row} className={`flex gap-2 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible ${list.length === 6 ? "xl:grid-cols-6" : "lg:grid-cols-5"}`}>
           {list.map((step, i) => {
             const active = step.key === current;
             const state = states[step.key] ?? "todo";
             const why = shut?.[step.key];
             return (
-              <li key={step.key} className="flex flex-col gap-1.5">
+              <li key={step.key} className="flex min-w-[9.5rem] shrink-0 flex-col gap-1.5 sm:min-w-0 sm:shrink">
                 <span className={`block h-1.5 rounded-full ${active || state === "done" ? "bg-blue-600" : state === "stale" ? "bg-blue-200 dark:bg-blue-500/40" : "bg-muted"}`} />
                 <Tooltip>
                   <TooltipTrigger asChild>
