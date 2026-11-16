@@ -8,6 +8,7 @@ import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
@@ -69,6 +70,7 @@ export default function ComplianceStep({
   const check = sub?.latest_check ?? null;
   const [picked, setPicked] = useState<string | null>(null);
   const [clearedOpen, setClearedOpen] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -367,12 +369,7 @@ export default function ComplianceStep({
           )}
         </section>
 
-        <SourcesCheckedSection
-          checks={check.source_checks}
-          checking={sourceChecking}
-          submissionId={sub?.id}
-          className={`${card} flex flex-col gap-3`}
-        />
+        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} className={`${card} flex flex-col gap-3`} />
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 xl:sticky xl:top-4">
@@ -412,7 +409,12 @@ export default function ComplianceStep({
           )}
           {mainFile && !isVideo && (
             <>
-              <img src={authedFileUrl(mainFile.url)} alt="" className="max-h-[420px] w-full rounded-xl border border-border/60 object-contain" />
+              <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
+                <img src={authedFileUrl(mainFile.url)} alt="Open full-size image" className="max-h-[420px] w-full rounded-xl border border-border/60 object-contain" />
+              </button>
+              <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+                <DialogContent aria-label="Full-size post image" className="max-w-5xl p-2"><button type="button" onClick={() => setImageOpen(false)} aria-label="Close full-size image"><img src={authedFileUrl(mainFile.url)} alt="Full-size post" className="max-h-[90vh] w-full cursor-zoom-out object-contain" /></button></DialogContent>
+              </Dialog>
               {imageTerms.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Flagged text in the image</span>
