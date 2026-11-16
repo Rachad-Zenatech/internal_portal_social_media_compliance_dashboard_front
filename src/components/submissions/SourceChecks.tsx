@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileText, Link2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, FileText, Link2, Loader2, XCircle } from "lucide-react";
 
 import ClaimVsSource from "@/components/submissions/ClaimVsSource";
 import SourceTrustBar from "@/components/submissions/SourceTrustBar";
@@ -113,6 +113,48 @@ function Row({ source }: { source: SourceCheck }) {
         </div>
       )}
     </li>
+  );
+}
+
+/** Banner shown on the compliance step when a source link or image-source scan is running in the background. */
+export function SourceCheckingNotice({ items }: { items?: string[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50/50 px-3.5 py-2.5 text-xs text-foreground dark:border-blue-500/30 dark:bg-blue-500/5">
+      <p className="flex items-center gap-2 font-semibold">
+        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-blue-600" />
+        Checking source in the background
+      </p>
+      <ul className="mt-1 space-y-0.5 pl-5.5 text-muted-foreground">
+        {items.map((item) => (
+          <li key={item} className="truncate" title={item}>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Card rendered on the compliance step when source checks exist or a source is being checked in the background. */
+export function SourcesCheckedSection({
+  checks,
+  checking,
+  submissionId,
+  className = "",
+}: {
+  checks?: SourceCheck[] | null;
+  checking?: string[];
+  submissionId?: string | null;
+  className?: string;
+}) {
+  if ((checks?.length ?? 0) === 0 && (checking?.length ?? 0) === 0) return null;
+  return (
+    <section className={className}>
+      <h2 className="text-lg font-bold text-foreground">Sources checked</h2>
+      <SourceCheckingNotice items={checking} />
+      <SourceChecks checks={checks} submissionId={submissionId} />
+    </section>
   );
 }
 

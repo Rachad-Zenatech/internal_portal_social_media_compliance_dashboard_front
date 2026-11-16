@@ -88,6 +88,7 @@ import CaptionSignalsBar from "@/components/submissions/CaptionSignalsBar";
 import HashtagPicker from "@/components/submissions/HashtagPicker";
 import CaptionExtras from "@/components/submissions/CaptionExtras";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
+import { useBackgroundSourceChecks } from "@/hooks/useBackgroundSourceChecks";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
 import { useReviewComments } from "@/hooks/useReview";
@@ -401,6 +402,7 @@ export default function NewSubmissionPage() {
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
+  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]);
   // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
   const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
   // The repost (same post, another date) the creator already said yes to, so sending doesn't ask again.
@@ -1054,6 +1056,8 @@ export default function NewSubmissionPage() {
     return () => window.clearInterval(t);
   }, [checkAnalysing, submissionId]);
 
+  const sourceChecking = useBackgroundSourceChecks(submissionId, stepView === "compliance", localSourceChecking);
+
   const hasCheck = Boolean(checkedSub?.latest_check);
   // Edited since the last check (a check loaded with the draft counts as current until something changes).
   const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
@@ -1298,12 +1302,12 @@ export default function NewSubmissionPage() {
     saveState === "saving"
       ? "Saving..."
       : saveState === "dirty"
-      ? "Unsaved changes"
-      : saveState === "error"
-      ? "Not saved"
-      : savedAt
-      ? `Saved ${format(savedAt, "h:mm a")}`
-      : "Not saved yet";
+        ? "Unsaved changes"
+        : saveState === "error"
+          ? "Not saved"
+          : savedAt
+            ? `Saved ${format(savedAt, "h:mm a")}`
+            : "Not saved yet";
 
   if (loadingExisting) {
     return (
@@ -1367,24 +1371,24 @@ export default function NewSubmissionPage() {
           onGo={openStep}
         />
       ) : (
-      <PostStepNav
-        current={stepView}
-        states={{
-          details: detailsComplete ? "done" : "todo",
-          // Done once it has run; the compliance step itself says when the post changed since.
-          compliance: resubmitting ? (recheck.compliance ? "done" : "stale") : hasCheck ? "done" : "todo",
-          sentiment: resubmitting
-            ? recheck.sentiment
-              ? "done"
-              : "stale"
-            : sentimentAnalysis?.status === "COMPLETED"
-            ? "done"
-            : "todo",
-          mood: mood ? "done" : "todo",
-          ...(readOnly ? { send: "done" as const } : {}),
-        }}
-        onGo={openStep}
-      />
+        <PostStepNav
+          current={stepView}
+          states={{
+            details: detailsComplete ? "done" : "todo",
+            // Done once it has run; the compliance step itself says when the post changed since.
+            compliance: resubmitting ? (recheck.compliance ? "done" : "stale") : hasCheck ? "done" : "todo",
+            sentiment: resubmitting
+              ? recheck.sentiment
+                ? "done"
+                : "stale"
+              : sentimentAnalysis?.status === "COMPLETED"
+                ? "done"
+                : "todo",
+            mood: mood ? "done" : "todo",
+            ...(readOnly ? { send: "done" as const } : {}),
+          }}
+          onGo={openStep}
+        />
       )}
 
       {/* Once decided, the creator gets a copy of the review conversation (reviewers and suggesting reviewers) on
@@ -1442,796 +1446,792 @@ export default function NewSubmissionPage() {
           {/* Sent for review: the details can be read, not changed. */}
           {/* A real box (not "contents") so its sections get the page's gap; hidden off the details step (empty, it adds a stray gap). */}
           <fieldset disabled={readOnly} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
-          {showDetails && (
-          <div className={onDetails ? "space-y-4" : "hidden"}>
-          <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">
-            <div className="flex flex-col gap-5">
-              <Field label="Title" required error={errorFor("title")}>
-                <Input
-                  value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
-                    markEdited();
-                  }}
-                  maxLength={300}
-                  placeholder="e.g. ZenaDrone 1000 – Autonomous Defense Capabilities"
-                  className={`h-11 rounded-xl ${isMissing("title") ? "border-red-500" : ""}`}
-                />
-              </Field>
-
-              <div className="space-y-2">
-                <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
-                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
-                  {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
-                    const selected = contentType === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        title={description}
-                        onClick={() => {
-                          if (value === contentType) return;
-                          if (mainFiles.length > 0) {
-                            toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
-                          }
-                          setContentType(value);
-                          if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
+            {showDetails && (
+              <div className={onDetails ? "space-y-4" : "hidden"}>
+                <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">
+                  <div className="flex flex-col gap-5">
+                    <Field label="Title" required error={errorFor("title")}>
+                      <Input
+                        value={title}
+                        onChange={(e) => {
+                          setTitle(e.target.value);
                           markEdited();
                         }}
-                        className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${
-                          selected
-                            ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-                            : "border-border bg-card text-muted-foreground hover:border-slate-400 hover:text-foreground"
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground">{CONTENT_TYPES.find((c) => c.value === contentType)?.description}</p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
-              <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>
-                {!options ? (
-                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
-                ) : (
-                  // One brand per post: its reviewers are the people who work on that brand.
-                  <Select value={brands[0] ?? ""} onValueChange={(code) => onBrandsChange([code])}>
-                    <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
-                      <SelectValue placeholder="Select a brand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {options.brands.map((b) => (
-                        <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {brands.length > 1 && (
-                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                    This draft had several brands; pick the one it's for. Make a separate post for each other brand.
-                  </p>
-                )}
-              </Field>
-              <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")}>
-                {!options ? (
-                  <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
-                ) : (
-                  <MultiSelect<string>
-                    options={Object.keys(options.audiences)}
-                    value={audiences}
-                    onChange={onAudiencesChange}
-                    placeholder="Select audiences"
-                    getLabel={(code) => options.audiences[code] ?? code}
-                    invalid={isMissing("audience")}
-                  />
-                )}
-              </Field>
-                <div className="md:col-span-2">
-                <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
-                <MultiSelect
-                  options={options?.rule_sets ?? []}
-                  value={ruleSets}
-                  onChange={(next) => {
-                    setRuleSets(next);
-                    markEdited();
-                  }}
-                  placeholder="Select rule sets"
-                  compact
-                  invalid={isMissing("rule_sets")}
-                />
-                </Field>
-                </div>
-              </div>
-              <div className="-mt-2">
-              <p className="text-[11px] text-muted-foreground mt-0">
-              Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
-              sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
-              </p>
-              </div>
-            </div>
-          </Section>
-
-          <Section step={2} title="Where it goes" description="The accounts and platforms it posts through, and when.">
-            <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
-              <Field
-                label="Publishing Account(s)"
-                required
-                error={errorFor("account_id", "Choose at least one connected account")}
-                className="md:col-span-2"
-           >
-                {!options || brandAccounts.length === 0 ? (
-                  <div className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${isMissing("account_id") ? "border-red-500" : "border-input"}`}>
-                    {!options ? "Loading accounts..." : "No connected accounts"}
-                  </div>
-                ) : (
-                  <MultiSelect<string>
-                    // Keep accounts that were picked before a brand change filtered them out of the list.
-                    options={[...brandAccounts.map((a) => a.id), ...accountIds.filter((id) => !brandAccounts.some((a) => a.id === id))]}
-                    value={accountIds}
-                    onChange={onAccountsChange}
-                    placeholder="Select accounts"
-                    getLabel={(id) => {
-                      const a = accounts.find((x) => x.id === id);
-                      return a ? `${a.label}${a.is_demo ? " · demo" : ""}` : "Disconnected account";
-                    }}
-                    renderIcon={(id) => {
-                      const a = accounts.find((x) => x.id === id);
-                      return a ? <PlatformIcon platform={a.platform as SocialPlatform} className="w-3.5 h-3.5" /> : null;
-                    }}
-                    invalid={isMissing("account_id")}
-                  />
-                )}
-                {options && brandAccounts.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground">
-                    No connected accounts{brands.length ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
-                  </p>
-                )}
-              </Field>
-              <Field label="Platform(s)" required error={errorFor("platforms")}>
-                <MultiSelect<string>
-                  options={options?.platforms ?? []}
-                  value={platforms}
-                  onChange={(next) => {
-                    setPlatforms(next);
-                    markEdited();
-                  }}
-                  placeholder="Select platforms"
-                  getLabel={(p) => PLATFORM_LABELS[p as SocialPlatform] ?? p}
-                  renderIcon={(p) => <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
-                  invalid={isMissing("platforms")}
-                />
-                {selectedAccounts.length > 0 && platformsWithoutAccount.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground">
-                    No publishing account selected for {platformsWithoutAccount.map((p) => PLATFORM_LABELS[p as SocialPlatform] ?? p).join(", ")} yet.
-                  </p>
-                )}
-              </Field>
-              <Field label="Region" required error={errorFor("region")}>
-                <Select
-                  value={region}
-                  onValueChange={(v) => {
-                    setRegion(v);
-                    markEdited();
-                  }}
-                  disabled={!options}
-                >
-                  <SelectTrigger className="h-11 w-full rounded-xl">
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {options?.regions.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field
-                label="Intended Publish Date"
-                error={errorFor("publish_at", "Pick a date in the future")}
-                
-           >
-                <Popover>
-                  <div
-                    className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${
-                      isMissing("publish_at") ? "border-red-500" : "border-input"
-                    }`}
-                  >
-                    <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <PopoverTrigger asChild>
-                      <button type="button" className="flex-1 text-left text-sm min-w-0 truncate">
-                        {publishDate ? format(publishDate, "MMM d, yyyy") : <span className="text-muted-foreground">Pick a date</span>}
-                      </button>
-                    </PopoverTrigger>
-                    {publishDate && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPublishDate(undefined);
-                          markEdited();
-                        }}
-                        className="w-5 h-5 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center"
-                        aria-label="Clear date"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                  <PopoverContent align="end" className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={publishDate}
-                      onSelect={(d) => {
-                        // Default to 9:00 AM local on the chosen day.
-                        if (d) d.setHours(9, 0, 0, 0);
-                        setPublishDate(d);
-                        markEdited();
-                      }}
-                      disabled={{ before: new Date() }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </Field>
-              <Field
-                label="Need approval by"
-                required
-                error={errorFor(
-                  "approval_needed_by",
-                  approvalBy && publishDate && approvalBy> publishDate ? "Must be on or before the publish date" : approvalBy ? "Pick a date in the future" : "Required"
-                )}
-                
-           >
-                <Popover>
-                  <div
-                    className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${
-                      isMissing("approval_needed_by") ? "border-red-500" : "border-input"
-                    }`}
-                  >
-                    <CalendarCheck className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <PopoverTrigger asChild>
-                      <button type="button" className="flex-1 text-left text-sm min-w-0 truncate">
-                        {approvalBy ? format(approvalBy, "EEE, MMM d · h:mm a") : <span className="text-muted-foreground">Pick a date</span>}
-                      </button>
-                    </PopoverTrigger>
-                    {approvalBy && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setApprovalBy(undefined);
-                          markEdited();
-                        }}
-                        className="w-5 h-5 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center"
-                        aria-label="Clear approval date"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                  <PopoverContent align="end" className="flex w-auto flex-row gap-0 p-0">
-                    {/* Quick picks on the left (working days from now, at the chosen time), each showing its date. */}
-                    <div className="flex w-36 flex-col gap-0.5 border-r border-border p-2" role="group" aria-label="Quick picks">
-                      <p className="px-2 pb-1 pt-0.5 text-xs font-medium text-muted-foreground">Quick picks</p>
-                      {[
-                        { days: 1, label: "In 1 day" },
-                        { days: 3, label: "In 3 days" },
-                        { days: 5, label: "In 1 week" },
-                      ].map(({ days, label }) => {
-                        const d = atApprovalTime(addBusinessDays(new Date(), days));
-                        const tooLate = Boolean(publishDate && d > publishDate);
-                        const picked = Boolean(approvalBy && isSameDay(approvalBy, d));
-                        return (
-                          <button
-                            key={days}
-                            type="button"
-                            disabled={tooLate}
-                            title={tooLate ? "After the publish date" : undefined}
-                            aria-pressed={picked}
-                            onClick={() => pickApproval(d)}
-                            className={`flex flex-col items-start rounded-md px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                              picked ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
-                            }`}
-                          >
-                            <span className="text-sm font-medium">{label}</span>
-                            <span className="text-xs text-muted-foreground">{format(d, "EEE, MMM d")}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex flex-col">
-                      <Calendar
-                        mode="single"
-                        selected={approvalBy}
-                        defaultMonth={approvalBy ?? new Date()}
-                        onSelect={(d) => pickApproval(d ? atApprovalTime(d) : undefined)}
-                        disabled={publishDate ? [{ before: new Date() }, { after: publishDate }] : { before: new Date() }}
+                        maxLength={300}
+                        placeholder="e.g. ZenaDrone 1000 – Autonomous Defense Capabilities"
+                        className={`h-11 rounded-xl ${isMissing("title") ? "border-red-500" : ""}`}
                       />
-                      <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
-                        <Label htmlFor="approval-time" className="text-xs font-medium text-muted-foreground">
-                          Time
-                        </Label>
-                        <Select
-                          value={approvalTime}
-                          onValueChange={(t) => {
-                            setApprovalTime(t);
-                            if (approvalBy) pickApproval(withTime(approvalBy, t));
-                          }}
-                        >
-                          <SelectTrigger id="approval-time" size="sm" className="h-8 flex-1 gap-2 text-sm">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent position="popper" side="top" className="max-h-60">
-                            {timeOptions(approvalTime).map((t) => (
-                              <SelectItem key={t} value={t} className="text-sm">
-                                {timeLabel(t)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    </Field>
+
+                    <div className="space-y-2">
+                      <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
+                      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
+                        {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
+                          const selected = contentType === value;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              title={description}
+                              onClick={() => {
+                                if (value === contentType) return;
+                                if (mainFiles.length > 0) {
+                                  toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
+                                }
+                                setContentType(value);
+                                if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
+                                markEdited();
+                              }}
+                              className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${selected
+                                  ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                                  : "border-border bg-card text-muted-foreground hover:border-slate-400 hover:text-foreground"
+                                }`}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{CONTENT_TYPES.find((c) => c.value === contentType)?.description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                      <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>
+                        {!options ? (
+                          <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading brands...</div>
+                        ) : (
+                          // One brand per post: its reviewers are the people who work on that brand.
+                          <Select value={brands[0] ?? ""} onValueChange={(code) => onBrandsChange([code])}>
+                            <SelectTrigger className={`w-full ${isMissing("brand_code") ? "border-red-500" : ""}`}>
+                              <SelectValue placeholder="Select a brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.brands.map((b) => (
+                                <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {brands.length > 1 && (
+                          <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                            This draft had several brands; pick the one it's for. Make a separate post for each other brand.
+                          </p>
+                        )}
+                      </Field>
+                      <Field label="Target Audience(s)" required error={errorFor("audience", "Choose at least one audience")}>
+                        {!options ? (
+                          <div className="flex h-9 items-center rounded-md border border-input px-3 text-sm text-muted-foreground">Loading audiences...</div>
+                        ) : (
+                          <MultiSelect<string>
+                            options={Object.keys(options.audiences)}
+                            value={audiences}
+                            onChange={onAudiencesChange}
+                            placeholder="Select audiences"
+                            getLabel={(code) => options.audiences[code] ?? code}
+                            invalid={isMissing("audience")}
+                          />
+                        )}
+                      </Field>
+                      <div className="md:col-span-2">
+                        <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
+                          <MultiSelect
+                            options={options?.rule_sets ?? []}
+                            value={ruleSets}
+                            onChange={(next) => {
+                              setRuleSets(next);
+                              markEdited();
+                            }}
+                            placeholder="Select rule sets"
+                            compact
+                            invalid={isMissing("rule_sets")}
+                          />
+                        </Field>
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
-              </Field>
-            </div>
-          </Section>
-
-
-          <Section
-            step={3}
-            title={videoLocked ? "Script" : "Image and sources"}
-            description={
-              videoLocked
-                ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
-                : "Upload your image or video, and any documents that back up your claims."
-            }
-          >
-            {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
-            {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <FileText className="w-3.5 h-3.5 shrink-0" />
-                Writing a script? Start from the template: title, storyline, hook and a timed shot table.
-              </p>
-              <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                <a href={`${import.meta.env.BASE_URL}templates/script-template.docx`} download="script-template.docx">
-                  <Download className="w-3.5 h-3.5" />
-                  Export template (.docx)
-                </a>
-              </Button>
-            </div>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPT_ALL}
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) uploadFiles(Array.from(e.target.files));
-                e.target.value = "";
-              }}
-            />
-            <input
-              ref={scriptInputRef}
-              type="file"
-              accept={ACCEPT_SCRIPT}
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) uploadFiles(Array.from(e.target.files), { asScript: true });
-                e.target.value = "";
-              }}
-            />
-            {scriptFirst && (
-              <ScriptStageCard
-                submissionId={submissionId}
-                stage={scriptStage.data}
-                canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
-                onAddScript={() => scriptInputRef.current?.click()}
-                onSend={() => submit()}
-                sending={submitting}
-                invalid={isMissing("script")}
-              />
-            )}
-            {/* Two ways to add content: upload files, or import a Canva design. A video post waiting on its script
-                only has the script card above; both open once the script is approved. */}
-            {!videoLocked && (
-            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDraggingMain(true);
-              }}
-              onDragLeave={() => setIsDraggingMain(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingMain(false);
-                if (needScriptFirst) {
-                  toast.info("Upload your script first. Once it's in, you can add other files.");
-                  return;
-                }
-                if (e.dataTransfer.files) uploadFiles(Array.from(e.dataTransfer.files));
-              }}
-              className={`min-h-[190px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-1.5 p-6 cursor-pointer transition-colors ${
-                isDraggingMain
-                  ? "border-blue-500 bg-blue-500/10"
-                  : isMissing("main_file")
-                  ? "border-red-400 bg-red-500/5"
-                  : "border-blue-300 dark:border-blue-500/40 bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <span className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
-                <Upload className="w-5 h-5" />
-              </span>
-              <span className="text-sm font-semibold text-foreground">{needScriptFirst ? "Upload your script first" : "Drag & drop files here"}</span>
-              <span className="text-xs text-muted-foreground max-w-md">
-                {needScriptFirst
-                  ? "Start by uploading the script (PDF, Word or .txt). Once it's in, you can add a cover image and other files here. Your video can go in once the script is approved."
-                  : videoLocked
-                  ? "Add a cover image or supporting documents now. Your video can go in once the script is approved."
-                  : `Add ${mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.`}
-              </span>
-              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold shadow-2xs">
-                <CloudUpload className="w-3.5 h-3.5" /> {needScriptFirst ? "Upload the script" : "Choose Files"}
-              </span>
-              {!needScriptFirst && (
-                <span className="text-[11px] text-muted-foreground mt-1">
-                  Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setCanvaOpen(true)}
-              disabled={!canvaFits || videoLocked}
-              title={
-                videoLocked
-                  ? "Get the script approved first, then add the video"
-                  : canvaFits
-                  ? undefined
-                  : "Canva designs can't be the main file of a blog or article"
-              }
-              className="min-h-[190px] rounded-xl border border-[#7d2ae8]/30 bg-[#7d2ae8]/5 hover:bg-[#7d2ae8]/10 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 p-5 text-center transition-colors"
-            >
-              <CanvaMark className="w-11 h-11 text-base" />
-              <span className="text-sm font-semibold text-foreground">Import from Canva</span>
-              <span className="text-xs text-muted-foreground">Pick a design from your Canva account. It's reviewed like any upload.</span>
-              <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
-            </button>
-            </div>
-            )}
-            {!scriptFirst && (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 gap-1.5 text-xs"
-                onClick={() => scriptInputRef.current?.click()}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                {files.some((f) => f.kind === "SCRIPT") ? "Replace the script" : "Add a script"}
-              </Button>
-              <span>
-                PDF, Word (.docx), .txt or .md. Its text is checked against the rulebook with the rest of the post. Files
-                with "script" in the name are picked up as the script automatically.
-              </span>
-            </div>
-            )}
-            {isMissing("main_file") && (
-              <p className="text-[11px] text-red-600 mt-1.5">
-                Add {mainUpload.main} to submit this {CONTENT_TYPES.find((c) => c.value === contentType)?.label.toLowerCase()}.
-              </p>
-            )}
-
-            {(files.length > 0 || uploading.length > 0) && (
-              <div className="mt-3 space-y-2">
-                <p className="text-xs font-semibold text-foreground">
-                  Uploaded files <span className="font-normal text-muted-foreground">({files.length})</span>
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {files.map((f) => (
-                    <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={readOnly ? undefined : () => removeFile(f)} />
-                  ))}
-                  {uploading.map((u) => (
-                    <div key={u.key} className="flex items-center gap-3 rounded-lg border border-dashed border-border p-2.5 text-xs text-muted-foreground min-h-[58px]">
-                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                      <span className="truncate">Uploading {u.name}...</span>
+                    <div className="-mt-2">
+                      <p className="text-[11px] text-muted-foreground mt-0">
+                        Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
+                        sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
-                <p className="text-xs text-foreground">
-                  <span className="font-semibold">Your post is in.</span>{" "}
-                  <span className="text-muted-foreground">It needs a caption: write one in section 4, or have one suggested from it.</span>
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2 text-[11px] gap-1"
-                  onClick={() => {
-                    setSuggesterOpen(true);
-                    captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  <Sparkles className="w-3 h-3 text-violet-500" /> Create a caption
-                </Button>
-              </div>
-            )}
-            {canvaMain && !resubmitting && (
-              <div className="mt-3">
-                <CanvaReimportBar file={canvaMain} resubmitting={false} busy={reimporting} onReimport={reimportCanva} />
-              </div>
-            )}
-            <CanvaImportDialog
-              open={canvaOpen}
-              onOpenChange={setCanvaOpen}
-              contentType={contentType}
-              ensureSubmissionId={() => save({ force: true })}
-              onImported={onCanvaImported}
-            />
-          </Section>
-          </div>
-          )}
+                  </div>
+                </Section>
 
-          {resubmitting && (
-            <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 ${onDetails ? "" : "hidden"}`}>
-              <p className="text-xs text-muted-foreground">
-                {showAllDetails
-                  ? "All details are open. Anything you change is part of the next version."
-                  : "Type, brand, platforms, files and rule sets stay as they were. Open them only if the reviewer asked."}
-              </p>
-              <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAllDetails((v) => !v)}>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllDetails ? "rotate-180" : ""}`} />
-                {showAllDetails ? "Hide details" : "Show all details"}
-              </Button>
-            </div>
-          )}
+                <Section step={2} title="Where it goes" description="The accounts and platforms it posts through, and when.">
+                  <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                    <Field
+                      label="Publishing Account(s)"
+                      required
+                      error={errorFor("account_id", "Choose at least one connected account")}
+                      className="md:col-span-2"
+                    >
+                      {!options || brandAccounts.length === 0 ? (
+                        <div className={`flex h-9 items-center rounded-md border px-3 text-sm text-muted-foreground ${isMissing("account_id") ? "border-red-500" : "border-input"}`}>
+                          {!options ? "Loading accounts..." : "No connected accounts"}
+                        </div>
+                      ) : (
+                        <MultiSelect<string>
+                          // Keep accounts that were picked before a brand change filtered them out of the list.
+                          options={[...brandAccounts.map((a) => a.id), ...accountIds.filter((id) => !brandAccounts.some((a) => a.id === id))]}
+                          value={accountIds}
+                          onChange={onAccountsChange}
+                          placeholder="Select accounts"
+                          getLabel={(id) => {
+                            const a = accounts.find((x) => x.id === id);
+                            return a ? `${a.label}${a.is_demo ? " · demo" : ""}` : "Disconnected account";
+                          }}
+                          renderIcon={(id) => {
+                            const a = accounts.find((x) => x.id === id);
+                            return a ? <PlatformIcon platform={a.platform as SocialPlatform} className="w-3.5 h-3.5" /> : null;
+                          }}
+                          invalid={isMissing("account_id")}
+                        />
+                      )}
+                      {options && brandAccounts.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          No connected accounts{brands.length ? ` for ${brandName}` : ""}. An admin can connect one under Integrations.
+                        </p>
+                      )}
+                    </Field>
+                    <Field label="Platform(s)" required error={errorFor("platforms")}>
+                      <MultiSelect<string>
+                        options={options?.platforms ?? []}
+                        value={platforms}
+                        onChange={(next) => {
+                          setPlatforms(next);
+                          markEdited();
+                        }}
+                        placeholder="Select platforms"
+                        getLabel={(p) => PLATFORM_LABELS[p as SocialPlatform] ?? p}
+                        renderIcon={(p) => <PlatformIcon platform={p as SocialPlatform} className="w-3.5 h-3.5" />}
+                        invalid={isMissing("platforms")}
+                      />
+                      {selectedAccounts.length > 0 && platformsWithoutAccount.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          No publishing account selected for {platformsWithoutAccount.map((p) => PLATFORM_LABELS[p as SocialPlatform] ?? p).join(", ")} yet.
+                        </p>
+                      )}
+                    </Field>
+                    <Field label="Region" required error={errorFor("region")}>
+                      <Select
+                        value={region}
+                        onValueChange={(v) => {
+                          setRegion(v);
+                          markEdited();
+                        }}
+                        disabled={!options}
+                      >
+                        <SelectTrigger className="h-11 w-full rounded-xl">
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {options?.regions.map((r) => (
+                            <SelectItem key={r} value={r}>
+                              {r}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Intended Publish Date"
+                      error={errorFor("publish_at", "Pick a date in the future")}
 
-          <div ref={captionSectionRef} className={`scroll-mt-4 ${onDetails ? "" : "hidden"}`}>
-          <Section
-            step={4}
-            title="Caption"
-            description="Required. Write or paste your caption, script, or copy, or have one suggested from your post."
-          >
-            <div className={`rounded-lg border ${isMissing("caption") ? "border-red-500" : "border-input"} overflow-hidden`}>
-              <div className="flex flex-wrap items-center gap-0.5 border-b border-border/70 bg-muted/30 px-2 py-1.5">
-                <Select defaultValue="p" onValueChange={(v) => exec("formatBlock", v)}>
-                  <SelectTrigger size="sm" className="h-7 w-[120px] text-xs border-0 bg-transparent shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="p" className="text-xs">Paragraph</SelectItem>
-                    <SelectItem value="h2" className="text-xs">Heading</SelectItem>
-                    <SelectItem value="h3" className="text-xs">Subheading</SelectItem>
-                    <SelectItem value="blockquote" className="text-xs">Quote</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="w-px h-5 bg-border mx-1" />
-                {[
-                  { icon: Bold, cmd: "bold", label: "Bold" },
-                  { icon: Italic, cmd: "italic", label: "Italic" },
-                  { icon: Underline, cmd: "underline", label: "Underline" },
-                  { icon: List, cmd: "insertUnorderedList", label: "Bulleted list" },
-                  { icon: ListOrdered, cmd: "insertOrderedList", label: "Numbered list" },
-                ].map(({ icon: Icon, cmd, label }) => (
-                  <Button key={cmd} type="button" size="icon" variant="ghost" className="h-7 w-7" title={label} onMouseDown={(e) => e.preventDefault()} onClick={() => exec(cmd)}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </Button>
-                ))}
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7"
-                  title="Insert link"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    const url = safeHref(window.prompt("Link URL", "https://"));
-                    if (url) exec("createLink", url);
-                    else toast.error("Links must start with https://, http:// or mailto:.");
-                  }}
+                    >
+                      <Popover>
+                        <div
+                          className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${isMissing("publish_at") ? "border-red-500" : "border-input"
+                            }`}
+                        >
+                          <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <PopoverTrigger asChild>
+                            <button type="button" className="flex-1 text-left text-sm min-w-0 truncate">
+                              {publishDate ? format(publishDate, "MMM d, yyyy") : <span className="text-muted-foreground">Pick a date</span>}
+                            </button>
+                          </PopoverTrigger>
+                          {publishDate && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPublishDate(undefined);
+                                markEdited();
+                              }}
+                              className="w-5 h-5 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center"
+                              aria-label="Clear date"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                        <PopoverContent align="end" className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={publishDate}
+                            onSelect={(d) => {
+                              // Default to 9:00 AM local on the chosen day.
+                              if (d) d.setHours(9, 0, 0, 0);
+                              setPublishDate(d);
+                              markEdited();
+                            }}
+                            disabled={{ before: new Date() }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </Field>
+                    <Field
+                      label="Need approval by"
+                      required
+                      error={errorFor(
+                        "approval_needed_by",
+                        approvalBy && publishDate && approvalBy > publishDate ? "Must be on or before the publish date" : approvalBy ? "Pick a date in the future" : "Required"
+                      )}
+
+                    >
+                      <Popover>
+                        <div
+                          className={`flex h-11 items-center gap-2 rounded-xl border bg-background px-3 ${isMissing("approval_needed_by") ? "border-red-500" : "border-input"
+                            }`}
+                        >
+                          <CalendarCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <PopoverTrigger asChild>
+                            <button type="button" className="flex-1 text-left text-sm min-w-0 truncate">
+                              {approvalBy ? format(approvalBy, "EEE, MMM d · h:mm a") : <span className="text-muted-foreground">Pick a date</span>}
+                            </button>
+                          </PopoverTrigger>
+                          {approvalBy && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setApprovalBy(undefined);
+                                markEdited();
+                              }}
+                              className="w-5 h-5 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center"
+                              aria-label="Clear approval date"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                        <PopoverContent align="end" className="flex w-auto flex-row gap-0 p-0">
+                          {/* Quick picks on the left (working days from now, at the chosen time), each showing its date. */}
+                          <div className="flex w-36 flex-col gap-0.5 border-r border-border p-2" role="group" aria-label="Quick picks">
+                            <p className="px-2 pb-1 pt-0.5 text-xs font-medium text-muted-foreground">Quick picks</p>
+                            {[
+                              { days: 1, label: "In 1 day" },
+                              { days: 3, label: "In 3 days" },
+                              { days: 5, label: "In 1 week" },
+                            ].map(({ days, label }) => {
+                              const d = atApprovalTime(addBusinessDays(new Date(), days));
+                              const tooLate = Boolean(publishDate && d > publishDate);
+                              const picked = Boolean(approvalBy && isSameDay(approvalBy, d));
+                              return (
+                                <button
+                                  key={days}
+                                  type="button"
+                                  disabled={tooLate}
+                                  title={tooLate ? "After the publish date" : undefined}
+                                  aria-pressed={picked}
+                                  onClick={() => pickApproval(d)}
+                                  className={`flex flex-col items-start rounded-md px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${picked ? "bg-accent text-accent-foreground" : "hover:bg-accent/60"
+                                    }`}
+                                >
+                                  <span className="text-sm font-medium">{label}</span>
+                                  <span className="text-xs text-muted-foreground">{format(d, "EEE, MMM d")}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="flex flex-col">
+                            <Calendar
+                              mode="single"
+                              selected={approvalBy}
+                              defaultMonth={approvalBy ?? new Date()}
+                              onSelect={(d) => pickApproval(d ? atApprovalTime(d) : undefined)}
+                              disabled={publishDate ? [{ before: new Date() }, { after: publishDate }] : { before: new Date() }}
+                            />
+                            <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
+                              <Label htmlFor="approval-time" className="text-xs font-medium text-muted-foreground">
+                                Time
+                              </Label>
+                              <Select
+                                value={approvalTime}
+                                onValueChange={(t) => {
+                                  setApprovalTime(t);
+                                  if (approvalBy) pickApproval(withTime(approvalBy, t));
+                                }}
+                              >
+                                <SelectTrigger id="approval-time" size="sm" className="h-8 flex-1 gap-2 text-sm">
+                                  <Clock className="w-4 h-4 text-muted-foreground" />
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent position="popper" side="top" className="max-h-60">
+                                  {timeOptions(approvalTime).map((t) => (
+                                    <SelectItem key={t} value={t} className="text-sm">
+                                      {timeLabel(t)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </Field>
+                  </div>
+                </Section>
+
+
+                <Section
+                  step={3}
+                  title={videoLocked ? "Script" : "Image and sources"}
+                  description={
+                    videoLocked
+                      ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
+                      : "Upload your image or video, and any documents that back up your claims."
+                  }
                 >
-                  <Link2 className="w-3.5 h-3.5" />
-                </Button>
-                <span className="flex-1" />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs gap-1 text-violet-700 dark:text-violet-300 bg-violet-500/10 hover:bg-violet-500/15 mr-1"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => setSuggesterOpen(true)}
-                >
-                  <Sparkles className="w-3.5 h-3.5" /> Suggest a caption
-                </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button type="button" size="sm" variant="ghost" className="h-7 text-xs gap-1 text-blue-700 dark:text-blue-300 bg-blue-500/10 hover:bg-blue-500/15">
-                      <Hash className="w-3.5 h-3.5" /> Hashtags
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-2.5">
-                    <p className="text-[11px] font-semibold text-foreground px-1 pb-1">
-                      Hashtags for {brandName || "ZenaTech brands"}
-                    </p>
-                    <HashtagPicker
-                      library={hashtagLibrary.data}
-                      loading={hashtagLibrary.isLoading}
-                      caption={caption}
-                      hasBrand={brands.length > 0}
-                      onAdd={insertHashtag}
-                      onRemove={removeHashtag}
+                  {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
+                  {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
+                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        Writing a script? Start from the template: title, storyline, hook and a timed shot table.
+                      </p>
+                      <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+                        <a href={`${import.meta.env.BASE_URL}templates/script-template.docx`} download="script-template.docx">
+                          <Download className="w-3.5 h-3.5" />
+                          Export template (.docx)
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPT_ALL}
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) uploadFiles(Array.from(e.target.files));
+                      e.target.value = "";
+                    }}
+                  />
+                  <input
+                    ref={scriptInputRef}
+                    type="file"
+                    accept={ACCEPT_SCRIPT}
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) uploadFiles(Array.from(e.target.files), { asScript: true });
+                      e.target.value = "";
+                    }}
+                  />
+                  {scriptFirst && (
+                    <ScriptStageCard
+                      submissionId={submissionId}
+                      stage={scriptStage.data}
+                      canEdit={status === "DRAFT" || status === "CHANGES_REQUESTED"}
+                      onAddScript={() => scriptInputRef.current?.click()}
+                      onSend={() => submit()}
+                      sending={submitting}
+                      invalid={isMissing("script")}
                     />
-                  </PopoverContent>
-                </Popover>
-                <span className="w-px h-5 bg-border mx-1" />
-                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Undo" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("undo")}>
-                  <Undo2 className="w-3.5 h-3.5" />
-                </Button>
-                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Redo" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("redo")}>
-                  <Redo2 className="w-3.5 h-3.5" />
+                  )}
+                  {/* Two ways to add content: upload files, or import a Canva design. A video post waiting on its script
+                only has the script card above; both open once the script is approved. */}
+                  {!videoLocked && (
+                    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-3">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
+                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (needScriptFirst ? scriptInputRef : fileInputRef).current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDraggingMain(true);
+                        }}
+                        onDragLeave={() => setIsDraggingMain(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDraggingMain(false);
+                          if (needScriptFirst) {
+                            toast.info("Upload your script first. Once it's in, you can add other files.");
+                            return;
+                          }
+                          if (e.dataTransfer.files) uploadFiles(Array.from(e.dataTransfer.files));
+                        }}
+                        className={`min-h-[190px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-1.5 p-6 cursor-pointer transition-colors ${isDraggingMain
+                            ? "border-blue-500 bg-blue-500/10"
+                            : isMissing("main_file")
+                              ? "border-red-400 bg-red-500/5"
+                              : "border-blue-300 dark:border-blue-500/40 bg-muted/20 hover:bg-muted/40"
+                          }`}
+                      >
+                        <span className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
+                          <Upload className="w-5 h-5" />
+                        </span>
+                        <span className="text-sm font-semibold text-foreground">{needScriptFirst ? "Upload your script first" : "Drag & drop files here"}</span>
+                        <span className="text-xs text-muted-foreground max-w-md">
+                          {needScriptFirst
+                            ? "Start by uploading the script (PDF, Word or .txt). Once it's in, you can add a cover image and other files here. Your video can go in once the script is approved."
+                            : videoLocked
+                              ? "Add a cover image or supporting documents now. Your video can go in once the script is approved."
+                              : `Add ${mainUpload.main}, plus any extra images or supporting documents. You can select several files at once.`}
+                        </span>
+                        <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold shadow-2xs">
+                          <CloudUpload className="w-3.5 h-3.5" /> {needScriptFirst ? "Upload the script" : "Choose Files"}
+                        </span>
+                        {!needScriptFirst && (
+                          <span className="text-[11px] text-muted-foreground mt-1">
+                            Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCanvaOpen(true)}
+                        disabled={!canvaFits || videoLocked}
+                        title={
+                          videoLocked
+                            ? "Get the script approved first, then add the video"
+                            : canvaFits
+                              ? undefined
+                              : "Canva designs can't be the main file of a blog or article"
+                        }
+                        className="min-h-[190px] rounded-xl border border-[#7d2ae8]/30 bg-[#7d2ae8]/5 hover:bg-[#7d2ae8]/10 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 p-5 text-center transition-colors"
+                      >
+                        <CanvaMark className="w-11 h-11 text-base" />
+                        <span className="text-sm font-semibold text-foreground">Import from Canva</span>
+                        <span className="text-xs text-muted-foreground">Pick a design from your Canva account. It's reviewed like any upload.</span>
+                        <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
+                      </button>
+                    </div>
+                  )}
+                  {!scriptFirst && (
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1.5 text-xs"
+                        onClick={() => scriptInputRef.current?.click()}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        {files.some((f) => f.kind === "SCRIPT") ? "Replace the script" : "Add a script"}
+                      </Button>
+                      <span>
+                        PDF, Word (.docx), .txt or .md. Its text is checked against the rulebook with the rest of the post. Files
+                        with "script" in the name are picked up as the script automatically.
+                      </span>
+                    </div>
+                  )}
+                  {isMissing("main_file") && (
+                    <p className="text-[11px] text-red-600 mt-1.5">
+                      Add {mainUpload.main} to submit this {CONTENT_TYPES.find((c) => c.value === contentType)?.label.toLowerCase()}.
+                    </p>
+                  )}
+
+                  {(files.length > 0 || uploading.length > 0) && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-semibold text-foreground">
+                        Uploaded files <span className="font-normal text-muted-foreground">({files.length})</span>
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {files.map((f) => (
+                          <SubmissionFileRow key={f.id} file={f} removing={removingId === f.id} onRemove={readOnly ? undefined : () => removeFile(f)} />
+                        ))}
+                        {uploading.map((u) => (
+                          <div key={u.key} className="flex items-center gap-3 rounded-lg border border-dashed border-border p-2.5 text-xs text-muted-foreground min-h-[58px]">
+                            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                            <span className="truncate">Uploading {u.name}...</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
+                      <p className="text-xs text-foreground">
+                        <span className="font-semibold">Your post is in.</span>{" "}
+                        <span className="text-muted-foreground">It needs a caption: write one in section 4, or have one suggested from it.</span>
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-[11px] gap-1"
+                        onClick={() => {
+                          setSuggesterOpen(true);
+                          captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        <Sparkles className="w-3 h-3 text-violet-500" /> Create a caption
+                      </Button>
+                    </div>
+                  )}
+                  {canvaMain && !resubmitting && (
+                    <div className="mt-3">
+                      <CanvaReimportBar file={canvaMain} resubmitting={false} busy={reimporting} onReimport={reimportCanva} />
+                    </div>
+                  )}
+                  <CanvaImportDialog
+                    open={canvaOpen}
+                    onOpenChange={setCanvaOpen}
+                    contentType={contentType}
+                    ensureSubmissionId={() => save({ force: true })}
+                    onImported={onCanvaImported}
+                  />
+                </Section>
+              </div>
+            )}
+
+            {resubmitting && (
+              <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 ${onDetails ? "" : "hidden"}`}>
+                <p className="text-xs text-muted-foreground">
+                  {showAllDetails
+                    ? "All details are open. Anything you change is part of the next version."
+                    : "Type, brand, platforms, files and rule sets stay as they were. Open them only if the reviewer asked."}
+                </p>
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAllDetails((v) => !v)}>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllDetails ? "rotate-180" : ""}`} />
+                  {showAllDetails ? "Hide details" : "Show all details"}
                 </Button>
               </div>
-              <div
-                ref={editorRef}
-                contentEditable={!readOnly}
-                suppressContentEditableWarning
-                role="textbox"
-                aria-multiline="true"
-                aria-label="Caption or copy"
-                data-placeholder="Write your caption, script, or copy here..."
-                onInput={(e) => {
-                  setCaption(e.currentTarget.innerText);
-                  markEdited();
-                }}
-                onPaste={(e) => {
-                  // Pasted rich text (from Word, a web page...) keeps its formatting but nothing unsafe.
-                  e.preventDefault();
-                  const html = e.clipboardData.getData("text/html");
-                  if (html) document.execCommand("insertHTML", false, sanitizeCaptionHtml(html));
-                  else document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
-                  setCaption(e.currentTarget.innerText);
-                  markEdited();
-                }}
-                className="min-h-[180px] max-h-[480px] overflow-y-auto px-3 py-2.5 text-sm leading-relaxed outline-none bg-background empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_a]:text-blue-600 [&_a]:underline"
-              />
+            )}
+
+            <div ref={captionSectionRef} className={`scroll-mt-4 ${onDetails ? "" : "hidden"}`}>
+              <Section
+                step={4}
+                title="Caption"
+                description="Required. Write or paste your caption, script, or copy, or have one suggested from your post."
+              >
+                <div className={`rounded-lg border ${isMissing("caption") ? "border-red-500" : "border-input"} overflow-hidden`}>
+                  <div className="flex flex-wrap items-center gap-0.5 border-b border-border/70 bg-muted/30 px-2 py-1.5">
+                    <Select defaultValue="p" onValueChange={(v) => exec("formatBlock", v)}>
+                      <SelectTrigger size="sm" className="h-7 w-[120px] text-xs border-0 bg-transparent shadow-none">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="p" className="text-xs">Paragraph</SelectItem>
+                        <SelectItem value="h2" className="text-xs">Heading</SelectItem>
+                        <SelectItem value="h3" className="text-xs">Subheading</SelectItem>
+                        <SelectItem value="blockquote" className="text-xs">Quote</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="w-px h-5 bg-border mx-1" />
+                    {[
+                      { icon: Bold, cmd: "bold", label: "Bold" },
+                      { icon: Italic, cmd: "italic", label: "Italic" },
+                      { icon: Underline, cmd: "underline", label: "Underline" },
+                      { icon: List, cmd: "insertUnorderedList", label: "Bulleted list" },
+                      { icon: ListOrdered, cmd: "insertOrderedList", label: "Numbered list" },
+                    ].map(({ icon: Icon, cmd, label }) => (
+                      <Button key={cmd} type="button" size="icon" variant="ghost" className="h-7 w-7" title={label} onMouseDown={(e) => e.preventDefault()} onClick={() => exec(cmd)}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </Button>
+                    ))}
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      title="Insert link"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        const url = safeHref(window.prompt("Link URL", "https://"));
+                        if (url) exec("createLink", url);
+                        else toast.error("Links must start with https://, http:// or mailto:.");
+                      }}
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <span className="flex-1" />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1 text-violet-700 dark:text-violet-300 bg-violet-500/10 hover:bg-violet-500/15 mr-1"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSuggesterOpen(true)}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Suggest a caption
+                    </Button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button type="button" size="sm" variant="ghost" className="h-7 text-xs gap-1 text-blue-700 dark:text-blue-300 bg-blue-500/10 hover:bg-blue-500/15">
+                          <Hash className="w-3.5 h-3.5" /> Hashtags
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-80 p-2.5">
+                        <p className="text-[11px] font-semibold text-foreground px-1 pb-1">
+                          Hashtags for {brandName || "ZenaTech brands"}
+                        </p>
+                        <HashtagPicker
+                          library={hashtagLibrary.data}
+                          loading={hashtagLibrary.isLoading}
+                          caption={caption}
+                          hasBrand={brands.length > 0}
+                          onAdd={insertHashtag}
+                          onRemove={removeHashtag}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="w-px h-5 bg-border mx-1" />
+                    <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Undo" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("undo")}>
+                      <Undo2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Redo" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("redo")}>
+                      <Redo2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                  <div
+                    ref={editorRef}
+                    contentEditable={!readOnly}
+                    suppressContentEditableWarning
+                    role="textbox"
+                    aria-multiline="true"
+                    aria-label="Caption or copy"
+                    data-placeholder="Write your caption, script, or copy here..."
+                    onInput={(e) => {
+                      setCaption(e.currentTarget.innerText);
+                      markEdited();
+                    }}
+                    onPaste={(e) => {
+                      // Pasted rich text (from Word, a web page...) keeps its formatting but nothing unsafe.
+                      e.preventDefault();
+                      const html = e.clipboardData.getData("text/html");
+                      if (html) document.execCommand("insertHTML", false, sanitizeCaptionHtml(html));
+                      else document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
+                      setCaption(e.currentTarget.innerText);
+                      markEdited();
+                    }}
+                    className="min-h-[180px] max-h-[480px] overflow-y-auto px-3 py-2.5 text-sm leading-relaxed outline-none bg-background empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_a]:text-blue-600 [&_a]:underline"
+                  />
+                </div>
+                <p className={`text-[11px] text-right mt-1.5 ${caption.trim().length > charLimit ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+                  {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
+                  {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
+                </p>
+                <CaptionSignalsBar
+                  caption={caption}
+                  maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
+                  maxReason={hashtagLibrary.data?.max_reason}
+                  ruleSets={ruleSets}
+                  audiences={audiences}
+                  onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
+                />
+                <CaptionExtras
+                  platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
+                  limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
+                  submissionId={submissionId} readOnly={readOnly} uploadedFiles={files}
+                  ensureSubmissionId={() => save({ force: true })}
+                  onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
+                  onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
+                  onSourceCheckActivityChange={setLocalSourceChecking}
+                />
+                {isMissing("caption") && (
+                  <p className="text-[11px] text-red-600">
+                    Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
+                    your post.
+                  </p>
+                )}
+                {suggesterOpen && (
+                  <CaptionSuggester
+                    submissionId={submissionId}
+                    ensureSubmissionId={() => save({ force: true })}
+                    maxChars={charLimit}
+                    hasCaption={Boolean(caption.trim())}
+                    onUse={applySuggestedCaption}
+                    onClose={() => setSuggesterOpen(false)}
+                  />
+                )}
+              </Section>
             </div>
-            <p className={`text-[11px] text-right mt-1.5 ${caption.trim().length > charLimit ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
-              {caption.trim().length.toLocaleString()}/{charLimit.toLocaleString()} characters
-              {platforms.length > 0 && caption.trim().length > charLimit && " (too long for one of the selected platforms)"}
-            </p>
-            <CaptionSignalsBar
-              caption={caption}
-              maxHashtags={hashtagLibrary.data?.max_hashtags ?? null}
-              maxReason={hashtagLibrary.data?.max_reason}
-              ruleSets={ruleSets}
-              audiences={audiences}
-              onAddInvestors={() => onAudiencesChange([...audiences, "INVESTORS"])}
-            />
-            <CaptionExtras
-              platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
-              limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
-              submissionId={submissionId} readOnly={readOnly} uploadedFiles={files}
-              ensureSubmissionId={() => save({ force: true })}
-              onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
-              onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
-            />
-            {isMissing("caption") && (
-              <p className="text-[11px] text-red-600">
-                Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
-                your post.
-              </p>
-            )}
-            {suggesterOpen && (
-              <CaptionSuggester
-                submissionId={submissionId}
-                ensureSubmissionId={() => save({ force: true })}
-                maxChars={charLimit}
-                hasCaption={Boolean(caption.trim())}
-                onUse={applySuggestedCaption}
-                onClose={() => setSuggesterOpen(false)}
-              />
-            )}
-          </Section>
-          </div>
           </fieldset>
 
           {showDetails && (
-          <div className={toolView("mood") ? "" : "hidden"}>
-          <Section
-            id="step-mood"
-            step={4}
-            title="Market & News Sentiment"
-            description="Live industry conversation on X and news outlets for your post's topics, and whether posting now carries backlash risk."
-          >
-            {submissionId ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-foreground">
-                        {moodDecision
-                          ? moodDecision.reason
-                          : mood?.topics.length
-                          ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"} found in current conversation`
-                          : "No negative crisis or backlash topics matched in current feeds."}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {mood?.topics.length
-                          ? `Topics: ${mood.topics.map((t) => t.name).join(", ")}`
-                          : "Topics are matched continuously from your title, caption, script and video transcript."}
-                      </p>
+            <div className={toolView("mood") ? "" : "hidden"}>
+              <Section
+                id="step-mood"
+                step={4}
+                title="Market & News Sentiment"
+                description="Live industry conversation on X and news outlets for your post's topics, and whether posting now carries backlash risk."
+              >
+                {submissionId ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-foreground">
+                            {moodDecision
+                              ? moodDecision.reason
+                              : mood?.topics.length
+                                ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"} found in current conversation`
+                                : "No negative crisis or backlash topics matched in current feeds."}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {mood?.topics.length
+                              ? `Topics: ${mood.topics.map((t) => t.name).join(", ")}`
+                              : "Topics are matched continuously from your title, caption, script and video transcript."}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {moodDecision && (
+                          <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
+                            {moodDecision.recommendation}
+                          </span>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => refreshMood()}
+                          disabled={moodLoading}
+                          hidden={readOnly}
+                        >
+                          {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Refresh" : "Run public mood"}
+                        </Button>
+                      </div>
                     </div>
+
+                    <TopicTrend
+                      submissionId={submissionId}
+                      mood={mood}
+                      isLoading={moodLoading}
+                      canEdit={!readOnly}
+                      busy={dismissTopic.isPending}
+                      onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
+                      onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
+                      hasRun={moodHasRun}
+                      onRun={readOnly ? undefined : () => refreshMood()}
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    {moodDecision && (
-                      <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
-                        {moodDecision.recommendation}
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
+                    <div className="flex items-center gap-2.5">
+                      <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
+                      <span className="text-xs text-muted-foreground">
+                        Save your draft to check live social sentiment and industry news on your topics before sending for review.
                       </span>
-                    )}
+                    </div>
                     <Button
                       type="button"
-                      variant="outline"
                       size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => refreshMood()}
-                      disabled={moodLoading}
-                      hidden={readOnly}
+                      variant="outline"
+                      className="h-7 text-xs gap-1 shrink-0"
+                      onClick={() => saveNow()}
                     >
-                      {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Refresh" : "Run public mood"}
+                      <Save className="w-3 h-3" /> Check Sentiment
                     </Button>
                   </div>
-                </div>
-
-                <TopicTrend
-                  submissionId={submissionId}
-                  mood={mood}
-                  isLoading={moodLoading}
-                  canEdit={!readOnly}
-                  busy={dismissTopic.isPending}
-                  onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
-                  onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
-                  hasRun={moodHasRun}
-                  onRun={readOnly ? undefined : () => refreshMood()}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
-                <div className="flex items-center gap-2.5">
-                  <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
-                  <span className="text-xs text-muted-foreground">
-                    Save your draft to check live social sentiment and industry news on your topics before sending for review.
-                  </span>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs gap-1 shrink-0"
-                  onClick={() => saveNow()}
-                >
-                  <Save className="w-3 h-3" /> Check Sentiment
-                </Button>
-              </div>
-            )}
-          </Section>
-          </div>
+                )}
+              </Section>
+            </div>
           )}
 
           {gated && <StepGate missing={detailsMissing} onBack={() => goToStep("details")} />}
@@ -2250,6 +2250,7 @@ export default function NewSubmissionPage() {
                 editable={!readOnly}
                 checking={checking}
                 stale={checkStale}
+                sourceChecking={sourceChecking}
                 progress={<CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />}
                 extra={
                   checkedSub?.latest_check ? (
@@ -2268,189 +2269,189 @@ export default function NewSubmissionPage() {
           )}
 
           <div ref={checkSectionRef} className={`scroll-mt-4 ${onDetails || stepView === "mood" || gated || (toolView("compliance") && !videoLocked) ? "hidden" : ""}`}>
-          <Section
-            step={STEP_NUMBER[stepView]}
-            title={titleOf(stepView)}
-            description={resubmitting && stepView === "send" ? "The reviewers stay on the post. Add more people if you like, then resubmit." : STEP_DESCRIPTION[stepView]}
-          >
-            <div className="flex flex-col gap-4">
-              {videoLocked ? (
-                <p className={`flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground ${stepView === "send" ? "hidden" : ""}`}>
-                  <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    Your script is checked first: open it from the script card to see its compliance score. The
-                    compliance check and sentiment analysis of the video and caption open here once the script is approved.{" "}
-                    <button
-                      type="button"
-                      className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
-                      onClick={() => {
-                        goToStep("details");
-                        window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
-                      }}
-                    >
-                      Go to script
-                    </button>
-                  </span>
-                </p>
-              ) : (
-                <>
-                  {/* Compliance: the same rulebook check the reviewer sees */}
-                  <div className={`scroll-mt-4 rounded-xl border border-border/80 p-3.5 space-y-3 ${toolView("compliance") ? "" : "hidden"}`}>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-start gap-2.5">
-                        <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground">Compliance check</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Regulatory, legal and brand messaging rules for the selected rule sets, audience and region.
-                          </p>
-                        </div>
-                      </div>
-                      <Button
+            <Section
+              step={STEP_NUMBER[stepView]}
+              title={titleOf(stepView)}
+              description={resubmitting && stepView === "send" ? "The reviewers stay on the post. Add more people if you like, then resubmit." : STEP_DESCRIPTION[stepView]}
+            >
+              <div className="flex flex-col gap-4">
+                {videoLocked ? (
+                  <p className={`flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground ${stepView === "send" ? "hidden" : ""}`}>
+                    <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      Your script is checked first: open it from the script card to see its compliance score. The
+                      compliance check and sentiment analysis of the video and caption open here once the script is approved.{" "}
+                      <button
                         type="button"
-                        size="sm"
-                        variant={hasCheck && !checkStale ? "outline" : "default"}
-                        className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
-                        onClick={() => void runComplianceCheck()}
-                        disabled={checking || uploading.length > 0 || readOnly}
-                        hidden={readOnly}
+                        className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                        onClick={() => {
+                          goToStep("details");
+                          window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+                        }}
                       >
-                        {checking ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : hasCheck ? (
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        ) : (
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                        )}
-                        {hasCheck ? "Check again" : "Run compliance check"}
-                      </Button>
-                    </div>
-                    {checking ? (
-                      <CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />
-                    ) : checkedSub?.latest_check ? (
-                      <>
-                        {checkStale && (
-                          <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-                            You've edited the post since this check. Check again to see the score for your latest changes.
-                          </p>
-                        )}
-                        <p className="text-[11px] text-muted-foreground">
-                          {lastCheckMs != null && !checkStale ? "New result" : "Last result"}
-                          {checkedSub.latest_check.checked_at
-                            ? ` · checked ${format(new Date(checkedSub.latest_check.checked_at), "MMM d, h:mm:ss a")}`
-                            : ""}
-                        </p>
-                        {lastCheckMs != null && <CheckModelsUsed attempts={checkAttempts} durationMs={lastCheckMs} />}
-                        <ComplianceView
-                          sub={checkedSub}
-                          outdatedText="The rulebook has changed since this check. Check again to use the current rules."
-                        />
-                      </>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
-                  <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
-                    <SentimentPanel
-                      submissionId={submissionId}
-                      post={
-                        // The post itself, shown with the analysis: its picture and each platform's own caption.
-                        platforms.length > 0 ? (
-                          <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
-                            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Your post</p>
-                            <div className="flex gap-3 overflow-x-auto pb-1">
-                              {platforms.map((p) => (
-                                <div key={p} className="w-[280px] shrink-0">
-                                  <PostPreview
-                                    platform={p}
-                                    account={selectedAccounts.find((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS")) ?? null}
-                                    title={title}
-                                    caption={platformCaptions[p]?.trim() ? platformCaptions[p] : caption}
-                                    media={mainFiles[0] ?? files.find((f) => f.kind === "IMAGE") ?? null}
-                                    whenLabel={publishDate ? format(publishDate, "MMM d") : "Not scheduled"}
-                                  />
-                                </div>
-                              ))}
-                            </div>
+                        Go to script
+                      </button>
+                    </span>
+                  </p>
+                ) : (
+                  <>
+                    {/* Compliance: the same rulebook check the reviewer sees */}
+                    <div className={`scroll-mt-4 rounded-xl border border-border/80 p-3.5 space-y-3 ${toolView("compliance") ? "" : "hidden"}`}>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">Compliance check</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Regulatory, legal and brand messaging rules for the selected rule sets, audience and region.
+                            </p>
                           </div>
-                        ) : undefined
-                      }
-                      showTopicTrends={false}
-                      canRun={!readOnly}
-                      design
-                      beforeAnalyse={async () => {
-                        if (!detailsComplete) {
-                          toast.error(`Fill in the required fields before running the analysis: ${detailsMissing.join(", ")}.`);
-                          return false;
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={hasCheck && !checkStale ? "outline" : "default"}
+                          className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                          onClick={() => void runComplianceCheck()}
+                          disabled={checking || uploading.length > 0 || readOnly}
+                          hidden={readOnly}
+                        >
+                          {checking ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : hasCheck ? (
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          ) : (
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                          )}
+                          {hasCheck ? "Check again" : "Run compliance check"}
+                        </Button>
+                      </div>
+                      {checking ? (
+                        <CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />
+                      ) : checkedSub?.latest_check ? (
+                        <>
+                          {checkStale && (
+                            <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                              You've edited the post since this check. Check again to see the score for your latest changes.
+                            </p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground">
+                            {lastCheckMs != null && !checkStale ? "New result" : "Last result"}
+                            {checkedSub.latest_check.checked_at
+                              ? ` · checked ${format(new Date(checkedSub.latest_check.checked_at), "MMM d, h:mm:ss a")}`
+                              : ""}
+                          </p>
+                          {lastCheckMs != null && <CheckModelsUsed attempts={checkAttempts} durationMs={lastCheckMs} />}
+                          <ComplianceView
+                            sub={checkedSub}
+                            outdatedText="The rulebook has changed since this check. Check again to use the current rules."
+                          />
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
+                    <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
+                      <SentimentPanel
+                        submissionId={submissionId}
+                        post={
+                          // The post itself, shown with the analysis: its picture and each platform's own caption.
+                          platforms.length > 0 ? (
+                            <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
+                              <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Your post</p>
+                              <div className="flex gap-3 overflow-x-auto pb-1">
+                                {platforms.map((p) => (
+                                  <div key={p} className="w-[280px] shrink-0">
+                                    <PostPreview
+                                      platform={p}
+                                      account={selectedAccounts.find((a) => a.platform === p || (a.platform === "YOUTUBE" && p === "YOUTUBE_SHORTS")) ?? null}
+                                      title={title}
+                                      caption={platformCaptions[p]?.trim() ? platformCaptions[p] : caption}
+                                      media={mainFiles[0] ?? files.find((f) => f.kind === "IMAGE") ?? null}
+                                      whenLabel={publishDate ? format(publishDate, "MMM d") : "Not scheduled"}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : undefined
                         }
-                        try {
-                          await save({ force: true });
-                          return true;
-                        } catch (err) {
-                          toast.error(`Couldn't save the draft: ${(err as Error).message}`);
-                          return false;
-                        }
-                      }}
-                    />
+                        showTopicTrends={false}
+                        canRun={!readOnly}
+                        design
+                        beforeAnalyse={async () => {
+                          if (!detailsComplete) {
+                            toast.error(`Fill in the required fields before running the analysis: ${detailsMissing.join(", ")}.`);
+                            return false;
+                          }
+                          try {
+                            await save({ force: true });
+                            return true;
+                          } catch (err) {
+                            toast.error(`Couldn't save the draft: ${(err as Error).message}`);
+                            return false;
+                          }
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {readOnly && toolView("send") && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
+                    <p className="font-semibold">
+                      {status === "APPROVED" ? "Approved" : "Sent for review"}
+                      {sentAt ? ` (sent ${format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a")})` : ""}
+                    </p>
+                    <p className="mt-1 text-[13px] text-blue-950/80 dark:text-blue-100/80">
+                      {status === "APPROVED"
+                        ? "It's on the content calendar. A reviewer can reschedule it or reopen it if something changes."
+                        : "It's with the reviewer now. You'll get a notification when they decide."}
+                    </p>
                   </div>
-                </>
-              )}
+                )}
 
-              {readOnly && toolView("send") && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
-                  <p className="font-semibold">
-                    {status === "APPROVED" ? "Approved" : "Sent for review"}
-                    {sentAt ? ` (sent ${format(new Date(sentAt), "MMM d, yyyy 'at' h:mm a")})` : ""}
-                  </p>
-                  <p className="mt-1 text-[13px] text-blue-950/80 dark:text-blue-100/80">
-                    {status === "APPROVED"
-                      ? "It's on the content calendar. A reviewer can reschedule it or reopen it if something changes."
-                      : "It's with the reviewer now. You'll get a notification when they decide."}
-                  </p>
-                </div>
-              )}
-
-              {/* Who it goes to, and the send itself */}
-              <div id="step-send" className={`scroll-mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3 ${toolView("send") && !readOnly ? "" : "hidden"}`}>
-                <ReviewerPicker
-                  approvers={approverOptions}
-                  suggesters={suggesterOptions}
-                  locked={lockedReviewerIds}
-                  pickedApprovers={pickedApprovers}
-                  pickedSuggesters={pickedSuggesters}
-                  onChange={(ids) => { setReviewerIds(ids); markEdited(); }}
-                  status={reviewersQuery}
-                  brandCount={brands.length}
-                  invalid={isMissing("reviewer_ids")}
-                  error={errorFor("reviewer_ids", "Pick at least one reviewer")}
-                />
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
-                  <p className="text-[11px] text-muted-foreground">
-                    {videoLocked
-                      ? "Sends your script to the reviewers you picked."
-                      : !hasCheck
-                      ? "You haven't run the compliance check yet. It also runs when you send."
-                      : checkStale
-                      ? "Edited since your last check. It runs again when you send."
-                      : "Ready when you are. The reviewer sees the same check and analysis."}
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={() => submit()}
-                    disabled={submitting || checking || uploading.length > 0}
-                    className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
-                  </Button>
+                {/* Who it goes to, and the send itself */}
+                <div id="step-send" className={`scroll-mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3 ${toolView("send") && !readOnly ? "" : "hidden"}`}>
+                  <ReviewerPicker
+                    approvers={approverOptions}
+                    suggesters={suggesterOptions}
+                    locked={lockedReviewerIds}
+                    pickedApprovers={pickedApprovers}
+                    pickedSuggesters={pickedSuggesters}
+                    onChange={(ids) => { setReviewerIds(ids); markEdited(); }}
+                    status={reviewersQuery}
+                    brandCount={brands.length}
+                    invalid={isMissing("reviewer_ids")}
+                    error={errorFor("reviewer_ids", "Pick at least one reviewer")}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
+                    <p className="text-[11px] text-muted-foreground">
+                      {videoLocked
+                        ? "Sends your script to the reviewers you picked."
+                        : !hasCheck
+                          ? "You haven't run the compliance check yet. It also runs when you send."
+                          : checkStale
+                            ? "Edited since your last check. It runs again when you send."
+                            : "Ready when you are. The reviewer sees the same check and analysis."}
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => submit()}
+                      disabled={submitting || checking || uploading.length > 0}
+                      className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Section>
+            </Section>
           </div>
 
           {/* Details: the duplicate check runs as soon as the details are filled in and saved, so it is known before sending */}
@@ -2485,9 +2486,9 @@ export default function NewSubmissionPage() {
                 stepView === "send"
                   ? undefined
                   : {
-                      label: `Continue to ${titleOf(POST_STEPS[STEP_NUMBER[stepView]].key).toLowerCase()}`,
-                      onClick: () => goToStep(POST_STEPS[STEP_NUMBER[stepView]].key),
-                    }
+                    label: `Continue to ${titleOf(POST_STEPS[STEP_NUMBER[stepView]].key).toLowerCase()}`,
+                    onClick: () => goToStep(POST_STEPS[STEP_NUMBER[stepView]].key),
+                  }
               }
             />
           )}

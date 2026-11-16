@@ -7,6 +7,7 @@ import type { CheckAttempt } from "@/types/submission";
 const STEP_LABELS: Record<string, string> = {
   COMPLIANCE_CHECK: "Rulebook check",
   CONTEXT_EVAL: "Context review",
+  SOURCE_CHECK: "Checking cited sources",
   IMAGE_TEXT: "Reading text in images",
   TRANSCRIPTION: "Reading the video's speech",
   DOCUMENT_TEXT: "Reading the script",

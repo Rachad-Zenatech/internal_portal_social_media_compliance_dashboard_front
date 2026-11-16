@@ -17,8 +17,8 @@ installGlobalErrorReporting();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Data remains "fresh" for 5 minutes before checking for background updates
-      staleTime: 1000 * 60 * 5, 
+      // In development, always refetch so backend/code changes show immediately; in production keep fresh for 5 minutes.
+      staleTime: import.meta.env.DEV ? 0 : 1000 * 60 * 5,
       retry: (failureCount, error: unknown) => {
         const status =
           typeof error === "object" && error !== null && "status" in error

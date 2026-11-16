@@ -5,7 +5,7 @@ import CheckCoverage from "@/components/submissions/CheckCoverage";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
-import SourceChecks from "@/components/submissions/SourceChecks";
+import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
@@ -44,6 +44,7 @@ export default function ComplianceStep({
   stale,
   progress,
   extra,
+  sourceChecking,
   onCheck,
   onEditCaption,
   onReplaceMedia,
@@ -59,6 +60,8 @@ export default function ComplianceStep({
   progress?: ReactNode;
   /** Shown under the score (which models read it). */
   extra?: ReactNode;
+  /** Active background source checks (image source scan or link quick-check). */
+  sourceChecking?: string[];
   onCheck: () => void;
   onEditCaption: () => void;
   onReplaceMedia: () => void;
@@ -171,6 +174,7 @@ export default function ComplianceStep({
             Not checked yet. Run it to see your score and anything a reviewer would flag; it saves your draft first.
           </p>
         )}
+        <SourceCheckingNotice items={sourceChecking} />
       </div>
     );
   }
@@ -363,12 +367,12 @@ export default function ComplianceStep({
           )}
         </section>
 
-        {(check.source_checks?.length ?? 0) > 0 && (
-          <section className={`${card} flex flex-col gap-3`}>
-            <h2 className="text-lg font-bold text-foreground">Sources checked</h2>
-            <SourceChecks checks={check.source_checks} submissionId={sub?.id} />
-          </section>
-        )}
+        <SourcesCheckedSection
+          checks={check.source_checks}
+          checking={sourceChecking}
+          submissionId={sub?.id}
+          className={`${card} flex flex-col gap-3`}
+        />
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 xl:sticky xl:top-4">
