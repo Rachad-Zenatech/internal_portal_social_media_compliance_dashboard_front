@@ -74,7 +74,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (320 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (117 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
-- src/components/scriptdoc/SharedEditorFrame.tsx (76 lines) - The sign-in the server hands out lasts 15 minutes; a fresh one is sent to the editor well before then.
+- src/components/scriptdoc/SharedEditorFrame.tsx (173 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (102 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
@@ -187,7 +187,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)
-- src/lib/scriptDocLive.ts (167 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
+- src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)

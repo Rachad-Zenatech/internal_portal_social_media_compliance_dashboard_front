@@ -159,7 +159,16 @@ export class LiveProvider {
     this.stopSeedAsk();
     if (this.timer) clearTimeout(this.timer);
     this.awareness.destroy();
-    this.ws?.close();
+    const ws = this.ws;
+    if (ws) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      } else if (ws.readyState === WebSocket.CONNECTING) {
+        // Closing while CONNECTING logs a browser warning; close as soon as the handshake finishes.
+        ws.onopen = () => ws.close();
+        ws.onmessage = null;
+      }
+    }
     this.doc.destroy();
     this.notes.destroy();
   }

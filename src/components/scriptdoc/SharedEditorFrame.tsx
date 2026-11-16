@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { scriptDocService } from "@/services/scriptDocService";
 
-// The sign-in the server hands out lasts 15 minutes; a fresh one is sent to the editor well before then.
-const TOKEN_REFRESH_MS = 10 * 60 * 1000;
+// Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+const FALLBACK_REFRESH_MS = 10 * 60 * 1000;
+const EXPIRY_BUFFER_MS = 30 * 1000;
 
 /** Messages the shared editor sends this page (see the Share Document front's lib/embedBridge.ts). */
 const NEWS = new Set(["script-embed:status", "script-embed:merge-completed", "script-embed:post-requested"]);
+const AUTH_REQUIRED = "script-embed:auth-required";
 
 /**
  * The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
@@ -18,21 +21,64 @@ const NEWS = new Set(["script-embed:status", "script-embed:merge-completed", "sc
 export default function SharedEditorFrame({ docId }: { docId: string }) {
   const qc = useQueryClient();
   const frame = useRef<HTMLIFrameElement>(null);
-  const { data: session, error } = useQuery({
+  const [frameKey, setFrameKey] = useState(0);
+  const needsReload = useRef(false);
+  const lastTokenAt = useRef(0);
+
+  const {
+    data: session,
+    dataUpdatedAt,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["script-doc-editor", docId],
     queryFn: () => scriptDocService.sharedEditor(docId),
-    refetchInterval: TOKEN_REFRESH_MS,
-    refetchOnWindowFocus: false,
+    refetchInterval: (query) => {
+      const expiresIn = query.state.data?.expires_in;
+      return expiresIn ? Math.max(30_000, expiresIn * 1000 * 0.65) : FALLBACK_REFRESH_MS;
+    },
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
+    staleTime: 0,
+    gcTime: 0,
     retry: false,
   });
 
-  // The frame is loaded once per script: a refreshed token is sent to it, never by reloading it.
+  useEffect(() => {
+    if (!session) return;
+    lastTokenAt.current = dataUpdatedAt || Date.now();
+    if (needsReload.current) {
+      needsReload.current = false;
+      setFrameKey((k) => k + 1);
+    }
+  }, [session, dataUpdatedAt]);
+
+  // If the tab slept past the token's lifetime, a postMessage won't rescue a frame that already redirected to /login: reload it.
+  useEffect(() => {
+    const checkExpiry = () => {
+      if (document.visibilityState === "hidden" || !session) return;
+      const expiresMs = (session.expires_in ?? 15 * 60) * 1000;
+      if (Date.now() - lastTokenAt.current >= Math.max(0, expiresMs - EXPIRY_BUFFER_MS)) {
+        needsReload.current = true;
+        void refetch();
+      }
+    };
+    document.addEventListener("visibilitychange", checkExpiry);
+    window.addEventListener("focus", checkExpiry);
+    return () => {
+      document.removeEventListener("visibilitychange", checkExpiry);
+      window.removeEventListener("focus", checkExpiry);
+    };
+  }, [session, refetch]);
+
+  // The frame is loaded once per script (or after an expired session): a refreshed token is sent to it, never by reloading it.
   const src = useMemo(() => {
     if (!session) return null;
     const parent = encodeURIComponent(window.location.origin);
     return `${session.url}?mode=editor&parent=${parent}#token=${session.token}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.share_document_id]);
+  }, [session?.share_document_id, frameKey]);
 
   // Until the editor's page has loaded the frame is a blank page of this portal's own origin, which a message meant for the
   // editor's origin can't be sent to. The first token is already in the address, so only refreshes after load are sent.
@@ -51,17 +97,43 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
     if (!session) return;
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== session.origin || e.source !== frame.current?.contentWindow) return;
-      if (!NEWS.has((e.data as { type?: string } | null)?.type ?? "")) return;
+      const type = (e.data as { type?: string } | null)?.type ?? "";
+      if (type === AUTH_REQUIRED) {
+        void refetch();
+        return;
+      }
+      if (!NEWS.has(type)) return;
       // This portal learns of the change through the event bus a moment after the editor does: ask again once it has.
       qc.invalidateQueries({ queryKey: ["script-doc", docId] });
       window.setTimeout(() => qc.invalidateQueries({ queryKey: ["script-doc", docId] }), 1500);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [session?.origin, qc, docId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.origin, qc, docId, refetch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const reconnect = () => {
+    needsReload.current = true;
+    void refetch();
+  };
+
+  const handleLoad = () => {
+    loaded.current = true;
+    const bootToken = src?.split("#token=")[1];
+    if (session && frame.current?.contentWindow && session.token !== bootToken) {
+      frame.current.contentWindow.postMessage({ type: "script-embed:token", token: session.token }, session.origin);
+    }
+  };
 
   if (error) {
-    return <div className="flex flex-1 items-center justify-center p-6 text-sm text-destructive">{(error as Error).message || "The editor couldn't be opened."}</div>;
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-sm text-destructive">
+        <span>{(error as Error).message || "The editor couldn't be opened."}</span>
+        <Button size="sm" variant="outline" onClick={reconnect} disabled={isFetching}>
+          <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          Reconnect editor
+        </Button>
+      </div>
+    );
   }
   if (!src) {
     return (
@@ -71,5 +143,30 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
       </div>
     );
   }
-  return <iframe ref={frame} src={src} onLoad={() => { loaded.current = true; }} title="Script editor" className="min-h-[24rem] w-full flex-1 border-0" allow="clipboard-read; clipboard-write" />;
+  return (
+    <div className="flex min-h-[24rem] flex-1 flex-col">
+      <iframe
+        key={frameKey}
+        ref={frame}
+        src={src}
+        onLoad={handleLoad}
+        title="Script editor"
+        className="min-h-[24rem] w-full flex-1 border-0"
+        allow="clipboard-read; clipboard-write"
+      />
+      <div className="flex items-center justify-end border-t bg-muted/20 px-2 py-0.5">
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-6 gap-1 px-2 text-xs text-muted-foreground"
+          onClick={reconnect}
+          disabled={isFetching}
+        >
+          <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
+          Reconnect editor
+        </Button>
+      </div>
+    </div>
+  );
 }
