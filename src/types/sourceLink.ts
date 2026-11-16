@@ -1,5 +1,6 @@
 export interface SubmissionSourceFields {
   source_links?: string[];
+  source_link_checks?: Record<string, SourceLinkCheck>;
 }
 
 export interface SourceLinkClaim {

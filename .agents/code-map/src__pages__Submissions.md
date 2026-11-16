@@ -18,57 +18,57 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `navigate` (fn) L321
     - `queryClient` (fn) L326
     - `optionsQuery` (fn) L328
-    - `markEdited` (fn) L421
-    - `accounts` (fn) L427
-    - `reviewersQuery` (fn) L429
-    - `reviewerOptions` (fn) L434
-    - `approverOptions` (fn) L440 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-    - `suggesterOptions` (fn) L441
-    - `selectedAccounts` (fn) L444
-    - `brandAccounts` (fn) L448
-    - `scriptStage` (fn) L463 - the script stage (required: false) work as they always did.
-    - `duplicatesQuery` (fn) L468
-    - `refreshScript` (fn) L478
-    - `sentBack` (fn) L493
-    - `applyServer` (fn) L528 - ----- Load an existing draft (S08 resume) -----
-    - `buildPayload` (fn) L601 - ----- Saving (S01, S02-S04, S06, S08) -----
-    - `save` (fn) L633 - Create the draft if needed, then save the current fields.
-    - `handler` (fn) L676
-    - `saveNow` (fn) L683
-    - `suggestRouting` (fn) L693 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
-    - `onBrandsChange` (fn) L712
-    - `onAccountsChange` (fn) L721
-    - `onAudiencesChange` (fn) L734
-    - `uploadFiles` (fn) L741 - ----- Files (S05, S07) -----
-    - `removeFile` (fn) L805
-    - `replaceMain` (fn) L821 - Swap the main file for a new one (the revision workspace's "Replace video").
-    - `onCanvaImported` (fn) L845
-    - `reimportCanva` (fn) L853 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - `atApprovalTime` (fn) L879 - Need approval by": the picked day at the chosen time, never after the publish time.
-    - `pickApproval` (fn) L880
-    - `isMissing` (fn) L905
-    - `errorFor` (fn) L907
-    - `titleOf` (fn) L919 - A step's name as the step bar shows it (a post sent back has its own six).
-    - `detailsMissing` (fn) L922 - What the post still needs before its compliance check, sentiment analysis and public mood can be run.
-    - `toolView` (fn) L928
-    - `goToStep` (fn) L929
+    - `markEdited` (fn) L422
+    - `accounts` (fn) L428
+    - `reviewersQuery` (fn) L430
+    - `reviewerOptions` (fn) L435
+    - `approverOptions` (fn) L441 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn) L442
+    - `selectedAccounts` (fn) L445
+    - `brandAccounts` (fn) L449
+    - `scriptStage` (fn) L464 - the script stage (required: false) work as they always did.
+    - `duplicatesQuery` (fn) L469
+    - `refreshScript` (fn) L479
+    - `sentBack` (fn) L497
+    - `applyServer` (fn) L532 - ----- Load an existing draft (S08 resume) -----
+    - `buildPayload` (fn) L605 - ----- Saving (S01, S02-S04, S06, S08) -----
+    - `save` (fn) L637 - Create the draft if needed, then save the current fields.
+    - `handler` (fn) L680
+    - `saveNow` (fn) L687
+    - `suggestRouting` (fn) L697 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
+    - `onBrandsChange` (fn) L716
+    - `onAccountsChange` (fn) L725
+    - `onAudiencesChange` (fn) L738
+    - `uploadFiles` (fn) L745 - ----- Files (S05, S07) -----
+    - `removeFile` (fn) L809
+    - `replaceMain` (fn) L825 - Swap the main file for a new one (the revision workspace's "Replace video").
+    - `onCanvaImported` (fn) L849
+    - `reimportCanva` (fn) L857 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - `atApprovalTime` (fn) L883 - Need approval by": the picked day at the chosen time, never after the publish time.
+    - `pickApproval` (fn) L884
+    - `isMissing` (fn) L909
+    - `errorFor` (fn) L911
+    - `titleOf` (fn) L922
+    - `detailsMissing` (fn) L924
+    - `toolView` (fn) L929
+    - `goToStep` (fn) L930
     - `repostKey` (fn) L941
-    - `leaveDetails` (fn) L944 - Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate.
-    - `wideCompliance` (fn) L980 - The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
-    - `backToCaption` (fn) L981
-    - `openStep` (fn) L985
-    - `runComplianceCheck` (fn) L990 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1059
-    - `ranSinceSentBack` (fn) L1066
-    - `submit` (fn) L1075
-    - `exec` (fn) L1219 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1227 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1239
-    - `typedTail` (fn) L1244 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1251 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1275 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1291 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1299
+    - `leaveDetails` (fn) L943
+    - `wideCompliance` (fn) L979
+    - `backToCaption` (fn) L980
+    - `openStep` (fn) L984
+    - `runComplianceCheck` (fn) L989 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+    - `sourceChecking` (fn) L1058
+    - `ranSinceSentBack` (fn) L1065
+    - `submit` (fn) L1074
+    - `exec` (fn) L1218 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1226 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1238
+    - `typedTail` (fn) L1243 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1250 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1274 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1290 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1298
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...

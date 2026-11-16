@@ -17,6 +17,7 @@ interface Props {
   readOnly?: boolean;
   onChange: (next: string[]) => void;
   uploadedFiles?: SubmissionFile[];
+  savedResults?: Record<string, SourceLinkCheck>;
   onBackgroundActivityChange?: (activities: string[]) => void;
 }
 
@@ -169,13 +170,19 @@ export default function SourceLinksField({
   readOnly,
   onChange,
   uploadedFiles,
+  savedResults,
   onBackgroundActivityChange,
 }: Props) {
   const [draftUrl, setDraftUrl] = useState("");
   const [checkingUrl, setCheckingUrl] = useState<string | null>(null);
   const [scanningImage, setScanningImage] = useState(false);
   const [scanResult, setScanResult] = useState<ImageSourceScanJob | null>(null);
-  const [results, setResults] = useState<Record<string, SourceLinkCheck>>({});
+  const [results, setResults] = useState<Record<string, SourceLinkCheck>>(() => savedResults ?? {});
+
+  useEffect(() => {
+    if (!savedResults) return;
+    setResults((prev) => ({ ...savedResults, ...prev }));
+  }, [savedResults]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pollTimerRef = useRef<number | null>(null);
   const linksRef = useRef(links);

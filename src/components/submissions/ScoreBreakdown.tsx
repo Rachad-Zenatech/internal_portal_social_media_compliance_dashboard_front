@@ -45,8 +45,8 @@ export default function ScoreBreakdown({
             <span>Starting score</span>
             <span className="tabular-nums">100</span>
           </li>
-          {scored.map((v) => (
-            <li key={`${v.rule_id}-${v.kind ?? ""}`} className="flex items-start justify-between gap-3 px-2.5 py-1.5">
+          {scored.map((v, index) => (
+            <li key={`${v.rule_id}-${v.kind ?? ""}-${index}`} className="flex items-start justify-between gap-3 px-2.5 py-1.5">
               <span className="min-w-0">
                 <RuleNumberBadge v={v} />
                 <span className="text-muted-foreground"> · {v.kind === "MISSING_DISCLAIMER" ? "Missing disclaimer" : v.title}</span>
