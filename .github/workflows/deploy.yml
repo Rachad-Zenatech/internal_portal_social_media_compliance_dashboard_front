@@ -12,11 +12,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{ secrets.REGION }}
-  AWS_ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-  S3_BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
-  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.DISTRIBUTION_ID || secrets.DISTRIBUTION_NAME }}
-  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || secrets.API_BASE_URL }}
+  ENV_FILE: ${{ secrets.ENV_FILE }}
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
 
 jobs:
@@ -33,7 +29,20 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Trim leading/trailing whitespace from secrets
+          if [ -z "${ENV_FILE:-}" ]; then
+            echo "::error::Set ENV_FILE in the Zenatech environment to the complete production .env contents."
+            exit 1
+          fi
+
+          install -m 600 /dev/null .env
+          printf '%s\n' "$ENV_FILE" | tr -d '\r' > .env
+
+          set -a
+          # shellcheck disable=SC1091
+          source .env
+          set +a
+
+          # Trim leading/trailing whitespace from ENV_FILE values
           AWS_REGION="$(echo -n "${AWS_REGION:-}" | xargs)"
           AWS_ACCOUNT_ID="$(echo -n "${AWS_ACCOUNT_ID:-}" | xargs)"
           S3_BUCKET_NAME="$(echo -n "${S3_BUCKET_NAME:-}" | xargs)"
@@ -114,8 +123,6 @@ jobs:
 
       - name: Build the app
         shell: bash
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
           set -euxo pipefail
           npm run build
