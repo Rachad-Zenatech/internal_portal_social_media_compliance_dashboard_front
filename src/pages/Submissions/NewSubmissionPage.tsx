@@ -403,7 +403,7 @@ export default function NewSubmissionPage() {
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
-  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]);
+  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]); const [autoScanImageId, setAutoScanImageId] = useState<string | null>(null);
   // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
   const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
   // The repost (same post, another date) the creator already said yes to, so sending doesn't ask again.
@@ -734,7 +734,6 @@ export default function NewSubmissionPage() {
     suggestRouting({ brands, audiences, accounts: next });
     markEdited();
   };
-
   const onAudiencesChange = (values: string[]) => {
     setAudiences(values);
     suggestRouting({ brands, audiences: values, accounts: selectedAccounts });
@@ -794,8 +793,10 @@ export default function NewSubmissionPage() {
           link_url: `/submissions/new?id=${id}`,
         });
         const saved = await uploadPromise;
-        // The server keeps one script: the new one replaces any earlier one.
         setFiles((prev) => [...(kind === "SCRIPT" ? prev.filter((f) => f.kind !== "SCRIPT") : prev), saved]);
+        if (file.type.startsWith("image/") || saved.mime_type?.startsWith("image/")) {
+          setAutoScanImageId(saved.id);
+        }
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       } finally {
@@ -959,7 +960,7 @@ export default function NewSubmissionPage() {
         }
         if (report.repost) {
           if (repostOk === repostKey(report.repost)) {
-            setStartAnalysesFor(id);
+            void runComplianceCheck();
             goToStep(target);
             return;
           }
@@ -968,7 +969,7 @@ export default function NewSubmissionPage() {
           return;
         }
       }
-      setStartAnalysesFor(id);
+      void runComplianceCheck();
       goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
@@ -1020,7 +1021,7 @@ export default function NewSubmissionPage() {
       const updated = await running;
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
-      setLastCheckMs(Date.now() - started);
+      setLastCheckMs(Date.now() - started); setStartAnalysesFor(id!);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
@@ -2126,9 +2127,8 @@ export default function NewSubmissionPage() {
                   limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
                   submissionId={submissionId} readOnly={readOnly} uploadedFiles={files} savedSourceChecks={checkedSub?.source_link_checks}
                   ensureSubmissionId={() => save({ force: true })}
-                  onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
-                  onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
-                  onSourceCheckActivityChange={setLocalSourceChecking}
+                  onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }} onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
+                  onSourceCheckActivityChange={setLocalSourceChecking} autoScanImageId={autoScanImageId}
                 />
                 {isMissing("caption") && (
                   <p className="text-[11px] text-red-600">

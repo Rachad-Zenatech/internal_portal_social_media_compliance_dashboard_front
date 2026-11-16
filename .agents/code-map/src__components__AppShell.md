@@ -12,7 +12,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L10
 - `AppShell` (export function) L17
 
-## src/components/AppShell/Breadcrumbs.tsx (165 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
+## src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - `BreadcrumbItem` (export interface) L7
 - `Breadcrumbs` (export function) L12
 
@@ -42,12 +42,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `formatLastSeen` (fn) L366
     - `renderMetric` (fn) L388
 
-## src/components/AppShell/Navigation.tsx (154 lines) - navigation (components  app shell)
+## src/components/AppShell/Navigation.tsx (155 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface) L16
 - `NavigationItem` (export interface) L22
 - `AppView` (export type) L36
 - `navigation` (export const) L44 - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) L150 - Whether a page belongs to a view.
+- `pathInView` (export function) L151 - Whether a page belongs to a view.
 
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function) L22

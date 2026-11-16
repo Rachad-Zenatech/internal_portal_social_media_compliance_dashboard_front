@@ -19,6 +19,7 @@ interface Props {
   uploadedFiles?: SubmissionFile[];
   savedResults?: Record<string, SourceLinkCheck>;
   onBackgroundActivityChange?: (activities: string[]) => void;
+  autoScanImageId?: string | null;
 }
 
 function normalizeDraftUrl(raw: string): string | null {
@@ -172,6 +173,7 @@ export default function SourceLinksField({
   uploadedFiles,
   savedResults,
   onBackgroundActivityChange,
+  autoScanImageId,
 }: Props) {
   const [draftUrl, setDraftUrl] = useState("");
   const [checkingUrl, setCheckingUrl] = useState<string | null>(null);
@@ -186,9 +188,12 @@ export default function SourceLinksField({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pollTimerRef = useRef<number | null>(null);
   const linksRef = useRef(links);
-  linksRef.current = links;
   const activityCbRef = useRef(onBackgroundActivityChange);
-  activityCbRef.current = onBackgroundActivityChange;
+  const autoScanRef = useRef<(fileId: string) => void>(() => {});
+  const lastAutoScanId = useRef<string | null>(null);
+
+  useEffect(() => { linksRef.current = links; }, [links]);
+  useEffect(() => { activityCbRef.current = onBackgroundActivityChange; }, [onBackgroundActivityChange]);
 
   useEffect(() => {
     const active: string[] = [];
@@ -296,6 +301,16 @@ export default function SourceLinksField({
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+
+  useEffect(() => {
+    autoScanRef.current = (fileId) => { void runImageScan(undefined, fileId); };
+  });
+
+  useEffect(() => {
+    if (!autoScanImageId || autoScanImageId === lastAutoScanId.current) return;
+    lastAutoScanId.current = autoScanImageId;
+    autoScanRef.current(autoScanImageId);
+  }, [autoScanImageId]);
 
   const removeLink = (url: string) => {
     onChange(links.filter((item) => item !== url));

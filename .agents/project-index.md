@@ -5,14 +5,14 @@
 Scan this index first to locate the right file and description without loading symbol trees or line numbers.
 For function and route definitions with their line numbers, grep `.agents/code-map/` (listed in `.agents/code-map.md`).
 
-- src/App.tsx (184 lines) - app
+- src/App.tsx (186 lines) - app
 - src/components/AppShell/AiStatusBanner.tsx (45 lines) - ai status banner (components  app shell)
 - src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
-- src/components/AppShell/Breadcrumbs.tsx (165 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
+- src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
 - src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
 - src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
-- src/components/AppShell/Navigation.tsx (154 lines) - navigation (components  app shell)
+- src/components/AppShell/Navigation.tsx (155 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (261 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
@@ -79,7 +79,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
 - src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
-- src/components/submissions/CaptionExtras.tsx (50 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+- src/components/submissions/CaptionExtras.tsx (52 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 - src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - src/components/submissions/CaptionSuggester.tsx (144 lines) - caption suggester (components submissions)
 - src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
@@ -87,7 +87,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceStep.tsx (490 lines) - Where in the post it was found.
+- src/components/submissions/ComplianceStep.tsx (483 lines) - Where in the post it was found.
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
@@ -96,9 +96,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FindingStatus.tsx (220 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
+- src/components/submissions/FlaggedVideo.tsx (40 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- src/components/submissions/MediaFindingOverlay.tsx (34 lines) - Yellow boxes over media findings.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
@@ -122,11 +124,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
-- src/components/submissions/SourceChecks.tsx (230 lines) - source checks (components submissions)
-- src/components/submissions/SourceLinksField.tsx (368 lines) - source links field (components submissions)
+- src/components/submissions/SourceChecks.tsx (251 lines) - source checks (components submissions)
+- src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
+- src/components/submissions/ZoomableImageDialog.tsx (51 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
@@ -209,6 +212,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/RoleGroupPermissions.tsx (488 lines) - role group permissions (pages  configurations)
 - src/pages/Configurations/RoleMcpToolPermissions.tsx (306 lines) - Left panel search
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
+- src/pages/Configurations/TrainingDataPage.tsx (45 lines) - training data page (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
@@ -231,7 +235,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
-- src/services/complianceService.ts (361 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (366 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.

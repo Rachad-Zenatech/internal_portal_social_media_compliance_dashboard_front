@@ -52,6 +52,7 @@ export default function Breadcrumbs() {
       "role-group-permissions": "Role Group Permissions",
       "role-api-permissions": "Role API Permissions",
       "role-mcp-tool-permissions": "Role MCP Tool Permissions",
+      "training-data": "Training data & quality",
       "audit": "Audit Log",
       "audit-log": "Audit Log",
       "system-logs": "System Logs",

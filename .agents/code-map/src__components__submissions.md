@@ -19,9 +19,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
 - `CanvaReimportBar` (export function) L14 - For content imported from Canva: which design and revision it is, and a one-click way to bring in the latest  version after editing it in...
 
-## src/components/submissions/CaptionExtras.tsx (50 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+## src/components/submissions/CaptionExtras.tsx (52 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 - `Props` (interface) L6
-- `CaptionExtras` (export function) L23 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+- `CaptionExtras` (export function) L24 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 
 ## src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - `CaptionSignalsBar` (export function) L12 - Live feedback under the caption: the hashtags, cashtags and mentions in it, whether there are more hashtags than  the platforms suit, and...
@@ -62,17 +62,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - `CommentThread` (export function) L11 - A comment and the replies that follow it, indented under it with a line down the side; long threads fold up.
 
-## src/components/submissions/ComplianceStep.tsx (490 lines) - Where in the post it was found.
-- `escapeRe` (const) L18
-- `Finding` (interface) L20
-- `ring` (function) L29
-- `ComplianceStep` (export function) L38 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
-    - `seek` (fn) L109
-    - `pick` (fn) L117
-    - `terms` (fn) L123
-    - `captionParts` (fn) L124
-    - `header` (fn) L134
-    - `count` (fn) L188
+## src/components/submissions/ComplianceStep.tsx (483 lines) - Where in the post it was found.
+- `escapeRe` (const) L20
+- `Finding` (interface) L22
+- `ring` (function) L31
+- `ComplianceStep` (export function) L40 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
+    - `seek` (fn) L111
+    - `pick` (fn) L119
+    - `terms` (fn) L125
+    - `captionParts` (fn) L126
+    - `header` (fn) L137
+    - `count` (fn) L191
 
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) L19 - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
@@ -120,6 +120,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
 - `FlagReviewControl` (export function) L25 - A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that.
 
+## src/components/submissions/FlaggedVideo.tsx (40 lines) - Video frame with the compliance checker’s yellow finding boxes.
+- `FlaggedVideo` (export function) L7 - Video frame with the compliance checker’s yellow finding boxes.
+
 ## src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - `Field` (export function) L12 - The fields of a post's details, shared by the new-submission form and the script batch form so both look and work  the same: a bold label...
 - `MultiSelect` (export function) L26 - Select-style box that holds removable chips; options open in a popover.
@@ -131,6 +134,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Box` (type) L13 - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - `clamp` (const) L18
 - `ImageAnnotator` (export function) L24 - An image post's picture, with comments on areas of it, as in Google Docs: drag a box over the part you mean and write  the comment there.
+
+## src/components/submissions/MediaFindingOverlay.tsx (34 lines) - Yellow boxes over media findings.
+- `MediaFindingOverlay` (export function) L10 - Yellow boxes over media findings.
 
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.
@@ -274,7 +280,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ResultHeading` (function) L32
 - `SourceCheckResult` (export function) L44 - What checking one source showed: its title, any message, and each claim's verdict.
 
-## src/components/submissions/SourceChecks.tsx (230 lines) - source checks (components submissions)
+## src/components/submissions/SourceChecks.tsx (251 lines) - source checks (components submissions)
 - `mergeSourceChecks` (function) L31 - Keep quick checks made from Post details visible when the rulebook response omitted that URL.
 - `counts` (function) L57
 - `ClaimRow` (function) L63 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
@@ -283,12 +289,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourcesCheckedSection` (export function) L168 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
 - `SourceChecks` (export function) L197 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
-## src/components/submissions/SourceLinksField.tsx (368 lines) - source links field (components submissions)
+## src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
 - `Props` (interface) L13
-- `normalizeDraftUrl` (function) L24
-- `SourceLinkRow` (function) L37
-- `SourceLinkInputBar` (function) L92
-- `SourceLinksField` (export function) L166 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
+- `normalizeDraftUrl` (function) L25
+- `SourceLinkRow` (function) L38
+- `SourceLinkInputBar` (function) L93
+- `SourceLinksField` (export function) L167 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
 
 ## src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - `SourceTrustBar` (export function) L17 - A source's standing with reviewers (from every post checked against its site), and buttons to rate it a good or a  poor source.
@@ -305,6 +311,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `scrapeTwitter` (fn) L328
     - `handleScrape` (fn) L331
     - `otherTrends` (fn) L348
+
+## src/components/submissions/ZoomableImageDialog.tsx (51 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
+- `Props` (interface) L7
+- `ZoomableImageDialog` (export function) L19 - Full-size image preview that zooms toward the point under the mouse wheel.
 
 ## src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `COMMENT_CATEGORIES` (export const) L5

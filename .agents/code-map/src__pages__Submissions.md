@@ -38,37 +38,37 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `suggestRouting` (fn) L697 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
     - `onBrandsChange` (fn) L716
     - `onAccountsChange` (fn) L725
-    - `onAudiencesChange` (fn) L738
-    - `uploadFiles` (fn) L745 - ----- Files (S05, S07) -----
-    - `removeFile` (fn) L809
-    - `replaceMain` (fn) L825 - Swap the main file for a new one (the revision workspace's "Replace video").
-    - `onCanvaImported` (fn) L849
-    - `reimportCanva` (fn) L857 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - `atApprovalTime` (fn) L883 - Need approval by": the picked day at the chosen time, never after the publish time.
-    - `pickApproval` (fn) L884
-    - `isMissing` (fn) L909
-    - `errorFor` (fn) L911
-    - `titleOf` (fn) L922
-    - `detailsMissing` (fn) L924
-    - `toolView` (fn) L929
-    - `goToStep` (fn) L930
-    - `repostKey` (fn) L941
-    - `leaveDetails` (fn) L943
-    - `wideCompliance` (fn) L979
-    - `backToCaption` (fn) L980
-    - `openStep` (fn) L984
-    - `runComplianceCheck` (fn) L989 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1058
-    - `ranSinceSentBack` (fn) L1065
-    - `submit` (fn) L1074
-    - `exec` (fn) L1218 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1226 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1238
-    - `typedTail` (fn) L1243 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1250 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1274 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1290 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1298
+    - `onAudiencesChange` (fn) L737
+    - `uploadFiles` (fn) L744 - ----- Files (S05, S07) -----
+    - `removeFile` (fn) L810
+    - `replaceMain` (fn) L826 - Swap the main file for a new one (the revision workspace's "Replace video").
+    - `onCanvaImported` (fn) L850
+    - `reimportCanva` (fn) L858 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - `atApprovalTime` (fn) L884 - Need approval by": the picked day at the chosen time, never after the publish time.
+    - `pickApproval` (fn) L885
+    - `isMissing` (fn) L910
+    - `errorFor` (fn) L912
+    - `titleOf` (fn) L923
+    - `detailsMissing` (fn) L925
+    - `toolView` (fn) L930
+    - `goToStep` (fn) L931
+    - `repostKey` (fn) L942
+    - `leaveDetails` (fn) L944
+    - `wideCompliance` (fn) L980
+    - `backToCaption` (fn) L981
+    - `openStep` (fn) L985
+    - `runComplianceCheck` (fn) L990 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+    - `sourceChecking` (fn) L1059
+    - `ranSinceSentBack` (fn) L1066
+    - `submit` (fn) L1075
+    - `exec` (fn) L1219 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1227 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1239
+    - `typedTail` (fn) L1244 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1251 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1275 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1291 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1299
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...

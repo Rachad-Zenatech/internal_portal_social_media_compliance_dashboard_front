@@ -17,6 +17,7 @@ interface Props {
   onSourceCheckActivityChange?: (activities: string[]) => void;
   uploadedFiles?: SubmissionFile[];
   savedSourceChecks?: Record<string, SourceLinkCheck>;
+  autoScanImageId?: string | null;
 }
 
 /** Per-platform caption overrides and source links placed at the bottom of the Details caption section. */
@@ -42,6 +43,7 @@ export default function CaptionExtras(props: Props) {
         uploadedFiles={props.uploadedFiles}
         savedResults={props.savedSourceChecks}
         onBackgroundActivityChange={props.onSourceCheckActivityChange}
+        autoScanImageId={props.autoScanImageId}
       />
     </>
   );

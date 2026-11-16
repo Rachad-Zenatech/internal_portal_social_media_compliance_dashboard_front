@@ -89,6 +89,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `canDrop` (fn) L408
     - `handleMoveRole` (fn) L424
 
+## src/pages/Configurations/TrainingDataPage.tsx (45 lines) - training data page (pages  configurations)
+- `QualitySummary` (function) L12
+- `AiCapacity` (function) L26
+- `RuleDataTable` (function) L31
+- `TrainingDataPage` (export function) L36
+
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.
 - `UserRoleAssignment` (export function) L20

@@ -199,6 +199,7 @@ export default function SourceChecks({
   savedChecks,
   submissionId,
   className = "",
+  onViewChange,
 }: {
   checks?: SourceCheck[] | null;
   /** Results saved by quick-checking links in Post details. */
@@ -206,23 +207,43 @@ export default function SourceChecks({
   /** The post: with it, calls on the sources are saved and each source's standing with reviewers is shown. */
   submissionId?: string | null;
   className?: string;
+  /** Lets a parent show source checks separately from its compliance findings. */
+  onViewChange?: (view: "checks" | "review") => void;
 }) {
   const sourceChecks = mergeSourceChecks(checks, savedChecks);
+  const [activeTab, setActiveTab] = useState<"checks" | "review">(onViewChange ? "review" : "checks");
   if (sourceChecks.length === 0) return null;
   const links = sourceChecks.filter((c) => c.kind === "URL").length;
+  const needsReview = sourceChecks.filter((source) => {
+    const { wrong, open } = counts(source.claims);
+    return source.status !== "READ" || wrong > 0 || open > 0;
+  });
+  const visibleChecks = activeTab === "review" ? needsReview : sourceChecks;
   const urls = [...new Set(sourceChecks.flatMap((c) => [c.url, ...c.claims.map((k) => k.source_url)]).filter(Boolean) as string[])];
   return (
     <SourceConfirmationsProvider submissionId={submissionId} urls={urls}>
     <div className={`space-y-1.5 text-[11px] ${className}`}>
-      <p className="flex items-center gap-1.5 font-semibold text-foreground">
+      <div className="flex items-center gap-1.5 font-semibold text-foreground">
         {links > 0 ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
         Sources checked ({sourceChecks.length})
-      </p>
-      <ul className="space-y-1.5">
-        {sourceChecks.map((c) => (
-          <Row key={`${c.kind}-${c.reference}`} source={c} />
-        ))}
-      </ul>
+      </div>
+      <div role="tablist" aria-label="Source check results" className="flex gap-1 border-b border-border/60">
+        <button type="button" role="tab" aria-selected={activeTab === "review"} onClick={() => { setActiveTab("review"); onViewChange?.("review"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "review" ? "border-amber-600 text-amber-700 dark:text-amber-300" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          Needs review ({needsReview.length})
+        </button>
+        <button type="button" role="tab" aria-selected={activeTab === "checks"} onClick={() => { setActiveTab("checks"); onViewChange?.("checks"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "checks" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          Check source ({sourceChecks.length})
+        </button>
+      </div>
+      {(!onViewChange || activeTab === "checks") && (visibleChecks.length > 0 ? (
+        <ul role="tabpanel" className="space-y-1.5">
+          {visibleChecks.map((c, index) => (
+            <Row key={`${c.kind}-${c.reference}-${index}`} source={c} />
+          ))}
+        </ul>
+      ) : (
+        <p role="tabpanel" className="rounded-lg border border-dashed border-border/60 px-2.5 py-3 text-muted-foreground">All source claims are supported.</p>
+      ))}
     </div>
     </SourceConfirmationsProvider>
   );

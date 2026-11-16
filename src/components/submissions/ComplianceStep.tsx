@@ -3,12 +3,14 @@ import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } fr
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
+import FlaggedVideo from "@/components/submissions/FlaggedVideo";
+import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
@@ -130,6 +132,7 @@ export default function ComplianceStep({
       .map((text, i) => ({ text, tone: i % 2 ? (chosen.has(text.toLowerCase()) ? "chosen" : "flag") : "" }));
   })();
   const imageTerms = findings.filter((f) => f.where === "Image or on-screen text");
+  const mediaFindings = findings.filter((f) => statusOf(f.v) === "VIOLATION" && (f.where === "Image or on-screen text" || f.where === "Video"));
 
   const header = (
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -381,18 +384,7 @@ export default function ComplianceStep({
 
           {mainFile && isVideo && (
             <>
-              <video
-                ref={videoRef}
-                src={authedFileUrl(mainFile.url)}
-                controls
-                playsInline
-                preload="metadata"
-                onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)}
-                onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
-                className="max-h-[420px] w-full rounded-xl bg-black"
-              />
+              <FlaggedVideo src={authedFileUrl(mainFile.url)} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
               <FlaggedMoments
                 parts={parts}
                 now={now}
@@ -410,11 +402,12 @@ export default function ComplianceStep({
           {mainFile && !isVideo && (
             <>
               <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
-                <img src={authedFileUrl(mainFile.url)} alt="Open full-size image" className="max-h-[420px] w-full rounded-xl border border-border/60 object-contain" />
+                <div className="relative">
+                  <img src={authedFileUrl(mainFile.url)} alt="Open full-size image" className="max-h-[420px] w-full rounded-xl border border-border/60 object-contain" />
+                  <MediaFindingOverlay findings={mediaFindings.map((f) => f.v)} />
+                </div>
               </button>
-              <Dialog open={imageOpen} onOpenChange={setImageOpen}>
-                <DialogContent aria-label="Full-size post image" showCloseButton={false} className="h-[82dvh] w-[90vw] max-w-4xl gap-0 p-1 sm:max-w-4xl"><DialogTitle className="sr-only">Full-size post image</DialogTitle><button type="button" onClick={() => setImageOpen(false)} aria-label="Close full-size image" className="h-full w-full"><img src={authedFileUrl(mainFile.url)} alt="Full-size post" className="h-full w-full cursor-zoom-out object-contain" /></button></DialogContent>
-              </Dialog>
+              <ZoomableImageDialog open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(mainFile.url)} findings={mediaFindings.map((f) => f.v)} />
               {imageTerms.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Flagged text in the image</span>
