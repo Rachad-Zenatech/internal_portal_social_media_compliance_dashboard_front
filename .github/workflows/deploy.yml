@@ -37,17 +37,39 @@ jobs:
           install -m 600 /dev/null .env
           printf '%s\n' "$ENV_FILE" | tr -d '\r' > .env
 
-          set -a
-          # shellcheck disable=SC1091
-          source .env
-          set +a
+          # Parse ENV_FILE safely (supports spaces around '=', quotes, and short/long key aliases)
+          eval "$(python3 - <<'PY'
+          import os, re, shlex, sys
+          from pathlib import Path
 
-          # Trim leading/trailing whitespace from ENV_FILE values
-          AWS_REGION="$(echo -n "${AWS_REGION:-}" | xargs)"
-          AWS_ACCOUNT_ID="$(echo -n "${AWS_ACCOUNT_ID:-}" | xargs)"
-          S3_BUCKET_NAME="$(echo -n "${S3_BUCKET_NAME:-}" | xargs)"
-          CLOUDFRONT_DISTRIBUTION_ID="$(echo -n "${CLOUDFRONT_DISTRIBUTION_ID:-}" | xargs)"
-          VITE_API_BASE_URL="$(echo -n "${VITE_API_BASE_URL:-}" | xargs)"
+          vals = {}
+          for raw in Path(".env").read_text(encoding="utf-8", errors="ignore").splitlines():
+              line = raw.strip()
+              if not line or line.startswith("#") or "=" not in line:
+                  continue
+              if line.startswith("export "):
+                  line = line[7:].strip()
+              k, v = line.split("=", 1)
+              k = k.strip()
+              v = v.strip()
+              if len(v) >= 2 and v[0] == v[-1] and v[0] in ('"', "'"):
+                  v = v[1:-1]
+              if re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", k):
+                  vals[k] = v
+
+          print("Loaded keys from ENV_FILE:", " ".join(vals.keys()), file=sys.stderr)
+
+          mapped = {
+              "AWS_REGION": vals.get("AWS_REGION") or vals.get("REGION") or "",
+              "AWS_ACCOUNT_ID": vals.get("AWS_ACCOUNT_ID") or vals.get("ACCOUNT_ID") or "",
+              "S3_BUCKET_NAME": vals.get("S3_BUCKET_NAME") or vals.get("BUCKET_NAME") or "",
+              "CLOUDFRONT_DISTRIBUTION_ID": vals.get("CLOUDFRONT_DISTRIBUTION_ID") or vals.get("DISTRIBUTION_ID") or vals.get("DISTRIBUTION_NAME") or "",
+              "VITE_API_BASE_URL": vals.get("VITE_API_BASE_URL") or vals.get("API_BASE_URL") or "",
+          }
+          for k, v in mapped.items():
+              print(f"{k}={shlex.quote(v.strip())}")
+          PY
+          )"
 
           # Export sanitized variables to subsequent steps
           echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_ENV"
