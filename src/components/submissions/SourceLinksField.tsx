@@ -17,6 +17,7 @@ interface Props {
   readOnly?: boolean;
   onChange: (next: string[]) => void;
   uploadedFiles?: SubmissionFile[];
+  onBackgroundActivityChange?: (activities: string[]) => void;
 }
 
 function normalizeDraftUrl(raw: string): string | null {
@@ -168,6 +169,7 @@ export default function SourceLinksField({
   readOnly,
   onChange,
   uploadedFiles,
+  onBackgroundActivityChange,
 }: Props) {
   const [draftUrl, setDraftUrl] = useState("");
   const [checkingUrl, setCheckingUrl] = useState<string | null>(null);
@@ -178,6 +180,15 @@ export default function SourceLinksField({
   const pollTimerRef = useRef<number | null>(null);
   const linksRef = useRef(links);
   linksRef.current = links;
+  const activityCbRef = useRef(onBackgroundActivityChange);
+  activityCbRef.current = onBackgroundActivityChange;
+
+  useEffect(() => {
+    const active: string[] = [];
+    if (scanningImage) active.push("Scanning image and scraping source in the background...");
+    if (checkingUrl) active.push(`Checking source link: ${checkingUrl}`);
+    activityCbRef.current?.(active);
+  }, [scanningImage, checkingUrl]);
 
   const uploadedImages = (uploadedFiles ?? []).filter(
     (f) =>

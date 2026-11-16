@@ -114,6 +114,13 @@ export const submissionService = {
     );
   },
 
+  /** List any background image source scan jobs currently running for a submission. */
+  getActiveImageSourceScanJobs: (id: string) =>
+    apiClient.get<import("@/types/sourceLink").ImageSourceScanJob[]>(
+      `/api/submissions/${id}/scan-image-sources`,
+      quiet,
+    ),
+
   /** Poll the status/result of a background image source scan job. */
   getImageSourceScanJob: (id: string, jobId: string) =>
     apiClient.get<import("@/types/sourceLink").ImageSourceScanJob>(

@@ -13,6 +13,7 @@ interface Props {
   readOnly?: boolean;
   onPlatformCaptionsChange: (next: Record<string, string>) => void;
   onSourceLinksChange: (next: string[]) => void;
+  onSourceCheckActivityChange?: (activities: string[]) => void;
   uploadedFiles?: SubmissionFile[];
 }
 
@@ -37,6 +38,7 @@ export default function CaptionExtras(props: Props) {
         readOnly={props.readOnly}
         onChange={props.onSourceLinksChange}
         uploadedFiles={props.uploadedFiles}
+        onBackgroundActivityChange={props.onSourceCheckActivityChange}
       />
     </>
   );

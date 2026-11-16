@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
+- `useBackgroundSourceChecks` (export function) L6 - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
+
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) L7 - Caption suggestions for a draft, and how many are left today.
 
