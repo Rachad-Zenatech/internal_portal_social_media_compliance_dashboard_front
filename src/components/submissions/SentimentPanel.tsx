@@ -901,7 +901,7 @@ export default function SentimentPanel({
   post?: ReactNode;
   className?: string;
 }) {
-  const { analysis, isLoading, run, scheduleAfterReset, rate, saveTestCase, usage } = useSentiment(submissionId, version);
+  const { analysis, isLoading, run, rate, saveTestCase, usage } = useSentiment(submissionId, version);
   const { hasPermission } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   const [testCaseOpen, setTestCaseOpen] = useState(false);
@@ -912,7 +912,7 @@ export default function SentimentPanel({
   // The topics' current mood only means something for the current content, not an earlier version.
   const topics = usePublicMood(submissionId, trends && version == null);
   const running = isSentimentRunning(analysis) || run.isPending || preparing;
-  /** All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis. */
+  /** Save the current post and run only the requested sentiment analysis. */
   const analyseAll = async () => {
     if (beforeAnalyse) {
       setPreparing(true);
@@ -922,7 +922,6 @@ export default function SentimentPanel({
         setPreparing(false);
       }
     }
-    if (trends) topics.run();
     run.mutate();
   };
   const ctx: FindingContext | undefined =
@@ -967,8 +966,8 @@ export default function SentimentPanel({
         <p className="text-xs text-muted-foreground flex items-start gap-2 rounded-lg border border-dashed border-border p-3">
           <CalendarClock className="w-3.5 h-3.5 shrink-0 mt-px text-violet-500" />
           <span>
-            Gemini's daily limit was reached, so this runs automatically
-            {analysis.retry_at ? ` after ${format(new Date(analysis.retry_at), "MMM d, h:mm a")}` : " once it resets"}. Nothing else to do.
+            This analysis was scheduled earlier. Run the sentiment check manually
+            {analysis.retry_at ? ` after ${format(new Date(analysis.retry_at), "MMM d, h:mm a")}` : " once it resets"}. It will not start automatically.
           </span>
         </p>
       ) : analysis.status === "FAILED" && analysis.retry_at ? (
@@ -977,18 +976,7 @@ export default function SentimentPanel({
             Gemini's daily limit for {analysis.model || "this model"} was reached, so this couldn't run. It resets{" "}
             {format(new Date(analysis.retry_at), "MMM d 'at' h:mm a")} ({formatDistanceToNow(new Date(analysis.retry_at), { addSuffix: true })}).
           </p>
-          {canRun && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-[11px] gap-1"
-              disabled={scheduleAfterReset.isPending}
-              onClick={() => scheduleAfterReset.mutate(analysis.id)}
-            >
-              {scheduleAfterReset.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CalendarClock className="w-3 h-3" />}
-              Run when it resets
-            </Button>
-          )}
+          <p>Use Run sentiment check when you are ready to try again.</p>
         </div>
       ) : analysis.status === "FAILED" ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5 text-xs text-red-700 dark:text-red-300 space-y-2">
@@ -1111,13 +1099,13 @@ export default function SentimentPanel({
                 <div className="flex flex-col items-end gap-1">
                   <Button
                     type="button"
-                    variant={analysis && analysis.is_current ? "outline" : "default"}
-                    className={`h-10 gap-2 rounded-xl px-4 text-sm font-semibold ${analysis && analysis.is_current ? "" : "bg-blue-700 text-white hover:bg-blue-800"}`}
+                    variant="default"
+                    className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
                     disabled={running || outOfRuns}
                     onClick={analyseAll}
                   >
                     {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                    {analysis ? "Run again" : "Run sentiment analysis"}
+                    {analysis ? "Run sentiment check again" : "Run sentiment check"}
                   </Button>
                   {usage?.remaining != null && (
                     <span className={`text-xs tabular-nums ${outOfRuns ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
@@ -1162,27 +1150,27 @@ export default function SentimentPanel({
           </p>
           <p className="text-[10px] text-muted-foreground">
             Advisory · {trends ? "how its topics are doing online, and " : ""}how the post is likely to be perceived
-            {beforeAnalyse ? ". Analyse also runs the rulebook check." : ""}
+            {canRun ? ". Runs only when you click; run again after editing." : ""}
           </p>
         </div>
         {canRun && submissionId && (
           <div className="flex flex-col items-end gap-0.5 shrink-0">
             <Button
               size="sm"
-              variant="outline"
-              className="h-7 px-2 text-[11px] gap-1"
+              variant="default"
+              className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
               disabled={running || outOfRuns}
               onClick={analyseAll}
               title={
                 outOfRuns
                   ? "Daily AI limit reached"
                   : beforeAnalyse
-                  ? "Runs the rulebook check, the topic trend and the perception check together"
+                  ? "Saves the draft and runs the sentiment check"
                   : undefined
               }
             >
               {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              {analysis ? "Re-run" : "Analyse"}
+              {analysis ? "Run sentiment check again" : "Run sentiment check"}
             </Button>
             {usage?.remaining != null && (
               <span className={`text-[10px] tabular-nums ${outOfRuns ? "text-amber-700 dark:text-amber-300 font-semibold" : "text-muted-foreground"}`}>

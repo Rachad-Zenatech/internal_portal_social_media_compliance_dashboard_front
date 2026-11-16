@@ -18,7 +18,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/submissions/SentimentPanel.tsx": {
-      "max_lines": 1333,
+      "max_lines": 1321,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/video/VideoUploadQueueDrawer.tsx": {
@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2691,
+      "max_lines": 2683,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -164,7 +164,7 @@
       "kind": "jsx_return"
     },
     "src/components/submissions/ComplianceStep.tsx#ComplianceStep": {
-      "max_lines": 289,
+      "max_lines": 252,
       "kind": "jsx_return"
     },
     "src/components/submissions/ContextReportView.tsx#ContextReportView": {
@@ -332,7 +332,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1375,
+      "max_lines": 1370,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {
