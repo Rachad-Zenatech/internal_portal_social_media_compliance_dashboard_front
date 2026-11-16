@@ -16,6 +16,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
+## src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
+- `imageSlides` (export function) L5 - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
+- `useImageSlideshow` (export function) L10
+
 ## src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
 - `nameOf` (const) L13
 - `useScopeOptions` (function) L16 - The brand, audience and platform names the pickers and "Applies to" lines use.
@@ -40,10 +44,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
-## src/hooks/usePublicMood.ts (152 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
-- `usePublicMood` (export function) L15 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
-- `useMarketTrends` (export function) L100 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
-- `useScrapeTwitter` (export function) L110 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
+## src/hooks/usePublicMood.ts (151 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+- `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
+- `useMarketTrends` (export function) L99 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
+- `useScrapeTwitter` (export function) L109 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
 
 ## src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12

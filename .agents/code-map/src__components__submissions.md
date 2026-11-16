@@ -62,17 +62,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - `CommentThread` (export function) L11 - A comment and the replies that follow it, indented under it with a line down the side; long threads fold up.
 
-## src/components/submissions/ComplianceStep.tsx (483 lines) - Where in the post it was found.
-- `escapeRe` (const) L20
-- `Finding` (interface) L22
-- `ring` (function) L31
-- `ComplianceStep` (export function) L40 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
+## src/components/submissions/ComplianceStep.tsx (455 lines) - Where in the post it was found.
+- `escapeRe` (const) L19
+- `Finding` (interface) L21
+- `ring` (function) L30
+- `ComplianceStep` (export function) L39 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
     - `seek` (fn) L111
     - `pick` (fn) L119
     - `terms` (fn) L125
     - `captionParts` (fn) L126
-    - `header` (fn) L137
-    - `count` (fn) L191
+    - `header` (fn) L136
+    - `count` (fn) L190
 
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) L19 - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
@@ -135,8 +135,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `clamp` (const) L18
 - `ImageAnnotator` (export function) L24 - An image post's picture, with comments on areas of it, as in Google Docs: drag a box over the part you mean and write  the comment there.
 
-## src/components/submissions/MediaFindingOverlay.tsx (34 lines) - Yellow boxes over media findings.
-- `MediaFindingOverlay` (export function) L10 - Yellow boxes over media findings.
+## src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
+- `Props` (interface) L11
+- `SlideThumbnail` (function) L16
+- `MarkedUpImageSlideshow` (export function) L29 - Every image in the post, with highlights scoped to the currently displayed file.
+
+## src/components/submissions/MediaFindingOverlay.tsx (33 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- `Props` (interface) L3
+- `MediaFindingOverlay` (export function) L9 - Only measured regions are shown; never place a finding in an arbitrary area.
 
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.
@@ -244,7 +250,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
 - `ScoreBreakdown` (export function) L11 - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...
 
-## src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
+## src/components/submissions/SentimentPanel.tsx (1322 lines) - sentiment panel (components submissions)
 - `titleCase` (const) L115
 - `timestamp` (const) L116
 - `Metric` (function) L118
@@ -271,9 +277,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DesignAside` (function) L837 - The side column: what the analysis read, and how to use it.
 - `SentimentPanel` (export function) L873 - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
     - `topics` (fn) L913 - The topics' current mood only means something for the current content, not an earlier version.
-    - `analyseAll` (fn) L916 - All checks at once: the rulebook check (in the editor), the topics' trend, and the perception analysis.
-    - `statusChain` (fn) L944
-- `SaveTestCaseDialog` (function) L1238 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
+    - `analyseAll` (fn) L916 - Save the current post and run only the requested sentiment analysis.
+    - `statusChain` (fn) L943
+- `SaveTestCaseDialog` (function) L1226 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
 
 ## src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - `ClaimResultRow` (export function) L19 - One claim from the post next to what the source says, with the AI's verdict and a link to that spot in the source.
@@ -302,19 +308,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - `StageTabs` (export function) L4 - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 
-## src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
+## src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const) L19
 - `overallPostDecision` (export function) L34
 - `TopicRow` (function) L73
 - `MarketTrendRow` (function) L220
 - `TopicTrend` (export function) L299 - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
-    - `scrapeTwitter` (fn) L328
-    - `handleScrape` (fn) L331
-    - `otherTrends` (fn) L348
+    - `scrapeTwitter` (fn) L324
+    - `handleScrape` (fn) L327
+    - `otherTrends` (fn) L344
 
-## src/components/submissions/ZoomableImageDialog.tsx (51 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
+## src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - `Props` (interface) L7
-- `ZoomableImageDialog` (export function) L19 - Full-size image preview that zooms toward the point under the mouse wheel.
+- `ZoomableImageDialog` (export function) L20 - Full-size image preview that zooms toward the point under the mouse wheel.
 
 ## src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - `COMMENT_CATEGORIES` (export const) L5

@@ -9,10 +9,9 @@ import type { MoodVerdict } from "@/types/publicMood";
 /**
  * Public mood for a submission's topics, and the action that writes (or reuses) its summary. It does not run by itself:
  * nothing is fetched until `run()` is called (a Run button), and a result already run in this session shows without
- * running it again. `hasRun` says whether there is anything to show. With `autoLoad` (a locked post) it loads what is
- * there to show.
+ * running it again. `hasRun` says whether there is anything to show; only the Run button starts a check.
  */
-export function usePublicMood(submissionId?: string | null, enabled = true, autoLoad = false) {
+export function usePublicMood(submissionId?: string | null, enabled = true, _autoLoad = false) {
   const queryClient = useQueryClient();
   const { addJob } = useGlobalProgress();
   const key = ["public-mood", submissionId];
@@ -22,8 +21,8 @@ export function usePublicMood(submissionId?: string | null, enabled = true, auto
   const query = useQuery({
     queryKey: key,
     queryFn: () => submissionService.getPublicMood(submissionId!),
-    // autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
-    enabled: Boolean(submissionId) && enabled && (requested || autoLoad),
+    // This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+    enabled: false,
     // Topic snapshots refresh at most every few hours, so there's no need to refetch on every focus.
     staleTime: 5 * 60_000,
   });
@@ -86,10 +85,10 @@ export function usePublicMood(submissionId?: string | null, enabled = true, auto
       return running;
     },
     /** Whether it has been run (now, or earlier in this session). */
-    hasRun: requested || autoLoad || query.data != null,
+    hasRun: requested || query.data != null,
     dismissTopic,
     rate,
-    isLoading: query.isLoading,
+    isLoading: query.isFetching,
     error: query.error as Error | null,
     summarise,
     usage: usage.data?.PUBLIC_MOOD ?? null,

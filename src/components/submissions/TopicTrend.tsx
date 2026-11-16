@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, Flame, Globe2, Loader2, RefreshCw, ShieldAlert, TrendingDown, TrendingUp, Undo2, X } from "lucide-react";
 
@@ -321,11 +321,7 @@ export default function TopicTrend({
 }) {
   const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(hasRun);
   const [showAllTrends, setShowAllTrends] = useState(false);
-  const afterScrapeRef = useRef<() => void>(() => {});
-  afterScrapeRef.current = () => {
-    if (!hasRun) onRun?.();
-  };
-  const scrapeTwitter = useScrapeTwitter(submissionId, () => afterScrapeRef.current());
+  const scrapeTwitter = useScrapeTwitter(submissionId);
   const { addJob } = useGlobalProgress();
 
   const handleScrape = () => {
@@ -412,7 +408,7 @@ export default function TopicTrend({
               : "Public mood was not run for this post."}
           </p>
           {onRun && (
-            <Button type="button" size="sm" className="h-8 shrink-0 gap-1.5 bg-blue-700 text-xs font-semibold text-white hover:bg-blue-800" onClick={onRun} disabled={!canEdit}>
+            <Button type="button" size="sm" className="h-12 shrink-0 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800" onClick={onRun} disabled={!canEdit}>
               <Globe2 className="h-3.5 w-3.5" /> Run public mood
             </Button>
           )}

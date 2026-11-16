@@ -330,7 +330,6 @@ export default function NewSubmissionPage() {
 
   // Submission identity and server state
   const [submissionId, setSubmissionId] = useState<string | null>(routeId);
-  const [startAnalysesFor, setStartAnalysesFor] = useState<string | null>(null);
   const [referenceCode, setReferenceCode] = useState<string | null>(null);
   const [status, setStatus] = useState<SubmissionStatus>("DRAFT");
   const [loadingExisting, setLoadingExisting] = useState(Boolean(routeId));
@@ -403,7 +402,7 @@ export default function NewSubmissionPage() {
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
-  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]); const [autoScanImageId, setAutoScanImageId] = useState<string | null>(null);
+  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]);
   // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
   const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
   // The repost (same post, another date) the creator already said yes to, so sending doesn't ask again.
@@ -478,13 +477,12 @@ export default function NewSubmissionPage() {
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
-  const { mood, isLoading: moodLoading, run: refreshMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  const { analysis: sentimentAnalysis, run: runSentiment } = useSentiment(submissionId);
-  useEffect(() => {
-    if (startAnalysesFor && startAnalysesFor === submissionId) {
-      setStartAnalysesFor(null); void refreshMood(); runSentiment.mutate();
-    }
-  }, [refreshMood, runSentiment, startAnalysesFor, submissionId]);
+  const { mood, isLoading: moodLoading, run: runMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
+  const { analysis: sentimentAnalysis } = useSentiment(submissionId);
+  const refreshMood = async () => {
+    try { await save({ force: true }); return await runMood(); }
+    catch (err) { toast.error(`Couldn't run public mood: ${(err as Error).message}`); }
+  };
 
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
@@ -794,9 +792,6 @@ export default function NewSubmissionPage() {
         });
         const saved = await uploadPromise;
         setFiles((prev) => [...(kind === "SCRIPT" ? prev.filter((f) => f.kind !== "SCRIPT") : prev), saved]);
-        if (file.type.startsWith("image/") || saved.mime_type?.startsWith("image/")) {
-          setAutoScanImageId(saved.id);
-        }
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       } finally {
@@ -960,7 +955,6 @@ export default function NewSubmissionPage() {
         }
         if (report.repost) {
           if (repostOk === repostKey(report.repost)) {
-            void runComplianceCheck();
             goToStep(target);
             return;
           }
@@ -969,7 +963,6 @@ export default function NewSubmissionPage() {
           return;
         }
       }
-      void runComplianceCheck();
       goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
@@ -1021,7 +1014,7 @@ export default function NewSubmissionPage() {
       const updated = await running;
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
-      setLastCheckMs(Date.now() - started); setStartAnalysesFor(id!);
+      setLastCheckMs(Date.now() - started);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
@@ -2128,7 +2121,7 @@ export default function NewSubmissionPage() {
                   submissionId={submissionId} readOnly={readOnly} uploadedFiles={files} savedSourceChecks={checkedSub?.source_link_checks}
                   ensureSubmissionId={() => save({ force: true })}
                   onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }} onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
-                  onSourceCheckActivityChange={setLocalSourceChecking} autoScanImageId={autoScanImageId}
+                  onSourceCheckActivityChange={setLocalSourceChecking}
                 />
                 {isMissing("caption") && (
                   <p className="text-[11px] text-red-600">
@@ -2174,7 +2167,7 @@ export default function NewSubmissionPage() {
                           <p className="text-[11px] text-muted-foreground truncate">
                             {mood?.topics.length
                               ? `Topics: ${mood.topics.map((t) => t.name).join(", ")}`
-                              : "Topics are matched continuously from your title, caption, script and video transcript."}
+                              : "Run the check to match topics from your current title, caption, script and video transcript."}
                           </p>
                         </div>
                       </div>
@@ -2186,14 +2179,14 @@ export default function NewSubmissionPage() {
                         )}
                         <Button
                           type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
+                          variant="default"
+                          size="lg"
+                          className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
                           onClick={() => refreshMood()}
                           disabled={moodLoading}
                           hidden={readOnly}
                         >
-                          {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Refresh" : "Run public mood"}
+                          {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Run public mood check again" : "Run public mood check"}
                         </Button>
                       </div>
                     </div>
@@ -2245,7 +2238,7 @@ export default function NewSubmissionPage() {
                 sub={checkedSub}
                 title={title}
                 caption={caption}
-                mainFile={mainFiles[0]}
+                mainFile={mainFiles[0]} files={files}
                 editable={!readOnly}
                 checking={checking}
                 stale={checkStale}
@@ -2309,8 +2302,8 @@ export default function NewSubmissionPage() {
                         <Button
                           type="button"
                           size="sm"
-                          variant={hasCheck && !checkStale ? "outline" : "default"}
-                          className={`h-7 gap-1.5 text-xs ${hasCheck && !checkStale ? "" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                          variant="default"
+                          className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
                           onClick={() => void runComplianceCheck()}
                           disabled={checking || uploading.length > 0 || readOnly}
                           hidden={readOnly}
@@ -2529,7 +2522,6 @@ export default function NewSubmissionPage() {
                     } else if (repostTarget) {
                       const target = repostTarget;
                       setRepostTarget(null);
-                      setStartAnalysesFor(submissionId);
                       goToStep(target);
                     } else {
                       submit(true);

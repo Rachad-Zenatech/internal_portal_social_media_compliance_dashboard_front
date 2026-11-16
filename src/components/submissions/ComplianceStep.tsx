@@ -4,12 +4,11 @@ import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } fr
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
-import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
+import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
-import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
 import { Button } from "@/components/ui/button";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
 import type { ComplianceViolation } from "@/services/complianceService";
@@ -42,6 +41,7 @@ export default function ComplianceStep({
   title,
   caption,
   mainFile,
+  files,
   editable,
   checking,
   stale,
@@ -56,6 +56,7 @@ export default function ComplianceStep({
   title: string;
   caption: string;
   mainFile?: SubmissionFile;
+  files?: SubmissionFile[];
   editable: boolean;
   checking: boolean;
   stale: boolean;
@@ -72,7 +73,6 @@ export default function ComplianceStep({
   const check = sub?.latest_check ?? null;
   const [picked, setPicked] = useState<string | null>(null);
   const [clearedOpen, setClearedOpen] = useState(false);
-  const [imageOpen, setImageOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -131,8 +131,7 @@ export default function ComplianceStep({
       .split(new RegExp(`(${all.map(escapeRe).join("|")})`, "gi"))
       .map((text, i) => ({ text, tone: i % 2 ? (chosen.has(text.toLowerCase()) ? "chosen" : "flag") : "" }));
   })();
-  const imageTerms = findings.filter((f) => f.where === "Image or on-screen text");
-  const mediaFindings = findings.filter((f) => statusOf(f.v) === "VIOLATION" && (f.where === "Image or on-screen text" || f.where === "Video"));
+  const mediaFindings = findings.filter((f) => f.v.image_regions?.length || f.where === "Image or on-screen text" || f.where === "Video");
 
   const header = (
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -151,15 +150,15 @@ export default function ComplianceStep({
         <div className="flex flex-col items-end gap-1">
           <Button
             type="button"
-            variant={check && !stale ? "outline" : "default"}
+            variant="default"
             onClick={onCheck}
             disabled={checking}
-            className={`h-10 gap-2 rounded-xl px-4 text-sm font-semibold ${check && !stale ? "" : "bg-blue-700 text-white hover:bg-blue-800"}`}
+            className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
           >
             {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : check ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
             {check ? "Check again" : "Run compliance check"}
           </Button>
-          <span className="text-xs text-muted-foreground">Run it as often as you like</span>
+          <span className="text-xs text-muted-foreground">Runs only when you click; run again after editing</span>
         </div>
       )}
     </div>
@@ -379,7 +378,7 @@ export default function ComplianceStep({
         <section className="flex flex-col gap-3.5 rounded-2xl border border-border/70 bg-card p-4 shadow-xs sm:p-5">
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-base font-bold text-foreground">Your post, marked up</h2>
-            {mainFile && <span className="text-[11px] text-muted-foreground">{isVideo ? "Video" : "Image 1 of 1"}</span>}
+            {mainFile && isVideo && <span className="text-[11px] text-muted-foreground">Video</span>}
           </div>
 
           {mainFile && isVideo && (
@@ -399,35 +398,8 @@ export default function ComplianceStep({
               />
             </>
           )}
-          {mainFile && !isVideo && (
-            <>
-              <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
-                <div className="relative">
-                  <img src={authedFileUrl(mainFile.url)} alt="Open full-size image" className="max-h-[420px] w-full rounded-xl border border-border/60 object-contain" />
-                  <MediaFindingOverlay findings={mediaFindings.map((f) => f.v)} />
-                </div>
-              </button>
-              <ZoomableImageDialog open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(mainFile.url)} findings={mediaFindings.map((f) => f.v)} />
-              {imageTerms.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Flagged text in the image</span>
-                  {imageTerms.map((f) => (
-                    <button
-                      key={f.key}
-                      type="button"
-                      onClick={() => pick(f)}
-                      className={`rounded-lg border px-2.5 py-1.5 text-left text-[13px] ${
-                        f.key === picked
-                          ? "border-red-500 bg-red-50 font-semibold text-red-900 dark:bg-red-500/10 dark:text-red-100"
-                          : "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-                      }`}
-                    >
-                      {f.v.flagged_terms.length ? f.v.flagged_terms.map((t) => `"${t}"`).join(", ") : f.v.title}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+          {!isVideo && (
+            <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />
           )}
 
           <div className="flex flex-col gap-1.5 border-t border-border/60 pt-3">

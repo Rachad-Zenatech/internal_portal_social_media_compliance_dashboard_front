@@ -96,6 +96,14 @@ export interface ComplianceRuleUpdate {
   evaluation_guidance?: string;
 }
 
+export interface ImageFindingRegion {
+  file_id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface ComplianceViolation {
   rule_id: string;
   rule_number: string;
@@ -124,6 +132,7 @@ export interface ComplianceViolation {
   passage?: string | null;
   context?: string | null;
   /** Where the checker found the issue in image/video media, as fractions of its rendered frame. */
+  image_regions?: ImageFindingRegion[];
   region_x?: number | null;
   region_y?: number | null;
   region_w?: number | null;

@@ -87,7 +87,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceStep.tsx (483 lines) - Where in the post it was found.
+- src/components/submissions/ComplianceStep.tsx (455 lines) - Where in the post it was found.
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
@@ -100,7 +100,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
-- src/components/submissions/MediaFindingOverlay.tsx (34 lines) - Yellow boxes over media findings.
+- src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
+- src/components/submissions/MediaFindingOverlay.tsx (33 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
@@ -122,14 +123,14 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (92 lines) - Violations always list here; a warning only when it cost points.
-- src/components/submissions/SentimentPanel.tsx (1334 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1322 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - src/components/submissions/SourceChecks.tsx (251 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
-- src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
-- src/components/submissions/ZoomableImageDialog.tsx (51 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
+- src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+- src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
 - src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
@@ -166,12 +167,13 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
+- src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
 - src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
 - src/hooks/useNotificationStream.tsx (72 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
-- src/hooks/usePublicMood.ts (152 lines) - autoLoad: a locked post (in review or approved) only shows what is there, so nothing is waiting on a Run button.
+- src/hooks/usePublicMood.ts (151 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
 - src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.
@@ -227,7 +229,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (307 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (50 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2692 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2684 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (578 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
@@ -235,7 +237,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
-- src/services/complianceService.ts (366 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (375 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
