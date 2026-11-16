@@ -13,7 +13,7 @@ import { Bold, Columns3, Italic, List, ListOrdered, Redo2, Rows3, Trash2, Undo2 
 
 import type { LiveProvider } from "@/lib/scriptDocLive";
 import type { DocNote } from "@/types/scriptDoc";
-import { LatestProps, NoteMarks, findAndSelect, locate, notesKey } from "@/components/scriptdoc/scriptNoteMarks";
+import { LatestProps, NoteMarks, findAndSelect, locate, notesKey, readSelection } from "@/components/scriptdoc/scriptNoteMarks";
 
 const FlatListItem = ListItem.extend({ content: "paragraph" });
 
@@ -155,16 +155,7 @@ const CollabEditor = forwardRef(function CollabEditor(
         editor.chain().insertContentAt(editor.state.doc.content.size, html).focus("end").scrollIntoView().run();
       },
       getText: () => editor?.getText({ blockSeparator: "\n" }) ?? "",
-      selection: () => {
-        if (!editor) return null;
-        const { from, to, empty } = editor.state.selection;
-        if (empty) return null;
-        const $from = editor.state.doc.resolve(from);
-        const $to = editor.state.doc.resolve(to);
-        if (!$from.sameParent($to)) return null;
-        const quote = editor.state.doc.textBetween(from, to).trim();
-        return quote ? { quote, start: from } : null;
-      },
+      selection: () => (editor ? readSelection(editor) : null),
       goTo: (note) => {
         if (!editor) return false;
         const at = locate(editor.state.doc, note);

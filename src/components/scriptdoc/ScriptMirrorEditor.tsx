@@ -8,7 +8,7 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
 import type { CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
-import { LatestProps, NoteMarks, findAndSelect, locate, notesKey } from "@/components/scriptdoc/scriptNoteMarks";
+import { LatestProps, NoteMarks, findAndSelect, locate, notesKey, readSelection } from "@/components/scriptdoc/scriptNoteMarks";
 import type { DocNote } from "@/types/scriptDoc";
 
 const FlatListItem = ListItem.extend({ content: "paragraph" });
@@ -76,16 +76,7 @@ const ScriptMirrorEditor = forwardRef(function ScriptMirrorEditor(
       getHtml: () => editor?.getHTML() ?? "",
       append: () => {},
       getText: () => editor?.getText({ blockSeparator: "\n" }) ?? "",
-      selection: () => {
-        if (!editor) return null;
-        const { from, to, empty } = editor.state.selection;
-        if (empty) return null;
-        const $from = editor.state.doc.resolve(from);
-        const $to = editor.state.doc.resolve(to);
-        if (!$from.sameParent($to)) return null;
-        const quote = editor.state.doc.textBetween(from, to).trim();
-        return quote ? { quote, start: from } : null;
-      },
+      selection: () => (editor ? readSelection(editor) : null),
       goTo: (note) => {
         if (!editor) return false;
         const at = locate(editor.state.doc, note);

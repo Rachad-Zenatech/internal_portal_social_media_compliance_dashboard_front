@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/scriptdoc/CollabEditor.tsx (224 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
+## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - `CollabEditorHandle` (export interface) L20
 - `Tool` (function) L34
 - `Props` (interface) L52
@@ -22,9 +22,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (112 lines) - Highlight and Comment, in the editor's toolbar.
-- `NoteButtons` (function) L12 - Highlight and Comment, in the editor's toolbar.
-- `DocEditorColumn` (export function) L28 - The script page itself, once the live connection is up (until then, a short wait).
+## src/components/scriptdoc/DocEditorColumn.tsx (203 lines) - Highlight color palette (preset swatches + custom color picker).
+- `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
+- `NoteButtons` (function) L94 - Highlight and Comment, in the editor's toolbar.
+- `DocEditorColumn` (export function) L119 - The script page itself, once the live connection is up (until then, a short wait).
 
 ## src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
 - `DOC_STATUS` (export const) L10
@@ -68,17 +69,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocLists` (function) L201 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
 - `ScriptDocHub` (export function) L239 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
 
-## src/components/scriptdoc/ScriptMirrorEditor.tsx (117 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
+## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
 
 ## src/components/scriptdoc/SharedEditorFrame.tsx (173 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L21 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
-## src/components/scriptdoc/scriptNoteMarks.ts (102 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+## src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - `LatestProps` (export class) L9 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - `notesKey` (export const) L25
-- `locate` (export function) L28 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
-- `NoteOptions` (interface) L44
-- `NoteMarks` (export const) L50 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
-- `findAndSelect` (export function) L89 - Select the first occurrence of `term` (any case) and scroll to it.
+- `TextSlice` (interface) L27
+- `collectBlocks` (function) L35
+- `strOffsetToDocPos` (function) L50
+- `readSelection` (export function) L63 - Read the current selection (even across multiple table cells or paragraphs) as { quote, start }.
+- `locate` (export function) L73 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
+- `NoteOptions` (interface) L104
+- `NoteMarks` (export const) L110 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
+- `findAndSelect` (export function) L154 - Select the first occurrence of `term` (any case) and scroll to it.

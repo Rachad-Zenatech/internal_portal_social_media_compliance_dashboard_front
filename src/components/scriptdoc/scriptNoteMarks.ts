@@ -24,20 +24,80 @@ export class LatestProps {
 
 export const notesKey = new PluginKey<DecorationSet>("scriptDocNotes");
 
-/** Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit). */
-export function locate(doc: PMNode, note: DocNote): { from: number; to: number } | null {
-  let best: { from: number; to: number } | null = null;
+interface TextSlice {
+  from: number;
+  to: number;
+  strStart: number;
+  strEnd: number;
+  text: string;
+}
+
+function collectBlocks(doc: PMNode): { joined: string; slices: TextSlice[] } {
+  const slices: TextSlice[] = [];
+  let cursor = 0;
   doc.descendants((node, pos) => {
     if (!node.isTextblock) return true;
     const text = node.textContent;
-    let at = text.indexOf(note.quote);
-    while (at >= 0) {
-      const from = pos + 1 + at;
-      if (!best || Math.abs(from - note.start) < Math.abs(best.from - note.start)) best = { from, to: from + note.quote.length };
-      at = text.indexOf(note.quote, at + 1);
-    }
+    if (slices.length > 0) cursor += 1; // "\n" separator between textblocks
+    const strStart = cursor;
+    cursor += text.length;
+    slices.push({ from: pos + 1, to: pos + 1 + node.content.size, strStart, strEnd: cursor, text });
     return false;
   });
+  return { joined: slices.map((s) => s.text).join("\n"), slices };
+}
+
+function strOffsetToDocPos(slices: TextSlice[], offset: number, preferEnd = false): number {
+  for (let i = 0; i < slices.length; i++) {
+    const s = slices[i];
+    if (offset < s.strStart) return s.from;
+    if (offset <= s.strEnd) {
+      if (preferEnd && offset === s.strStart && i > 0) return slices[i - 1].to;
+      return s.from + (offset - s.strStart);
+    }
+  }
+  return slices.length ? slices[slices.length - 1].to : 0;
+}
+
+/** Read the current selection (even across multiple table cells or paragraphs) as { quote, start }. */
+export function readSelection(editor: Editor): { quote: string; start: number } | null {
+  const { from, to, empty } = editor.state.selection;
+  if (empty) return null;
+  const quote = editor.state.doc.textBetween(from, to, "\n").trim();
+  if (!quote) return null;
+  const at = locate(editor.state.doc, { quote, start: from } as DocNote);
+  return { quote, start: at ? at.from : from };
+}
+
+/** Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit). */
+export function locate(doc: PMNode, note: DocNote): { from: number; to: number } | null {
+  if (!note.quote) return null;
+  let best: { from: number; to: number } | null = null;
+  if (!note.quote.includes("\n")) {
+    doc.descendants((node, pos) => {
+      if (!node.isTextblock) return true;
+      const text = node.textContent;
+      let at = text.indexOf(note.quote);
+      while (at >= 0) {
+        const from = pos + 1 + at;
+        if (!best || Math.abs(from - note.start) < Math.abs(best.from - note.start)) best = { from, to: from + note.quote.length };
+        at = text.indexOf(note.quote, at + 1);
+      }
+      return false;
+    });
+    if (best) return best;
+  }
+
+  const { joined, slices } = collectBlocks(doc);
+  let at = joined.indexOf(note.quote);
+  while (at >= 0) {
+    const from = strOffsetToDocPos(slices, at, false);
+    const to = strOffsetToDocPos(slices, at + note.quote.length, true);
+    if (from < to && (!best || Math.abs(from - note.start) < Math.abs(best.from - note.start))) {
+      best = { from, to };
+    }
+    at = joined.indexOf(note.quote, at + 1);
+  }
   return best;
 }
 
@@ -60,15 +120,20 @@ export const NoteMarks = Extension.create<NoteOptions>({
         const at = locate(doc, n);
         if (!at) continue;
         const strong = n.id === active;
-        decos.push(
-          Decoration.inline(at.from, at.to, {
-            class: `script-note script-note-${n.kind}${strong ? " script-note-active" : ""}`,
-            style: n.kind === "highlight"
-              ? `background:${n.color}${strong ? "55" : "33"}`
-              : `border-bottom:2px solid ${n.color};background:${n.color}${strong ? "33" : "14"}`,
-            "data-note": n.id,
-          }),
-        );
+        const attrs = {
+          class: `script-note script-note-${n.kind}${strong ? " script-note-active" : ""}`,
+          style: n.kind === "highlight"
+            ? `background:${n.color}${strong ? "55" : "33"}`
+            : `border-bottom:2px solid ${n.color};background:${n.color}${strong ? "33" : "14"}`,
+          "data-note": n.id,
+        };
+        doc.nodesBetween(at.from, at.to, (node, pos) => {
+          if (!node.isTextblock) return true;
+          const s = Math.max(at.from, pos + 1);
+          const e = Math.min(at.to, pos + 1 + node.content.size);
+          if (s < e) decos.push(Decoration.inline(s, e, attrs));
+          return false;
+        });
       }
       return DecorationSet.create(doc, decos);
     };

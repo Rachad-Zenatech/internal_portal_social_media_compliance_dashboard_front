@@ -171,20 +171,20 @@ export default function ScriptDocPage() {
   const myName = provider?.userName || "Someone";
   const myColor = doc?.my_color ?? "#2563eb";
   const putNote = (n: DocNote) => provider?.notes.getMap<DocNote>("notes").set(n.id, n);
-  const addNote = (kind: "highlight" | "comment", text: string, sel: { quote: string; start: number }) => {
+  const addNote = (kind: "highlight" | "comment", text: string, sel: { quote: string; start: number }, color?: string) => {
     putNote({
-      id: crypto.randomUUID(), kind, quote: sel.quote, start: sel.start, text, color: myColor, author_id: me, author_name: myName,
+      id: crypto.randomUUID(), kind, quote: sel.quote, start: sel.start, text, color: color || myColor, author_id: me, author_name: myName,
       created_at: new Date().toISOString(), resolved: false, replies: [],
     });
     setTab("notes");
   };
-  const startNote = (kind: "highlight" | "comment") => {
+  const startNote = (kind: "highlight" | "comment", color?: string) => {
     const sel = editor.current?.selection();
     if (!sel) {
-      toast.info("Select some wording inside one paragraph or cell first.");
+      toast.info("Select some wording in the script first.");
       return;
     }
-    if (kind === "highlight") addNote("highlight", "", sel);
+    if (kind === "highlight") addNote("highlight", "", sel, color);
     else {
       setComposer(sel);
       setTab("notes");

@@ -62,20 +62,20 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
 - src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
-- src/components/scriptdoc/CollabEditor.tsx (224 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
+- src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (135 lines) - The button that opens the details, with how many are still to fill in.
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
-- src/components/scriptdoc/DocEditorColumn.tsx (112 lines) - Highlight and Comment, in the editor's toolbar.
+- src/components/scriptdoc/DocEditorColumn.tsx (203 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
 - src/components/scriptdoc/DocSidePanel.tsx (337 lines) - The box for the comment on the wording that was selected.
 - src/components/scriptdoc/EditorLayoutBar.tsx (60 lines) - For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text.
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (320 lines) - script doc hub (components scriptdoc)
-- src/components/scriptdoc/ScriptMirrorEditor.tsx (117 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
+- src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/SharedEditorFrame.tsx (173 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
-- src/components/scriptdoc/scriptNoteMarks.ts (102 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
 - src/components/submissions/CanvaReimportBar.tsx (80 lines) - Changes were requested: offer "Reimport & resubmit".
