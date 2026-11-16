@@ -18,43 +18,43 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `navigate` (fn) L321
     - `queryClient` (fn) L326
     - `optionsQuery` (fn) L328
-    - `markEdited` (fn) L421
-    - `accounts` (fn) L427
-    - `reviewersQuery` (fn) L429
-    - `reviewerOptions` (fn) L434
-    - `approverOptions` (fn) L440 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-    - `suggesterOptions` (fn) L441
-    - `selectedAccounts` (fn) L444
-    - `brandAccounts` (fn) L448
-    - `scriptStage` (fn) L463 - the script stage (required: false) work as they always did.
-    - `duplicatesQuery` (fn) L468
-    - `refreshScript` (fn) L478
-    - `sentBack` (fn) L493
-    - `applyServer` (fn) L528 - ----- Load an existing draft (S08 resume) -----
-    - `buildPayload` (fn) L601 - ----- Saving (S01, S02-S04, S06, S08) -----
-    - `save` (fn) L633 - Create the draft if needed, then save the current fields.
-    - `handler` (fn) L676
-    - `saveNow` (fn) L683
-    - `suggestRouting` (fn) L693 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
-    - `onBrandsChange` (fn) L712
-    - `onAccountsChange` (fn) L721
-    - `onAudiencesChange` (fn) L734
-    - `uploadFiles` (fn) L741 - ----- Files (S05, S07) -----
-    - `removeFile` (fn) L805
-    - `replaceMain` (fn) L821 - Swap the main file for a new one (the revision workspace's "Replace video").
-    - `onCanvaImported` (fn) L845
-    - `reimportCanva` (fn) L853 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - `atApprovalTime` (fn) L879 - Need approval by": the picked day at the chosen time, never after the publish time.
-    - `pickApproval` (fn) L880
-    - `isMissing` (fn) L905
-    - `errorFor` (fn) L907
-    - `titleOf` (fn) L919 - A step's name as the step bar shows it (a post sent back has its own six).
-    - `detailsMissing` (fn) L922 - What the post still needs before its compliance check, sentiment analysis and public mood can be run.
-    - `toolView` (fn) L928
-    - `goToStep` (fn) L929
-    - `repostKey` (fn) L941
-    - `leaveDetails` (fn) L944 - Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate.
-    - `wideCompliance` (fn) L980 - The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
+    - `markEdited` (fn) L422
+    - `accounts` (fn) L428
+    - `reviewersQuery` (fn) L430
+    - `reviewerOptions` (fn) L435
+    - `approverOptions` (fn) L441 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn) L442
+    - `selectedAccounts` (fn) L445
+    - `brandAccounts` (fn) L449
+    - `scriptStage` (fn) L464 - the script stage (required: false) work as they always did.
+    - `duplicatesQuery` (fn) L469
+    - `refreshScript` (fn) L479
+    - `sentBack` (fn) L497
+    - `applyServer` (fn) L532 - ----- Load an existing draft (S08 resume) -----
+    - `buildPayload` (fn) L605 - ----- Saving (S01, S02-S04, S06, S08) -----
+    - `save` (fn) L637 - Create the draft if needed, then save the current fields.
+    - `handler` (fn) L680
+    - `saveNow` (fn) L687
+    - `suggestRouting` (fn) L697 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
+    - `onBrandsChange` (fn) L716
+    - `onAccountsChange` (fn) L725
+    - `onAudiencesChange` (fn) L737
+    - `uploadFiles` (fn) L744 - ----- Files (S05, S07) -----
+    - `removeFile` (fn) L810
+    - `replaceMain` (fn) L826 - Swap the main file for a new one (the revision workspace's "Replace video").
+    - `onCanvaImported` (fn) L850
+    - `reimportCanva` (fn) L858 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - `atApprovalTime` (fn) L884 - Need approval by": the picked day at the chosen time, never after the publish time.
+    - `pickApproval` (fn) L885
+    - `isMissing` (fn) L910
+    - `errorFor` (fn) L912
+    - `titleOf` (fn) L923
+    - `detailsMissing` (fn) L925
+    - `toolView` (fn) L930
+    - `goToStep` (fn) L931
+    - `repostKey` (fn) L942
+    - `leaveDetails` (fn) L944
+    - `wideCompliance` (fn) L980
     - `backToCaption` (fn) L981
     - `openStep` (fn) L985
     - `runComplianceCheck` (fn) L990 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.

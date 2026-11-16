@@ -17,6 +17,7 @@ const ApprovalPaths = lazy(() => import("./pages/Configurations/ApprovalPaths"))
 const RoleGroupPermissions = lazy(() => import("./pages/Configurations/RoleGroupPermissions"));
 const RoleApiPermissions = lazy(() => import("./pages/Configurations/RoleApiPermissions"));
 const RoleMcpToolPermissions = lazy(() => import("./pages/Configurations/RoleMcpToolPermissions"));
+const TrainingDataPage = lazy(() => import("./pages/Configurations/TrainingDataPage"));
 const SocialMediaPage = lazy(() => import("./pages/SocialMedia/SocialMediaPage"));
 const OAuthIntegrations = lazy(() => import("./pages/Configurations/OAuthIntegrations"));
 const OAuthCallbackPage = lazy(() => import("./pages/Configurations/OAuthCallbackPage"));
@@ -73,6 +74,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES", element: <RoleGroupPermissions /> },
   { path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS", element: <RoleApiPermissions /> },
   { path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS", element: <RoleMcpToolPermissions /> },
+  { path: "/configurations/training-data", navigationCode: "AUDIT_LOG", element: <TrainingDataPage /> },
   { path: "/log/audit", navigationCode: "AUDIT_LOG", element: <AuditLog /> },
   { path: "/log/system-logs", navigationCode: "AUDIT_LOG", element: <SystemLogsPage /> },
 ];

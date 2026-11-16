@@ -146,14 +146,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
 - `AiUsage` (export type) L218
 
-## src/types/sourceLink.ts (63 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
+## src/types/sourceLink.ts (64 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - `SubmissionSourceFields` (export interface) L1
-- `SourceLinkClaim` (export interface) L5
-- `SourceLinkCheck` (export interface) L20
-- `ImageSourceCitation` (export interface) L35
-- `ImageSourceScanResponse` (export interface) L41
-- `PastedSourceRequest` (export interface) L53 - A whole article pasted in as the source, for pages the checker can't open.
-- `ImageSourceScanJob` (export interface) L59
+- `SourceLinkClaim` (export interface) L6
+- `SourceLinkCheck` (export interface) L21
+- `ImageSourceCitation` (export interface) L36
+- `ImageSourceScanResponse` (export interface) L42
+- `PastedSourceRequest` (export interface) L54 - A whole article pasted in as the source, for pages the checker can't open.
+- `ImageSourceScanJob` (export interface) L60
 
 ## src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
 - `SourceConfirmation` (export interface) L3

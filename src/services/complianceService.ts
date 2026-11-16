@@ -123,6 +123,11 @@ export interface ComplianceViolation {
   /** The sentence the wording sits in, and the lines around it. */
   passage?: string | null;
   context?: string | null;
+  /** Where the checker found the issue in image/video media, as fractions of its rendered frame. */
+  region_x?: number | null;
+  region_y?: number | null;
+  region_w?: number | null;
+  region_h?: number | null;
 }
 
 /**

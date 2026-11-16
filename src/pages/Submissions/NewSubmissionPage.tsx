@@ -330,6 +330,7 @@ export default function NewSubmissionPage() {
 
   // Submission identity and server state
   const [submissionId, setSubmissionId] = useState<string | null>(routeId);
+  const [startAnalysesFor, setStartAnalysesFor] = useState<string | null>(null);
   const [referenceCode, setReferenceCode] = useState<string | null>(null);
   const [status, setStatus] = useState<SubmissionStatus>("DRAFT");
   const [loadingExisting, setLoadingExisting] = useState(Boolean(routeId));
@@ -402,7 +403,7 @@ export default function NewSubmissionPage() {
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
   const [lastCheckMs, setLastCheckMs] = useState<number | null>(null);
-  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]);
+  const [localSourceChecking, setLocalSourceChecking] = useState<string[]>([]); const [autoScanImageId, setAutoScanImageId] = useState<string | null>(null);
   // The earlier post this one repeats on another date, while the creator is asked whether to send it again.
   const [repostAsk, setRepostAsk] = useState<DuplicateMatch | null>(null);
   // The repost (same post, another date) the creator already said yes to, so sending doesn't ask again.
@@ -477,10 +478,13 @@ export default function NewSubmissionPage() {
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
-  // Live public mood & news sentiment for the post's topics.
   const { mood, isLoading: moodLoading, run: refreshMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  // The same query the sentiment panel uses, so the step bar knows when it has run (no extra request).
-  const { analysis: sentimentAnalysis } = useSentiment(submissionId);
+  const { analysis: sentimentAnalysis, run: runSentiment } = useSentiment(submissionId);
+  useEffect(() => {
+    if (startAnalysesFor && startAnalysesFor === submissionId) {
+      setStartAnalysesFor(null); void refreshMood(); runSentiment.mutate();
+    }
+  }, [refreshMood, runSentiment, startAnalysesFor, submissionId]);
 
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
@@ -730,7 +734,6 @@ export default function NewSubmissionPage() {
     suggestRouting({ brands, audiences, accounts: next });
     markEdited();
   };
-
   const onAudiencesChange = (values: string[]) => {
     setAudiences(values);
     suggestRouting({ brands, audiences: values, accounts: selectedAccounts });
@@ -790,8 +793,10 @@ export default function NewSubmissionPage() {
           link_url: `/submissions/new?id=${id}`,
         });
         const saved = await uploadPromise;
-        // The server keeps one script: the new one replaces any earlier one.
         setFiles((prev) => [...(kind === "SCRIPT" ? prev.filter((f) => f.kind !== "SCRIPT") : prev), saved]);
+        if (file.type.startsWith("image/") || saved.mime_type?.startsWith("image/")) {
+          setAutoScanImageId(saved.id);
+        }
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       } finally {
@@ -909,21 +914,18 @@ export default function NewSubmissionPage() {
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
 
-  // ---- The five steps: one at a time (?step=), and the later ones wait until the details are filled in ----
+  // The five steps: one at a time (?step=), and the later ones wait until the details are filled in.
   const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? stepParam : "details";
   // Sent back, the first step is the reviewers' suggestions (where it opens unless another step is asked for).
   const onSuggestions = resubmitting && Boolean(submissionId) && (stepParam === "suggestions" || !stepParam);
   const currentStep: EditorStep = onSuggestions ? "suggestions" : stepView;
   const onDetails = stepView === "details" && !onSuggestions;
-  /** A step's name as the step bar shows it (a post sent back has its own six). */
   const titleOf = (step: EditorStep) => (resubmitting ? REVISION_TITLE[step] : STEP_TITLE[step as PostStepKey]);
   const SENDING_FIELDS = ["reviewer_ids", "approval_needed_by", "publish_at"];
-  // What the post still needs before its compliance check, sentiment analysis and public mood can be run.
   const detailsMissing = (Object.entries(clientMissing) as [keyof typeof clientMissing, boolean][])
     .filter(([key, missing]) => missing && !SENDING_FIELDS.includes(key))
     .map(([key]) => MISSING_LABEL[key] ?? key);
   const detailsComplete = detailsMissing.length === 0;
-  // A video's script is approved first; until then its own flow handles the later steps.
   const gated = !onDetails && !videoLocked && !detailsComplete;
   const toolView = (step: PostStepKey) => stepView === step && !gated;
   const goToStep = (step: EditorStep) =>
@@ -936,11 +938,9 @@ export default function NewSubmissionPage() {
   const [continuing, setContinuing] = useState(false);
   const [dupChecked, setDupChecked] = useState<{ report: DuplicateReport; edit: number } | null>(null);
   const [repostTarget, setRepostTarget] = useState<PostStepKey | null>(null);
-  // The repost question came from the compliance check: once confirmed, the check runs.
   const [repostForCheck, setRepostForCheck] = useState(false);
   const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
 
-  /** Moving on from the details: every required field is in, the draft is saved, and the post is not a duplicate. */
   const leaveDetails = async (target: PostStepKey) => {
     setShowErrors(true);
     if (!detailsComplete) {
@@ -959,8 +959,8 @@ export default function NewSubmissionPage() {
           return;
         }
         if (report.repost) {
-          // The same post went out before, on another date: ask before going on (the answer holds when it is sent).
           if (repostOk === repostKey(report.repost)) {
+            void runComplianceCheck();
             goToStep(target);
             return;
           }
@@ -969,6 +969,7 @@ export default function NewSubmissionPage() {
           return;
         }
       }
+      void runComplianceCheck();
       goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
@@ -976,7 +977,6 @@ export default function NewSubmissionPage() {
       setContinuing(false);
     }
   };
-  // The compliance step has its own two columns (score and findings, your post marked up), so it takes the whole width.
   const wideCompliance = (toolView("compliance") || toolView("sentiment")) && !videoLocked;
   const backToCaption = () => {
     goToStep("details");
@@ -1021,7 +1021,7 @@ export default function NewSubmissionPage() {
       const updated = await running;
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
-      setLastCheckMs(Date.now() - started);
+      setLastCheckMs(Date.now() - started); setStartAnalysesFor(id!);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
@@ -2125,11 +2125,10 @@ export default function NewSubmissionPage() {
                 <CaptionExtras
                   platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
                   limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
-                  submissionId={submissionId} readOnly={readOnly} uploadedFiles={files}
+                  submissionId={submissionId} readOnly={readOnly} uploadedFiles={files} savedSourceChecks={checkedSub?.source_link_checks}
                   ensureSubmissionId={() => save({ force: true })}
-                  onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }}
-                  onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
-                  onSourceCheckActivityChange={setLocalSourceChecking}
+                  onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }} onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
+                  onSourceCheckActivityChange={setLocalSourceChecking} autoScanImageId={autoScanImageId}
                 />
                 {isMissing("caption") && (
                   <p className="text-[11px] text-red-600">
@@ -2530,6 +2529,7 @@ export default function NewSubmissionPage() {
                     } else if (repostTarget) {
                       const target = repostTarget;
                       setRepostTarget(null);
+                      setStartAnalysesFor(submissionId);
                       goToStep(target);
                     } else {
                       submit(true);

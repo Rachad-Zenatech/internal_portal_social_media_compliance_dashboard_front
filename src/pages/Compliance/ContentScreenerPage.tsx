@@ -713,14 +713,14 @@ function ReviewPanel({
   const { analysis: sentiment } = useSentiment(s.id);
   const { mood, isLoading: moodLoading, dismissTopic, hasRun: moodHasRun, run: runMood } = usePublicMood(s.id, true);
   // A suggesting reviewer comments but doesn't decide.
-  const { isSuggester } = useAuth();
+  const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
   const canComment = (canReview || isSuggester) && s.status === "IN_REVIEW";
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [picked, tab]);
   const moodDecision = overallPostDecision(mood);
-  const check = s.latest_check;
+  const check = s.latest_check; const showingCompliance = tab === "compliance" && sourceView === "review";
   const score = scoreOf(s);
   // Open: still needs attention. Cleared triggers don't; violations cost points, the rest are warnings.
   const open = flags.filter((f) => !dismissed.has(f.v.rule_id) && statusOf(f.v) !== "CLEARED");
@@ -811,7 +811,8 @@ function ReviewPanel({
 
       {/* Tab content */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
-        {tab === "compliance" && (
+        {tab === "compliance" && <SourceChecks checks={check?.source_checks} submissionId={s.id} onViewChange={setSourceView} />}
+        {showingCompliance && (
         <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-4">
           <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
             <span className="text-center leading-none">
@@ -841,11 +842,10 @@ function ReviewPanel({
                 {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
               </p>
             )}
-            <SourceChecks checks={check?.source_checks} submissionId={s.id} />
           </div>
         </div>
         )}
-        {tab === "compliance" && dismissedFlags.length > 0 && (
+        {showingCompliance && dismissedFlags.length > 0 && (
           <section className="flex flex-col gap-2.5">
             <p className="text-[13px] font-bold text-violet-800 dark:text-violet-300">Dismissed ({dismissedFlags.length})</p>
             {dismissedFlags.map((f) => {
@@ -900,7 +900,7 @@ function ReviewPanel({
             })}
           </section>
         )}
-        {tab === "compliance" &&
+        {showingCompliance &&
           (flags.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
               <CheckCircle2 className="mx-auto w-7 h-7 text-emerald-500" />
@@ -987,7 +987,7 @@ function ReviewPanel({
               ))}
             </>
           ))}
-        {tab === "compliance" && manual.length > 0 && (
+        {showingCompliance && manual.length > 0 && (
           <div className="rounded-xl border border-border/70 p-3.5">
             <p className="text-sm font-semibold text-foreground">Check by hand</p>
             <p className="mb-2 text-xs text-muted-foreground">The text check can't test these. You confirm them when you approve.</p>

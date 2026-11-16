@@ -5,6 +5,7 @@ import ClaimVsSource from "@/components/submissions/ClaimVsSource";
 import SourceTrustBar from "@/components/submissions/SourceTrustBar";
 import { SourceConfirmationsProvider } from "@/components/submissions/sourceConfirmationsContext";
 import type { SourceCheck, SourceClaim, SourceVerdict } from "@/services/complianceService";
+import type { SourceLinkCheck } from "@/types/sourceLink";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
   SUPPORTED: { label: "Matches the source", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
@@ -25,6 +26,33 @@ const WHERE: Record<SourceCheck["where"], string> = {
   image: "cited on the image",
   attached: "attached document",
 };
+
+/** Keep quick checks made from Post details visible when the rulebook response omitted that URL. */
+function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<string, SourceLinkCheck>): SourceCheck[] {
+  const merged = [...(checks ?? [])];
+  const knownUrls = new Set(
+    merged
+      .filter((check) => check.kind === "URL")
+      .flatMap((check) => [check.url, check.reference])
+      .filter((url): url is string => Boolean(url))
+      .map((url) => url.toLowerCase())
+  );
+
+  for (const [url, saved] of Object.entries(savedChecks ?? {})) {
+    if (knownUrls.has(url.toLowerCase())) continue;
+    merged.push({
+      ...saved,
+      reference: saved.reference || url,
+      where: saved.where ?? "caption",
+      claims: saved.claims.map((claim) => ({
+        ...claim,
+        where: claim.where ?? "caption",
+        confidence: claim.confidence ?? 0,
+      })),
+    });
+  }
+  return merged;
+}
 
 function counts(claims: SourceClaim[]) {
   const n = (v: SourceVerdict) => claims.filter((c) => c.verdict === v).length;
@@ -139,21 +167,25 @@ export function SourceCheckingNotice({ items }: { items?: string[] }) {
 /** Card rendered on the compliance step when source checks exist or a source is being checked in the background. */
 export function SourcesCheckedSection({
   checks,
+  savedChecks,
   checking,
   submissionId,
   className = "",
 }: {
   checks?: SourceCheck[] | null;
+  /** Results saved by quick-checking links in Post details. */
+  savedChecks?: Record<string, SourceLinkCheck>;
   checking?: string[];
   submissionId?: string | null;
   className?: string;
 }) {
-  if ((checks?.length ?? 0) === 0 && (checking?.length ?? 0) === 0) return null;
+  const sourceChecks = mergeSourceChecks(checks, savedChecks);
+  if (sourceChecks.length === 0 && (checking?.length ?? 0) === 0) return null;
   return (
     <section className={className}>
       <h2 className="text-lg font-bold text-foreground">Sources checked</h2>
       <SourceCheckingNotice items={checking} />
-      <SourceChecks checks={checks} submissionId={submissionId} />
+      <SourceChecks checks={sourceChecks} submissionId={submissionId} />
     </section>
   );
 }
@@ -164,29 +196,54 @@ export function SourcesCheckedSection({
  */
 export default function SourceChecks({
   checks,
+  savedChecks,
   submissionId,
   className = "",
+  onViewChange,
 }: {
   checks?: SourceCheck[] | null;
+  /** Results saved by quick-checking links in Post details. */
+  savedChecks?: Record<string, SourceLinkCheck>;
   /** The post: with it, calls on the sources are saved and each source's standing with reviewers is shown. */
   submissionId?: string | null;
   className?: string;
+  /** Lets a parent show source checks separately from its compliance findings. */
+  onViewChange?: (view: "checks" | "review") => void;
 }) {
-  if (!checks || checks.length === 0) return null;
-  const links = checks.filter((c) => c.kind === "URL").length;
-  const urls = [...new Set(checks.flatMap((c) => [c.url, ...c.claims.map((k) => k.source_url)]).filter(Boolean) as string[])];
+  const sourceChecks = mergeSourceChecks(checks, savedChecks);
+  const [activeTab, setActiveTab] = useState<"checks" | "review">(onViewChange ? "review" : "checks");
+  if (sourceChecks.length === 0) return null;
+  const links = sourceChecks.filter((c) => c.kind === "URL").length;
+  const needsReview = sourceChecks.filter((source) => {
+    const { wrong, open } = counts(source.claims);
+    return source.status !== "READ" || wrong > 0 || open > 0;
+  });
+  const visibleChecks = activeTab === "review" ? needsReview : sourceChecks;
+  const urls = [...new Set(sourceChecks.flatMap((c) => [c.url, ...c.claims.map((k) => k.source_url)]).filter(Boolean) as string[])];
   return (
     <SourceConfirmationsProvider submissionId={submissionId} urls={urls}>
     <div className={`space-y-1.5 text-[11px] ${className}`}>
-      <p className="flex items-center gap-1.5 font-semibold text-foreground">
+      <div className="flex items-center gap-1.5 font-semibold text-foreground">
         {links > 0 ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
-        Sources checked ({checks.length})
-      </p>
-      <ul className="space-y-1.5">
-        {checks.map((c) => (
-          <Row key={`${c.kind}-${c.reference}`} source={c} />
-        ))}
-      </ul>
+        Sources checked ({sourceChecks.length})
+      </div>
+      <div role="tablist" aria-label="Source check results" className="flex gap-1 border-b border-border/60">
+        <button type="button" role="tab" aria-selected={activeTab === "review"} onClick={() => { setActiveTab("review"); onViewChange?.("review"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "review" ? "border-amber-600 text-amber-700 dark:text-amber-300" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          Needs review ({needsReview.length})
+        </button>
+        <button type="button" role="tab" aria-selected={activeTab === "checks"} onClick={() => { setActiveTab("checks"); onViewChange?.("checks"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "checks" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          Check source ({sourceChecks.length})
+        </button>
+      </div>
+      {(!onViewChange || activeTab === "checks") && (visibleChecks.length > 0 ? (
+        <ul role="tabpanel" className="space-y-1.5">
+          {visibleChecks.map((c, index) => (
+            <Row key={`${c.kind}-${c.reference}-${index}`} source={c} />
+          ))}
+        </ul>
+      ) : (
+        <p role="tabpanel" className="rounded-lg border border-dashed border-border/60 px-2.5 py-3 text-muted-foreground">All source claims are supported.</p>
+      ))}
     </div>
     </SourceConfirmationsProvider>
   );
