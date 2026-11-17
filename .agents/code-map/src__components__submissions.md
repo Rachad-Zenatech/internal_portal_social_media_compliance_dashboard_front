@@ -144,6 +144,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L3
 - `MediaFindingOverlay` (export function) L9 - Only measured regions are shown; never place a finding in an arbitrary area.
 
+## src/components/submissions/MediaFindingOverlay.tsx (33 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- `Props` (interface) L3
+- `MediaFindingOverlay` (export function) L9 - Only measured regions are shown; never place a finding in an arbitrary area.
+
+## src/components/submissions/MediaFindingOverlay.tsx (33 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- `Props` (interface) L3
+- `MediaFindingOverlay` (export function) L9 - Only measured regions are shown; never place a finding in an arbitrary area.
+
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.
 - `MoodBar` (export function) L18 - Positive / neutral / negative share of mentions.
@@ -286,14 +294,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ResultHeading` (function) L32
 - `SourceCheckResult` (export function) L44 - What checking one source showed: its title, any message, and each claim's verdict.
 
-## src/components/submissions/SourceChecks.tsx (251 lines) - source checks (components submissions)
+## src/components/submissions/SourceChecks.tsx (252 lines) - source checks (components submissions)
 - `mergeSourceChecks` (function) L31 - Keep quick checks made from Post details visible when the rulebook response omitted that URL.
-- `counts` (function) L57
-- `ClaimRow` (function) L63 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
-- `Row` (function) L78
-- `SourceCheckingNotice` (export function) L148 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
-- `SourcesCheckedSection` (export function) L168 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
-- `SourceChecks` (export function) L197 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+- `counts` (function) L58
+- `ClaimRow` (function) L64 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
+- `Row` (function) L79
+- `SourceCheckingNotice` (export function) L149 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
+- `SourcesCheckedSection` (export function) L169 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
+- `SourceChecks` (export function) L198 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
 
 ## src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
 - `Props` (interface) L13

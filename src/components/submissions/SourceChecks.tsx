@@ -38,13 +38,14 @@ function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<s
       .map((url) => url.toLowerCase())
   );
 
-  for (const [url, saved] of Object.entries(savedChecks ?? {})) {
-    if (knownUrls.has(url.toLowerCase())) continue;
+  const checksMap = savedChecks && typeof savedChecks === "object" ? savedChecks : {};
+  for (const [url, saved] of Object.entries(checksMap)) {
+    if (!saved || knownUrls.has(url.toLowerCase())) continue;
     merged.push({
       ...saved,
       reference: saved.reference || url,
       where: saved.where ?? "caption",
-      claims: saved.claims.map((claim) => ({
+      claims: (saved.claims ?? []).map((claim) => ({
         ...claim,
         where: claim.where ?? "caption",
         confidence: claim.confidence ?? 0,
