@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/FlaggedVideo.tsx (40 lines) - Video frame with the compliance checker’s yellow finding boxes.
+## src/components/submissions/FlaggedVideo.tsx (44 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - `FlaggedVideo` (export function) L7 - Video frame with the compliance checker’s yellow finding boxes.

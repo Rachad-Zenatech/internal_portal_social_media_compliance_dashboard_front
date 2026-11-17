@@ -18,7 +18,14 @@ const REASONS: { value: FlagDismissReason; label: string; hint: string }[] = [
   { value: "OTHER", label: "Other", hint: "Say why below" },
 ];
 
-function CreatorDismissalRequest({ request, canApprove, approving, onApprove }: { request: CreatorFlagDismissalRequest; canApprove: boolean; approving: boolean; onApprove: () => void }) {
+function CreatorDismissalRequest({ request, canApprove, approving, rejecting, onApprove, onReject }: {
+  request: CreatorFlagDismissalRequest;
+  canApprove: boolean;
+  approving: boolean;
+  rejecting: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
   return (
     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
       <ShieldOff className="w-3.5 h-3.5" />
@@ -27,12 +34,21 @@ function CreatorDismissalRequest({ request, canApprove, approving, onApprove }: 
         {request.note ? `: "${request.note}"` : ""}
       </span>
       {canApprove && (
-        <button type="button" className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300" disabled={approving} onClick={onApprove}>
-          {approving && <Loader2 className="w-3 h-3 animate-spin" />} Approve dismissal
+        <button type="button" className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300" disabled={approving || rejecting} onClick={onApprove}>
+          {approving && <Loader2 className="w-3 h-3 animate-spin" />} Allow claim
+        </button>
+      )}
+      {canApprove && (
+        <button type="button" className="inline-flex items-center gap-1 font-semibold text-red-700 hover:underline disabled:opacity-60 dark:text-red-300" disabled={approving || rejecting} onClick={onReject}>
+          {rejecting && <Loader2 className="w-3 h-3 animate-spin" />} Send back for changes
         </button>
       )}
     </span>
   );
+}
+
+function DismissalRejectedNotice() {
+  return <span className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-800 dark:bg-red-500/10 dark:text-red-300"><ShieldOff className="w-3.5 h-3.5" /> Dismissal request declined — changes requested</span>;
 }
 
 function DismissFlagButton({ creatorRequest, evidence, onClick }: { creatorRequest: boolean; evidence: boolean; onClick: () => void }) {
@@ -43,7 +59,7 @@ function DismissFlagButton({ creatorRequest, evidence, onClick }: { creatorReque
       : "This flag is a false alarm. It is kept as an example of what the rule should not catch.";
   return (
     <button type="button" onClick={onClick} title={title} className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground">
-      <ShieldOff className="w-3.5 h-3.5" /> {creatorRequest ? "Request dismissal" : evidence ? "Evidence is on file" : "Dismiss as false alarm"}
+      <ShieldOff className="w-3.5 h-3.5" /> {creatorRequest ? "Add dismissal request" : evidence ? "Evidence is on file" : "Dismiss as false alarm"}
     </button>
   );
 }
@@ -73,7 +89,7 @@ export default function FlagReviewControl({
   /** The flag is a claim that needs a source: the way to clear it is to confirm the evidence is on file. */
   evidence?: boolean;
 }) {
-  const { forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
+  const { forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, rejectCreatorDismissal, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
   const review = forCurrent.get(ruleId);
   const creatorRequest = creatorRequests.get(ruleId);
   const right = confirmed.get(ruleId);
@@ -107,7 +123,8 @@ export default function FlagReviewControl({
   return (
     <>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5" onClick={(e) => e.stopPropagation()}>
-        {creatorRequest?.status === "PENDING" && <CreatorDismissalRequest request={creatorRequest} canApprove={canDismiss} approving={approveCreatorDismissal.isPending} onApprove={() => approveCreatorDismissal.mutate(ruleId)} />}
+        {creatorRequest?.status === "PENDING" && <CreatorDismissalRequest request={creatorRequest} canApprove={canDismiss} approving={approveCreatorDismissal.isPending} rejecting={rejectCreatorDismissal.isPending} onApprove={() => approveCreatorDismissal.mutate(ruleId)} onReject={() => rejectCreatorDismissal.mutate({ ruleId, notes: `The request to dismiss ${ruleNumber} was not approved. Please update this issue before resubmitting.` })} />}
+        {creatorRequest?.status === "REJECTED" && <DismissalRejectedNotice />}
         {right ? (
           <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
             <ThumbsUp className="w-3.5 h-3.5" />
@@ -154,10 +171,10 @@ export default function FlagReviewControl({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle className="text-base">{canRequest ? `Request dismissal of the ${ruleNumber} flag?` : evidence ? `Is the evidence for the ${ruleNumber} claim on file?` : `Dismiss the ${ruleNumber} flag?`}</DialogTitle>
+            <DialogTitle className="text-base">{canRequest ? `Add a dismissal request for the ${ruleNumber} flag?` : evidence ? `Is the evidence for the ${ruleNumber} claim on file?` : `Dismiss the ${ruleNumber} flag?`}</DialogTitle>
             <DialogDescription className="text-xs">
               {canRequest
-                ? "Your request and note are sent to a reviewer. The finding and score do not change unless they approve it."
+                ? "This request is saved with the draft and goes to the reviewer when you send the post for review. The finding and score do not change unless they approve it."
                 : evidence
                 ? "The points this claim cost come back, and the note below is recorded so anyone can find the evidence."
                 : "The score stays as the rulebook found it; your call is recorded beside it with the reason, counts toward how noisy this rule is, and is kept as an example so the check learns what this rule should not catch."}
@@ -195,7 +212,7 @@ export default function FlagReviewControl({
               disabled={(canRequest ? requestDismissal.isPending : dismiss.isPending) || ((reason === "OTHER" || reason === "EVIDENCE_ON_FILE") && !note.trim())}
               onClick={() => (canRequest ? requestDismissal : dismiss).mutate({ ruleId, reason, note: note.trim() || null }, { onSuccess: () => setOpen(false) })}
             >
-              {(canRequest ? requestDismissal.isPending : dismiss.isPending) && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {canRequest ? "Send to reviewer" : "Dismiss flag"}
+              {(canRequest ? requestDismissal.isPending : dismiss.isPending) && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {canRequest ? "Add to post" : "Dismiss flag"}
             </Button>
           </DialogFooter>
         </DialogContent>

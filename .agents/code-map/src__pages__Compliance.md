@@ -30,30 +30,30 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleRunScanner` (fn) L532
 
 ## src/pages/Compliance/ContentScreenerPage.tsx (1557 lines) - content screener page (pages  compliance)
-- `scoreOf` (const) L96
-- `isFailing` (const) L97
-- `hasCritical` (const) L101
-- `deadlineOf` (const) L103 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
-- `matches` (function) L105
-- `dueText` (function) L125 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
-- `CheckingBadge` (function) L140 - Checking · ~35 s" while the post is still being read.
-    - `countdown` (fn) L141
-- `ScoreBadge` (function) L152
-- `Thumb` (function) L165
-- `Flag` (interface) L185
-- `flagsOf` (function) L194
-    - `caption` (fn) L197
-- `escapeRe` (const) L219
-- `HighlightedCaption` (export function) L222 - The caption with every flagged phrase highlighted.
-- `MarkedTerm` (interface) L241 - One flagged phrase in the caption: which rule found it, and whether it was dismissed.
-- `MarkedCaption` (function) L251 - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
-- `TimelinePart` (interface) L301
-- `timelineOf` (export function) L309 - The video split into its checked parts, each coloured by what was found there.
-- `FlaggedMoments` (export function) L321 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
-    - `count` (fn) L338
-- `PostView` (function) L434
-    - `toggle` (fn) L497
-    - `step` (fn) L503
+- `scoreOf` (const) L97
+- `isFailing` (const) L98
+- `hasCritical` (const) L102
+- `deadlineOf` (const) L104 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
+- `matches` (function) L106
+- `dueText` (function) L126 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
+- `CheckingBadge` (function) L141 - Checking · ~35 s" while the post is still being read.
+    - `countdown` (fn) L142
+- `ScoreBadge` (function) L153
+- `Thumb` (function) L166
+- `Flag` (interface) L191
+- `flagsOf` (function) L200
+    - `caption` (fn) L203
+- `escapeRe` (const) L225
+- `HighlightedCaption` (export function) L228 - The caption with every flagged phrase highlighted.
+- `MarkedTerm` (interface) L247 - One flagged phrase in the caption: which rule found it, and whether it was dismissed.
+- `MarkedCaption` (function) L257 - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
+- `TimelinePart` (interface) L307
+- `timelineOf` (export function) L315 - The video split into its checked parts, each coloured by what was found there.
+- `FlaggedMoments` (export function) L327 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
+    - `count` (fn) L344
+- `PostView` (function) L436
+    - `toggle` (fn) L499
+    - `step` (fn) L505
 - `PanelTab` (type) L672
 - `ReviewPanel` (function) L674
     - `canComment` (fn) L714

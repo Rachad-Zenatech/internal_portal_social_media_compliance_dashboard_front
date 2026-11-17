@@ -25,7 +25,6 @@ export default function ReviewerSentimentPanel({
       onSeek={onSeek}
       onApplyRevision={onApplyRevision}
       showTopicTrends={showTopicTrends}
-      design
     />
   );
 }

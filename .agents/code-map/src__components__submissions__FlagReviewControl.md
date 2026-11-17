@@ -4,7 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/FlagReviewControl.tsx (206 lines) - flag review control (components submissions)
+## src/components/submissions/FlagReviewControl.tsx (223 lines) - flag review control (components submissions)
 - `CreatorDismissalRequest` (function) L21
-- `DismissFlagButton` (function) L38
-- `FlagReviewControl` (export function) L55 - A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that.
+- `DismissalRejectedNotice` (function) L50
+- `DismissFlagButton` (function) L54
+- `FlagReviewControl` (export function) L71 - A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that.
