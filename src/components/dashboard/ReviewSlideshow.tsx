@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
  */
 export default function ReviewSlideshow({ slides, label }: { slides: { key: string; node: ReactNode }[]; label: string }) {
   const track = useRef<HTMLUListElement | null>(null);
+  const targetPage = useRef(0);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
   const [pages, setPages] = useState(1);
@@ -31,6 +32,7 @@ export default function ReviewSlideshow({ slides, label }: { slides: { key: stri
     if (!el) return;
     // Opens on the first card, fully in view.
     el.scrollLeft = 0;
+    targetPage.current = 0;
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -39,12 +41,27 @@ export default function ReviewSlideshow({ slides, label }: { slides: { key: stri
 
   const go = (dir: -1 | 1) => {
     const el = track.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.9, behavior: "smooth" });
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const count = Math.max(1, Math.ceil(el.scrollWidth / el.clientWidth - 0.05));
+    const currentPage = max <= 0 ? 0 : Math.round((el.scrollLeft / max) * (count - 1));
+    const basePage = dir === 1 ? Math.max(currentPage, targetPage.current) : Math.min(currentPage, targetPage.current);
+    const nextPage = Math.max(0, Math.min(count - 1, basePage + dir));
+    const left = count <= 1 ? 0 : (max * nextPage) / (count - 1);
+
+    // scrollBy can be ignored while its previous smooth-scroll animation is running.
+    // Jump to a concrete page target instead, so each arrow click always changes sections.
+    targetPage.current = nextPage;
+    el.scrollTo({ left, behavior: "smooth" });
+    setPage(nextPage);
+    setAtStart(nextPage === 0);
+    setAtEnd(nextPage === count - 1);
   };
   const jump = (p: number) => {
     const el = track.current;
     if (!el) return;
     const max = el.scrollWidth - el.clientWidth;
+    targetPage.current = p;
     el.scrollTo({ left: pages <= 1 ? 0 : (max * p) / (pages - 1), behavior: "smooth" });
   };
 

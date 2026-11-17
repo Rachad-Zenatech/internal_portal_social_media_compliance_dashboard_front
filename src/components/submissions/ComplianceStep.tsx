@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
+import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
@@ -108,6 +109,9 @@ export default function ComplianceStep({
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
+  // The editable compliance step is the creator workflow. Creators may request,
+  // but never directly apply, a dismissal.
+  const canRequestDismissal = editable;
   const parts = check ? timelineOf(sub!, duration) : [];
   const selected = findings.find((f) => f.key === picked) ?? null;
 
@@ -260,7 +264,7 @@ export default function ComplianceStep({
             const critical = f.v.traffic_light === "RED";
             const on = f.key === picked;
             const tone = critical || st === "VIOLATION" ? "red" : "amber";
-            const edit = f.where === "Caption" || f.where === "Title" || f.where === "Missing disclaimer";
+            const edit = f.where === "Caption" || f.where === "Title";
             return (
               <article
                 key={f.key}
@@ -293,19 +297,16 @@ export default function ComplianceStep({
                 </button>
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
-                    {f.v.flagged_terms.length > 0 && (
-                      <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">
-                        {f.v.flagged_terms.map((t) => `"${t}"`).join(", ")}
-                      </p>
-                    )}
+                    {f.v.flagged_terms.length > 0 && <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">{f.v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>}
                     <p className="text-[13px] leading-relaxed text-foreground/80">
                       <strong className="font-semibold">What to do:</strong> {f.v.remediation_guidance || f.v.explanation}
                     </p>
                     {editable && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>
-                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : "Replace the media"}
+                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : f.where === "Video" ? "Edit the video" : "Fix in image"}
                       </Button>
                     )}
+                    {canRequestDismissal && f.v.rule_id && <FlagReviewControl submissionId={sub!.id} ruleId={f.v.rule_id} ruleNumber={f.v.rule_number} currentVersion={sub!.current_version} canDismiss={false} canRequest evidence={f.v.status === "EVIDENCE_REQUIRED"} />}
                   </div>
                 )}
               </article>
@@ -387,7 +388,7 @@ export default function ComplianceStep({
 
           {mainFile && isVideo && (
             <>
-              <FlaggedVideo src={authedFileUrl(mainFile.url)} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
+              <FlaggedVideo src={authedFileUrl(mainFile.url)} fileId={mainFile.id} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} currentTime={now} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
               <FlaggedMoments
                 parts={parts}
                 now={now}

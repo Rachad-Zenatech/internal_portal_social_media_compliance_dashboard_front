@@ -102,6 +102,9 @@ export interface ImageFindingRegion {
   y: number;
   w: number;
   h: number;
+  /** Present only for a video-frame region. */
+  start_sec?: number | null;
+  end_sec?: number | null;
 }
 
 export interface ComplianceViolation {

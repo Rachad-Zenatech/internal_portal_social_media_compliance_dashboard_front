@@ -37,7 +37,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `dayName` (const) L11
 - `DayAgenda` (export function) L15 - One day of posts at a time, in time order, with arrows to step through days.
 
-## src/components/dashboard/ReviewSlideshow.tsx (115 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
+## src/components/dashboard/ReviewSlideshow.tsx (132 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
 - `ReviewSlideshow` (export function) L10 - Cards in a row that slides: arrows move a screenful at a time, the dots show where you are and jump there, and the  row can be swiped or ...
 
 ## src/components/dashboard/ReviewerStats.tsx (71 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.

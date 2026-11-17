@@ -6,15 +6,19 @@ import type { ComplianceViolation } from "@/services/complianceService";
 /** Video frame with the compliance checker’s yellow finding boxes. */
 export default function FlaggedVideo({
   src,
+  fileId,
   videoRef,
   findings,
+  currentTime,
   onTime,
   onDuration,
   onPlaying,
 }: {
   src: string;
+  fileId: string;
   videoRef: RefObject<HTMLVideoElement | null>;
   findings: ComplianceViolation[];
+  currentTime: number;
   onTime: (seconds: number) => void;
   onDuration: (seconds: number) => void;
   onPlaying: (playing: boolean) => void;
@@ -33,7 +37,7 @@ export default function FlaggedVideo({
         onPause={() => onPlaying(false)}
         className="max-h-[420px] w-full rounded-xl bg-black"
       />
-      <MediaFindingOverlay findings={findings} />
+      <MediaFindingOverlay findings={findings} fileId={fileId} currentTime={currentTime} showRuleTooltip />
     </div>
   );
 }

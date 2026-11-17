@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/apiClient";
+import { submissionService } from "@/services/submissionService";
 import type { User } from "@/types/auth";
 
 interface SidebarProps {
@@ -25,6 +26,18 @@ function isItemActive(item: NavigationItem, pathname: string, search = ""): bool
     return pathname === "/submissions" || (pathname.startsWith("/submissions/") && pathname !== "/submissions/new");
   }
   return pathname === item.path || (item.path !== "/" && pathname.startsWith(item.path + "/"));
+}
+
+function ReviewerQueueBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span
+      aria-label={`${count} item${count === 1 ? "" : "s"} waiting for review`}
+      className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white"
+    >
+      {count}
+    </span>
+  );
 }
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
@@ -52,6 +65,23 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           u.assigned_roles.length === 0 ||
           u.assigned_roles.every((role) => role.code === "PENDING_USER"))
     ).length || 0;
+
+  // Keep the reviewer-facing navigation useful at a glance, the same way the
+  // admin role-assignment link shows users who still need setup.
+  const reviewerView = hasPermission("CONTENT_REVIEW_VIEW");
+  const { data: reviewCounts } = useQuery({
+    queryKey: ["review-queue", "counts", "sidebar"],
+    queryFn: () => submissionService.reviewQueueCounts("all"),
+    enabled: reviewerView,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+  const navigationCount = (label: string) => {
+    if (!reviewerView || !reviewCounts) return 0;
+    if (label === "Content screener") return reviewCounts.review;
+    if (label === "Script review") return reviewCounts.scripts ?? 0;
+    return 0;
+  };
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -99,7 +129,6 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile & Tablet backdrop overlay */}
       {isOpen && (
         <div
           onClick={onToggle}
@@ -221,6 +250,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   }
 
                   const isMainActive = isItemActive(item, location.pathname, location.search);
+                  const itemCount = navigationCount(item.label);
 
                   return (
                     <Tooltip key={item.path} delayDuration={0}>
@@ -238,10 +268,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             }
                           `}
                         >
-                          {/* A slim bar on the page you're on */}
                           {isMainActive && <span aria-hidden className="absolute -left-3 top-2 bottom-2 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />}
                           <Icon size={18} strokeWidth={2} className={`flex-shrink-0 ${isMainActive ? "" : "text-muted-foreground"}`} />
                           {isOpen && <span className="ml-3 truncate">{item.label}</span>}
+                          {isOpen && <ReviewerQueueBadge count={itemCount} />}
                         </Link>
                       </TooltipTrigger>
                       <TooltipContent side="right" sideOffset={10} className={`font-semibold z-50 ${isOpen ? "hidden" : ""}`}>

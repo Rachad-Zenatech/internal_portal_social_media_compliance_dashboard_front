@@ -123,7 +123,7 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
       submissionService.requestCreatorFlagDismissal(submissionId, v.ruleId, { reason: v.reason, note: v.note }),
     onSuccess: (r) => {
       refresh();
-      toast.success(`${r.rule_number} dismissal request sent to a reviewer.`);
+      toast.success(`${r.rule_number} dismissal request added to this post.`);
     },
     onError: (err) => toast.error(`Couldn't request the dismissal: ${(err as Error).message}`),
   });
@@ -134,6 +134,15 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
       toast.success(`${r.rule_number} creator dismissal approved.`);
     },
     onError: (err) => toast.error(`Couldn't approve the dismissal: ${(err as Error).message}`),
+  });
+  const rejectCreatorDismissal = useMutation({
+    mutationFn: (v: { ruleId: string; notes: string }) =>
+      submissionService.rejectCreatorFlagDismissal(submissionId, v.ruleId, v.notes),
+    onSuccess: () => {
+      refresh();
+      toast.success("Dismissal request declined and post sent back for changes.");
+    },
+    onError: (err) => toast.error(`Couldn't send the post back: ${(err as Error).message}`),
   });
   const confirm = useMutation({
     mutationFn: (v: { ruleId: string; note?: string | null }) => submissionService.confirmFlag(submissionId, v.ruleId, v.note ?? null),
@@ -151,7 +160,7 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
     },
     onError: (err) => toast.error(`Couldn't remove it: ${(err as Error).message}`),
   });
-  return { reviews: query.data ?? [], forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, confirmed, confirm, unconfirm };
+  return { reviews: query.data ?? [], forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, rejectCreatorDismissal, confirmed, confirm, unconfirm };
 }
 
 export function useReviewDecision(submissionId: string, referenceCode: string) {

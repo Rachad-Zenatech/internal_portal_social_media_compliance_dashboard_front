@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ComplianceView.tsx (108 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+## src/components/submissions/ComplianceView.tsx (110 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) L19 - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
