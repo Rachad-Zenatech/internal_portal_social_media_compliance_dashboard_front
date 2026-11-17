@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
-- `CheckCoverage` (export function) L11 - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
+## src/components/submissions/CheckCoverage.tsx (143 lines) - check coverage (components submissions)
+- `CheckCoverage` (export function) L10 - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
