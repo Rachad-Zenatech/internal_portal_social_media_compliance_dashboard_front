@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
-import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, Send, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,7 @@ export interface ReviewTarget {
   created_by?: string | null;
 }
 
-type Mode = "schedule" | "now" | "changes" | null;
+type Mode = "schedule" | "changes" | null;
 
 const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
 
@@ -62,7 +62,7 @@ function defaultPublishTime(planned: Date | null) {
 }
 
 /**
- * The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or
+ * The reviewer's decision for the version in review: approve it for the creator to publish, or
  * send it back with what to change. Only shown to reviewers who may decide on this item.
  */
 export default function ReviewDecisionPanel({
@@ -130,15 +130,6 @@ export default function ReviewDecisionPanel({
         { decision: "APPROVE", notes: notes.trim() || undefined, publish_at: whenDate.toISOString(), confirmed_rules: confirmedRules },
         { onSuccess: () => setMode(null) }
       );
-    } else if (mode === "now") {
-      decide.mutate(
-        { decision: "APPROVE", notes: notes.trim() || undefined, publish_now: true, confirmed_rules: confirmedRules },
-        {
-          onSuccess: () => {
-            setMode(null);
-          },
-        }
-      );
     }
   };
 
@@ -183,14 +174,12 @@ export default function ReviewDecisionPanel({
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("changes")}>
             <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
           </Button>
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("schedule")} disabled={!mayApprove}>
-            <CalendarPlus className="w-3.5 h-3.5" /> Add to calendar
-          </Button>
+
           <Button
             size="sm"
             className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
-            onClick={() => start("now")}
-            disabled={!target.platforms.length || !mayApprove}
+            onClick={() => start("schedule")}
+            disabled={!mayApprove}
           >
             <Check className="w-3.5 h-3.5" /> Approve content
           </Button>
@@ -201,22 +190,18 @@ export default function ReviewDecisionPanel({
           <Button className="col-span-2 h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("schedule")} disabled={!mayApprove}>
             Approve content
           </Button>
-          <Button variant="outline" className={barOutline} onClick={() => start("changes")}>
+          <Button variant="outline" className={`col-span-2 ${barOutline}`} onClick={() => start("changes")}>
             Request changes
           </Button>
-          <Button variant="outline" className={barOutline} onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
-            Approve & post now
-          </Button>
+
         </div>
       ) : (
-      // Three across when the panel is wide enough; otherwise the main action takes its own row.
-      <div className="grid grid-cols-2 @lg:grid-cols-3 gap-2">
-        <Button size="sm" className="col-span-2 @lg:col-span-1 text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
+      // The reviewer can approve the content or request changes.
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="sm" className="text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white" onClick={() => start("schedule")} disabled={!mayApprove}>
           <CalendarPlus className="w-3.5 h-3.5" /> Approve content
         </Button>
-        <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("now")} disabled={!target.platforms.length || !mayApprove}>
-          <Send className="w-3.5 h-3.5" /> Approve & post now
-        </Button>
+
         <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("changes")}>
           <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
         </Button>
@@ -232,13 +217,11 @@ export default function ReviewDecisionPanel({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base">
-              {mode === "changes" ? `Send ${target.reference_code} back for changes` : mode === "now" ? `Approve ${target.reference_code} for immediate publish` : `Approve ${target.reference_code} for creator to publish`}
+              {mode === "changes" ? `Send ${target.reference_code} back for changes` : `Approve ${target.reference_code} for creator to publish`}
             </DialogTitle>
             <DialogDescription className="text-xs">
               {mode === "changes"
                 ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
-                : mode === "now"
-                ? "It's approved and marked ready for the creator to publish immediately."
                 : "It's approved and placed on the content calendar for the creator to publish."}
             </DialogDescription>
           </DialogHeader>
@@ -249,7 +232,7 @@ export default function ReviewDecisionPanel({
                 <Label htmlFor="review-when" className="text-xs font-semibold">Publish on</Label>
                 <DateTimePicker id="review-when" withTime disablePast value={when} onChange={setWhen} />
                 {planned && <p className="text-[11px] text-muted-foreground">Planned by the creator for {format(planned, "EEE MMM d, h:mm a")}.</p>}
-                {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future, or use "Approve & post now".</p>}
+                {whenInPast && <p className="text-[11px] text-red-600">Pick a planned time in the future. The creator handles publishing.</p>}
               </div>
             )}
             {mode !== "changes" && <ManualRulesChecklist rules={manualRules} confirmed={confirmed} onToggle={toggleConfirmed} />}
@@ -268,7 +251,7 @@ export default function ReviewDecisionPanel({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-xs"
-                placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Great post, scheduled for the morning slot."}
+                placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Approved. Ready for you to publish."}
               />
             </div>
             {mode === "changes" && (
@@ -293,7 +276,7 @@ export default function ReviewDecisionPanel({
               onClick={confirm}
             >
               {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "changes" ? "Send back for changes" : mode === "now" ? "Approve for immediate publish" : "Approve & send to creator"}
+              {mode === "changes" ? "Send back for changes" : "Approve & send to creator"}
             </Button>
           </DialogFooter>
         </DialogContent>

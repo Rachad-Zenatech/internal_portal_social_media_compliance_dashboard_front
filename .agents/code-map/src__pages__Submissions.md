@@ -4,21 +4,20 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2577 lines) - new submission page (pages  submissions)
-- `classifyFile` (function) L166 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- `SaveState` (type) L205
-- `timeOptions` (const) L212
-- `timeLabel` (function) L215 - 17:00" -> "5:00 PM".
-- `withTime` (function) L221 - A copy of the date at the given "HH:mm" time.
-- `SentBackHeader` (function) L263 - Who sent the post back, their note, and when it is due back.
-- `EditorStep` (type) L284 - A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last.
+## src/pages/Submissions/NewSubmissionPage.tsx (2684 lines) - new submission page (pages  submissions)
+- `classifyFile` (function) L164 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `SaveState` (type) L203
+- `timeOptions` (const) L210
+- `timeLabel` (function) L213 - 17:00" -> "5:00 PM".
+- `withTime` (function) L219 - A copy of the date at the given "HH:mm" time.
+- `SentBackHeader` (function) L262 - Who sent the post back, their note, and when it is due back.
+- `EditorStep` (type) L283 - A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last.
 - `Section` (function) L294
 - `SummaryRow` (function) L306
 - `NewSubmissionPage` (export function) L320
     - `navigate` (fn) L321
     - `queryClient` (fn) L326
     - `optionsQuery` (fn) L328
-    - `checking` (fn) L399
     - `markEdited` (fn) L421
     - `accounts` (fn) L427
     - `reviewersQuery` (fn) L429
@@ -28,8 +27,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `selectedAccounts` (fn) L444
     - `brandAccounts` (fn) L448
     - `scriptStage` (fn) L463 - the script stage (required: false) work as they always did.
-    - `duplicatesQuery` (fn) L471
-    - `refreshScript` (fn) L481
+    - `duplicatesQuery` (fn) L468
+    - `refreshScript` (fn) L478
+    - `refreshMood` (fn) L482
     - `sentBack` (fn) L495
     - `applyServer` (fn) L530 - ----- Load an existing draft (S08 resume) -----
     - `buildPayload` (fn) L603 - ----- Saving (S01, S02-S04, S06, S08) -----
@@ -55,20 +55,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `goToStep` (fn) L926
     - `repostKey` (fn) L937
     - `leaveDetails` (fn) L939
+    - `wideCompliance` (fn) L973
     - `backToCaption` (fn) L974
     - `openStep` (fn) L978
     - `runComplianceCheck` (fn) L983 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1049
-    - `ranSinceSentBack` (fn) L1056
-    - `submit` (fn) L1065
-    - `exec` (fn) L1209 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1217 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1229
-    - `typedTail` (fn) L1234 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1241 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1265 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1281 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1289
+    - `sourceChecking` (fn) L1052
+    - `ranSinceSentBack` (fn) L1059
+    - `submit` (fn) L1068
+    - `exec` (fn) L1212 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1220 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1232
+    - `typedTail` (fn) L1237 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1244 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1268 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1284 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1292
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
@@ -95,54 +96,54 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) L4 - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1602 lines) - submissions list page (pages  submissions)
-- `Stage` (type) L101 - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
-- `stageOf` (function) L103
-- `tabOf` (function) L113 - The tab a post is counted under.
-- `SortBy` (type) L140
-- `Prefs` (type) L151
-- `loadPrefs` (function) L154
-- `savePrefs` (function) L163
-- `platformName` (const) L171
-- `sortItems` (function) L173
-    - `time` (fn) L175
-- `accountsOf` (const) L184 - Every account it posts through; older data may only have the single primary one.
-- `isVideo` (const) L186
-- `submitLabel` (const) L187
-- `useIsWide` (function) L192
-    - `onChange` (fn) L196
-- `Labels` (interface) L204 - Names for brand and audience codes, from the same options New Submission uses.
-- `StagePill` (function) L214
-- `DueLine` (function) L232 - Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue.
-- `whenText` (function) L244 - When it goes out (or was last touched), with "past due" when a planned time passed without approval.
-- `SubmissionCard` (function) L257
-- `friendlyDate` (function) L349 - Today", "Tomorrow", a weekday within the week ahead, otherwise the date.
-- `statusLine` (function) L360 - One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,  grey when it's waiting on so...
-- `PlatformBadges` (function) L399 - The platforms a post goes to, as their own marks.
-- `EmptyTile` (function) L413 - What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing.
-- `ScoreRing` (function) L428 - The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100.
-- `progressText` (function) L459 - 3 of 5 steps done", or where a sent post is.
-- `PostRow` (function) L463
-- `ReviewCard` (function) L574
-    - `navigate` (fn) L592
-    - `queryClient` (fn) L593
-    - `runCheck` (fn) L608
-    - `openInScreener` (fn) L633
-- `SubmissionsListPage` (export function) L1004
-    - `navigate` (fn) L1016
-    - `isWide` (fn) L1017
-    - `submit` (fn) L1018
-    - `openPost` (fn) L1029 - script a reviewer sent back, opens in the side sheet, which has what each needs.
-    - `openStep` (fn) L1043 - A click on one step opens that step.
-    - `setPrefs` (fn) L1049
-    - `inMonth` (fn) L1086
-    - `stageCounts` (fn) L1089
-    - `platformsInList` (fn) L1104 - Platform options come from what's actually in the list.
-    - `audiencesInList` (fn) L1106 - The audiences that are actually in the list.
-    - `brandsInList` (fn) L1109 - older content, so it can be found.
-    - `managed` (fn) L1110
-    - `visible` (fn) L1115
-    - `paged` (fn) L1134 - 25 to a page; a new filter, search or sort starts again from the first page.
-    - `pager` (fn) L1135
-    - `clearFilters` (fn) L1155
-    - `panel` (fn) L1164
+## src/pages/Submissions/SubmissionsListPage.tsx (1620 lines) - submissions list page (pages  submissions)
+- `Stage` (type) L97 - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
+- `stageOf` (function) L99
+- `tabOf` (function) L109 - The tab a post is counted under.
+- `SortBy` (type) L136
+- `Prefs` (type) L147
+- `loadPrefs` (function) L150
+- `savePrefs` (function) L159
+- `platformName` (const) L167
+- `sortItems` (function) L169
+    - `time` (fn) L171
+- `accountsOf` (const) L180 - Every account it posts through; older data may only have the single primary one.
+- `isVideo` (const) L182
+- `submitLabel` (const) L183
+- `useIsWide` (function) L188
+    - `onChange` (fn) L192
+- `Labels` (interface) L200 - Names for brand and audience codes, from the same options New Submission uses.
+- `StagePill` (function) L210
+- `DueLine` (function) L228 - Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue.
+- `whenText` (function) L240 - When it goes out (or was last touched), with "past due" when a planned time passed without approval.
+- `SubmissionCard` (function) L253
+- `friendlyDate` (function) L345 - Today", "Tomorrow", a weekday within the week ahead, otherwise the date.
+- `statusLine` (function) L356 - One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,  grey when it's waiting on so...
+- `PlatformBadges` (function) L395 - The platforms a post goes to, as their own marks.
+- `EmptyTile` (function) L409 - What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing.
+- `ScoreRing` (function) L424 - The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100.
+- `progressText` (function) L455 - 3 of 5 steps done", or where a sent post is.
+- `PostRow` (function) L464
+- `ReviewCard` (function) L575
+    - `navigate` (fn) L593
+    - `queryClient` (fn) L594
+    - `runCheck` (fn) L609
+    - `openInScreener` (fn) L634
+- `SubmissionsListPage` (export function) L1022
+    - `navigate` (fn) L1034
+    - `isWide` (fn) L1035
+    - `submit` (fn) L1036
+    - `openPost` (fn) L1047 - script a reviewer sent back, opens in the side sheet, which has what each needs.
+    - `openStep` (fn) L1061 - A click on one step opens that step.
+    - `setPrefs` (fn) L1067
+    - `inMonth` (fn) L1104
+    - `stageCounts` (fn) L1107
+    - `platformsInList` (fn) L1122 - Platform options come from what's actually in the list.
+    - `audiencesInList` (fn) L1124 - The audiences that are actually in the list.
+    - `brandsInList` (fn) L1127 - older content, so it can be found.
+    - `managed` (fn) L1128
+    - `visible` (fn) L1133
+    - `paged` (fn) L1152 - 25 to a page; a new filter, search or sort starts again from the first page.
+    - `pager` (fn) L1153
+    - `clearFilters` (fn) L1173
+    - `panel` (fn) L1182

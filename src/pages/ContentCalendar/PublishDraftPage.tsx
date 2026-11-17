@@ -1,3 +1,5 @@
+import PublishPostButton from "@/components/submissions/PublishPostButton";
+import PrePublishMood from "@/components/submissions/PrePublishMood";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +14,6 @@ import {
   FlaskConical,
   Info,
   Loader2,
-  Send,
   ShieldCheck,
   XCircle,
 } from "lucide-react";
@@ -115,7 +116,6 @@ export default function PublishDraftPage() {
     if (running) return;
     setRunning(true);
     setStepIndex(0);
-    // Simulated: each step "takes" a moment. Nothing is sent to the platform.
     steps.forEach((_, i) => {
       timers.current.push(
         window.setTimeout(() => {
@@ -278,11 +278,9 @@ export default function PublishDraftPage() {
                     ))}
                   </ol>
                 )}
+                {isSubmission && rawSub?.status === "APPROVED" && <PrePublishMood submissionId={rawSub.id} canRun={isCreator && !running} />}
                 {isCreator ? (
-                  <Button className="w-full gap-1.5 text-xs font-semibold" disabled={running || overLimit} onClick={start}>
-                    {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {running ? "Working..." : info.action}
-                  </Button>
+                  <PublishPostButton onClick={start} disabled={overLimit} busy={running} label={info.action} />
                 ) : (
                   <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200">
                     This post is approved. As a reviewer, publishing is reserved for the post's creator.

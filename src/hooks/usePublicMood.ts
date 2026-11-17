@@ -11,7 +11,7 @@ import type { MoodVerdict } from "@/types/publicMood";
  * nothing is fetched until `run()` is called (a Run button), and a result already run in this session shows without
  * running it again. `hasRun` says whether there is anything to show; only the Run button starts a check.
  */
-export function usePublicMood(submissionId?: string | null, enabled = true, _autoLoad = false) {
+export function usePublicMood(submissionId?: string | null, enabled = true, _autoLoad = false, publishing = false) {
   const queryClient = useQueryClient();
   const { addJob } = useGlobalProgress();
   const key = ["public-mood", submissionId];
@@ -36,6 +36,7 @@ export function usePublicMood(submissionId?: string | null, enabled = true, _aut
 
   const summarise = useMutation({
     mutationFn: () => {
+      if (!publishing || !enabled) throw new Error("Public mood is available just before publishing.");
       const running = submissionService.summarisePublicMood(submissionId!);
       addJob("Checking for public mood", running, {
         type: "check",
@@ -74,6 +75,7 @@ export function usePublicMood(submissionId?: string | null, enabled = true, _aut
     /** Check the topics again now (the server reuses topic data that's still fresh). */
     /** Run it (or run it again): the first time it is the only thing that loads the mood. */
     run: () => {
+      if (!publishing || !enabled || !submissionId) return Promise.resolve(null);
       setRequestedFor(submissionId ?? null);
       const running = queryClient.fetchQuery({ queryKey: key, queryFn: () => submissionService.getPublicMood(submissionId!), staleTime: 0 });
       addJob("Checking for public mood", running, {
