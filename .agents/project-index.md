@@ -86,7 +86,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CaptionExtras.tsx (52 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 - src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - src/components/submissions/CaptionSuggester.tsx (144 lines) - caption suggester (components submissions)
-- src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
+- src/components/submissions/CheckCoverage.tsx (143 lines) - check coverage (components submissions)
 - src/components/submissions/CheckProgress.tsx (145 lines) - What each AI step of the check is, in the creator's words.
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.

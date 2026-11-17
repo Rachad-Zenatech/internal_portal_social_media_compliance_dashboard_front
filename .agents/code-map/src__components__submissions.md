@@ -33,8 +33,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SuggestionCard` (function) L15
 - `CaptionSuggester` (export function) L46 - Suggest a caption": three captions drafted from the post itself (images, video transcript, title), in the  brand's voice and already run ...
 
-## src/components/submissions/CheckCoverage.tsx (153 lines) - check coverage (components submissions)
-- `CheckCoverage` (export function) L11 - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
+## src/components/submissions/CheckCoverage.tsx (143 lines) - check coverage (components submissions)
+- `CheckCoverage` (export function) L10 - What the rulebook check actually covered: which parts of the post it read, and which applicable rules it can't  test from text at all, so...
 
 ## src/components/submissions/CheckProgress.tsx (145 lines) - What each AI step of the check is, in the creator's words.
 - `stepLabel` (const) L25

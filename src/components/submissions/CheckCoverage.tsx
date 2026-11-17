@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { CheckCircle2, ChevronDown, Eye, FileWarning, Hash, Info, Loader2, UserCheck } from "lucide-react";
+import { CheckCircle2, Eye, FileWarning, Hash, Info, Loader2, UserCheck } from "lucide-react";
 
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import type { StoredCheck } from "@/types/submission";
@@ -9,7 +8,6 @@ import type { StoredCheck } from "@/types/submission";
  * test from text at all, so a clean score isn't mistaken for "every rule passed".
  */
 export default function CheckCoverage({ check, className = "" }: { check: StoredCheck; className?: string }) {
-  const [open, setOpen] = useState(false);
   const manual = check.manual_review_rules ?? [];
   const total = check.rules_checked ?? 0;
   const images = check.images_total ?? 0;
@@ -121,12 +119,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
       )}
       {total > 0 && manual.length > 0 && (
         <div>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            className="flex items-start gap-1.5 text-left hover:text-foreground"
-          >
+          <p className="flex items-start gap-1.5">
             <UserCheck className="mt-px w-3.5 h-3.5 shrink-0" />
             <span>
               {total - manual.length} of {total} rules checked automatically ·{" "}
@@ -134,17 +127,14 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
                 {manual.length} need{manual.length === 1 ? "s" : ""} a reviewer
               </span>
             </span>
-            <ChevronDown className={`mt-px w-3.5 h-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-          </button>
-          {open && (
-            <ul className="mt-1 ml-5 space-y-0.5">
-              {manual.map((m) => (
-                <li key={m.rule_id}>
-                  <RuleNumberBadge v={m} /> {m.title}
-                </li>
-              ))}
-            </ul>
-          )}
+          </p>
+          <ul className="mt-1 ml-5 space-y-0.5">
+            {manual.map((m) => (
+              <li key={m.rule_id}>
+                <RuleNumberBadge v={m} /> {m.title}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
