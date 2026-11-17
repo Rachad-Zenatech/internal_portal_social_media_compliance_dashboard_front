@@ -125,9 +125,7 @@ import type {
   SubmissionUpdate,
 } from "@/types/submission";
 
-// ---------------------------------------------------------------------------
 // Static presentation config (allowed values themselves come from the API)
-// ---------------------------------------------------------------------------
 
 const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
   { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
@@ -137,6 +135,7 @@ const CONTENT_TYPES: { value: ContentType; label: string; description: string; i
   { value: "BLOG", label: "Blog / Article", description: "Long-form content", icon: FileText },
   { value: "AD", label: "Paid Ad", description: "Sponsored post or ad creative", icon: Megaphone },
 ];
+const VISIBLE_CONTENT_TYPES = CONTENT_TYPES.filter(({ value }) => value !== "BLOG" && value !== "AD");
 
 const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
   VIDEO: { main: "your video" },
@@ -1465,7 +1464,7 @@ export default function NewSubmissionPage() {
                     <div className="space-y-2">
                       <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
                       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
-                        {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
+                        {VISIBLE_CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
                           const selected = contentType === value;
                           return (
                             <button
