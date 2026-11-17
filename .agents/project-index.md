@@ -121,7 +121,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PublishPostButton.tsx (13 lines) - publish post button (components submissions)
 - src/components/submissions/ReviewCommentsPanel.tsx (167 lines) - What other pages import from here.
 - src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
-- src/components/submissions/ReviewDecisionPanel.tsx (402 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+- src/components/submissions/ReviewDecisionPanel.tsx (424 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
 - src/components/submissions/ReviewerSentimentPanel.tsx (32 lines) - The expanded sentiment view shared by reviewer-facing screens.
@@ -183,7 +183,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
-- src/hooks/useReview.ts (194 lines) - The comment being replied to, per post.
+- src/hooks/useReview.ts (198 lines) - The comment being replied to, per post.
 - src/hooks/useScript.ts (235 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
@@ -191,6 +191,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
+- src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
@@ -207,6 +208,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/submissionProgress.ts (39 lines) - Use one state for the dots, count and resume link, including script-only requirements.
+- src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/utils.ts (7 lines) - utils (lib)
@@ -276,4 +278,4 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - src/types/sourceLink.ts (64 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
-- src/types/submission.ts (645 lines) - AD: paid social ad.
+- src/types/submission.ts (651 lines) - AD: paid social ad.

@@ -158,9 +158,13 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ReviewDecisionRequest) => submissionService.review(submissionId, data),
-    onSuccess: (_, data) => {
+    onSuccess: (saved, data) => {
       invalidateSubmission(queryClient, submissionId);
-      if (data.decision === "REQUEST_CHANGES") toast.success(`${referenceCode} sent back with your comments. The creator has been notified.`);
+      queryClient.setQueryData(["submission", submissionId], saved);
+      if (data.publish_after_changes && saved.publish_after_changes !== true) {
+        toast.error(`${referenceCode}: the backend did not save permission to publish after changes. This decision still requires another review. The backend needs updating before this action can work.`);
+      } else if (data.publish_after_changes) toast.success(`${referenceCode} sent back with your comments. The creator can publish after making the changes.`);
+      else if (data.decision === "REQUEST_CHANGES") toast.success(`${referenceCode} sent back with your comments. The creator has been notified.`);
       else if (data.publish_now) toast.success(`${referenceCode} approved and ready for the creator to publish.`);
       else toast.success(`${referenceCode} approved and added to the content calendar.`);
     },

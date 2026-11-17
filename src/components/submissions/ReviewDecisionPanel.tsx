@@ -52,7 +52,23 @@ export interface ReviewTarget {
   created_by?: string | null;
 }
 
-type Mode = "schedule" | "changes" | null;
+type Mode = "schedule" | "changes" | "changes_publish" | null;
+
+function ReviewDecisionHeader({ mode, reference }: { mode: Mode; reference: string }) {
+  const title = mode === "changes" || mode === "changes_publish"
+    ? `Send ${reference} back for changes` : `Approve ${reference} for creator to publish`;
+  const description = mode === "changes_publish"
+    ? "The creator gets your feedback, can update the content, and can publish the corrected version directly without another review round."
+    : mode === "changes"
+      ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
+      : "It's approved and placed on the content calendar for the creator to publish.";
+  return (
+    <DialogHeader>
+      <DialogTitle className="text-base">{title}</DialogTitle>
+      <DialogDescription className="text-xs">{description}</DialogDescription>
+    </DialogHeader>
+  );
+}
 
 const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
 
@@ -119,10 +135,16 @@ export default function ReviewDecisionPanel({
   const confirmedRules = manualRules.map((r) => r.rule_number).filter((n) => confirmed.has(n));
 
   const confirm = () => {
-    if (mode === "changes") {
+    if (mode === "changes" || mode === "changes_publish") {
       const due = timelineFields(timeline);
       decide.mutate(
-        { decision: "REQUEST_CHANGES", notes: notes.trim() || undefined, revision_days: due.days, revision_due_at: due.at },
+        {
+          decision: "REQUEST_CHANGES",
+          notes: notes.trim() || undefined,
+          revision_days: due.days,
+          revision_due_at: due.at,
+          publish_after_changes: mode === "changes_publish",
+        },
         { onSuccess: () => setMode(null) }
       );
     } else if (mode === "schedule" && whenDate) {
@@ -174,6 +196,9 @@ export default function ReviewDecisionPanel({
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("changes")}>
             <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
           </Button>
+           <Button variant="outline" size="sm" className="h-9 gap-1.5 border-amber-300 text-xs font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => start("changes_publish")}>
+             <FilePen className="w-3.5 h-3.5" /> Make changes & publish
+           </Button>
 
           <Button
             size="sm"
@@ -193,6 +218,9 @@ export default function ReviewDecisionPanel({
           <Button variant="outline" className={`col-span-2 ${barOutline}`} onClick={() => start("changes")}>
             Request changes
           </Button>
+          <Button variant="outline" className={`col-span-2 ${barOutline} border-amber-300 text-amber-800 dark:border-amber-500/40 dark:text-amber-300`} onClick={() => start("changes_publish")}>
+            Make changes & publish
+          </Button>
 
         </div>
       ) : (
@@ -205,6 +233,9 @@ export default function ReviewDecisionPanel({
         <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("changes")}>
           <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
         </Button>
+        <Button size="sm" variant="outline" className="text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => start("changes_publish")}>
+          <FilePen className="w-3.5 h-3.5" /> Make changes & publish
+        </Button>
       </div>
       )}
       {target.can_delegate && (
@@ -215,16 +246,7 @@ export default function ReviewDecisionPanel({
 
       <Dialog open={mode !== null} onOpenChange={(o) => !o && setMode(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base">
-              {mode === "changes" ? `Send ${target.reference_code} back for changes` : `Approve ${target.reference_code} for creator to publish`}
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              {mode === "changes"
-                ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
-                : "It's approved and placed on the content calendar for the creator to publish."}
-            </DialogDescription>
-          </DialogHeader>
+          <ReviewDecisionHeader mode={mode} reference={target.reference_code} />
 
           <div className="space-y-3">
             {mode === "schedule" && (
@@ -235,15 +257,15 @@ export default function ReviewDecisionPanel({
                 {whenInPast && <p className="text-[11px] text-red-600">Pick a planned time in the future. The creator handles publishing.</p>}
               </div>
             )}
-            {mode !== "changes" && <ManualRulesChecklist rules={manualRules} confirmed={confirmed} onToggle={toggleConfirmed} />}
-            {mode === "changes" && openComments > 0 && (
+            {mode !== "changes" && mode !== "changes_publish" && <ManualRulesChecklist rules={manualRules} confirmed={confirmed} onToggle={toggleConfirmed} />}
+            {(mode === "changes" || mode === "changes_publish") && openComments > 0 && (
               <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Your {openComments} open comment{openComments === 1 ? " is" : "s are"} sent along with this.
               </p>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="review-notes" className="text-xs font-semibold">
-                {mode === "changes" ? (openComments ? "Summary (optional)" : "What needs to change") : "Note to the creator (optional)"}
+                {mode === "changes" || mode === "changes_publish" ? (openComments ? "Summary (optional)" : "What needs to change") : "Note to the creator (optional)"}
               </Label>
               <Textarea
                 id="review-notes"
@@ -251,10 +273,10 @@ export default function ReviewDecisionPanel({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-xs"
-                placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Approved. Ready for you to publish."}
+                placeholder={mode === "changes" || mode === "changes_publish" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Approved. Ready for you to publish."}
               />
             </div>
-            {mode === "changes" && (
+            {(mode === "changes" || mode === "changes_publish") && (
               <RevisionTimelinePicker value={timeline} onChange={setTimeline} publishAt={target.publish_at} />
             )}
           </div>
@@ -268,15 +290,15 @@ export default function ReviewDecisionPanel({
               className={`text-xs gap-1.5 ${mode === "changes" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-700 hover:bg-blue-800 text-white"}`}
               disabled={
                 decide.isPending ||
-                (mode === "changes" && !notes.trim() && openComments === 0) ||
-                (mode === "changes" && !timelineValid(timeline)) ||
+                ((mode === "changes" || mode === "changes_publish") && !notes.trim() && openComments === 0) ||
+                ((mode === "changes" || mode === "changes_publish") && !timelineValid(timeline)) ||
                 (mode === "schedule" && (!whenDate || whenInPast)) ||
-                (mode !== "changes" && !allConfirmed)
+                (mode === "schedule" && !allConfirmed)
               }
               onClick={confirm}
             >
               {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "changes" ? "Send back for changes" : "Approve & send to creator"}
+              {mode === "changes" ? "Send back for changes" : mode === "changes_publish" ? "Send back & allow publishing" : "Approve & send to creator"}
             </Button>
           </DialogFooter>
         </DialogContent>

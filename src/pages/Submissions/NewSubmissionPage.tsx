@@ -92,6 +92,8 @@ import { useBackgroundSourceChecks } from "@/hooks/useBackgroundSourceChecks";
 import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
 import { useReviewComments } from "@/hooks/useReview";
+import { useSubmissionReviewState } from "@/hooks/useSubmissionReviewState";
+import { STEP_TITLE, STEP_DESCRIPTION, submissionRevisionSteps, type EditorStep } from "@/lib/submissionRevisionSteps";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import ScriptStageCard from "@/components/script/ScriptStageCard";
@@ -245,22 +247,6 @@ const MISSING_LABEL: Record<string, string> = {
   rule_sets: "Rule set",
 };
 
-/** The editor shows one of the five steps at a time (?step=). */
-const STEP_TITLE: Record<PostStepKey, string> = {
-  details: "Post details",
-  compliance: "Compliance rules",
-  sentiment: "Sentiment analysis",
-  mood: "Public mood",
-  send: "Send for review",
-};
-const STEP_DESCRIPTION: Record<PostStepKey, string> = {
-  details: "",
-  compliance: "Check your post against the rulebook yourself. Edit and check again as often as you like.",
-  sentiment: "How the tone and messaging may land with your audience. Edit and run it again as often as you like.",
-  mood: "",
-  send: "Pick your reviewers and send it. Once it is sent the post is locked.",
-};
-
 /** Who sent the post back, their note, and when it is due back. */
 function SentBackHeader({ reviewer, note, dueAt }: { reviewer?: string | null; note?: string | null; dueAt?: string | null }) {
   const due = dueInfo(dueAt, "REVISION");
@@ -281,17 +267,6 @@ function SentBackHeader({ reviewer, note, dueAt }: { reviewer?: string | null; n
     </div>
   );
 }
-
-/** A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last. */
-type EditorStep = PostStepKey | "suggestions";
-const REVISION_STEPS: { key: EditorStep; label: string; purpose: string }[] = [
-  { key: "suggestions", label: "Check the suggestions", purpose: "Read what the reviewers said and see where each comment is on the post. Reply to any of them." },
-  { key: "details", label: "Make the changes", purpose: "Change the post as asked: upload a new image, video or script, and edit the caption or details." },
-  { key: "compliance", label: "Compliance", purpose: "Check the changed post against the rulebook again." },
-  { key: "sentiment", label: "Sentiment", purpose: "Run the sentiment analysis again on the changed post." },
-  { key: "send", label: "Reviewers", purpose: "The reviewers stay on the post. Add more people if you like, then resubmit." },
-];
-const REVISION_TITLE = Object.fromEntries(REVISION_STEPS.map((s) => [s.key, s.label])) as Record<EditorStep, string>;
 
 function Section({ title, description, children, id }: { step?: number; title: string; description?: string; children: ReactNode; id?: string }) {
   return (
@@ -394,8 +369,15 @@ export default function NewSubmissionPage() {
   const [reimporting, setReimporting] = useState(false);
   // Saved compliance and the edit count when it last ran.
   const [storedSub, setCheckedSub] = useState<Submission | null>(null);
+  const reviewState = useSubmissionReviewState(storedSub);
+  const publishAfterChanges = reviewState?.status === "CHANGES_REQUESTED" && reviewState.publish_after_changes === true;
   // Sent for review: every step can be looked at, nothing can be changed or run again.
   const [readOnly, setReadOnly] = useState(false);
+  useEffect(() => {
+    if (!reviewState) return;
+    setStatus(reviewState.status);
+    setReadOnly(!reviewState.can_edit);
+  }, [reviewState]);
   const [sentAt, setSentAt] = useState<string | null>(null);
   const [requestChecking, setChecking] = useState(false);
   const checking = useScriptCheckStatus("script", submissionId).length > 0 || requestChecking;
@@ -662,7 +644,7 @@ export default function NewSubmissionPage() {
       });
     return saveChain.current;
   };
-  const { refreshMood, startAutomaticAnalyses } = useAutomaticAnalyses({ submissionId, save, runMood, runSentiment: () => runSentiment.mutate(), onMoodError: (error) => toast.error(`Couldn't run public mood: ${(error as Error).message}`) });
+  const { startAutomaticAnalyses } = useAutomaticAnalyses({ submissionId, save, runMood, runSentiment: () => runSentiment.mutate(), onMoodError: (error) => toast.error(`Couldn't run public mood: ${(error as Error).message}`) });
 
   // Autosave 1.5 s after the last edit.
   useEffect(() => {
@@ -898,8 +880,8 @@ export default function NewSubmissionPage() {
     // Every post needs a caption: the score and the sentiment analysis read it first.
     caption: !scriptOnly && !caption.trim(),
     rule_sets: ruleSets.length === 0,
-    reviewer_ids: pickedApprovers.length === 0,
-    approval_needed_by: !approvalBy,
+    reviewer_ids: !publishAfterChanges && pickedApprovers.length === 0,
+    approval_needed_by: !publishAfterChanges && !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
     publish_at: false,
   };
@@ -909,6 +891,8 @@ export default function NewSubmissionPage() {
 
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
+  const revisionSteps = submissionRevisionSteps(scriptOnly, publishAfterChanges);
+  const revisionTitles = Object.fromEntries(revisionSteps.map((step) => [step.key, step.label])) as Record<EditorStep, string>;
 
   const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? (scriptOnly && stepParam === "sentiment" ? "compliance" : stepParam) : "details";
   const stepNumber = Math.max(1, preparationSteps.findIndex((step) => step.key === stepView) + 1);
@@ -916,7 +900,7 @@ export default function NewSubmissionPage() {
   const onSuggestions = resubmitting && Boolean(submissionId) && (stepParam === "suggestions" || !stepParam);
   const currentStep: EditorStep = onSuggestions ? "suggestions" : stepView;
   const onDetails = stepView === "details" && !onSuggestions;
-  const titleOf = (step: EditorStep) => (resubmitting ? REVISION_TITLE[step] : STEP_TITLE[step as PostStepKey]);
+  const titleOf = (step: EditorStep) => (resubmitting ? revisionTitles[step] : STEP_TITLE[step as PostStepKey]);
   const SENDING_FIELDS = ["reviewer_ids", "approval_needed_by", "publish_at"];
   const detailsMissing = (Object.entries(clientMissing) as [keyof typeof clientMissing, boolean][])
     .filter(([key, missing]) => missing && !SENDING_FIELDS.includes(key))
@@ -1066,13 +1050,13 @@ export default function NewSubmissionPage() {
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
     const badDates: string[] = [];
-    if (publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
-    if (approvalBy && approvalBy.getTime() < Date.now()) badDates.push("approval_needed_by");
+    if (!publishAfterChanges && publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
+    if (!publishAfterChanges && approvalBy && approvalBy.getTime() < Date.now()) badDates.push("approval_needed_by");
     if (badDates.length) {
       missingNow.push(...badDates.filter((d) => !missingNow.includes(d)));
       setServerMissing(badDates);
     }
-    if (!missingNow.length && approvalBy && publishDate && approvalBy > publishDate) {
+    if (!publishAfterChanges && !missingNow.length && approvalBy && publishDate && approvalBy > publishDate) {
       setServerMissing(["approval_needed_by"]);
       setShowErrors(true);
       toast.error("The \"need approval by\" date has to be on or before the publish date.");
@@ -1176,10 +1160,16 @@ export default function NewSubmissionPage() {
       queryClient.removeQueries({ queryKey: ["submission-history", result.submission.id] });
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       toast.success(
-        `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.automated_check?.ai_unavailable ? "no score, the AI review couldn't run" : result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
+        result.submission.status === "APPROVED"
+          ? `${result.submission.reference_code} was updated and published directly (version ${result.submission.current_version}).`
+          : `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.automated_check?.ai_unavailable ? "no score, the AI review couldn't run" : result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
-      // Sent: the submission page is done, so the creator goes back to My posts to follow it from there.
-      navigate("/submissions");
+      // A reviewer-authorized revision goes straight to the existing publish flow; ordinary submissions return to My posts.
+      if (result.submission.status === "APPROVED" && result.submission.platforms[0]) {
+        navigate(`/content-calendar/publish/sub-${result.submission.id}/${result.submission.platforms[0]}`);
+      } else {
+        navigate("/submissions");
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 422 && err.detail && typeof err.detail === "object" && "missing" in err.detail) {
         const missing = (err.detail as { missing: string[] }).missing;
@@ -1358,7 +1348,7 @@ export default function NewSubmissionPage() {
 
       {resubmitting && submissionId ? (
         <PostStepNav<EditorStep>
-          steps={REVISION_STEPS.filter((step) => !scriptOnly || step.key !== "sentiment")}
+          steps={revisionSteps}
           current={currentStep}
           states={{
             suggestions: reviewComments.some((c) => !c.resolved_at) ? "todo" : "done",
@@ -2187,7 +2177,13 @@ export default function NewSubmissionPage() {
             <Section
               step={stepNumber}
               title={titleOf(stepView)}
-              description={resubmitting && stepView === "send" ? "The reviewers stay on the post. Add more people if you like, then resubmit." : STEP_DESCRIPTION[stepView]}
+              description={
+                resubmitting && stepView === "send"
+                  ? publishAfterChanges
+                    ? "Publish the corrected post directly. It will not return to the review queue."
+                    : "The reviewers stay on the post. Add more people if you like, then resubmit."
+                  : STEP_DESCRIPTION[stepView]
+              }
             >
               <div className="flex flex-col gap-4">
 
@@ -2311,21 +2307,25 @@ export default function NewSubmissionPage() {
 
                 {/* Who it goes to, and the send itself */}
                 <div id="step-send" className={`scroll-mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3 ${toolView("send") && !readOnly ? "" : "hidden"}`}>
-                  <ReviewerPicker
-                    approvers={approverOptions}
-                    suggesters={suggesterOptions}
-                    locked={lockedReviewerIds}
-                    pickedApprovers={pickedApprovers}
-                    pickedSuggesters={pickedSuggesters}
-                    onChange={(ids) => { setReviewerIds(ids); markEdited(); }}
-                    status={reviewersQuery}
-                    brandCount={brands.length}
-                    invalid={isMissing("reviewer_ids")}
-                    error={errorFor("reviewer_ids", "Pick at least one reviewer")}
-                  />
+                  {!publishAfterChanges && (
+                    <ReviewerPicker
+                      approvers={approverOptions}
+                      suggesters={suggesterOptions}
+                      locked={lockedReviewerIds}
+                      pickedApprovers={pickedApprovers}
+                      pickedSuggesters={pickedSuggesters}
+                      onChange={(ids) => { setReviewerIds(ids); markEdited(); }}
+                      status={reviewersQuery}
+                      brandCount={brands.length}
+                      invalid={isMissing("reviewer_ids")}
+                      error={errorFor("reviewer_ids", "Pick at least one reviewer")}
+                    />
+                  )}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
                     <p className="text-[11px] text-muted-foreground">
-                      {videoLocked
+                      {publishAfterChanges
+                        ? "Your changes will be checked and published directly; they will not return to review."
+                        : videoLocked
                         ? "Sends your script to the reviewers you picked."
                         : !hasCheck
                           ? "You haven't run the compliance check yet. It also runs when you send."
@@ -2340,7 +2340,7 @@ export default function NewSubmissionPage() {
                       className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      {videoLocked ? "Send Script for Review" : resubmitting ? "Resubmit for Review" : "Send for Review"}
+                      {videoLocked ? "Send Script for Review" : resubmitting ? publishAfterChanges ? "Publish" : "Resubmit for Review" : "Send for Review"}
                     </Button>
                   </div>
                 </div>

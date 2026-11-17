@@ -192,6 +192,8 @@ export interface Submission extends SubmissionSourceFields {
   status: SubmissionStatus;
   current_version: number;
   latest_check?: StoredCheck | null;
+  /** The reviewer allowed the creator to publish the corrected version without another review round. */
+  publish_after_changes?: boolean;
   /** While the check is still reading the post: what's left and when the score is expected. */
   analysis_progress?: AnalysisProgress | null;
   files: SubmissionFile[];
@@ -260,6 +262,8 @@ export interface SubmissionSummary {
   platforms: string[];
   status: SubmissionStatus;
   current_version: number;
+  /** The reviewer allowed the creator to publish the corrected version without another review round. */
+  publish_after_changes?: boolean;
   publish_at?: string | null;
   /** When the next step is due (see DueKind). */
   due_at?: string | null;
@@ -392,6 +396,8 @@ export interface ReviewDecisionRequest {
   publish_at?: string;
   /** ...or approve to publish straight away. */
   publish_now?: boolean;
+  /** Request changes, but let the creator publish the corrected version without another review round. */
+  publish_after_changes?: boolean;
   /** Approve: the rules (by number) the reviewer confirmed by hand; must cover the check's manual_review_rules. */
   confirmed_rules?: string[];
   /** Request changes: working days the creator has to resubmit... */

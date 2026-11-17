@@ -146,6 +146,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `creatorSubmissionSteps` (export function) L9 - Use one state for the dots, count and resume link, including script-only requirements.
 - `creatorProgressText` (export function) L26
 
+## src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
+- `STEP_TITLE` (export const) L3
+- `STEP_DESCRIPTION` (export const) L10
+- `EditorStep` (export type) L18
+- `submissionRevisionSteps` (export function) L29 - Every revision starts with feedback; only explicitly authorized revisions end at Publish.
+
 ## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).
 - `textFragmentUrl` (export function) L16 - The page's address with a text fragment for the quote, or the plain address when there is no quote.
