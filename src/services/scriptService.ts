@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type { ScriptQueueItem, ScriptStage, SuggesterDashboard } from "@/types/script";
+import type { ScriptQueueSummary } from "@/types/scriptQueue";
 import type { ScriptHighlight } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
@@ -7,6 +8,7 @@ const quiet = { skipGlobalLoading: true };
 
 /** The script stage of video posts (see the backend's script_review_service). */
 export const scriptService = {
+  queueSummary: () => apiClient.get<ScriptQueueSummary[]>("/api/submissions/scripts/queue/summary", quiet),
   queue: (tab: "review" | "sent_back" | "done" = "review") =>
     apiClient.get<ScriptQueueItem[]>(`/api/submissions/scripts/queue?tab=${tab}`, quiet),
 

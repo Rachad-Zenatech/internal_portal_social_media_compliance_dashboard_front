@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Download, FileStack, FileText, Plus } from "lucide-react";
 
@@ -12,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useScriptBatches } from "@/hooks/useScriptBatches";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
-import { scriptService } from "@/services/scriptService";
+import { useScriptReviewQueue } from "@/hooks/useScriptReviewQueue";
+import { SCRIPT_REVIEW_TABS as TABS, scriptReviewCounts, visibleScripts, type ReviewTab } from "@/lib/scriptReviewLists";
 import type { ScriptQueueItem } from "@/types/script";
 import type { BatchStatus, BatchSummary } from "@/types/scriptBatch";
 
@@ -23,13 +23,6 @@ const STATUS: Record<BatchStatus, { label: string; tone: string }> = {
   CHANGES_REQUESTED: { label: "Changes requested", tone: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" },
   DONE: { label: "All approved", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
 };
-
-type ReviewTab = "review" | "sent_back" | "done";
-const TABS: { value: ReviewTab; label: string; status: BatchStatus }[] = [
-  { value: "review", label: "To review", status: "IN_REVIEW" },
-  { value: "sent_back", label: "Sent back", status: "CHANGES_REQUESTED" },
-  { value: "done", label: "Approved", status: "DONE" },
-];
 
 type CreatorFilter = "all" | BatchStatus;
 const CREATOR_FILTERS: { value: CreatorFilter; label: string }[] = [
@@ -209,24 +202,16 @@ export default function ScriptReviewPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const batches = useScriptBatches(reviewer ? "review" : "mine");
-  // Scripts uploaded on their own (not in a batch) are listed with the batches, for reviewers.
-  const singles = useQuery({
-    queryKey: ["script-queue", tab],
-    queryFn: () => scriptService.queue(tab),
-    enabled: reviewer,
-    staleTime: 15_000,
-  });
+  // Queue membership includes standalone scripts and members whose batch belongs to another tab.
+  const singles = useScriptReviewQueue(tab, reviewer);
 
   const shownBatches = useMemo(() => {
     const all = batches.data ?? [];
     if (reviewer) return all.filter((b) => b.status === TABS.find((t) => t.value === tab)!.status);
     return filter === "all" ? all : all.filter((b) => b.status === filter);
   }, [batches.data, reviewer, tab, filter]);
-  const shownSingles = useMemo(() => (singles.data ?? []).filter((s) => !s.batch_id), [singles.data]);
-  const counts = useMemo(() => {
-    const all = batches.data ?? [];
-    return Object.fromEntries(TABS.map((t) => [t.value, all.filter((b) => b.status === t.status).length])) as Record<ReviewTab, number>;
-  }, [batches.data]);
+  const shownSingles = useMemo(() => visibleScripts(singles.data ?? [], shownBatches), [singles.data, shownBatches]);
+  const counts = useMemo(() => scriptReviewCounts(batches.data ?? [], singles.summary), [batches.data, singles.summary]);
 
   // Batches and single scripts together, 24 to a page; a new tab or filter starts from the first page.
   type ListCard = { kind: "batch"; b: BatchSummary } | { kind: "single"; s: ScriptQueueItem };
