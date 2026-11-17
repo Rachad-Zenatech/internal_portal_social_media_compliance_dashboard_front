@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useFlagReviews } from "@/hooks/useReview";
-import type { FlagDismissReason } from "@/types/submission";
+import type { CreatorFlagDismissalRequest, FlagDismissReason } from "@/types/submission";
 
 const REASONS: { value: FlagDismissReason; label: string; hint: string }[] = [
   { value: "NEGATED", label: "Says the opposite", hint: 'e.g. "not combat proven"' },
@@ -17,6 +17,36 @@ const REASONS: { value: FlagDismissReason; label: string; hint: string }[] = [
   { value: "EVIDENCE_ON_FILE", label: "Evidence is on file", hint: "The claim is backed up; say where the evidence is below" },
   { value: "OTHER", label: "Other", hint: "Say why below" },
 ];
+
+function CreatorDismissalRequest({ request, canApprove, approving, onApprove }: { request: CreatorFlagDismissalRequest; canApprove: boolean; approving: boolean; onApprove: () => void }) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+      <ShieldOff className="w-3.5 h-3.5" />
+      <span>
+        <span className="font-semibold">Creator asked to dismiss</span> by {request.requested_by_name ?? "the creator"} Â· {request.reason_label}
+        {request.note ? `: "${request.note}"` : ""}
+      </span>
+      {canApprove && (
+        <button type="button" className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300" disabled={approving} onClick={onApprove}>
+          {approving && <Loader2 className="w-3 h-3 animate-spin" />} Approve dismissal
+        </button>
+      )}
+    </span>
+  );
+}
+
+function DismissFlagButton({ creatorRequest, evidence, onClick }: { creatorRequest: boolean; evidence: boolean; onClick: () => void }) {
+  const title = creatorRequest
+    ? "Ask a reviewer to dismiss this flag. The flag and score stay unchanged until they approve."
+    : evidence
+      ? "The evidence for this claim is on file. The points it cost come back."
+      : "This flag is a false alarm. It is kept as an example of what the rule should not catch.";
+  return (
+    <button type="button" onClick={onClick} title={title} className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground">
+      <ShieldOff className="w-3.5 h-3.5" /> {creatorRequest ? "Request dismissal" : evidence ? "Evidence is on file" : "Dismiss as false alarm"}
+    </button>
+  );
+}
 
 /**
  * A reviewer's call on one automated flag: dismiss it as a false alarm with a reason, or undo that. The score
@@ -28,6 +58,7 @@ export default function FlagReviewControl({
   ruleNumber,
   currentVersion,
   canDismiss,
+  canRequest = false,
   evidence = false,
 }: {
   submissionId: string;
@@ -37,11 +68,14 @@ export default function FlagReviewControl({
   ruleNumber: string;
   /** A reviewer looking at the version in review. */
   canDismiss: boolean;
+  /** The creator can ask a reviewer to dismiss but cannot dismiss directly. */
+  canRequest?: boolean;
   /** The flag is a claim that needs a source: the way to clear it is to confirm the evidence is on file. */
   evidence?: boolean;
 }) {
-  const { forCurrent, dismiss, restore, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
+  const { forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, confirmed, confirm, unconfirm } = useFlagReviews(submissionId, currentVersion);
   const review = forCurrent.get(ruleId);
+  const creatorRequest = creatorRequests.get(ruleId);
   const right = confirmed.get(ruleId);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<FlagDismissReason>(evidence ? "EVIDENCE_ON_FILE" : "NEGATED");
@@ -69,10 +103,11 @@ export default function FlagReviewControl({
       </div>
     );
   }
-  if (!canDismiss && !right) return null;
+  if (!canDismiss && !canRequest && !right && !creatorRequest) return null;
   return (
     <>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5" onClick={(e) => e.stopPropagation()}>
+        {creatorRequest?.status === "PENDING" && <CreatorDismissalRequest request={creatorRequest} canApprove={canDismiss} approving={approveCreatorDismissal.isPending} onApprove={() => approveCreatorDismissal.mutate(ruleId)} />}
         {right ? (
           <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
             <ThumbsUp className="w-3.5 h-3.5" />
@@ -104,31 +139,26 @@ export default function FlagReviewControl({
             </button>
           )
         )}
-        {canDismiss && (
-          <button
-            type="button"
+        {(canDismiss || canRequest) && !creatorRequest && (
+          <DismissFlagButton
+            creatorRequest={canRequest}
+            evidence={evidence}
             onClick={() => {
               setReason(evidence ? "EVIDENCE_ON_FILE" : "NEGATED");
               setNote("");
               setOpen(true);
             }}
-            title={
-              evidence
-                ? "The evidence for this claim is on file. The points it cost come back."
-                : "This flag is a false alarm. It is kept as an example of what the rule should not catch."
-            }
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <ShieldOff className="w-3.5 h-3.5" /> {evidence ? "Evidence is on file" : "Dismiss as false alarm"}
-          </button>
+          />
         )}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
-            <DialogTitle className="text-base">{evidence ? `Is the evidence for the ${ruleNumber} claim on file?` : `Dismiss the ${ruleNumber} flag?`}</DialogTitle>
+            <DialogTitle className="text-base">{canRequest ? `Request dismissal of the ${ruleNumber} flag?` : evidence ? `Is the evidence for the ${ruleNumber} claim on file?` : `Dismiss the ${ruleNumber} flag?`}</DialogTitle>
             <DialogDescription className="text-xs">
-              {evidence
+              {canRequest
+                ? "Your request and note are sent to a reviewer. The finding and score do not change unless they approve it."
+                : evidence
                 ? "The points this claim cost come back, and the note below is recorded so anyone can find the evidence."
                 : "The score stays as the rulebook found it; your call is recorded beside it with the reason, counts toward how noisy this rule is, and is kept as an example so the check learns what this rule should not catch."}
             </DialogDescription>
@@ -162,10 +192,10 @@ export default function FlagReviewControl({
             <Button
               size="sm"
               className="text-xs gap-1.5 bg-blue-700 hover:bg-blue-800 text-white"
-              disabled={dismiss.isPending || ((reason === "OTHER" || reason === "EVIDENCE_ON_FILE") && !note.trim())}
-              onClick={() => dismiss.mutate({ ruleId, reason, note: note.trim() || null }, { onSuccess: () => setOpen(false) })}
+              disabled={(canRequest ? requestDismissal.isPending : dismiss.isPending) || ((reason === "OTHER" || reason === "EVIDENCE_ON_FILE") && !note.trim())}
+              onClick={() => (canRequest ? requestDismissal : dismiss).mutate({ ruleId, reason, note: note.trim() || null }, { onSuccess: () => setOpen(false) })}
             >
-              {dismiss.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Dismiss flag
+              {(canRequest ? requestDismissal.isPending : dismiss.isPending) && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {canRequest ? "Send to reviewer" : "Dismiss flag"}
             </Button>
           </DialogFooter>
         </DialogContent>

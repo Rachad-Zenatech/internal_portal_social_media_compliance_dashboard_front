@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { submissionService } from "@/services/submissionService";
-import type { FlagVerdict, FlagDismissReason, FlagReview, ReviewComment, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
+import type { CreatorFlagDismissalRequest, FlagVerdict, FlagDismissReason, FlagReview, ReviewComment, ReviewCommentCreate, ReviewDecisionRequest } from "@/types/submission";
 
 // The comment being replied to, per post. Shared so a Reply clicked in the comment list reaches whichever comment box
 // the page shows (the list's own, or the Content screener's box under the video).
@@ -73,8 +73,19 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
   const queryClient = useQueryClient();
   const key = ["flag-reviews", submissionId];
   const query = useQuery({ queryKey: key, queryFn: () => submissionService.flags(submissionId), staleTime: 0 });
+  const creatorRequestKey = ["creator-flag-dismissals", submissionId];
+  const creatorRequestQuery = useQuery({
+    queryKey: creatorRequestKey,
+    queryFn: () => submissionService.creatorFlagDismissals(submissionId),
+    staleTime: 0,
+  });
   const forCurrent = new Map<string, FlagReview>(
     (query.data ?? []).filter((r) => r.version_number === currentVersion).map((r) => [r.rule_id, r])
+  );
+  const creatorRequests = new Map<string, CreatorFlagDismissalRequest>(
+    (creatorRequestQuery.data ?? [])
+      .filter((r) => r.version_number === currentVersion)
+      .map((r): [string, CreatorFlagDismissalRequest] => [r.rule_id, r])
   );
   const verdictKey = ["flag-verdicts", submissionId];
   const verdicts = useQuery({ queryKey: verdictKey, queryFn: () => submissionService.flagVerdicts(submissionId), staleTime: 0 });
@@ -84,6 +95,7 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
   );
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: key });
+    queryClient.invalidateQueries({ queryKey: creatorRequestKey });
     queryClient.invalidateQueries({ queryKey: verdictKey });
     // Open critical flags decide whether it can be approved.
     invalidateSubmission(queryClient, submissionId);
@@ -106,6 +118,23 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
     },
     onError: (err) => toast.error(`Couldn't restore the flag: ${(err as Error).message}`),
   });
+  const requestDismissal = useMutation({
+    mutationFn: (v: { ruleId: string; reason: FlagDismissReason; note: string | null }) =>
+      submissionService.requestCreatorFlagDismissal(submissionId, v.ruleId, { reason: v.reason, note: v.note }),
+    onSuccess: (r) => {
+      refresh();
+      toast.success(`${r.rule_number} dismissal request sent to a reviewer.`);
+    },
+    onError: (err) => toast.error(`Couldn't request the dismissal: ${(err as Error).message}`),
+  });
+  const approveCreatorDismissal = useMutation({
+    mutationFn: (ruleId: string) => submissionService.approveCreatorFlagDismissal(submissionId, ruleId),
+    onSuccess: (r) => {
+      refresh();
+      toast.success(`${r.rule_number} creator dismissal approved.`);
+    },
+    onError: (err) => toast.error(`Couldn't approve the dismissal: ${(err as Error).message}`),
+  });
   const confirm = useMutation({
     mutationFn: (v: { ruleId: string; note?: string | null }) => submissionService.confirmFlag(submissionId, v.ruleId, v.note ?? null),
     onSuccess: (r) => {
@@ -122,7 +151,7 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
     },
     onError: (err) => toast.error(`Couldn't remove it: ${(err as Error).message}`),
   });
-  return { reviews: query.data ?? [], forCurrent, dismiss, restore, confirmed, confirm, unconfirm };
+  return { reviews: query.data ?? [], forCurrent, creatorRequests, dismiss, restore, requestDismissal, approveCreatorDismissal, confirmed, confirm, unconfirm };
 }
 
 export function useReviewDecision(submissionId: string, referenceCode: string) {

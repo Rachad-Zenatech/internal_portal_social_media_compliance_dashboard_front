@@ -15,6 +15,7 @@ import type {
 } from "@/types/sentiment";
 import type {
   CheckAttempt,
+  CreatorFlagDismissalRequest,
   DuplicateReport,
   ContentType,
   DashboardSummary,
@@ -235,6 +236,10 @@ export const submissionService = {
   dismissFlag: (id: string, ruleId: string, data: { reason: FlagDismissReason; note: string | null }) =>
     apiClient.put<FlagReview>(`/api/submissions/${id}/flags/${ruleId}`, data, quiet),
   restoreFlag: (id: string, ruleId: string) => apiClient.delete<null>(`/api/submissions/${id}/flags/${ruleId}`, quiet),
+  creatorFlagDismissals: (id: string) => apiClient.get<CreatorFlagDismissalRequest[]>(`/api/submissions/${id}/creator-flag-dismissals`, quiet),
+  requestCreatorFlagDismissal: (id: string, ruleId: string, data: { reason: FlagDismissReason; note: string | null }) =>
+    apiClient.put<CreatorFlagDismissalRequest>(`/api/submissions/${id}/creator-flag-dismissals/${ruleId}`, data, quiet),
+  approveCreatorFlagDismissal: (id: string, ruleId: string) => apiClient.put<FlagReview>(`/api/submissions/${id}/creator-flag-dismissals/${ruleId}/approve`, {}, quiet),
   /** Reviewers' calls on the flags (right, or a false alarm), on every version. */
   flagVerdicts: (id: string) => apiClient.get<FlagVerdict[]>(`/api/submissions/${id}/flag-verdicts`, quiet),
   /** Say a flag is right: kept as an example of wording the rule should catch. */

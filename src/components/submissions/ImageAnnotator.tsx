@@ -3,11 +3,13 @@ import { Loader2, Send, X } from "lucide-react";
 
 import { COMMENT_CATEGORIES, regionNumbers } from "@/components/submissions/ReviewCommentsPanel";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
+import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import type { ReviewCommentCategory, SubmissionFile } from "@/types/submission";
+import type { ComplianceViolation } from "@/services/complianceService";
 
 /** A box drawn on the image, as fractions (0 to 1) of its width and height. */
 type Box = { x: number; y: number; w: number; h: number };
@@ -29,6 +31,7 @@ export default function ImageAnnotator({
   onActive,
   onPlainClick,
   imageClassName = "max-h-[56vh] w-auto object-contain",
+  findings = [],
 }: {
   submissionId: string;
   file: SubmissionFile;
@@ -40,6 +43,8 @@ export default function ImageAnnotator({
   /** A click that was not a drag, e.g. to open the comments tab. */
   onPlainClick?: () => void;
   imageClassName?: string;
+  /** Measured compliance finding regions for this image; comments remain separate. */
+  findings?: ComplianceViolation[];
 }) {
   const { comments, add } = useReviewComments(submissionId);
   const { hasPermission } = useAuth();
@@ -144,6 +149,7 @@ export default function ImageAnnotator({
           className={`block transition-[filter] duration-200 ${focus ? "blur-[3px] brightness-[0.55]" : ""} ${imageClassName}`}
         />
       </span>
+      <MediaFindingOverlay findings={findings} fileId={file.id} />
       {focus && (
         <img
           src={authedFileUrl(file.url)}
@@ -154,7 +160,6 @@ export default function ImageAnnotator({
           style={{ clipPath: clip }}
         />
       )}
-
       {here.map((c) => {
         const active = c.id === activeId;
         const resolved = Boolean(c.resolved_at);
