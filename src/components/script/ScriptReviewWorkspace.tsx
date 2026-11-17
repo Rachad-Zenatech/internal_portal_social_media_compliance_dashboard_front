@@ -1,3 +1,6 @@
+import ScriptWorkspaceState from "@/components/script/ScriptWorkspaceState";
+import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
+import { useAuth } from "@/lib/AuthContext";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { locateOnPage } from "@/lib/locateOnPage";
 import { Link } from "react-router-dom";
@@ -15,15 +18,10 @@ import CheckingNotice from "@/components/common/CheckingNotice";
 import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
-import { overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
-import { usePublicMood } from "@/hooks/usePublicMood";
-import { useSentiment } from "@/hooks/useSentiment";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { ContextNote, FINDING_ORDER, FindingGroup, StatusPill, groupFindings, isWarning, statusOf } from "@/components/submissions/FindingStatus";
 import { useLiveScriptCheck, useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
-import { replaceInText } from "@/lib/replaceQuote";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { AI_UNAVAILABLE_SHORT } from "@/components/submissions/submissionUi";
 import { changesOf, diffWords } from "@/lib/wordDiff";
@@ -32,15 +30,8 @@ import ScriptSuggestPanel from "@/components/script/ScriptSuggestPanel";
 import type { ScriptHighlight, ScriptSuggestion, ScriptVersion } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
-type PanelTab = "flags" | "highlights" | "sentiment" | "history";
+type PanelTab = "flags" | "highlights" | "history";
 
-/** How the sentiment analysis read, in a word, for its tile (the same words as a post's review). */
-const SENTIMENT_TILE: Record<string, { label: string; tone: GlanceTile["tone"] }> = {
-  NO_CONCERNS: { label: "No concerns", tone: "ok" },
-  REVIEW_SUGGESTED: { label: "Review suggested", tone: "warn" },
-  SIGNIFICANT_CONCERNS: { label: "Concerns", tone: "bad" },
-  INSUFFICIENT_INFORMATION: { label: "Not enough to judge", tone: "muted" },
-};
 type Compare = "mine" | "previous";
 
 /** Prefix of the display-only marks for what the creator fixed. */
@@ -65,10 +56,7 @@ function writeDraft(id: string, version: number, text: string | null) {
   }
 }
 
-/**
- * The reviewer's script workspace in the Content screener: the script in the middle (read with flagged wording
- * marked, or edited directly with every change tracked), and the check, sentiment and decision on the right.
- */
+/** Review tools; creators awaiting a decision see only their submitted script and saved compliance. */
 export default function ScriptReviewWorkspace({
   submissionId,
   isReviewer,
@@ -81,37 +69,12 @@ export default function ScriptReviewWorkspace({
   /** Open another script of the batch this one came in (the screener keeps its list, so it picks the script itself). */
   onOpenScript?: (submissionId: string) => void;
 }) {
+  const { creatorView } = useAuth();
   const stage = useScriptStage(submissionId);
   const data = stage.data;
   const sent = data?.versions.at(-1);
-  if (stage.isLoading || !data) {
-    return (
-      <div className="grid flex-1 place-items-center p-10 text-sm text-muted-foreground">
-        {stage.isError ? `Couldn't load the script: ${(stage.error as Error).message}` : <Loader2 className="w-5 h-5 animate-spin" />}
-      </div>
-    );
-  }
-  if (!sent) {
-    return (
-      <div className="grid flex-1 place-items-center p-10 text-center">
-        <div className="max-w-md space-y-3">
-          <FileText className="mx-auto w-10 h-10 text-blue-600/70" />
-          <p className="text-base font-semibold text-foreground">This post has no script yet.</p>
-          <p className="text-xs text-muted-foreground">Upload the script to start the compliance check.</p>
-          {onUploadScript && (
-            <Button
-              type="button"
-              size="sm"
-              className="mt-2 h-8 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white"
-              onClick={onUploadScript}
-            >
-              <FileText className="w-3.5 h-3.5" /> Upload the script
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
+  if (stage.isLoading || !data || !sent) return <ScriptWorkspaceState loading={stage.isLoading || !data} error={stage.isError ? (stage.error as Error).message : undefined} onUploadScript={onUploadScript} />;
+  if (data.status === "IN_REVIEW" && (creatorView || (!isReviewer && !data.can_suggest))) return <ScriptInReviewDetails summary={{ id: submissionId, reference_code: data.reference_code, title: data.title }} stage={data} />;
   return (
     // A script from a batch has the batch's strip across the top; the script and its review panel sit side by side below.
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -231,10 +194,6 @@ function Editor({
   const { decide } = useScriptActions(submissionId);
   const [confirming, setConfirming] = useState<"approve" | "send_back" | null>(null);
   const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
-  const { mood } = usePublicMood(submissionId, true);
-  const moodDecision = overallPostDecision(mood);
-  // The same query the sentiment panel uses, for its tile.
-  const { analysis: sentiment } = useSentiment(submissionId);
 
   const hasEdits = !sameText(draft, sent.body);
   useEffect(() => {
@@ -360,8 +319,6 @@ function Editor({
   };
 
   // The four things a reviewer looks at, each with its one-line answer (as on a post's review).
-  const sentimentRead = sentiment?.status === "COMPLETED" && sentiment.result ? SENTIMENT_TILE[sentiment.result.overall_assessment] : null;
-  const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
   const flagWords = [
     verdict.critical > 0 ? `${verdict.critical} critical` : "",
     grouped.NEEDS_REVIEW.length ? `${grouped.NEEDS_REVIEW.length} to check` : "",
@@ -383,14 +340,6 @@ function Editor({
       sub: highlights.length ? "Places you marked for changes" : "Select text in the script to mark it",
       tone: highlights.length ? "warn" : "muted",
       seen: seen.has("highlights"),
-    },
-    {
-      key: "sentiment",
-      label: "Sentiment",
-      value: sentimentRead?.label ?? (sentimentBusy ? "Running" : "Not run"),
-      sub: moodDecision ? `Public mood: ${moodDecision.recommendation.toLowerCase()}` : sentimentRead ? "Read on the script as sent" : sentimentBusy ? "Will appear here" : "Run it from here",
-      tone: sentimentRead?.tone ?? "muted",
-      seen: seen.has("sentiment"),
     },
     {
       key: "history",
@@ -545,7 +494,7 @@ function Editor({
         </div>
       </section>
 
-      {/* ===== Check, sentiment, history and the decision ===== */}
+      {/* ===== Check, history and the decision ===== */}
       <ResizablePanel
         as="aside"
         label="Your review"
@@ -669,28 +618,6 @@ function Editor({
                 highlights={highlights}
                 onPick={goToHighlight}
                 empty="Select wording in the script to highlight it or leave a note. They show here, and the creator sees them too."
-              />
-            </>
-          )}
-
-          {tab === "sentiment" && (
-            <>
-              <p className="text-xs text-muted-foreground">Reads the script as sent (version {sent.version_number}), with the post's audience and brand.</p>
-              <ReviewerSentimentPanel
-                key={`${submissionId}-${sent.version_number}`}
-                submissionId={submissionId}
-                canRun={canReview}
-                onApplyRevision={
-                  canReview
-                    ? (f) => {
-                        const next = f.suggested_revision ? replaceInText(draft, f.quote, f.suggested_revision) : null;
-                        if (next == null) return false;
-                        setDraft(next);
-                        setCompare("mine");
-                        return true;
-                      }
-                    : undefined
-                }
               />
             </>
           )}

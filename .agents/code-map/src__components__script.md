@@ -94,6 +94,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DiffLegend` (export function) L445 - Removed" / "Added" key for the marks above.
 - `StageSteps` (export function) L455 - The two stages of a video post, with where this one is.
 
+## src/components/script/ScriptDocumentPreview.tsx (18 lines) - Read-only script preview using the same document renderer as the reviewer workspace.
+- `ScriptDocumentPreview` (export function) L5 - Read-only script preview using the same document renderer as the reviewer workspace.
+
 ## src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
 - `SCRIPT_EXTENSIONS` (export const) L38
 - `ScriptEditorHandle` (export interface) L56
@@ -106,6 +109,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ScriptFindings.tsx (235 lines) - script findings (components script)
 - `Fix` (type) L13
 - `ScriptFindings` (export function) L20 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
+
+## src/components/script/ScriptInReviewDetails.tsx (45 lines) - The exact submitted script and saved check, without draft/video editing controls.
+- `ScriptInReviewDetails` (export function) L13 - The exact submitted script and saved check, without draft/video editing controls.
 
 ## src/components/script/ScriptPrecheck.tsx (119 lines) - script precheck (components script)
 - `PrecheckBody` (function) L17 - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
@@ -152,6 +158,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - `same` (const) L9
 - `ScriptSuggestPanel` (export function) L16 - The bottom of the script panel for a suggesting reviewer, in place of the reviewer's decision: they edit the script and  leave notes on w...
+
+## src/components/script/ScriptWorkspaceState.tsx (21 lines) - Loading, error and empty states shared by the script review workspace.
+- `ScriptWorkspaceState` (export function) L5 - Loading, error and empty states shared by the script review workspace.
 
 ## src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - `UploadScriptDialog` (export function) L22

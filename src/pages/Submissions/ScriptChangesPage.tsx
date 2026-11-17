@@ -17,7 +17,6 @@ import { DiffLegend, InlineDiff, SideBySide, StageSteps, isStructured } from "@/
 import { VersionHistory } from "@/components/script/ScriptReviewWorkspace";
 import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { SOURCE_LABELS, scriptVerdict } from "@/lib/scriptStage";
 import { useScriptActions, useScriptHighlights, useScriptStage } from "@/hooks/useScript";
 import { changesOf, diffWords } from "@/lib/wordDiff";
@@ -125,7 +124,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
       return next;
     });
   // Where the creator has nothing to change (with the reviewer, or approved) the compliance check is what's worth reading.
-  const [tab, setTab] = useState<"compliance" | "request" | "sentiment" | "history">(
+  const [tab, setTab] = useState<"compliance" | "request" | "history">(
     stage.status === "IN_REVIEW" || stage.status === "APPROVED" ? "compliance" : "request"
   );
   const { highlights, resolve } = useScriptHighlights(stage.submission_id, fromReviewer ? base?.version_number : shown?.version_number, false);
@@ -313,7 +312,6 @@ function Changes({ stage }: { stage: ScriptStage }) {
             [
               ["compliance", "Compliance", activeFlagCount(shown.check)],
               ["request", "Reviewer comments", highlights.length + (base ? changes.length : 0)],
-              ["sentiment", "Sentiment", null],
               ["history", "History", stage.versions.length],
             ] as const
           ).map(([value, label, count]) => (
@@ -340,8 +338,6 @@ function Changes({ stage }: { stage: ScriptStage }) {
               ? "Every version and the reviewer's notes."
               : tab === "compliance"
                 ? "The rulebook check of the script as it stands."
-                : tab === "sentiment"
-                  ? "How the script is likely to land with its audience: tone, brand fit and wording that could be misread. Run it before you send."
                   : "What your reviewer highlighted, commented on and changed. Click one to find it in the script."}
             {base?.check?.score != null && shown.check?.score != null && ` Script check: ${base.check.score} → ${shown.check.score}.`}
             {!base && shown.check?.score != null && ` Script check: ${shown.check.score}/100 · ${verdict.text.toLowerCase()}.`}
@@ -352,9 +348,6 @@ function Changes({ stage }: { stage: ScriptStage }) {
             <VersionHistory versions={stage.versions} />
           ) : tab === "compliance" ? (
             <ScriptCompliance check={shown.check} />
-          ) : tab === "sentiment" ? (
-            // The creator runs it while the script is theirs to change; once sent, it shows the last result.
-            <SentimentPanel submissionId={stage.submission_id} canRun={stage.can_submit || stage.can_respond} />
           ) : (
             <>
               <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

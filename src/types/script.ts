@@ -56,6 +56,7 @@ export interface ScriptStage {
   required: boolean;
   status?: ScriptStatus | null;
   versions: ScriptVersion[];
+  reviewer_names?: string[];
   /** The uploaded script file, as read now. */
   file_name?: string | null;
   file_status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | null;
