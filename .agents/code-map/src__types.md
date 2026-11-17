@@ -135,6 +135,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocLiveState` (export interface) L162 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
 - `DocNote` (export interface) L172 - A highlight or comment on a stretch of the script, shared live through the notes document.
 
+## src/types/scriptQueue.ts (4 lines) - script queue (types)
+- `ScriptQueueSummary` (export type) L3
+
 ## src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type) L3
 - `SentimentAssessment` (export type) L4
@@ -186,9 +189,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AnalysisStep` (export interface) L134 - One part of the post still being read before the rulebook check can score it.
 - `AnalysisProgress` (export interface) L146 - While the check is still reading the post: what's left and when the score is expected.
 - `Submission` (export interface) L156
-- `PostStepKey` (export type) L228 - The five steps a creator works through on a post.
-- `PostStepState` (export type) L231 - done; stale (run before the post was last edited, so run it again); running; todo (not done yet).
-- `SubmissionSteps` (export interface) L234 - How far a post has got through its steps (see the server's post_steps_service).
+- `PostStepKey` (export type) L229 - The five steps a creator works through on a post.
+- `PostStepState` (export type) L232 - done; stale (run before the post was last edited, so run it again); running; todo (not done yet).
+- `SubmissionSteps` (export interface) L235 - How far a post has got through its steps (see the server's post_steps_service).
 - `SubmissionSummary` (export interface) L250
 - `SubmissionUpdate` (export interface) L321
 - `SubmissionVersion` (export interface) L345

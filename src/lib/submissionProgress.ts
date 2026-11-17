@@ -1,4 +1,5 @@
-import { postPreparationSteps, ranOnce } from "@/lib/postSteps";
+import { ranOnce } from "@/lib/postSteps";
+import { creatorPreparationSteps } from "@/lib/revisionSteps";
 import type { SubmissionSteps, SubmissionSummary } from "@/types/submission";
 
 export function isScriptPreparation(s: SubmissionSummary): boolean {
@@ -10,10 +11,15 @@ export function creatorSubmissionSteps(s: SubmissionSummary): SubmissionSteps | 
   const steps = s.steps;
   if (!steps) return steps;
   const scriptOnly = isScriptPreparation(s);
+  if (s.status === "CHANGES_REQUESTED") {
+    if (steps.revision) return steps;
+    return { ...steps, revision: true, suggestions: "todo", details: "todo", compliance: "todo",
+      sentiment: "todo", send: "todo", locked: false, next: "suggestions", ready_to_send: false };
+  }
   if (!scriptOnly) return ranOnce(steps);
-  if (s.script_status === "IN_REVIEW") {
+  if (s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") {
     return { ...steps, details: "done", compliance: "done", send: "done",
-      locked: true, ready_to_send: false, next: null, missing: [] };
+      locked: s.script_status === "IN_REVIEW", ready_to_send: false, next: null, missing: [] };
   }
   if (steps.locked) return steps;
   const attached = s.has_script ?? Boolean(s.script_excerpt?.trim());
@@ -26,7 +32,8 @@ export function creatorSubmissionSteps(s: SubmissionSummary): SubmissionSteps | 
 export function creatorProgressText(s: SubmissionSummary, lockedLabel: string): string {
   const steps = s.steps;
   if (!steps) return "";
-  const preparation = postPreparationSteps(isScriptPreparation(s));
+  if (isScriptPreparation(s) && s.script_status === "APPROVED") return "Script approved \u00b7 Upload video";
+  const preparation = creatorPreparationSteps(isScriptPreparation(s), steps.revision);
   const done = preparation.filter((step) => steps[step.key] === "done").length;
   if (steps.locked) {
     return s.script_status === "IN_REVIEW"

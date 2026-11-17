@@ -1,8 +1,9 @@
 import { Check, Loader2, RefreshCw } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { postPreparationSteps, missingText, stepStatusText } from "@/lib/postSteps";
-import type { PostStepKey, PostStepState, SubmissionSteps } from "@/types/submission";
+import { missingText, stepStatusText } from "@/lib/postSteps";
+import { creatorPreparationSteps, type CreatorStepKey } from "@/lib/revisionSteps";
+import type { PostStepState, SubmissionSteps } from "@/types/submission";
 
 /**
  * The five steps of a post as five dots, in order. Hover one for what the step is for and where it stands; click it to
@@ -17,7 +18,7 @@ export default function PostSteps({
   scriptOnly = false,
 }: {
   steps: SubmissionSteps;
-  onOpen: (step: PostStepKey) => void;
+  onOpen: (step: CreatorStepKey) => void;
   /** lg: the dots grow on wide screens (the My posts rows). */
   size?: "md" | "lg";
   className?: string;
@@ -26,12 +27,12 @@ export default function PostSteps({
   return (
     <TooltipProvider delayDuration={150}>
       <ol aria-label="Steps" className={`flex items-center gap-1.5 ${size === "lg" ? "2xl:gap-2.5" : ""} ${className}`}>
-        {postPreparationSteps(scriptOnly).map((step, i) => {
-          const state: PostStepState = steps[step.key];
+        {creatorPreparationSteps(scriptOnly, steps.revision).map((step, i) => {
+          const state: PostStepState = steps[step.key] ?? "todo";
           // Where it was left off: the step a click on the post opens.
           const current = !steps.locked && steps.next === step.key;
           // Sending waits for the steps before it.
-          const shut = !steps.locked && step.key === "send" && !steps.ready_to_send;
+          const shut = !steps.locked && step.key === "send" && state !== "done" && !steps.ready_to_send;
           const tone = steps.locked
             ? "border-[#9AA9C9] bg-[#9AA9C9] text-white"
             : state === "done"

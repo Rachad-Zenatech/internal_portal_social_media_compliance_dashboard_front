@@ -21,3 +21,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SelectField` (function) L138
 - `ActiveFilterChips` (export function) L170 - The filters in use, each as a chip that clears it.
 - `FilterChip` (function) L186
+
+## src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
+- `ScriptReviewNotice` (export function) L4

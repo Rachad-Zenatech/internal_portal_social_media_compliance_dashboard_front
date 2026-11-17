@@ -62,12 +62,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useReviewDecision` (export function) L157
 - `useApprovalActions` (export function) L172 - Approved content: a reviewer reschedules it or reopens it for changes.
 
-## src/hooks/useScript.ts (235 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (237 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.
-- `useScriptActions` (export function) L45 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
-- `useDebounced` (export function) L156 - The value, once it has stopped changing for `ms`.
-- `useLiveScriptCheck` (export function) L170 - The rulebook check of wording being edited.
-- `useScriptHighlights` (export function) L205 - The reviewer's highlights and notes on a script version.
+- `useScriptActions` (export function) L47 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
+- `useDebounced` (export function) L158 - The value, once it has stopped changing for `ms`.
+- `useLiveScriptCheck` (export function) L172 - The rulebook check of wording being edited.
+- `useScriptHighlights` (export function) L207 - The reviewer's highlights and notes on a script version.
 
 ## src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - `message` (const) L11
@@ -78,6 +78,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
+
+## src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
+- `useScriptReviewQueue` (export function) L5
 
 ## src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - `useScriptReviewerLabel` (export function) L5 - Older script responses omit names; resolve the post's actual review assignment.

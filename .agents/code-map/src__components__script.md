@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
+- `ApprovedScriptNextStep` (export function) L5
+
 ## src/components/script/BatchDetailsForm.tsx (149 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `toLocalInput` (const) L13 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) L26 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
@@ -19,6 +22,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - `BulkScriptDialog` (export function) L19 - Upload one document that holds several scripts.
+
+## src/components/script/CreatorScriptDownload.tsx (33 lines) - creator script download (components script)
+- `CreatorScriptDownload` (export function) L7
 
 ## src/components/script/HighlightCards.tsx (137 lines) - highlight cards (components script)
 - `Quote` (function) L8
@@ -67,7 +73,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `activeFlagCount` (export function) L9 - How many of a script's flags still need attention: cleared triggers aren't counted.
 - `ScriptCompliance` (export function) L17 - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
 
-## src/components/script/ScriptDiff.tsx (488 lines) - Text with the given phrases marked (flagged wording).
+## src/components/script/ScriptDiff.tsx (489 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const) L7
 - `Highlighted` (export function) L10 - Text with the given phrases marked (flagged wording).
 - `InlineDiff` (export function) L34 - One version with the other's changes marked in place: removed wording struck through, added wording in green.
@@ -117,7 +123,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PrecheckBody` (function) L17 - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
 - `ScriptPrecheck` (export function) L111 - The check, and while it runs a notice that it can take a while and needn't be waited on.
 
-## src/components/script/ScriptReviewWorkspace.tsx (942 lines) - script review workspace (components script)
+## src/components/script/ScriptReviewWorkspace.tsx (931 lines) - script review workspace (components script)
 - `PanelTab` (type) L33
 - `Compare` (type) L35
 - `sameText` (const) L40
@@ -127,28 +133,28 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptReviewWorkspace` (export function) L60 - Review tools; creators awaiting a decision see only their submitted script and saved compliance.
     - `stage` (fn) L73
 - `Editor` (function) L99
-    - `setTab` (fn) L133
-    - `noteValue` (fn) L138 - The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
-    - `onNoteText` (fn) L141
-    - `shared` (fn) L151 - A suggesting reviewer's notes are their own (kept with their suggestion), not the reviewer's shared highlights.
-    - `shownHighlights` (fn) L180
-    - `openedResponse` (fn) L186 - Open on the Highlighted tab the first time the creator's response arrives.
-    - `live` (fn) L205 - once the wording has changed since, the reviewer is asked to rerun it.
-    - `parts` (fn) L216
-    - `changes` (fn) L220
-    - `myChangeCount` (fn) L221
-    - `findInScript` (fn) L224 - Open the editor with the flagged wording selected, so the reviewer can type over it.
-    - `goToFlag` (fn) L231 - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
-    - `goToHighlight` (fn) L256 - A highlight card was clicked: take the reviewer to that wording.
-    - `goToAddressed` (fn) L262 - An addressed card was clicked: go to the new wording (or the old, if it hasn't changed).
-    - `addDisclaimer` (fn) L270
-    - `discardDisclaimer` (fn) L275
-    - `sendBack` (fn) L298
-    - `approve` (fn) L308 - Approving asks when the video is due (a week by default, or none).
-    - `confirmDecision` (fn) L312
-- `FlagCard` (export function) L769
-    - `go` (fn) L800 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
-- `VersionHistory` (export function) L912 - Every version of the script, newest first, with the reviewer's call and note on each.
+    - `setTab` (fn) L134
+    - `noteValue` (fn) L139 - The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
+    - `onNoteText` (fn) L142
+    - `shared` (fn) L152 - A suggesting reviewer's notes are their own (kept with their suggestion), not the reviewer's shared highlights.
+    - `shownHighlights` (fn) L181
+    - `openedResponse` (fn) L187 - Open on the Highlighted tab the first time the creator's response arrives.
+    - `live` (fn) L206 - once the wording has changed since, the reviewer is asked to rerun it.
+    - `parts` (fn) L217
+    - `changes` (fn) L221
+    - `myChangeCount` (fn) L222
+    - `findInScript` (fn) L225 - Open the editor with the flagged wording selected, so the reviewer can type over it.
+    - `goToFlag` (fn) L232 - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
+    - `goToHighlight` (fn) L257 - A highlight card was clicked: take the reviewer to that wording.
+    - `goToAddressed` (fn) L263 - An addressed card was clicked: go to the new wording (or the old, if it hasn't changed).
+    - `addDisclaimer` (fn) L271
+    - `discardDisclaimer` (fn) L276
+    - `sendBack` (fn) L299
+    - `approve` (fn) L309 - Approving asks when the video is due (a week by default, or none).
+    - `confirmDecision` (fn) L313
+- `FlagCard` (export function) L758
+    - `go` (fn) L789 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
+- `VersionHistory` (export function) L901 - Every version of the script, newest first, with the reviewer's call and note on each.
 
 ## src/components/script/ScriptStageCard.tsx (284 lines) - The script is missing and the creator tried to send: outline the card in red.
 - `ScriptStageCard` (export function) L16 - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
