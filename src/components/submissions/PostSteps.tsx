@@ -1,7 +1,7 @@
 import { Check, Loader2, RefreshCw } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { POST_STEPS, missingText, stepStatusText } from "@/lib/postSteps";
+import { postPreparationSteps, missingText, stepStatusText } from "@/lib/postSteps";
 import type { PostStepKey, PostStepState, SubmissionSteps } from "@/types/submission";
 
 /**
@@ -14,17 +14,19 @@ export default function PostSteps({
   onOpen,
   size = "md",
   className = "",
+  scriptOnly = false,
 }: {
   steps: SubmissionSteps;
   onOpen: (step: PostStepKey) => void;
   /** lg: the dots grow on wide screens (the My posts rows). */
   size?: "md" | "lg";
   className?: string;
+  scriptOnly?: boolean;
 }) {
   return (
     <TooltipProvider delayDuration={150}>
       <ol aria-label="Steps" className={`flex items-center gap-1.5 ${size === "lg" ? "2xl:gap-2.5" : ""} ${className}`}>
-        {POST_STEPS.map((step, i) => {
+        {postPreparationSteps(scriptOnly).map((step, i) => {
           const state: PostStepState = steps[step.key];
           // Where it was left off: the step a click on the post opens.
           const current = !steps.locked && steps.next === step.key;

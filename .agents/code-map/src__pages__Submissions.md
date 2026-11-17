@@ -4,20 +4,21 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2684 lines) - new submission page (pages  submissions)
-- `classifyFile` (function) L164 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- `SaveState` (type) L203
-- `timeOptions` (const) L210
-- `timeLabel` (function) L213 - 17:00" -> "5:00 PM".
-- `withTime` (function) L219 - A copy of the date at the given "HH:mm" time.
-- `SentBackHeader` (function) L262 - Who sent the post back, their note, and when it is due back.
-- `EditorStep` (type) L283 - A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last.
+## src/pages/Submissions/NewSubmissionPage.tsx (2577 lines) - new submission page (pages  submissions)
+- `classifyFile` (function) L166 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `SaveState` (type) L205
+- `timeOptions` (const) L212
+- `timeLabel` (function) L215 - 17:00" -> "5:00 PM".
+- `withTime` (function) L221 - A copy of the date at the given "HH:mm" time.
+- `SentBackHeader` (function) L263 - Who sent the post back, their note, and when it is due back.
+- `EditorStep` (type) L284 - A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last.
 - `Section` (function) L294
 - `SummaryRow` (function) L306
 - `NewSubmissionPage` (export function) L320
     - `navigate` (fn) L321
     - `queryClient` (fn) L326
     - `optionsQuery` (fn) L328
+    - `checking` (fn) L399
     - `markEdited` (fn) L421
     - `accounts` (fn) L427
     - `reviewersQuery` (fn) L429
@@ -27,9 +28,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `selectedAccounts` (fn) L444
     - `brandAccounts` (fn) L448
     - `scriptStage` (fn) L463 - the script stage (required: false) work as they always did.
-    - `duplicatesQuery` (fn) L468
-    - `refreshScript` (fn) L478
-    - `refreshMood` (fn) L482
+    - `duplicatesQuery` (fn) L471
+    - `refreshScript` (fn) L481
     - `sentBack` (fn) L495
     - `applyServer` (fn) L530 - ----- Load an existing draft (S08 resume) -----
     - `buildPayload` (fn) L603 - ----- Saving (S01, S02-S04, S06, S08) -----
@@ -55,21 +55,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `goToStep` (fn) L926
     - `repostKey` (fn) L937
     - `leaveDetails` (fn) L939
-    - `wideCompliance` (fn) L973
     - `backToCaption` (fn) L974
     - `openStep` (fn) L978
     - `runComplianceCheck` (fn) L983 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1052
-    - `ranSinceSentBack` (fn) L1059
-    - `submit` (fn) L1068
-    - `exec` (fn) L1212 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1220 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1232
-    - `typedTail` (fn) L1237 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1244 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1268 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1284 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1292
+    - `sourceChecking` (fn) L1049
+    - `ranSinceSentBack` (fn) L1056
+    - `submit` (fn) L1065
+    - `exec` (fn) L1209 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1217 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1229
+    - `typedTail` (fn) L1234 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1241 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1265 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1281 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1289
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...

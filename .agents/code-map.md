@@ -16,9 +16,9 @@ to find the right file.
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
 | .agents/code-map/src__components__compliance__screener.md | 1 | 1 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
-| .agents/code-map/src__components__script.md | 20 | 11 KB |
+| .agents/code-map/src__components__script.md | 21 | 11 KB |
 | .agents/code-map/src__components__scriptdoc.md | 14 | 7 KB |
-| .agents/code-map/src__components__submissions.md | 63 | 30 KB |
+| .agents/code-map/src__components__submissions.md | 64 | 30 KB |
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
@@ -35,5 +35,5 @@ to find the right file.
 | .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
-| .agents/code-map/src__services.md | 14 | 6 KB |
+| .agents/code-map/src__services.md | 15 | 6 KB |
 | .agents/code-map/src__types.md | 15 | 14 KB |

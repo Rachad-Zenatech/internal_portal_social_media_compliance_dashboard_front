@@ -62,7 +62,7 @@ import type {
 
 // "How its topics are doing online" runs on sample data until Sprout Social is connected, so it's hidden (with its
 // signals in the summary) for now. Set to true to bring it back.
-const SHOW_TOPIC_TRENDS = true;
+const SHOW_TOPIC_TRENDS = false;
 
 const ASSESSMENT: Record<SentimentAssessment, { label: string; tone: string; Icon: typeof CheckCircle2 }> = {
   NO_CONCERNS: {
@@ -857,9 +857,9 @@ function DesignAside({ analysis, result }: { analysis: SentimentAnalysis | null 
         </section>
       )}
       <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs sm:p-5">
-        <h2 className="text-base font-bold text-foreground">Use it to improve the post</h2>
+        <h2 className="text-base font-bold text-foreground">Use it to improve the content</h2>
         <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">
-          Change the caption, then run it again. Each run reads the latest version. It is advice for you: it has no score, and nothing here blocks you from sending.
+          Edit the script or caption, then run it again. Each run reads the latest version. It is advice for you: it has no score, and nothing here blocks you from sending.
         </p>
       </section>
     </aside>
@@ -950,7 +950,7 @@ export default function SentimentPanel({
         </p>
       ) : !analysis ? (
         <p className="text-xs text-muted-foreground">
-          Not analysed yet.{canRun ? " Run it to check the tone, brand fit and how audiences may read it, including what the video shows." : ""}
+          Not analysed yet.{canRun ? " Run it to check the tone, brand fit and how audiences may read it." : ""}
         </p>
       ) : running ? (
         <div className="flex flex-col gap-2">

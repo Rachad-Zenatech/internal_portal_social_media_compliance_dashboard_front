@@ -33,7 +33,6 @@ import {
   Megaphone,
   MessageSquareText,
   Redo2,
-  Save,
   Send,
   Sparkles,
   Underline,
@@ -68,6 +67,7 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceStep from "@/components/submissions/ComplianceStep";
+import { scriptTextOf } from "@/components/script/scriptPreview";
 import ComplianceView from "@/components/submissions/ComplianceView";
 import DuplicateNotice from "@/components/submissions/DuplicateNotice";
 import {
@@ -95,14 +95,16 @@ import { useReviewComments } from "@/hooks/useReview";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
 import ScriptStageCard from "@/components/script/ScriptStageCard";
-import TopicTrend, { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
+import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTrend";
 import { usePublicMood } from "@/hooks/usePublicMood";
 import { useSentiment } from "@/hooks/useSentiment";
+import { useScriptCheckStatus } from "@/hooks/useScriptCheckStatus";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
+import { runPreparationCompliance } from "@/services/preparationComplianceService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
-import { POST_STEPS, RECHECK_AFTER_EDITS, isStepKey } from "@/lib/postSteps";
+import { RECHECK_AFTER_EDITS, isStepKey, postPreparationSteps } from "@/lib/postSteps";
 import PostStepNav, { StepFooter, StepGate } from "@/components/submissions/PostStepNav";
 import type { PostStepKey, SubmissionSummary } from "@/types/submission";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
@@ -242,7 +244,6 @@ const MISSING_LABEL: Record<string, string> = {
 };
 
 /** The editor shows one of the five steps at a time (?step=). */
-const STEP_NUMBER: Record<PostStepKey, number> = { details: 1, compliance: 2, sentiment: 3, mood: 4, send: 5 };
 const STEP_TITLE: Record<PostStepKey, string> = {
   details: "Post details",
   compliance: "Compliance rules",
@@ -286,7 +287,6 @@ const REVISION_STEPS: { key: EditorStep; label: string; purpose: string }[] = [
   { key: "details", label: "Make the changes", purpose: "Change the post as asked: upload a new image, video or script, and edit the caption or details." },
   { key: "compliance", label: "Compliance", purpose: "Check the changed post against the rulebook again." },
   { key: "sentiment", label: "Sentiment", purpose: "Run the sentiment analysis again on the changed post." },
-  { key: "mood", label: "Public mood", purpose: "See what people online are saying now about the post's topics." },
   { key: "send", label: "Reviewers", purpose: "The reviewers stay on the post. Add more people if you like, then resubmit." },
 ];
 const REVISION_TITLE = Object.fromEntries(REVISION_STEPS.map((s) => [s.key, s.label])) as Record<EditorStep, string>;
@@ -390,13 +390,13 @@ export default function NewSubmissionPage() {
   const [canvaOpen, setCanvaOpen] = useState(false);
   const [suggesterOpen, setSuggesterOpen] = useState(false);
   const [reimporting, setReimporting] = useState(false);
-  // The creator's own pre-send checks: the post as last saved (it carries the rulebook check), whether one is running,
-  // and the edit count when it last ran, to say when it's out of date.
-  const [checkedSub, setCheckedSub] = useState<Submission | null>(null);
+  // Saved compliance and the edit count when it last ran.
+  const [storedSub, setCheckedSub] = useState<Submission | null>(null);
   // Sent for review: every step can be looked at, nothing can be changed or run again.
   const [readOnly, setReadOnly] = useState(false);
   const [sentAt, setSentAt] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
+  const [requestChecking, setChecking] = useState(false);
+  const checking = useScriptCheckStatus("script", submissionId).length > 0 || requestChecking;
   const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
   // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
@@ -463,6 +463,9 @@ export default function NewSubmissionPage() {
   const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
   const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
+  const scriptOnly = contentType === "VIDEO" && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
+  const checkedSub = scriptOnly && videoLocked && storedSub && scriptStage.data?.precheck ? { ...storedSub, latest_check: scriptStage.data.precheck } : storedSub;
+  const preparationSteps = postPreparationSteps(scriptOnly);
   // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
   const scriptUploaded = Boolean(scriptStage.data?.file_name);
   const duplicatesQuery = useQuery({
@@ -477,12 +480,9 @@ export default function NewSubmissionPage() {
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
-  const { mood, isLoading: moodLoading, run: runMood, dismissTopic, hasRun: moodHasRun } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  const { analysis: sentimentAnalysis } = useSentiment(submissionId);
-  const refreshMood = async () => {
-    try { await save({ force: true }); return await runMood(); }
-    catch (err) { toast.error(`Couldn't run public mood: ${(err as Error).message}`); }
-  };
+  const { mood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
+  const { analysis: sentimentAnalysis } = useSentiment(scriptOnly ? null : submissionId);
+
 
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
@@ -891,11 +891,11 @@ export default function NewSubmissionPage() {
     region: !region,
     platforms: platforms.length === 0,
     // A video post starts with its script: it has to be uploaded (and then approved) before anything else is sent.
-    script: scriptFirst && !scriptStage.isLoading && !scriptStage.data?.file_name && !(scriptStage.data?.versions.length ?? 0),
+    script: scriptOnly && !scriptStage.isLoading && !files.some((file) => file.kind === "SCRIPT") && !scriptStage.data?.file_name && !(scriptStage.data?.versions.length ?? 0),
     // While the script is still being approved, the video and the caption aren't asked for yet.
-    main_file: !videoLocked && MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
+    main_file: !scriptOnly && MAIN_REQUIRED.includes(contentType) && mainFiles.length === 0,
     // Every post needs a caption: the score and the sentiment analysis read it first.
-    caption: !videoLocked && !caption.trim(),
+    caption: !scriptOnly && !caption.trim(),
     rule_sets: ruleSets.length === 0,
     reviewer_ids: pickedApprovers.length === 0,
     approval_needed_by: !approvalBy,
@@ -909,8 +909,8 @@ export default function NewSubmissionPage() {
   const resubmitting = status === "CHANGES_REQUESTED";
   const showDetails = !resubmitting || showAllDetails;
 
-  // The five steps: one at a time (?step=), and the later ones wait until the details are filled in.
-  const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? stepParam : "details";
+  const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? (scriptOnly && stepParam === "sentiment" ? "compliance" : stepParam) : "details";
+  const stepNumber = Math.max(1, preparationSteps.findIndex((step) => step.key === stepView) + 1);
   // Sent back, the first step is the reviewers' suggestions (where it opens unless another step is asked for).
   const onSuggestions = resubmitting && Boolean(submissionId) && (stepParam === "suggestions" || !stepParam);
   const currentStep: EditorStep = onSuggestions ? "suggestions" : stepView;
@@ -970,7 +970,7 @@ export default function NewSubmissionPage() {
       setContinuing(false);
     }
   };
-  const wideCompliance = (toolView("compliance") || toolView("sentiment")) && !videoLocked;
+  const wideCompliance = toolView("compliance") || toolView("sentiment");
   const backToCaption = () => {
     goToStep("details");
     window.setTimeout(() => captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
@@ -997,17 +997,15 @@ export default function NewSubmissionPage() {
     setCheckStartedAt(started);
     try {
       const id = await save({ force: true });
-      // Each model call is shown as it happens (fallbacks too); the old result stays hidden until the new one is in.
       const repostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
-      const running = submissionService.runCheckStream(
-        id!,
+      const running = runPreparationCompliance(
+        id!, scriptOnly && videoLocked,
         (a) => setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a])),
-        repostConfirmed
+        (stage) => queryClient.setQueryData(["script", id], stage), repostConfirmed
       );
-      // Also on the task list at the bottom right, so it can be left running while you use other tools.
       addJob("Checking for compliance", running, {
         type: "check",
-        description: "Compliance check",
+        description: "Compliance check", key: `script-compliance:${id}`,
         link_url: `/submissions/new?id=${id}`,
         doneMessage: "The compliance check is done",
       });
@@ -1035,7 +1033,6 @@ export default function NewSubmissionPage() {
     }
   };
 
-  // Check back while the check is still reading the post (videos, documents), so the score shows up when it's ready.
   const checkAnalysing = isAnalysing(checkedSub?.latest_check);
   useEffect(() => {
     if (!checkAnalysing || !submissionId) return;
@@ -1352,7 +1349,7 @@ export default function NewSubmissionPage() {
 
       {resubmitting && submissionId ? (
         <PostStepNav<EditorStep>
-          steps={REVISION_STEPS}
+          steps={REVISION_STEPS.filter((step) => !scriptOnly || step.key !== "sentiment")}
           current={currentStep}
           states={{
             suggestions: reviewComments.some((c) => !c.resolved_at) ? "todo" : "done",
@@ -1364,7 +1361,7 @@ export default function NewSubmissionPage() {
           onGo={openStep}
         />
       ) : (
-        <PostStepNav
+        <PostStepNav steps={preparationSteps}
           current={stepView}
           states={{
             details: detailsComplete ? "done" : "todo",
@@ -2143,92 +2140,9 @@ export default function NewSubmissionPage() {
             </div>
           </fieldset>
 
-          {showDetails && (
-            <div className={toolView("mood") ? "" : "hidden"}>
-              <Section
-                id="step-mood"
-                step={4}
-                title="Market & News Sentiment"
-                description="Live industry conversation on X and news outlets for your post's topics, and whether posting now carries backlash risk."
-              >
-                {submissionId ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-foreground">
-                            {moodDecision
-                              ? moodDecision.reason
-                              : mood?.topics.length
-                                ? `${mood.topics.length} matched topic${mood.topics.length === 1 ? "" : "s"} found in current conversation`
-                                : "No negative crisis or backlash topics matched in current feeds."}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {mood?.topics.length
-                              ? `Topics: ${mood.topics.map((t) => t.name).join(", ")}`
-                              : "Run the check to match topics from your current title, caption, script and video transcript."}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {moodDecision && (
-                          <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${REC_BADGE[moodDecision.recommendation].cls}`}>
-                            {moodDecision.recommendation}
-                          </span>
-                        )}
-                        <Button
-                          type="button"
-                          variant="default"
-                          size="lg"
-                          className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-                          onClick={() => refreshMood()}
-                          disabled={moodLoading}
-                          hidden={readOnly}
-                        >
-                          {moodLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : moodHasRun ? "Run public mood check again" : "Run public mood check"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <TopicTrend
-                      submissionId={submissionId}
-                      mood={mood}
-                      isLoading={moodLoading}
-                      canEdit={!readOnly}
-                      busy={dismissTopic.isPending}
-                      onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
-                      onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
-                      hasRun={moodHasRun}
-                      onRun={readOnly ? undefined : () => refreshMood()}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border/80 p-4 bg-muted/20">
-                    <div className="flex items-center gap-2.5">
-                      <Globe2 className="h-4 w-4 shrink-0 text-sky-600" />
-                      <span className="text-xs text-muted-foreground">
-                        Save your draft to check live social sentiment and industry news on your topics before sending for review.
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1 shrink-0"
-                      onClick={() => saveNow()}
-                    >
-                      <Save className="w-3 h-3" /> Check Sentiment
-                    </Button>
-                  </div>
-                )}
-              </Section>
-            </div>
-          )}
-
           {gated && <StepGate missing={detailsMissing} onBack={() => goToStep("details")} />}
 
-          {toolView("compliance") && !videoLocked && (
+          {toolView("compliance") && (
             <div id="step-compliance" className="scroll-mt-4 space-y-3">
               {/* Duplicates are settled here, just before the compliance check runs */}
               {duplicates && (duplicates.blocked || duplicates.repost) && (
@@ -2238,7 +2152,7 @@ export default function NewSubmissionPage() {
                 sub={checkedSub}
                 title={title}
                 caption={caption}
-                mainFile={mainFiles[0]} files={files}
+                mainFile={mainFiles[0]} files={files} scriptText={videoLocked ? scriptTextOf(files, scriptStage.data?.versions) : undefined}
                 editable={!readOnly}
                 checking={checking}
                 stale={checkStale}
@@ -2260,32 +2174,14 @@ export default function NewSubmissionPage() {
             </div>
           )}
 
-          <div ref={checkSectionRef} className={`scroll-mt-4 ${onDetails || stepView === "mood" || gated || (toolView("compliance") && !videoLocked) ? "hidden" : ""}`}>
+          <div ref={checkSectionRef} className={`scroll-mt-4 ${onDetails || stepView === "mood" || gated || (toolView("compliance")) ? "hidden" : ""}`}>
             <Section
-              step={STEP_NUMBER[stepView]}
+              step={stepNumber}
               title={titleOf(stepView)}
               description={resubmitting && stepView === "send" ? "The reviewers stay on the post. Add more people if you like, then resubmit." : STEP_DESCRIPTION[stepView]}
             >
               <div className="flex flex-col gap-4">
-                {videoLocked ? (
-                  <p className={`flex items-start gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground ${stepView === "send" ? "hidden" : ""}`}>
-                    <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    <span>
-                      Your script is checked first: open it from the script card to see its compliance score. The
-                      compliance check and sentiment analysis of the video and caption open here once the script is approved.{" "}
-                      <button
-                        type="button"
-                        className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
-                        onClick={() => {
-                          goToStep("details");
-                          window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
-                        }}
-                      >
-                        Go to script
-                      </button>
-                    </span>
-                  </p>
-                ) : (
+
                   <>
                     {/* Compliance: the same rulebook check the reviewer sees */}
                     <div className={`scroll-mt-4 rounded-xl border border-border/80 p-3.5 space-y-3 ${toolView("compliance") ? "" : "hidden"}`}>
@@ -2346,12 +2242,10 @@ export default function NewSubmissionPage() {
                       )}
                     </div>
 
-                    {/* Sentiment: the same tone and reputational-risk analysis the reviewer sees */}
-                    <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
+                    {!scriptOnly && <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
                       <SentimentPanel
                         submissionId={submissionId}
                         post={
-                          // The post itself, shown with the analysis: its picture and each platform's own caption.
                           platforms.length > 0 ? (
                             <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
                               <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Your post</p>
@@ -2376,7 +2270,7 @@ export default function NewSubmissionPage() {
                         canRun={!readOnly}
                         design
                         beforeAnalyse={async () => {
-                          if (!detailsComplete) {
+                          if (!detailsComplete && !videoLocked) {
                             toast.error(`Fill in the required fields before running the analysis: ${detailsMissing.join(", ")}.`);
                             return false;
                           }
@@ -2389,9 +2283,8 @@ export default function NewSubmissionPage() {
                           }
                         }}
                       />
-                    </div>
+                    </div>}
                   </>
-                )}
 
                 {readOnly && toolView("send") && (
                   <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-100">
@@ -2471,15 +2364,15 @@ export default function NewSubmissionPage() {
               onSave={readOnly ? undefined : saveNow}
               saving={saveState === "saving"}
               back={{
-                label: `Back: ${titleOf(POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key)}`,
-                onClick: () => goToStep(POST_STEPS[Math.max(STEP_NUMBER[stepView] - 2, 0)].key),
+                label: `Back: ${titleOf(preparationSteps[Math.max(stepNumber - 2, 0)].key)}`,
+                onClick: () => goToStep(preparationSteps[Math.max(stepNumber - 2, 0)].key),
               }}
               next={
                 stepView === "send"
                   ? undefined
                   : {
-                    label: `Continue to ${titleOf(POST_STEPS[STEP_NUMBER[stepView]].key).toLowerCase()}`,
-                    onClick: () => goToStep(POST_STEPS[STEP_NUMBER[stepView]].key),
+                    label: `Continue to ${titleOf(preparationSteps[stepNumber].key).toLowerCase()}`,
+                    onClick: () => goToStep(preparationSteps[stepNumber].key),
                   }
               }
             />

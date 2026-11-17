@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
+import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
@@ -22,7 +23,7 @@ interface Finding {
   v: ComplianceViolation;
   key: string;
   /** Where in the post it was found. */
-  where: "Caption" | "Title" | "Video" | "Image or on-screen text" | "Missing disclaimer";
+  where: "Caption" | "Script" | "Title" | "Video" | "Image or on-screen text" | "Missing disclaimer";
   /** The first moment of the video it was found at. */
   at: number | null;
 }
@@ -40,6 +41,7 @@ export default function ComplianceStep({
   sub,
   title,
   caption,
+  scriptText = "",
   mainFile,
   files,
   editable,
@@ -55,6 +57,7 @@ export default function ComplianceStep({
   sub: Submission | null;
   title: string;
   caption: string;
+  scriptText?: string;
   mainFile?: SubmissionFile;
   files?: SubmissionFile[];
   editable: boolean;
@@ -89,7 +92,7 @@ export default function ComplianceStep({
           .filter((f) => f.rule_numbers.includes(v.rule_number))
           .sort((a, b) => a.start_sec - b.start_sec)[0];
         const terms = v.flagged_terms.map((t) => t.toLowerCase());
-        const where: Finding["where"] = terms.some((t) => cap.includes(t))
+        const where: Finding["where"] = terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
           ? "Caption"
           : seg
           ? "Video"
@@ -101,7 +104,7 @@ export default function ComplianceStep({
         return { v, key: `${v.rule_id}-${v.kind ?? ""}`, where, at: seg ? seg.start_sec : null };
       })
       .sort((a, b) => Number(b.v.traffic_light === "RED") - Number(a.v.traffic_light === "RED") || (a.at ?? 1e9) - (b.at ?? 1e9));
-  }, [check, caption, title]);
+  }, [check, caption, title, scriptText]);
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
@@ -125,9 +128,10 @@ export default function ComplianceStep({
   const terms = (list: Finding[]) => list.flatMap((f) => f.v.flagged_terms).filter(Boolean);
   const captionParts = (() => {
     const all = terms(findings);
-    if (!all.length || !caption) return [{ text: caption, tone: "" }];
+    const preview = caption;
+    if (!all.length || !preview) return [{ text: preview, tone: "" }];
     const chosen = new Set(selected ? selected.v.flagged_terms.map((t) => t.toLowerCase()) : []);
-    return caption
+    return preview
       .split(new RegExp(`(${all.map(escapeRe).join("|")})`, "gi"))
       .map((text, i) => ({ text, tone: i % 2 ? (chosen.has(text.toLowerCase()) ? "chosen" : "flag") : "" }));
   })();
@@ -200,7 +204,7 @@ export default function ComplianceStep({
     : `A post needs ${MIN_SCORE} or more, and no critical issue, to be sent. You are ${-gap} point${gap === -1 ? "" : "s"} under the line: fix the findings below and check again.`;
 
   return (
-    <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,440px)]">
+    <div className={`grid grid-cols-1 items-start gap-4 sm:gap-5 ${scriptText ? "2xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.4fr)]" : "xl:grid-cols-[minmax(0,1fr)_minmax(340px,440px)]"}`}>
       <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
         <section className={`${card} flex flex-col gap-4`}>
           {header}
@@ -299,7 +303,7 @@ export default function ComplianceStep({
                     </p>
                     {editable && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>
-                        {edit ? "Fix in caption" : "Replace the media"}
+                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : "Replace the media"}
                       </Button>
                     )}
                   </div>
@@ -402,23 +406,7 @@ export default function ComplianceStep({
             <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />
           )}
 
-          <div className="flex flex-col gap-1.5 border-t border-border/60 pt-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Caption</span>
-            <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/90">
-              {captionParts.map((p, i) =>
-                p.tone ? (
-                  <mark
-                    key={i}
-                    className={`rounded px-0.5 text-foreground ${p.tone === "chosen" ? "bg-red-200 ring-2 ring-red-500 dark:bg-red-500/40" : "bg-amber-200/70 dark:bg-amber-500/30"}`}
-                  >
-                    {p.text}
-                  </mark>
-                ) : (
-                  <span key={i}>{p.text}</span>
-                )
-              )}
-            </p>
-          </div>
+          <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
           {selected && (
             <p className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-[13px] text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -430,10 +418,10 @@ export default function ComplianceStep({
           {editable && (
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" className="rounded-lg text-[13px] font-semibold" onClick={onEditCaption}>
-                Edit caption
+                {scriptText ? "Edit post details" : "Edit caption"}
               </Button>
               <Button type="button" variant="outline" size="sm" className="rounded-lg text-[13px] font-semibold" onClick={onReplaceMedia}>
-                {isVideo ? "Replace video" : "Replace image"}
+                {scriptText ? "Replace script" : isVideo ? "Replace video" : "Replace image"}
               </Button>
             </div>
           )}

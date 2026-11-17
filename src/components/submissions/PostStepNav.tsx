@@ -9,7 +9,7 @@ import type { PostStepKey } from "@/types/submission";
 type TabState = "done" | "stale" | "todo";
 
 /**
- * The five steps along the top of the post editor, the one you're on lit. Each says what it's for when you point at it.
+ * The preparation steps along the top of the post editor, the one you're on lit. Each says what it's for when you point at it.
  * The steps after the details stay shut until the details are filled in (the page then says what is missing).
  * It stays pinned to the top while the page scrolls, so the steps are always in view; on a phone it's one row that
  * scrolls sideways, so the pinned bar stays short.
@@ -30,7 +30,7 @@ export default function PostStepNav<K extends string = PostStepKey>({
   /** The steps that can't be opened yet, and why they can't. */
   shut?: Partial<Record<K, string>>;
   onGo: (step: K) => void;
-  /** Another set of steps (a post sent back has six); the usual five by default. */
+  /** Another set of steps (a post sent back has six); the usual four by default. */
   steps?: { key: K; label: string; purpose: string }[];
 }) {
   const list = steps ?? (POST_STEPS as unknown as { key: K; label: string; purpose: string }[]);
@@ -42,7 +42,7 @@ export default function PostStepNav<K extends string = PostStepKey>({
   return (
     <TooltipProvider delayDuration={150}>
       <nav aria-label="Steps" className={STICKY}>
-        <ol ref={row} className={`flex gap-2 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible ${list.length === 6 ? "xl:grid-cols-6" : "lg:grid-cols-5"}`}>
+        <ol ref={row} className={`flex gap-2 overflow-x-auto sm:grid sm:grid-cols-3 sm:overflow-visible ${list.length === 3 ? "lg:grid-cols-3" : list.length === 6 ? "xl:grid-cols-6" : list.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-5"}`}>
           {list.map((step, i) => {
             const active = step.key === current;
             const state = states[step.key] ?? "todo";

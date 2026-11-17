@@ -4,7 +4,6 @@ import { AlertTriangle, CheckCircle2, FileText, Loader2, Send } from "lucide-rea
 
 import { Button } from "@/components/ui/button";
 import { StageSteps } from "@/components/script/ScriptDiff";
-import ScriptInsights from "@/components/script/ScriptInsights";
 import ScriptPrecheck from "@/components/script/ScriptPrecheck";
 import { useScriptActions } from "@/hooks/useScript";
 import type { ScriptStage } from "@/types/script";
@@ -192,7 +191,7 @@ function DraftBody({
   note: string | null;
   reviewer: string | null;
 }) {
-  const { submit, precheck } = useScriptActions(submissionId ?? "");
+  const { submit, precheck, checking } = useScriptActions(submissionId ?? "");
   const navigate = useNavigate();
   const hasFile = Boolean(stage?.file_name);
   const failed = stage?.file_status === "FAILED";
@@ -258,13 +257,11 @@ function DraftBody({
           check={stage?.precheck}
           stale={stage?.precheck_stale}
           checkedAt={stage?.precheck_at}
-          checking={precheck.isPending}
+          checking={precheck.isPending || checking}
           canCheck={canEdit}
           onCheck={() => precheck.mutate({})}
         />
       )}
-      {/* Like a post: read the sentiment and the public mood before sending, too. */}
-      {checkable && submissionId && <ScriptInsights submissionId={submissionId} canRun={canEdit} />}
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onAddScript} disabled={!canEdit}>
           <FileText className="w-3.5 h-3.5" /> {hasFile ? "Replace the script" : "Upload the script"}
@@ -275,7 +272,7 @@ function DraftBody({
             size="sm"
             className="h-8 gap-1.5 text-xs"
             onClick={() => (onSend ? onSend() : submit.mutate(undefined, { onSuccess: () => navigate("/submissions") }))}
-            disabled={reading || failed || submit.isPending || sending}
+            disabled={reading || failed || checking || submit.isPending || sending}
           >
             {submit.isPending || sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send script for review
           </Button>
