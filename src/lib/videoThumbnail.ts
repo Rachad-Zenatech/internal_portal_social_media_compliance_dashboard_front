@@ -55,71 +55,84 @@ function scoreFrame(ctx: CanvasRenderingContext2D, w: number, h: number): number
 
 async function extract(url: string): Promise<VideoThumbnail> {
   const video = document.createElement("video");
+  video.crossOrigin = "anonymous";
   video.muted = true;
   video.playsInline = true;
   video.preload = "auto";
-  video.src = url;
+  let duration: number | null = null;
   try {
-    await waitFor(video, "loadeddata", 8000);
-  } catch {
-    return { dataUrl: null, duration: Number.isFinite(video.duration) ? video.duration : null };
-  }
-  const duration = Number.isFinite(video.duration) ? video.duration : null;
-  if (!video.videoWidth || !video.videoHeight) return { dataUrl: null, duration };
+    // Register first: cached videos can emit loadeddata as soon as their source is set.
+    const ready = waitFor(video, "loadeddata", 8000);
+    video.src = url;
+    video.load();
+    await ready;
+    duration = Number.isFinite(video.duration) ? video.duration : null;
+    if (!video.videoWidth || !video.videoHeight) return { dataUrl: null, duration };
 
-  // Score at low resolution; capture the winner at a card-friendly size.
-  const probe = document.createElement("canvas");
-  probe.width = 64;
-  probe.height = Math.max(1, Math.round((64 * video.videoHeight) / video.videoWidth));
-  const probeCtx = probe.getContext("2d", { willReadFrequently: true });
-  const out = document.createElement("canvas");
-  out.width = Math.min(640, video.videoWidth);
-  out.height = Math.round((out.width * video.videoHeight) / video.videoWidth);
-  const outCtx = out.getContext("2d");
-  if (!probeCtx || !outCtx) return { dataUrl: null, duration };
+    const probe = document.createElement("canvas");
+    probe.width = 64;
+    probe.height = Math.max(1, Math.round((64 * video.videoHeight) / video.videoWidth));
+    const probeCtx = probe.getContext("2d", { willReadFrequently: true });
+    const out = document.createElement("canvas");
+    out.width = Math.min(640, video.videoWidth);
+    out.height = Math.round((out.width * video.videoHeight) / video.videoWidth);
+    const outCtx = out.getContext("2d");
+    if (!probeCtx || !outCtx) return { dataUrl: null, duration };
 
-  const times = duration ? SAMPLE_POINTS.map((f) => f * duration) : [0.5];
-  let bestScore = -1;
-  let best: string | null = null;
-  for (const t of times) {
-    try {
-      video.currentTime = t;
-      await waitFor(video, "seeked");
-      probeCtx.drawImage(video, 0, 0, probe.width, probe.height);
-      const score = scoreFrame(probeCtx, probe.width, probe.height);
-      if (score > bestScore) {
-        bestScore = score;
-        outCtx.drawImage(video, 0, 0, out.width, out.height);
-        best = out.toDataURL("image/jpeg", 0.82);
+    // Capture the loaded frame too, so short clips or failed seeks still have a thumbnail.
+    const videoDuration = duration;
+    const times = [video.currentTime, ...(videoDuration ? SAMPLE_POINTS.map((f) => f * videoDuration) : [])];
+    let bestScore = -1;
+    let best: string | null = null;
+    for (const time of times) {
+      try {
+        if (time !== video.currentTime) {
+          const seeked = waitFor(video, "seeked");
+          video.currentTime = time;
+          await seeked;
+        }
+        probeCtx.drawImage(video, 0, 0, probe.width, probe.height);
+        const score = scoreFrame(probeCtx, probe.width, probe.height);
+        if (score > bestScore) {
+          bestScore = score;
+          outCtx.drawImage(video, 0, 0, out.width, out.height);
+          best = out.toDataURL("image/jpeg", 0.82);
+        }
+      } catch {
+        // Keep any frame already captured if a later frame can't be read.
       }
-    } catch {
-      // Skip frames that can't be seeked or read (e.g. an incomplete file).
     }
+    return { dataUrl: best, duration };
+  } catch {
+    return { dataUrl: null, duration };
+  } finally {
+    video.removeAttribute("src");
+    video.load();
   }
-  video.removeAttribute("src");
-  video.load();
-  return { dataUrl: best, duration };
 }
 
 /** Pick (and cache) the most representative frame of a video URL. */
 export function getVideoThumbnail(url: string): Promise<VideoThumbnail> {
   let pending = cache.get(url);
   if (!pending) {
-    pending = extract(url).catch(() => ({ dataUrl: null, duration: null }));
+    pending = extract(url).catch(() => ({ dataUrl: null, duration: null })).then((result) => {
+      if (!result.dataUrl) cache.delete(url); // A temporary auth/load failure must be retryable.
+      return result;
+    });
     cache.set(url, pending);
   }
   return pending;
 }
 
 export function useVideoThumbnail(url?: string | null): VideoThumbnail {
-  const [result, setResult] = useState<VideoThumbnail>({ dataUrl: null, duration: null });
+  const [loaded, setLoaded] = useState<{ url: string; result: VideoThumbnail } | null>(null);
   useEffect(() => {
     if (!url) return;
     let active = true;
-    getVideoThumbnail(url).then((r) => active && setResult(r));
+    getVideoThumbnail(url).then((result) => active && setLoaded({ url, result }));
     return () => {
       active = false;
     };
   }, [url]);
-  return url ? result : { dataUrl: null, duration: null };
+  return loaded && loaded.url === url ? loaded.result : { dataUrl: null, duration: null };
 }

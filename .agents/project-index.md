@@ -115,7 +115,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
-- src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
+- src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (109 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/PostTextPreview.tsx (27 lines) - A formatted script document, or the post's caption with its flagged words marked.
@@ -217,7 +217,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/utils.ts (7 lines) - utils (lib)
-- src/lib/videoThumbnail.ts (126 lines) - JPEG data URL of the most representative frame, or null if none could be read.
+- src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
 - src/main.tsx (51 lines) - Create a client
 - src/pages/Auth/Login.tsx (241 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).

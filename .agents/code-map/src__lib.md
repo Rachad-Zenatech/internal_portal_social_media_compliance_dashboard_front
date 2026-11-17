@@ -168,13 +168,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/utils.ts (7 lines) - utils (lib)
 - `cn` (export function) L4
 
-## src/lib/videoThumbnail.ts (126 lines) - JPEG data URL of the most representative frame, or null if none could be read.
+## src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - `VideoThumbnail` (export interface) L3
 - `waitFor` (function) L14
 - `scoreFrame` (function) L39 - Mean brightness and contrast of a small sample: higher contrast means more visible detail.
 - `extract` (function) L56
-- `getVideoThumbnail` (export function) L105 - Pick (and cache) the most representative frame of a video URL.
-- `useVideoThumbnail` (export function) L114
+- `getVideoThumbnail` (export function) L115 - Pick (and cache) the most representative frame of a video URL.
+- `useVideoThumbnail` (export function) L127
 
 ## src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
 - `DiffPart` (export type) L9

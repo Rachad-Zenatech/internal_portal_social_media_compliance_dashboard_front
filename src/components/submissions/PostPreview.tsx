@@ -18,6 +18,7 @@ import {
 
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
+import { useLinkToken } from "@/lib/linkToken";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import type { AccountOption, ContentType, SubmissionFile } from "@/types/submission";
 
@@ -100,9 +101,10 @@ export function CoverThumb({
   className?: string;
   showPlay?: boolean;
 }) {
+  const linkToken = useLinkToken();
   const isVideo = Boolean(cover?.mime_type.startsWith("video/"));
   const src = cover ? authedFileUrl(cover.url) : null;
-  const thumb = useVideoThumbnail(isVideo ? src : null);
+  const thumb = useVideoThumbnail(isVideo && linkToken ? src : null);
   const Icon = CONTENT_ICONS[contentType] ?? FileText;
 
   if (cover && !isVideo && src) {
