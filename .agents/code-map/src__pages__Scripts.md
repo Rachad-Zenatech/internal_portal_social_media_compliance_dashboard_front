@@ -15,7 +15,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useNotes` (function) L23 - The notes document as a list, kept up to date as anyone changes it.
 - `ScriptDocPage` (export function) L40 - A script open for review.
 
-## src/pages/Scripts/ScriptReviewPage.tsx (307 lines) - script review page (pages  scripts)
+## src/pages/Scripts/ScriptReviewPage.tsx (314 lines) - script review page (pages  scripts)
 - `ReviewTab` (type) L27
 - `CreatorFilter` (type) L34
 - `Progress` (function) L47 - How far a batch has got: a bar split by where its scripts are.

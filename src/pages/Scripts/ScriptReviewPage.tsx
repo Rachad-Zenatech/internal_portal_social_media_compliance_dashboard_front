@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { FileStack, FileText, Plus } from "lucide-react";
+import { Download, FileStack, FileText, Plus } from "lucide-react";
 
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import ListPager from "@/components/common/ListPager";
@@ -255,9 +255,16 @@ export default function ScriptReviewPage() {
           </p>
         </div>
         {!reviewer && (
-          <Button type="button" onClick={() => setUploadOpen(true)} className="h-10 gap-2 bg-blue-700 px-4 text-white hover:bg-blue-800">
-            <Plus className="h-4 w-4" /> Upload scripts
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" onClick={() => setUploadOpen(true)} className="h-10 gap-2 bg-blue-700 px-4 text-white hover:bg-blue-800">
+              <Plus className="h-4 w-4" /> Upload scripts
+            </Button>
+            <Button asChild variant="outline" className="h-10 gap-2 px-4">
+              <a href={`${import.meta.env.BASE_URL}templates/script-template.docx`} download="script-template.docx">
+                <Download className="h-4 w-4" /> Export template
+              </a>
+            </Button>
+          </div>
         )}
       </div>
 
