@@ -1,3 +1,6 @@
+import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
+import PublishPostButton from "@/components/submissions/PublishPostButton";
+import ApprovedPostChecks from "@/components/submissions/ApprovedPostChecks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListPager from "@/components/common/ListPager";
 import { CheckCard, HistoryView } from "@/components/submissions/PostDetailParts";
@@ -86,7 +89,8 @@ import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
 import PostSteps from "@/components/submissions/PostSteps";
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
-import { POST_STEPS, missingText, ranOnce, resumePath, stepPath } from "@/lib/postSteps";
+import { POST_STEPS, missingText, resumePath, stepPath } from "@/lib/postSteps";
+import { creatorSubmissionSteps, creatorProgressText, isScriptPreparation } from "@/lib/submissionProgress";
 import type { PostStepKey, Submission, SubmissionSummary } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
@@ -453,12 +457,7 @@ function ScoreRing({ score, pending }: { score?: number | null; pending?: boolea
 
 /** "3 of 5 steps done", or where a sent post is. */
 function progressText(s: SubmissionSummary, stage: Stage): string {
-  const steps = s.steps;
-  if (!steps) return "";
-  if (steps.locked) return stage === "IN_REVIEW" ? "Sent for review" : (STAGES[stage]?.label ?? "Sent");
-  if (steps.ready_to_send) return "Ready to send";
-  const done = POST_STEPS.filter((p) => steps[p.key] === "done").length;
-  return `${done} of ${POST_STEPS.length} steps done`;
+  return creatorProgressText(s, stage === "IN_REVIEW" ? "Sent for review" : (STAGES[stage]?.label ?? "Sent"));
 }
 
 function PostRow({
@@ -519,7 +518,7 @@ function PostRow({
       {/* How far it has got: hover a step for what it's for, click it to open it */}
       {s.steps && (
         <div className="flex min-w-[168px] flex-[1_1_180px] flex-col gap-1.5">
-          <PostSteps size="lg" steps={s.steps} onOpen={(step) => onOpenStep(s, step)} />
+          <PostSteps scriptOnly={isScriptPreparation(s)} size="lg" steps={s.steps} onOpen={(step) => onOpenStep(s, step)} />
           <span className="text-xs font-medium text-muted-foreground 2xl:text-sm">{progressText(s, stage)}</span>
         </div>
       )}
@@ -605,7 +604,7 @@ function ReviewCard({
     // Check back quickly while the post is still being read, so the score shows up soon after it's ready.
     refetchInterval: (q) => (isAnalysing(q.state.data?.latest_check) ? ANALYSING_REFETCH_MS : false),
   });
-  const { analysis } = useSentiment(summary.id);
+  const { analysis } = useSentiment(summary.content_type === "VIDEO" && !sub?.files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/")) ? null : summary.id);
   const runCheck = useMutation({
     mutationFn: () => submissionService.runCheck(summary.id),
     onSuccess: (updated) => {
@@ -690,19 +689,15 @@ function ReviewCard({
         }}
       />
     );
-  } else if (summary.status === "DRAFT" && (summary.script_status === "IN_REVIEW" || scriptNeedsChanges(summary)) && mine) {
-    // The script is with a reviewer, or back from one: the draft itself has nothing to edit or send, the script page does.
-    const back = scriptNeedsChanges(summary);
-    footerTitle = back ? "Your next step" : "Script in review";
-    footerNote = back
-      ? summary.script_status === "EDITS_PROPOSED"
-        ? "Your reviewer edited the script. Accept the changes or edit it and send it again."
-        : "Your reviewer asked for changes to the script. Make them and send it again."
-      : "Your script is with a reviewer. You'll be notified when it's decided.";
+  } else if (summary.status === "DRAFT" && scriptNeedsChanges(summary) && mine) {
+    footerTitle = "Your next step";
+    footerNote = summary.script_status === "EDITS_PROPOSED"
+      ? "Your reviewer edited the script. Accept the changes or edit it and send it again."
+      : "Your reviewer asked for changes to the script. Make them and send it again.";
     actions = (
       <div className="flex flex-wrap justify-end gap-2">
         <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/${summary.id}/script`)}>
-          <FileText className="w-3.5 h-3.5" /> {back ? "Review changes" : "Review script"}
+          <FileText className="w-3.5 h-3.5" /> Review changes
         </Button>
       </div>
     );
@@ -732,7 +727,7 @@ function ReviewCard({
       : "Send it for review when it's ready.";
     actions = (
       <div className="flex flex-col items-end gap-2">
-        {steps && <PostSteps steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
+        {steps && <PostSteps scriptOnly={summary.content_type === "VIDEO" && !mediaIsVideo} steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(summary.status === "CHANGES_REQUESTED" ? `/submissions/new?id=${summary.id}` : resumePath(summary.id, steps))}>
             <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Continue"}
@@ -757,13 +752,7 @@ function ReviewCard({
     actions = (
       <div className="flex flex-wrap justify-end gap-2">
         {mine && summary.platforms[0] && (
-          <Button
-            size="sm"
-            className="h-9 gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
-            onClick={() => navigate(`/content-calendar/publish/sub-${summary.id}/${summary.platforms[0]}`)}
-          >
-            <Send className="w-3.5 h-3.5" /> Publish post
-          </Button>
+          <PublishPostButton onClick={() => navigate(`/content-calendar/publish/sub-${summary.id}/${summary.platforms[0]}`)} />
         )}
         <ApprovalActions target={sub ?? summary} isCreator={mine} buttonClassName="h-9 text-xs font-semibold gap-1.5" />
       </div>
@@ -779,13 +768,14 @@ function ReviewCard({
     footerNote = "Waiting for the creator to make changes and resubmit.";
   }
 
+  if (summary.script_status === "IN_REVIEW" && !mediaIsVideo) return <ScriptInReviewDetails summary={summary} reviewerMode={!creatorView && !mine && canComment} />;
   return (
     <div className="@container rounded-xl border border-border/70 bg-card shadow-xs">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 px-5 pt-5">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-            <ClipboardCheck className="w-3.5 h-3.5" /> Content review
+            <ClipboardCheck className="w-3.5 h-3.5" /> {summary.status === "APPROVED" ? "Post details" : "Content review"}
           </p>
           <h2 className="mt-1.5 text-xl font-semibold leading-snug text-foreground">{summary.title}</h2>
         </div>
@@ -880,27 +870,18 @@ function ReviewCard({
           )}
           <div className="col-span-2 min-w-0">
             <dt className="text-muted-foreground">Caption</dt>
-            <dd className="mt-0.5 text-foreground whitespace-pre-wrap break-words line-clamp-5">{summary.caption_text?.trim() || "No caption yet."}</dd>
+            <dd className="mt-0.5 text-foreground whitespace-pre-wrap break-words">{(sub?.caption_text ?? summary.caption_text)?.trim() || "No caption yet."}</dd>
           </div>
         </dl>
       </div>
 
       {/* Review checks */}
+      {summary.status === "APPROVED" ? <ApprovedPostChecks submissionId={summary.id} canPublish={mine} /> : (
       <section className="border-t border-border/70 px-5 py-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
           <p className="text-[11px] text-muted-foreground">Analysis does not approve or publish content.</p>
         </div>
-        {locked && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-3 dark:border-blue-500/30 dark:bg-blue-500/10">
-            <p className="min-w-0 flex-1 text-xs text-blue-950/85 dark:text-blue-100/85">
-              Go through every step the way it was prepared: details, compliance, sentiment and public mood. It is read-only; nothing can be changed or run again.
-            </p>
-            <Button asChild size="sm" variant="outline" className="h-8 shrink-0 bg-card text-xs font-semibold">
-              <Link to={`/submissions/new?id=${summary.id}`}>Open all checks</Link>
-            </Button>
-          </div>
-        )}
         <div className="mt-3 grid gap-3 @xl:grid-cols-2">
           <CheckCard
             icon={ShieldCheck}
@@ -936,7 +917,7 @@ function ReviewCard({
             busy={runCheck.isPending}
             onAction={() => (check ? setOpenCheck((o) => (o === "compliance" ? null : "compliance")) : runCheck.mutate())}
           />
-          <CheckCard
+          {!(summary.content_type === "VIDEO" && !mediaIsVideo) && <CheckCard
             icon={BarChart3}
             title="Sentiment Analysis"
             status={sentimentDone ? "Results ready" : sentimentRunning ? "Running..." : locked ? "Not run before it was sent" : "No results yet"}
@@ -944,7 +925,7 @@ function ReviewCard({
             description="Assess tone and messaging for the intended audience. Review the analysis before making a decision."
             action={openCheck === "sentiment" ? "Hide analysis" : sentimentDone ? "View analysis" : locked ? null : "Analyze sentiment"}
             onAction={() => setOpenCheck((o) => (o === "sentiment" ? null : "sentiment"))}
-          />
+          />}
         </div>
         {!check && !canRunCheck && (
           <p className="mt-2 text-[11px] text-muted-foreground">The compliance check runs when it's sent for review.</p>
@@ -954,15 +935,16 @@ function ReviewCard({
             <ComplianceView sub={sub} />
           </div>
         )}
-        {openCheck === "sentiment" && (
+        {openCheck === "sentiment" && !(summary.content_type === "VIDEO" && !mediaIsVideo) && (
           <div className="mt-3 rounded-xl border border-border/70 p-4">
             <SentimentPanel submissionId={summary.id} onSeek={seek} canRun={!locked} />
           </div>
         )}
       </section>
+      )}
 
       {/* Feedback: nothing to show on a draft until it's been sent for review (kept if a withdrawn draft has comments) */}
-      {(summary.status !== "DRAFT" || (summary.comment_count ?? 0) > 0) && (
+      {summary.status !== "APPROVED" && (summary.status !== "DRAFT" || (summary.comment_count ?? 0) > 0) && (
         <section className="border-t border-border/70 px-5 py-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -1076,8 +1058,8 @@ export default function SubmissionsListPage() {
   const { data = [], isLoading, isError, error } = useQuery({
     queryKey: ["submissions", scope],
     queryFn: () => submissionService.list(undefined, scope),
-    // A step counts once it has run; re-running after an edit is asked for in the editor (see ranOnce).
-    select: (rows) => rows.map((s) => (s.steps ? { ...s, steps: ranOnce(s.steps) } : s)),
+    // Dots, counts and resume links share the same script-aware progress state.
+    select: (rows) => rows.map((s) => ({ ...s, steps: creatorSubmissionSteps(s) })),
     // Statuses change from other screens (autosave, submit); always show the latest.
     staleTime: 0,
     refetchInterval: refetchWhileAnalysing,
@@ -1561,7 +1543,7 @@ export default function SubmissionsListPage() {
           >
             <X className="w-4 h-4" />
           </DialogClose>
-          <div className="max-h-[90vh] overflow-y-auto rounded-xl">{picked && panel(picked)}</div>
+          <div className="max-h-[90vh] overflow-y-auto rounded-xl bg-card text-card-foreground">{picked && panel(picked)}</div>
         </DialogContent>
       </Dialog>
 

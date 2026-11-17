@@ -295,7 +295,7 @@ export interface SubmissionSummary {
   caption_text?: string | null;
   /** Platforms with their own caption (plain text); the others use caption_text. */
   platform_captions?: Record<string, string>;
-  /** Video posts with a script: the start of the script, shown on the card until a video is added. */
+  has_script?: boolean;
   script_excerpt?: string | null;
   /** Main video/image, or the first attached image, for the card thumbnail. */
   cover?: SubmissionFile | null;

@@ -205,6 +205,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)
 - src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
+- src/lib/submissionProgress.ts (39 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/utils.ts (7 lines) - utils (lib)
@@ -214,7 +215,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/Login.tsx (241 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1583 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1557 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
@@ -243,7 +244,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (571 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1620 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1602 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (336 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (59 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.

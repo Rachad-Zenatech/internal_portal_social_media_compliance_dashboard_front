@@ -32,7 +32,6 @@ import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIc
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
 import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
-import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
 import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
@@ -66,7 +65,6 @@ import {
   audienceNames,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
-import { usePublicMood } from "@/hooks/usePublicMood";
 import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
@@ -710,8 +708,7 @@ function ReviewPanel({
   setActiveComment: (id: string | null) => void;
 }) {
   const { comments } = useReviewComments(s.id);
-  const { analysis: sentiment } = useSentiment(s.id);
-  const { mood, isLoading: moodLoading, dismissTopic, hasRun: moodHasRun, run: runMood } = usePublicMood(s.id, true);
+  const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
   const canComment = (canReview || isSuggester) && s.status === "IN_REVIEW";
@@ -719,7 +716,6 @@ function ReviewPanel({
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [picked, tab]);
-  const moodDecision = overallPostDecision(mood);
   const check = s.latest_check; const showingCompliance = tab === "compliance" && sourceView === "review";
   const score = scoreOf(s);
   // Open: still needs attention. Cleared triggers don't; violations cost points, the rest are warnings.
@@ -775,14 +771,6 @@ function ReviewPanel({
       seen: seen.has("sentiment"),
     },
     {
-      key: "mood",
-      label: "Public mood",
-      value: moodDecision ? moodDecision.recommendation : moodLoading ? "Loading" : "No data",
-      sub: moodDecision ? moodDecision.reason : mood?.topics.length ? `${mood.topics.length} topic${mood.topics.length === 1 ? "" : "s"}` : "Nothing matched",
-      tone: moodDecision ? (moodDecision.recommendation === "POST" ? "ok" : moodDecision.recommendation === "WAIT" ? "warn" : "bad") : "muted",
-      seen: seen.has("mood"),
-    },
-    {
       key: "comments",
       label: canComment ? "Your input" : "Comments",
       value: canComment ? (comments.length ? `Comments (${comments.length})` : "Comments") : comments.length ? String(comments.length) : "None",
@@ -798,12 +786,12 @@ function ReviewPanel({
       highlight: canComment,
     },
   ];
-  const toLookAt = tiles.filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
+  const toLookAt = tiles.filter((tile) => tile.key !== "sentiment" || s.content_type !== "VIDEO" || hasVideo).filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ReviewGlance
-        tiles={tiles}
+        tiles={tiles.filter((tile) => tile.key !== "sentiment" || s.content_type !== "VIDEO" || hasVideo)}
         active={tab}
         onPick={(key) => setTab(key as PanelTab)}
         extra={hasVideo ? [{ key: "script", label: `Transcript${transcript.length ? ` (${transcript.length})` : ""}` }] : undefined}
@@ -1001,21 +989,7 @@ function ReviewPanel({
           </div>
         )}
 
-        {tab === "sentiment" && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
-
-        {tab === "mood" && (
-          <TopicTrend
-            submissionId={s.id}
-            mood={mood}
-            isLoading={moodLoading}
-            canEdit={canReview}
-            busy={dismissTopic.isPending}
-            onDismiss={(topicId) => dismissTopic.mutate({ topicId })}
-            onRestore={(topicId) => dismissTopic.mutate({ topicId, restore: true })}
-            hasRun={moodHasRun}
-            onRun={() => runMood()}
-          />
-        )}
+        {tab === "sentiment" && (s.content_type !== "VIDEO" || hasVideo) && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
 
         {tab === "comments" && canComment && (
           <div className="rounded-xl border-2 border-blue-600 bg-blue-50/40 p-3 dark:border-blue-400 dark:bg-blue-500/10">
