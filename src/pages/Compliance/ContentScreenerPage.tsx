@@ -565,7 +565,6 @@ function PostView({
           )}
         </div>
       </header>
-
       <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 p-5 min-[112.5rem]:max-w-[1000px]">
         {s.video ? (
           <>
@@ -612,6 +611,7 @@ function PostView({
                 activeId={activeCommentId}
                 onActive={onActiveComment}
                 onPlainClick={onComment}
+                findings={flags.map((flag) => flag.v)}
               />
             </div>
             {canComment && (

@@ -1,7 +1,0 @@
-Title: test-nov-16-2026
-
-Caption: NASDAQ: ZENA says the Pentagon / Army update will transform national defense. This is a test compliance post.
-
-Upload alongside this text: /test-nov-16-2026.png
-
-Expected result: Run Compliance Rules after uploading. The checker should flag the unsupported on-image Pentagon / Army claim, and its finding should display a yellow bounding box on the image.

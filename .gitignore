@@ -43,6 +43,7 @@ coverage/
 # temporary files
 tmp/
 temp/
+public/test-nov-16-*
 
 # local database files
 *.sqlite

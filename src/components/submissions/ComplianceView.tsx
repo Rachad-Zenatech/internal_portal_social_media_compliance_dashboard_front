@@ -71,8 +71,8 @@ export default function ComplianceView({
       )}
       <ScoreBreakdown check={check} />
       <OtherFindings violations={check.violations} />
-      {/* Reviewers make their call on each flag: a false alarm is dismissed with a reason (the score stays). */}
-      {canReview && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
+      {/* Creators can request a dismissal; a reviewer must approve it before the flag is cleared. */}
+      {(canReview || creatorView) && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
         <div className="space-y-2 border-t border-border/60 pt-3">
           {check.violations.filter((v) => statusOf(v) !== "CLEARED").map((v) => (
             <div key={v.rule_id} className="space-y-1 text-xs">
@@ -84,7 +84,8 @@ export default function ComplianceView({
                 ruleId={v.rule_id}
                 ruleNumber={v.rule_number}
                 currentVersion={sub.current_version}
-                canDismiss
+                canDismiss={canReview}
+                canRequest={creatorView}
                 evidence={v.status === "EVIDENCE_REQUIRED"}
               />
             </div>

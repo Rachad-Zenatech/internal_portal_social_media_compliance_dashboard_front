@@ -91,21 +91,21 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceStep.tsx (443 lines) - Where in the post it was found.
-- src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
+- src/components/submissions/ComplianceStep.tsx (444 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceView.tsx (108 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
 - src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FindingStatus.tsx (220 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
-- src/components/submissions/FlagReviewControl.tsx (176 lines) - flag review control (components submissions)
+- src/components/submissions/FlagReviewControl.tsx (206 lines) - flag review control (components submissions)
 - src/components/submissions/FlaggedVideo.tsx (40 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
-- src/components/submissions/ImageAnnotator.tsx (256 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
-- src/components/submissions/MediaFindingOverlay.tsx (39 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- src/components/submissions/MediaFindingOverlay.tsx (49 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
@@ -183,7 +183,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
-- src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
+- src/hooks/useReview.ts (194 lines) - The comment being replied to, per post.
 - src/hooks/useScript.ts (235 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
@@ -260,13 +260,14 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - src/services/scriptDocService.ts (49 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (62 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (366 lines) - submission service (services)
+- src/services/submissionService.ts (371 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.
 - src/types/canva.ts (20 lines) - The user's Canva account.
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
 - src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
+- src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - src/types/publicMood.ts (162 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/script.ts (150 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
@@ -275,4 +276,4 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - src/types/sourceLink.ts (64 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
-- src/types/submission.ts (682 lines) - AD: paid social ad.
+- src/types/submission.ts (645 lines) - AD: paid social ad.
