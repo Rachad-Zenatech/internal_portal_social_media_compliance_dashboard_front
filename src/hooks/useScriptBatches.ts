@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useGlobalProgress } from "@/lib/GlobalProgressContext";
+import { useScriptCheckStatus } from "@/hooks/useScriptCheckStatus";
+import { pendingScriptChecks, runBatchScriptCompliance } from "@/services/backgroundScriptChecks";
 import { scriptBatchService } from "@/services/scriptBatchService";
 import type { Batch, BatchDetails, ItemDecision } from "@/types/scriptBatch";
 
@@ -43,13 +46,28 @@ export function useScriptBatch(id?: string | null) {
 /** The creator's actions on a batch: details, edits to its scripts, and sending it. Each answers with the batch. */
 export function useBatchActions(id: string) {
   const queryClient = useQueryClient();
+  const { addJob } = useGlobalProgress();
+  const checkingIds = useScriptCheckStatus("batch", id);
   const keep = (batch: Batch) => {
     queryClient.setQueryData(["script-batch", id], batch);
     queryClient.invalidateQueries({ queryKey: ["script-batches"] });
   };
   const fail = (fallback: string) => (e: unknown) => toast.error(message(e, fallback));
 
+  const checkScripts = (ids: string[]) => {
+    if (!ids.length) return;
+    const key = `batch-compliance:${id}`;
+    const alreadyRunning = pendingScriptChecks(`batch:${id}`).length > 0;
+    const running = runBatchScriptCompliance(id, ids, keep);
+    if (alreadyRunning) return;
+    addJob("Checking script compliance", running, {
+      key, type: "check", description: `Checking ${ids.length} scripts. You can leave this page.`,
+      link_url: `/script-review/${id}`, doneMessage: "Script compliance checks finished",
+    });
+    void running.catch(fail("Couldn't finish all script checks"));
+  };
   return {
+    checkingIds, checkScripts,
     saveDetails: useMutation({
       mutationFn: (data: { title?: string; details?: BatchDetails; per_script_details?: boolean }) => scriptBatchService.update(id, data),
       onSuccess: keep,
@@ -70,11 +88,6 @@ export function useBatchActions(id: string) {
       mutationFn: (itemId: string) => scriptBatchService.removeItem(id, itemId),
       onSuccess: keep,
       onError: fail("Couldn't remove the script"),
-    }),
-    checkItem: useMutation({
-      mutationFn: (itemId: string) => scriptBatchService.checkItem(id, itemId),
-      onSuccess: keep,
-      onError: fail("Couldn't check the script"),
     }),
     send: useMutation({
       mutationFn: () => scriptBatchService.send(id),

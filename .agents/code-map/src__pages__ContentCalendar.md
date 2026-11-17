@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `send` (fn) L230
 - `SelectedPost` (function) L529
 
-## src/pages/ContentCalendar/PublishDraftPage.tsx (306 lines) - publish draft page (pages  content calendar)
-- `platformName` (const) L32
-- `stepsFor` (function) L35 - Mock steps; each becomes a real API call once the platform is connected.
-- `PublishDraftPage` (export function) L46
+## src/pages/ContentCalendar/PublishDraftPage.tsx (304 lines) - publish draft page (pages  content calendar)
+- `platformName` (const) L33
+- `stepsFor` (function) L36 - Mock steps; each becomes a real API call once the platform is connected.
+- `PublishDraftPage` (export function) L47

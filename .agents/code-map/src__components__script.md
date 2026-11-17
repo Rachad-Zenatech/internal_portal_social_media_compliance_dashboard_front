@@ -8,7 +8,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `toLocalInput` (const) L13 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) L26 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
-## src/components/script/BatchItemCard.tsx (327 lines) - batch item card (components script)
+## src/components/script/BatchItemCard.tsx (329 lines) - batch item card (components script)
 - `Decision` (export interface) L18
 - `CheckChip` (function) L31 - The state of a script's check as a short chip: its score, or why it has none.
 - `DetailsSummary` (function) L58 - The short form of a script's own details (brand and platforms), with what is missing; opens the form when it can.
@@ -107,51 +107,47 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Fix` (type) L13
 - `ScriptFindings` (export function) L20 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
 
-## src/components/script/ScriptInsights.tsx (110 lines) - One checks section that opens and closes: a title, whether it has been run, and its content when open.
-- `Section` (function) L13 - One checks section that opens and closes: a title, whether it has been run, and its content when open.
-- `ScriptInsights` (export function) L51 - Before a script is sent for review, the creator can read how it comes across, as they can for a post: its sentiment and  reputational ris...
-
 ## src/components/script/ScriptPrecheck.tsx (119 lines) - script precheck (components script)
 - `PrecheckBody` (function) L17 - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
 - `ScriptPrecheck` (export function) L111 - The check, and while it runs a notice that it can take a while and needn't be waited on.
 
-## src/components/script/ScriptReviewWorkspace.tsx (1015 lines) - script review workspace (components script)
-- `PanelTab` (type) L35
-- `Compare` (type) L44
-- `sameText` (const) L49
-- `draftKey` (const) L51
-- `readDraft` (function) L52
-- `writeDraft` (function) L59
-- `ScriptReviewWorkspace` (export function) L72 - The reviewer's script workspace in the Content screener: the script in the middle (read with flagged wording  marked, or edited directly ...
-    - `stage` (fn) L84
-- `Editor` (function) L136
-    - `setTab` (fn) L170
-    - `noteValue` (fn) L175 - The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
-    - `onNoteText` (fn) L178
-    - `shared` (fn) L188 - A suggesting reviewer's notes are their own (kept with their suggestion), not the reviewer's shared highlights.
-    - `shownHighlights` (fn) L217
-    - `openedResponse` (fn) L223 - Open on the Highlighted tab the first time the creator's response arrives.
-    - `live` (fn) L246 - once the wording has changed since, the reviewer is asked to rerun it.
-    - `parts` (fn) L257
-    - `changes` (fn) L261
-    - `myChangeCount` (fn) L262
-    - `findInScript` (fn) L265 - Open the editor with the flagged wording selected, so the reviewer can type over it.
-    - `goToFlag` (fn) L272 - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
-    - `goToHighlight` (fn) L297 - A highlight card was clicked: take the reviewer to that wording.
-    - `goToAddressed` (fn) L303 - An addressed card was clicked: go to the new wording (or the old, if it hasn't changed).
-    - `addDisclaimer` (fn) L311
-    - `discardDisclaimer` (fn) L316
-    - `sendBack` (fn) L339
-    - `approve` (fn) L349 - Approving asks when the video is due (a week by default, or none).
-    - `confirmDecision` (fn) L353
-- `FlagCard` (export function) L842
-    - `go` (fn) L873 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
-- `VersionHistory` (export function) L985 - Every version of the script, newest first, with the reviewer's call and note on each.
+## src/components/script/ScriptReviewWorkspace.tsx (942 lines) - script review workspace (components script)
+- `PanelTab` (type) L33
+- `Compare` (type) L35
+- `sameText` (const) L40
+- `draftKey` (const) L42
+- `readDraft` (function) L43
+- `writeDraft` (function) L50
+- `ScriptReviewWorkspace` (export function) L60 - Review tools; creators awaiting a decision see only their submitted script and saved compliance.
+    - `stage` (fn) L73
+- `Editor` (function) L99
+    - `setTab` (fn) L133
+    - `noteValue` (fn) L138 - The comment text lives in the box itself (see NoteField); the page only knows whether there is any.
+    - `onNoteText` (fn) L141
+    - `shared` (fn) L151 - A suggesting reviewer's notes are their own (kept with their suggestion), not the reviewer's shared highlights.
+    - `shownHighlights` (fn) L180
+    - `openedResponse` (fn) L186 - Open on the Highlighted tab the first time the creator's response arrives.
+    - `live` (fn) L205 - once the wording has changed since, the reviewer is asked to rerun it.
+    - `parts` (fn) L216
+    - `changes` (fn) L220
+    - `myChangeCount` (fn) L221
+    - `findInScript` (fn) L224 - Open the editor with the flagged wording selected, so the reviewer can type over it.
+    - `goToFlag` (fn) L231 - A flag card was clicked: take the reviewer to its wording in the script (the next place each time).
+    - `goToHighlight` (fn) L256 - A highlight card was clicked: take the reviewer to that wording.
+    - `goToAddressed` (fn) L262 - An addressed card was clicked: go to the new wording (or the old, if it hasn't changed).
+    - `addDisclaimer` (fn) L270
+    - `discardDisclaimer` (fn) L275
+    - `sendBack` (fn) L298
+    - `approve` (fn) L308 - Approving asks when the video is due (a week by default, or none).
+    - `confirmDecision` (fn) L312
+- `FlagCard` (export function) L769
+    - `go` (fn) L800 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
+- `VersionHistory` (export function) L912 - Every version of the script, newest first, with the reviewer's call and note on each.
 
-## src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
-- `ScriptStageCard` (export function) L17 - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
-- `Body` (function) L96
-- `DraftBody` (function) L170 - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
+## src/components/script/ScriptStageCard.tsx (284 lines) - The script is missing and the creator tried to send: outline the card in red.
+- `ScriptStageCard` (export function) L16 - The script step at the top of a video post's upload section: upload the script, send it for review, and see where  it is.
+- `Body` (function) L95
+- `DraftBody` (function) L169 - Not sent yet, or sent back with a note: upload (or replace) the script and send it.
 
 ## src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - `same` (const) L9

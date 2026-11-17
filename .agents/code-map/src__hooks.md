@@ -44,10 +44,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
-## src/hooks/usePublicMood.ts (151 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+## src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
-- `useMarketTrends` (export function) L99 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
-- `useScrapeTwitter` (export function) L109 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
+- `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
+- `useScrapeTwitter` (export function) L111 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
 
 ## src/hooks/useReview.ts (165 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12
@@ -58,19 +58,22 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useReviewDecision` (export function) L128
 - `useApprovalActions` (export function) L143 - Approved content: a reviewer reschedules it or reopens it for changes.
 
-## src/hooks/useScript.ts (230 lines) - A post's script stage, refreshed while its file is still being read.
-- `useScriptStage` (export function) L12 - A post's script stage, refreshed while its file is still being read.
-- `useScriptActions` (export function) L43 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
-- `useDebounced` (export function) L151 - The value, once it has stopped changing for `ms`.
-- `useLiveScriptCheck` (export function) L165 - The rulebook check of wording being edited.
-- `useScriptHighlights` (export function) L200 - The reviewer's highlights and notes on a script version.
+## src/hooks/useScript.ts (235 lines) - A post's script stage, refreshed while its file is still being read.
+- `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.
+- `useScriptActions` (export function) L45 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
+- `useDebounced` (export function) L156 - The value, once it has stopped changing for `ms`.
+- `useLiveScriptCheck` (export function) L170 - The rulebook check of wording being edited.
+- `useScriptHighlights` (export function) L205 - The reviewer's highlights and notes on a script version.
 
-## src/hooks/useScriptBatches.ts (103 lines) - The batches a person uploaded, or (reviewers) those sent for review.
-- `message` (const) L8
-- `useScriptBatches` (export function) L11 - The batches a person uploaded, or (reviewers) those sent for review.
-- `useScriptBatch` (export function) L21 - One batch, refreshed while its scripts are being checked, and told when that finishes.
-- `useBatchActions` (export function) L44 - The creator's actions on a batch: details, edits to its scripts, and sending it.
-- `useReviewBatch` (export function) L88 - The reviewer's decisions on any number of a batch's scripts at once.
+## src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
+- `message` (const) L11
+- `useScriptBatches` (export function) L14 - The batches a person uploaded, or (reviewers) those sent for review.
+- `useScriptBatch` (export function) L24 - One batch, refreshed while its scripts are being checked, and told when that finishes.
+- `useBatchActions` (export function) L47 - The creator's actions on a batch: details, edits to its scripts, and sending it.
+- `useReviewBatch` (export function) L101 - The reviewer's decisions on any number of a batch's scripts at once.
+
+## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
+- `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
 
 ## src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - `isSentimentRunning` (export function) L11

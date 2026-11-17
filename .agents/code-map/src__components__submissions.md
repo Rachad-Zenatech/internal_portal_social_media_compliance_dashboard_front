@@ -62,17 +62,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - `CommentThread` (export function) L11 - A comment and the replies that follow it, indented under it with a line down the side; long threads fold up.
 
-## src/components/submissions/ComplianceStep.tsx (455 lines) - Where in the post it was found.
-- `escapeRe` (const) L19
-- `Finding` (interface) L21
-- `ring` (function) L30
-- `ComplianceStep` (export function) L39 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
-    - `seek` (fn) L111
-    - `pick` (fn) L119
-    - `terms` (fn) L125
-    - `captionParts` (fn) L126
-    - `header` (fn) L136
-    - `count` (fn) L190
+## src/components/submissions/ComplianceStep.tsx (443 lines) - Where in the post it was found.
+- `escapeRe` (const) L20
+- `Finding` (interface) L22
+- `ring` (function) L31
+- `ComplianceStep` (export function) L40 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
+    - `seek` (fn) L114
+    - `pick` (fn) L122
+    - `terms` (fn) L128
+    - `captionParts` (fn) L129
+    - `header` (fn) L140
+    - `count` (fn) L194
 
 ## src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - `ComplianceView` (export function) L19 - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
@@ -184,7 +184,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `StepGate` (export function) L98 - Shown in place of a step's tool until the post's details are filled in.
 - `StepFooter` (export function) L125 - The back and next buttons under a step.
 
-## src/components/submissions/PostSteps.tsx (106 lines) - lg: the dots grow on wide screens (the My posts rows).
+## src/components/submissions/PostSteps.tsx (108 lines) - lg: the dots grow on wide screens (the My posts rows).
 - `PostSteps` (export function) L12 - The five steps of a post as five dots, in order.
 
 ## src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
@@ -197,20 +197,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
 - `ReviewConversation` (export function) L13 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
 
-## src/components/submissions/ReviewDecisionPanel.tsx (419 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+## src/components/submissions/ReviewDecisionPanel.tsx (402 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
 - `Mode` (type) L55
 - `toLocalInput` (const) L57
 - `defaultPublishTime` (function) L60 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
-- `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it onto the calendar, approve and publish now, or  send it back with what to c...
+- `ReviewDecisionPanel` (export function) L68 - The reviewer's decision for the version in review: approve it for the creator to publish, or  send it back with what to change.
     - `decide` (fn) L87
     - `start` (fn) L103
     - `toggleConfirmed` (fn) L110
     - `confirm` (fn) L121
-- `ApprovalBlockers` (function) L308 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
-- `ManualRulesChecklist` (function) L350 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
-- `ChangesRequestedBanner` (export function) L387 - For the creator: the reviewer sent it back.
-    - `navigate` (fn) L398
+- `ApprovalBlockers` (function) L291 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
+- `ManualRulesChecklist` (function) L333 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
+- `ChangesRequestedBanner` (export function) L370 - For the creator: the reviewer sent it back.
+    - `navigate` (fn) L381
 
 ## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L4

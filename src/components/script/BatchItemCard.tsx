@@ -97,6 +97,7 @@ export default function BatchItemCard({
   onRemove,
   saving,
   checking = false,
+  checkDisabled = false,
   onCheck,
 }: {
   item: BatchItem;
@@ -119,6 +120,7 @@ export default function BatchItemCard({
   saving?: boolean;
   /** Check this script against the rulebook before sending it. */
   checking?: boolean;
+  checkDisabled?: boolean;
   onCheck?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -239,7 +241,7 @@ export default function BatchItemCard({
             check={item.check}
             stale={item.check_stale || dirty}
             checking={checking}
-            canCheck={!dirty}
+            canCheck={!dirty && !checkDisabled}
             onCheck={onCheck}
           />
           {dirty && <p className="mt-1 text-[11px] text-muted-foreground">Save your changes, then check the script again.</p>}

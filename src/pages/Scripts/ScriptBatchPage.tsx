@@ -71,25 +71,7 @@ function BatchView({ batch }: { batch: Batch }) {
       new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-batches/${batch.id}`, title: batch.title } })
     );
   }, [batch.id, batch.title]);
-  // Scripts being checked now; "Check all" checks two at a time.
-  const [checkingIds, setCheckingIds] = useState<string[]>([]);
-  const checkScripts = async (ids: string[]) => {
-    setCheckingIds((prev) => [...new Set([...prev, ...ids])]);
-    const queue = [...ids];
-    const worker = async () => {
-      for (let next = queue.shift(); next; next = queue.shift()) {
-        const done = next;
-        try {
-          await actions.checkItem.mutateAsync(done);
-        } catch {
-          // the hook already says what went wrong
-        } finally {
-          setCheckingIds((prev) => prev.filter((x) => x !== done));
-        }
-      }
-    };
-    await Promise.all([worker(), worker()]);
-  };
+  const { checkingIds, checkScripts } = actions;
   const review = useReviewBatch(batch.id);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [skipped, setSkipped] = useState<Record<string, string>>({});
@@ -277,7 +259,7 @@ function BatchView({ batch }: { batch: Batch }) {
             }
             onSave={(data) => actions.updateItem.mutate({ itemId: item.id, ...data })}
             onRemove={() => actions.removeItem.mutate(item.id)}
-            checking={checkingIds.includes(item.id)}
+            checking={checkingIds.includes(item.id)} checkDisabled={checkingIds.length > 0}
             onCheck={batch.can_change_scripts ? () => void checkScripts([item.id]) : undefined}
           />
         ))}
@@ -322,7 +304,7 @@ function BatchView({ batch }: { batch: Batch }) {
             <Button
               type="button"
               onClick={() => actions.send.mutate()}
-              disabled={!batch.can_send || actions.send.isPending || unchecked.length > 0}
+              disabled={!batch.can_send || actions.send.isPending || checkingIds.length > 0 || unchecked.length > 0}
               className="gap-2 bg-blue-700 text-white hover:bg-blue-800"
             >
               {actions.send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

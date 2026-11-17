@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { ApiError } from "@/services/helper";
 
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
+import { useScriptCheckStatus } from "@/hooks/useScriptCheckStatus";
+import { pendingScriptChecks, runScriptCompliance } from "@/services/backgroundScriptChecks";
 import { scriptService } from "@/services/scriptService";
 import type { ScriptHighlight, ScriptStage } from "@/types/script";
 
@@ -43,6 +45,7 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
 export function useScriptActions(submissionId: string) {
   const queryClient = useQueryClient();
   const { addJob } = useGlobalProgress();
+  const checking = useScriptCheckStatus("script", submissionId).length > 0;
   const done = (stage: ScriptStage) => {
     queryClient.setQueryData(["script", submissionId], stage);
     queryClient.invalidateQueries({ queryKey: ["script-queue"] });
@@ -84,10 +87,12 @@ export function useScriptActions(submissionId: string) {
   const precheck = useMutation({
     // Duplicates are settled here, before the compliance check (a repost for another date is confirmed, then checked).
     mutationFn: (opts?: { confirmRepost?: boolean }) => {
-      const running = scriptService.precheck(submissionId, Boolean(opts?.confirmRepost));
+      const alreadyRunning = pendingScriptChecks(`script:${submissionId}`).length > 0;
+      const running = runScriptCompliance(submissionId, Boolean(opts?.confirmRepost), done);
+      if (alreadyRunning) return running;
       addJob("Checking for compliance", running, {
         type: "check",
-        description: "Script compliance check",
+        description: "Script compliance check", key: `script-compliance:${submissionId}`,
         link_url: `/submissions/${submissionId}?step=compliance`,
         doneMessage: "The compliance check of your script is done",
       });
@@ -143,7 +148,7 @@ export function useScriptActions(submissionId: string) {
     },
   });
   return {
-    precheck,
+    precheck, checking,
     submit, decide, accept, revise, saveSuggestion, discardSuggestion };
 }
 
