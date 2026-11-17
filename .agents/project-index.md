@@ -117,6 +117,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewDecisionPanel.tsx (419 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
+- src/components/submissions/ReviewerSentimentPanel.tsx (32 lines) - The expanded sentiment view shared by reviewer-facing screens.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
 - src/components/submissions/RevisionWorkspace.tsx (203 lines) - revision workspace (components submissions)

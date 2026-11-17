@@ -15,7 +15,7 @@ import CheckingNotice from "@/components/common/CheckingNotice";
 import ScriptBatchBar from "@/components/script/ScriptBatchBar";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
 import { overallPostDecision } from "@/components/submissions/TopicTrend";
 import { DiffLegend, InlineDiff, StageSteps, isStructured } from "@/components/script/ScriptDiff";
 import { usePublicMood } from "@/hooks/usePublicMood";
@@ -676,7 +676,7 @@ function Editor({
           {tab === "sentiment" && (
             <>
               <p className="text-xs text-muted-foreground">Reads the script as sent (version {sent.version_number}), with the post's audience and brand.</p>
-              <SentimentPanel
+              <ReviewerSentimentPanel
                 key={`${submissionId}-${sent.version_number}`}
                 submissionId={submissionId}
                 canRun={canReview}

@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
 import TopicTrend, { overallPostDecision } from "@/components/submissions/TopicTrend";
 import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
@@ -1001,7 +1001,7 @@ function ReviewPanel({
           </div>
         )}
 
-        {tab === "sentiment" && <SentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
+        {tab === "sentiment" && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
 
         {tab === "mood" && (
           <TopicTrend

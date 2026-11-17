@@ -80,7 +80,7 @@ import {
 } from "@/context/VideoUploadQueueContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { submissionService } from "@/services/submissionService";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
+import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import { DueBadge, UnderReviewBadge, isAnalysing } from "@/components/submissions/submissionUi";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
@@ -2605,7 +2605,7 @@ export default function VideoComplianceScannerPage() {
             {/* Sentiment (Gemini editorial read; submitted content only) */}
             <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
               {activeVideo?.submissionId ? (
-                <SentimentPanel
+                <ReviewerSentimentPanel
                   key={`${activeVideo.submissionId}-${viewVersion ?? "latest"}`}
                   submissionId={activeVideo.submissionId}
                   version={viewVersion ?? undefined}
