@@ -452,8 +452,9 @@ export function DiffLegend() {
 }
 
 /** The two stages of a video post, with where this one is. */
-export function StageSteps({ status, compact = false }: { status?: ScriptStatus | null; compact?: boolean }) {
+export function StageSteps({ status, compact = false, waitingForCreator = false }: { status?: ScriptStatus | null; compact?: boolean; waitingForCreator?: boolean }) {
   const approved = status === "APPROVED";
+  const approvedVideoLabel = waitingForCreator ? "Video · waiting for creator" : "Video · ready to upload";
   const scriptLabel: Record<ScriptStatus, string> = {
     DRAFT: "Script · not sent yet",
     IN_REVIEW: "Script · with a reviewer",
@@ -480,7 +481,7 @@ export function StageSteps({ status, compact = false }: { status?: ScriptStatus 
         }`}
       >
         <span className="grid h-4 w-4 place-items-center rounded-full bg-current/15 text-[10px]">2</span>
-        {approved ? "Video · ready to upload" : "Video · after the script is approved"}
+        {approved ? approvedVideoLabel : "Video · after the script is approved"}
       </li>
     </ol>
   );

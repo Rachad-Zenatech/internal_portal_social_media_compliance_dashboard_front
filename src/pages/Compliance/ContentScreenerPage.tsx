@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import ListPager from "@/components/common/ListPager";
+import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -1467,10 +1468,7 @@ export default function ContentScreenerPage() {
               >
                 {t.label}{" "}
                 <span className="text-muted-foreground">
-                  {counts.data
-                    ? counts.data[t.value] +
-                      ((t.value === "review" ? counts.data.scripts : t.value === "sent_back" ? counts.data.scripts_sent_back : counts.data.scripts_done) ?? 0)
-                    : ""}
+                  {counts.data?.[t.value] ?? ""}
                 </span>
               </button>
             ))}
@@ -1498,6 +1496,7 @@ export default function ContentScreenerPage() {
             />
           </div>
           <ActiveFilterChips filters={filters} setFilters={setFilters} brandLabel={brandLabel} />
+          <ScriptReviewNotice />
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
