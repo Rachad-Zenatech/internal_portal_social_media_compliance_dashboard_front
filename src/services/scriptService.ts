@@ -16,6 +16,7 @@ export const scriptService = {
   suggesterDashboard: () => apiClient.get<SuggesterDashboard>("/api/submissions/scripts/suggester-dashboard", quiet),
 
   get: (id: string) => apiClient.get<ScriptStage>(`/api/submissions/${id}/script`, quiet),
+  download: (id: string, version: number, filename: string) => apiClient.downloadFile(`/api/submissions/${id}/script/export?version=${version}`, filename),
 
   /** Send the uploaded script for review. confirmRepost: send the same script again for another publish date (the
    * server asks with a 409 REPOST_CONFIRM; the same script for the same place and date is a 409 DUPLICATE_SCRIPT). */
