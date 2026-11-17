@@ -143,9 +143,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SlideThumbnail` (function) L16
 - `MarkedUpImageSlideshow` (export function) L29 - Every image in the post, with highlights scoped to the currently displayed file.
 
-## src/components/submissions/MediaFindingOverlay.tsx (33 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+## src/components/submissions/MediaFindingOverlay.tsx (39 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - `Props` (interface) L3
-- `MediaFindingOverlay` (export function) L9 - Only measured regions are shown; never place a finding in an arbitrary area.
+- `MediaFindingOverlay` (export function) L10 - Only measured regions are shown; never place a finding in an arbitrary area.
 
 ## src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - `Sparkline` (export function) L6 - Mentions per day over the window, as a tiny line.

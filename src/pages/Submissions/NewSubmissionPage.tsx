@@ -99,6 +99,7 @@ import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTr
 import { usePublicMood } from "@/hooks/usePublicMood";
 import { useSentiment } from "@/hooks/useSentiment";
 import { useScriptCheckStatus } from "@/hooks/useScriptCheckStatus";
+import { useAutomaticAnalyses } from "@/hooks/useAutomaticAnalyses";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { runPreparationCompliance } from "@/services/preparationComplianceService";
@@ -158,6 +159,7 @@ const DOC_RE = /\.(pdf|docx?|md|txt|xlsx?|csv|zip|pptx?)$/i;
 /** Files the check can read as a script. */
 const SCRIPT_RE = /\.(pdf|docx?|md|txt)$/i;
 const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
+const AUTO_RUN_WORKFLOW = import.meta.env.PROD;
 
 /**
  * Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
@@ -480,10 +482,8 @@ export default function NewSubmissionPage() {
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
 
-  const { mood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  const { analysis: sentimentAnalysis } = useSentiment(scriptOnly ? null : submissionId);
-
-
+  const { mood, run: runMood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
+  const { analysis: sentimentAnalysis, run: runSentiment } = useSentiment(scriptOnly ? null : submissionId);
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
   const { data: revisionHistory } = useQuery({
@@ -662,6 +662,7 @@ export default function NewSubmissionPage() {
       });
     return saveChain.current;
   };
+  const { refreshMood, startAutomaticAnalyses } = useAutomaticAnalyses({ submissionId, save, runMood, runSentiment: () => runSentiment.mutate(), onMoodError: (error) => toast.error(`Couldn't run public mood: ${(error as Error).message}`) });
 
   // Autosave 1.5 s after the last edit.
   useEffect(() => {
@@ -955,7 +956,7 @@ export default function NewSubmissionPage() {
         }
         if (report.repost) {
           if (repostOk === repostKey(report.repost)) {
-            goToStep(target);
+            if (AUTO_RUN_WORKFLOW) void runComplianceCheck(); goToStep(target);
             return;
           }
           setRepostTarget(target);
@@ -963,7 +964,7 @@ export default function NewSubmissionPage() {
           return;
         }
       }
-      goToStep(target);
+      if (AUTO_RUN_WORKFLOW) void runComplianceCheck(); goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
     } finally {
@@ -1012,7 +1013,7 @@ export default function NewSubmissionPage() {
       const updated = await running;
       setCheckedSub(updated);
       setCheckedAtEdit(editCounter);
-      setLastCheckMs(Date.now() - started);
+      setLastCheckMs(Date.now() - started); if (AUTO_RUN_WORKFLOW) startAutomaticAnalyses(id!);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
@@ -1298,6 +1299,14 @@ export default function NewSubmissionPage() {
           : savedAt
             ? `Saved ${format(savedAt, "h:mm a")}`
             : "Not saved yet";
+
+  const onConfirmRepostDate = () => {
+    if (repostAsk) setRepostOk(repostKey(repostAsk));
+    setRepostAsk(null);
+    if (repostForCheck) { setRepostForCheck(false); void runComplianceCheck(true); }
+    else if (repostTarget) { const target = repostTarget; setRepostTarget(null); if (AUTO_RUN_WORKFLOW) void runComplianceCheck(true); goToStep(target); }
+    else { submit(true); }
+  };
 
   if (loadingExisting) {
     return (
@@ -2405,22 +2414,7 @@ export default function NewSubmissionPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Not now</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    if (repostAsk) setRepostOk(repostKey(repostAsk));
-                    setRepostAsk(null);
-                    if (repostForCheck) {
-                      setRepostForCheck(false);
-                      void runComplianceCheck(true);
-                    } else if (repostTarget) {
-                      const target = repostTarget;
-                      setRepostTarget(null);
-                      goToStep(target);
-                    } else {
-                      submit(true);
-                    }
-                  }}
-                >
+                <AlertDialogAction onClick={onConfirmRepostDate}>
                   Continue for this date
                 </AlertDialogAction>
               </AlertDialogFooter>

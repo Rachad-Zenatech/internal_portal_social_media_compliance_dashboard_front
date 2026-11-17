@@ -42,7 +42,7 @@ export default function ZoomableImageDialog({ open, src, fileId, findings, onOpe
         <button type="button" onClick={close} onWheel={zoomAtPointer} aria-label="Close full-size image" title="Scroll to zoom; click to close" className="inline-block cursor-zoom-out overflow-hidden">
           <div className="relative inline-block transition-transform duration-100" style={{ transform: `scale(${zoom})`, transformOrigin: origin }}>
             <img src={src} alt="Full-size post" className="block max-h-[82dvh] max-w-[calc(90vw-0.5rem)] object-contain" />
-            <MediaFindingOverlay findings={findings} fileId={fileId} />
+            <MediaFindingOverlay findings={findings} fileId={fileId} showRuleTooltip />
           </div>
         </button>
       </DialogContent>
