@@ -90,7 +90,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `readSignals` (export function) L26
 - `hasTag` (export function) L35 - Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife").
 
-## src/lib/postSteps.ts (107 lines) - post steps (lib)
+## src/lib/postSteps.ts (109 lines) - post steps (lib)
 - `POST_STEPS` (export const) L7 - The four steps a creator works through, in order.
 - `RECHECK_AFTER_EDITS` (export const) L35 - Whether an edit after a check has to be checked again before sending: a post's compliance check and sentiment  analysis (and both again a...
 - `postPreparationSteps` (export function) L38 - Scripts use compliance only; sentiment becomes available when the video is attached.
@@ -99,13 +99,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `resumePath` (export function) L53 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
 - `ranOnce` (export function) L62 - Steps 2 and 3 as the progress dots show them: done once they have run at least once, even if the post changed since.
 - `stepStatusText` (export function) L71 - What a step is up to, as a sentence for the hover.
-- `missingText` (export function) L103
+- `missingText` (export function) L105
 
 ## src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9
 - `locate` (function) L17 - Where the quote is in text: [start, end), taking in a closing punctuation mark the revision already ends with.
 - `replaceInText` (export function) L28 - The text with the quoted wording replaced, or null when it isn't there.
 - `replaceInEditable` (export function) L37 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
+
+## src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
+- `CreatorStepKey` (export type) L4
+- `REVISION_STEPS` (export const) L5
+- `creatorPreparationSteps` (export function) L13
 
 ## src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - `safeHref` (export function) L14 - A link the editor may keep: http(s) or mailto only.
@@ -137,14 +142,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `LiveHandlers` (export interface) L16
 - `LiveProvider` (export class) L32 - The browser's side of a script's live editing connection: two shared documents (the script's text, and its notes),  and the cursors and n...
 
+## src/lib/scriptReviewLists.ts (25 lines) - A script stays visible on its own when its batch belongs to another tab.
+- `ReviewTab` (export type) L4
+- `SCRIPT_REVIEW_TABS` (export const) L5
+- `visibleScripts` (export function) L12 - A script stays visible on its own when its batch belongs to another tab.
+- `scriptReviewCounts` (export function) L17
+
 ## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const) L4
 - `scriptVerdict` (export function) L11 - Score ring colours and the verdict line for a script check.
 
-## src/lib/submissionProgress.ts (39 lines) - Use one state for the dots, count and resume link, including script-only requirements.
-- `isScriptPreparation` (export function) L4
-- `creatorSubmissionSteps` (export function) L9 - Use one state for the dots, count and resume link, including script-only requirements.
-- `creatorProgressText` (export function) L26
+## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
+- `isScriptPreparation` (export function) L5
+- `creatorSubmissionSteps` (export function) L10 - Use one state for the dots, count and resume link, including script-only requirements.
+- `creatorProgressText` (export function) L32
 
 ## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).

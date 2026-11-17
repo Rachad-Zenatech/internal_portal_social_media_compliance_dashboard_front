@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ArrowLeft, Check, CheckCircle2, Download, Loader2, PencilLine, Undo2, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Loader2, PencilLine, Undo2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/AuthContext";
 
 import { Button } from "@/components/ui/button";
+import CreatorScriptDownload from "@/components/script/CreatorScriptDownload";
 import NoteField from "@/components/script/NoteField";
 import ScriptEditor from "@/components/script/ScriptEditor";
 import { displayText } from "@/lib/scriptDoc";
@@ -45,15 +46,6 @@ function comparison(stage: ScriptStage): { base: ScriptVersion | null; shown: Sc
   return { base: v.length > 1 ? v[v.length - 2] : null, shown: latest };
 }
 
-function downloadText(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 /**
  * The creator's view of their script after review: both versions (marked in place or side by side), the list of
  * changes, and accept or edit. Also where they read an approved script before filming.
@@ -84,7 +76,7 @@ function Changes({ stage }: { stage: ScriptStage }) {
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE") && !canSwitchView;
   const pair = comparison(stage);
   const status = stage.status ?? "DRAFT";
-  const [view, setView] = useState<View>("inline");
+  const [view, setView] = useState<View>("side");
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(pair?.shown.body ?? "");
   // The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
@@ -223,11 +215,11 @@ function Changes({ stage }: { stage: ScriptStage }) {
                 <p className="flex items-center gap-1.5 text-[13px] font-semibold text-emerald-800 dark:text-emerald-300">
                   <CheckCircle2 className="w-4 h-4" /> Script approved
                 </p>
-                <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80">Film from this version. The video is checked against it.</p>
+                <p className="text-xs text-emerald-900/80 dark:text-emerald-200/80">{stage.can_respond ? "Film from this version. The video is checked against it." : "Waiting for the creator to film and submit the video."}</p>
               </div>
-              <Button size="sm" className="gap-1.5" onClick={() => navigate(postLink)}>
+              {stage.can_respond && <Button size="sm" className="gap-1.5" disabled={editing || revise.isPending} onClick={() => navigate(`${postLink}&step=details`)}>
                 <Upload className="w-3.5 h-3.5" /> Upload the video
-              </Button>
+              </Button>}
             </div>
           )}
         </div>
@@ -554,13 +546,8 @@ function Changes({ stage }: { stage: ScriptStage }) {
               </Button>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              className="h-10 gap-1.5"
-              onClick={() => downloadText(`${stage.reference_code}-script-v${shown.version_number}.txt`, shown.body)}
-            >
-              <Download className="w-4 h-4" /> Download this version
-            </Button>
+            <CreatorScriptDownload submissionId={stage.submission_id} reference={stage.reference_code} version={shown.version_number}
+              onEdit={status === "APPROVED" && canEdit ? () => { setText(shown.body); setEditing(true); } : undefined} />
           )}
         </div>
       </aside>

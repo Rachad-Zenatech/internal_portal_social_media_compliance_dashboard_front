@@ -3,9 +3,9 @@ import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
 import { useAuth } from "@/lib/AuthContext";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { locateOnPage } from "@/lib/locateOnPage";
-import { Link } from "react-router-dom";
+import ApprovedScriptNextStep from "@/components/script/ApprovedScriptNextStep";
 import { format, formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search, Upload } from "lucide-react";
+import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";
@@ -116,6 +116,7 @@ function Editor({
   suggest?: { suggestion: ScriptSuggestion | null } | null;
   onUploadScript?: () => void;
 }) {
+  const { creatorView } = useAuth();
   const sent = versions[versions.length - 1];
   const previous = versions.length > 1 ? versions[versions.length - 2] : null;
   const suggesting = Boolean(suggest);
@@ -363,7 +364,7 @@ function Editor({
               {sent.created_by_name ? ` by ${sent.created_by_name}` : ""} · sent {formatDistanceToNow(new Date(sent.created_at), { addSuffix: true })}
             </span>
           </div>
-          <StageSteps status={(status as never) ?? "IN_REVIEW"} />
+          <StageSteps status={(status as never) ?? "IN_REVIEW"} waitingForCreator={!creatorView} />
         </header>
 
         <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border/70 bg-card/95 px-5 py-2 backdrop-blur">
@@ -743,19 +744,7 @@ function Editor({
             </Dialog>
           </div>
         ) : status === "APPROVED" ? (
-          <div className="flex flex-col gap-2.5 border-t border-border/70 bg-emerald-50/50 p-4 dark:bg-emerald-500/10">
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-800 dark:text-emerald-300">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Script approved
-            </div>
-            <p className="text-xs text-muted-foreground">
-              The script is approved and ready. You or the creator can now attach the final video to this submission.
-            </p>
-            <Button asChild className="h-9 gap-1.5 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white">
-              <Link to={`/submissions/new?id=${submissionId}`}>
-                <Upload className="w-3.5 h-3.5" /> Attach Video to Post
-              </Link>
-            </Button>
-          </div>
+          <ApprovedScriptNextStep submissionId={submissionId} canAttachVideo={creatorView} />
         ) : (
           <p className="border-t border-border/70 bg-muted/40 px-4 py-3.5 text-xs text-muted-foreground">
             {status === "IN_REVIEW" ? "You can't review your own script." : "This script isn't waiting for a review."}

@@ -33,6 +33,8 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
       queryClient.invalidateQueries({ queryKey: ["script-queue"] });
+    queryClient.invalidateQueries({ queryKey: ["script-batches"] });
+    queryClient.invalidateQueries({ queryKey: ["script-batch"] });
       if (query.data.send_error) toast.error(query.data.send_error);
       else toast.success("Script sent for review. Reviewers have been notified.");
     }

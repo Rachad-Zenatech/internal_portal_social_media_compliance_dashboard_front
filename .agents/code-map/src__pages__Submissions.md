@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2571 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2564 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L168 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L207
 - `timeOptions` (const) L214
@@ -12,93 +12,92 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `withTime` (function) L223 - A copy of the date at the given "HH:mm" time.
 - `SentBackHeader` (function) L265 - Who sent the post back, their note, and when it is due back.
 - `EditorStep` (type) L286 - A post sent back for changes is worked through in six steps: the suggestions come first, the reviewers last.
-- `Section` (function) L296
-- `SummaryRow` (function) L308
-- `NewSubmissionPage` (export function) L322
-    - `navigate` (fn) L323
-    - `queryClient` (fn) L328
-    - `optionsQuery` (fn) L330
-    - `checking` (fn) L401
-    - `markEdited` (fn) L423
-    - `accounts` (fn) L429
-    - `reviewersQuery` (fn) L431
-    - `reviewerOptions` (fn) L436
-    - `approverOptions` (fn) L442 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-    - `suggesterOptions` (fn) L443
-    - `selectedAccounts` (fn) L446
-    - `brandAccounts` (fn) L450
-    - `scriptStage` (fn) L465 - the script stage (required: false) work as they always did.
-    - `duplicatesQuery` (fn) L473
-    - `refreshScript` (fn) L483
-    - `sentBack` (fn) L495
-    - `applyServer` (fn) L530 - ----- Load an existing draft (S08 resume) -----
-    - `buildPayload` (fn) L603 - ----- Saving (S01, S02-S04, S06, S08) -----
-    - `save` (fn) L635 - Create the draft if needed, then save the current fields.
-    - `handler` (fn) L679
-    - `saveNow` (fn) L686
-    - `suggestRouting` (fn) L696 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
-    - `onBrandsChange` (fn) L715
-    - `onAccountsChange` (fn) L724
-    - `onAudiencesChange` (fn) L736
-    - `uploadFiles` (fn) L743 - ----- Files (S05, S07) -----
-    - `removeFile` (fn) L806
-    - `replaceMain` (fn) L822 - Swap the main file for a new one (the revision workspace's "Replace video").
-    - `onCanvaImported` (fn) L846
-    - `reimportCanva` (fn) L854 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - `atApprovalTime` (fn) L880 - Need approval by": the picked day at the chosen time, never after the publish time.
-    - `pickApproval` (fn) L881
-    - `isMissing` (fn) L906
-    - `errorFor` (fn) L908
-    - `titleOf` (fn) L919
-    - `detailsMissing` (fn) L921
-    - `toolView` (fn) L926
-    - `goToStep` (fn) L927
-    - `repostKey` (fn) L938
-    - `leaveDetails` (fn) L940
-    - `backToCaption` (fn) L975
-    - `openStep` (fn) L979
-    - `runComplianceCheck` (fn) L984 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1050
-    - `ranSinceSentBack` (fn) L1057
-    - `submit` (fn) L1066
-    - `exec` (fn) L1210 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1218 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1230
-    - `typedTail` (fn) L1235 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1242 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1266 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1282 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1290
-    - `onConfirmRepostDate` (fn) L1303
+- `Section` (function) L289
+- `SummaryRow` (function) L301
+- `NewSubmissionPage` (export function) L315
+    - `navigate` (fn) L316
+    - `queryClient` (fn) L321
+    - `optionsQuery` (fn) L323
+    - `checking` (fn) L394
+    - `markEdited` (fn) L416
+    - `accounts` (fn) L422
+    - `reviewersQuery` (fn) L424
+    - `reviewerOptions` (fn) L429
+    - `approverOptions` (fn) L435 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn) L436
+    - `selectedAccounts` (fn) L439
+    - `brandAccounts` (fn) L443
+    - `scriptStage` (fn) L458 - the script stage (required: false) work as they always did.
+    - `duplicatesQuery` (fn) L466
+    - `refreshScript` (fn) L476
+    - `sentBack` (fn) L488
+    - `applyServer` (fn) L523 - ----- Load an existing draft (S08 resume) -----
+    - `buildPayload` (fn) L596 - ----- Saving (S01, S02-S04, S06, S08) -----
+    - `save` (fn) L628 - Create the draft if needed, then save the current fields.
+    - `handler` (fn) L672
+    - `saveNow` (fn) L679
+    - `suggestRouting` (fn) L689 - ----- Routing suggestions, applied when the user changes brand/audience/account -----
+    - `onBrandsChange` (fn) L708
+    - `onAccountsChange` (fn) L717
+    - `onAudiencesChange` (fn) L729
+    - `uploadFiles` (fn) L736 - ----- Files (S05, S07) -----
+    - `removeFile` (fn) L799
+    - `replaceMain` (fn) L815 - Swap the main file for a new one (the revision workspace's "Replace video").
+    - `onCanvaImported` (fn) L839
+    - `reimportCanva` (fn) L847 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - `atApprovalTime` (fn) L873 - Need approval by": the picked day at the chosen time, never after the publish time.
+    - `pickApproval` (fn) L874
+    - `isMissing` (fn) L899
+    - `errorFor` (fn) L901
+    - `titleOf` (fn) L912
+    - `detailsMissing` (fn) L914
+    - `toolView` (fn) L919
+    - `goToStep` (fn) L920
+    - `repostKey` (fn) L931
+    - `leaveDetails` (fn) L933
+    - `backToCaption` (fn) L968
+    - `openStep` (fn) L972
+    - `runComplianceCheck` (fn) L977 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+    - `sourceChecking` (fn) L1043
+    - `ranSinceSentBack` (fn) L1050
+    - `submit` (fn) L1059
+    - `exec` (fn) L1203 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1211 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1223
+    - `typedTail` (fn) L1228 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1235 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1259 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1275 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1283
+    - `onConfirmRepostDate` (fn) L1296
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
 
-## src/pages/Submissions/ScriptChangesPage.tsx (571 lines) - script changes page (pages  submissions)
-- `View` (type) L25
-- `initials` (const) L27
-- `comparison` (function) L36 - Which two versions to compare: what the creator sent and what came back (or the last round's change).
-- `downloadText` (function) L48
-- `ScriptChangesPage` (export function) L61 - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
-    - `stage` (fn) L63
-- `noop` (const) L77
-- `Changes` (function) L79
-    - `navigate` (fn) L80
-    - `noteValue` (fn) L91 - The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
-    - `parts` (fn) L97
-    - `changes` (fn) L98
-    - `decide` (fn) L102
-    - `merged` (fn) L112 - The script with the reviewer's changes applied except where the creator kept their own wording.
-    - `toggleDone` (fn) L120
-    - `goToHighlight` (fn) L147 - A highlight card was clicked: find that wording in the script and flash it.
-    - `pick` (fn) L153
+## src/pages/Submissions/ScriptChangesPage.tsx (558 lines) - script changes page (pages  submissions)
+- `View` (type) L26
+- `initials` (const) L28
+- `comparison` (function) L37 - Which two versions to compare: what the creator sent and what came back (or the last round's change).
+- `ScriptChangesPage` (export function) L53 - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
+    - `stage` (fn) L55
+- `noop` (const) L69
+- `Changes` (function) L71
+    - `navigate` (fn) L72
+    - `noteValue` (fn) L83 - The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
+    - `parts` (fn) L89
+    - `changes` (fn) L90
+    - `decide` (fn) L94
+    - `merged` (fn) L104 - The script with the reviewer's changes applied except where the creator kept their own wording.
+    - `toggleDone` (fn) L112
+    - `goToHighlight` (fn) L139 - A highlight card was clicked: find that wording in the script and flash it.
+    - `pick` (fn) L145
 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) L4 - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1602 lines) - submissions list page (pages  submissions)
-- `Stage` (type) L101 - The status as the team thinks of it: approved content with a future publish date is "Scheduled".
-- `stageOf` (function) L103
+## src/pages/Submissions/SubmissionsListPage.tsx (1601 lines) - submissions list page (pages  submissions)
+- `Stage` (type) L102 - The review status remains Approved when a planned publishing date is set.
+- `stageOf` (function) L104
 - `tabOf` (function) L113 - The tab a post is counted under.
 - `SortBy` (type) L140
 - `Prefs` (type) L151
@@ -133,17 +132,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `navigate` (fn) L1016
     - `isWide` (fn) L1017
     - `submit` (fn) L1018
-    - `openPost` (fn) L1029 - script a reviewer sent back, opens in the side sheet, which has what each needs.
-    - `openStep` (fn) L1043 - A click on one step opens that step.
-    - `setPrefs` (fn) L1049
-    - `inMonth` (fn) L1086
-    - `stageCounts` (fn) L1089
-    - `platformsInList` (fn) L1104 - Platform options come from what's actually in the list.
-    - `audiencesInList` (fn) L1106 - The audiences that are actually in the list.
-    - `brandsInList` (fn) L1109 - older content, so it can be found.
-    - `managed` (fn) L1110
-    - `visible` (fn) L1115
-    - `paged` (fn) L1134 - 25 to a page; a new filter, search or sort starts again from the first page.
-    - `pager` (fn) L1135
-    - `clearFilters` (fn) L1155
-    - `panel` (fn) L1164
+    - `openPost` (fn) L1027
+    - `openStep` (fn) L1042
+    - `setPrefs` (fn) L1048
+    - `inMonth` (fn) L1085
+    - `stageCounts` (fn) L1088
+    - `platformsInList` (fn) L1103 - Platform options come from what's actually in the list.
+    - `audiencesInList` (fn) L1105 - The audiences that are actually in the list.
+    - `brandsInList` (fn) L1108 - older content, so it can be found.
+    - `managed` (fn) L1109
+    - `visible` (fn) L1114
+    - `paged` (fn) L1133 - 25 to a page; a new filter, search or sort starts again from the first page.
+    - `pager` (fn) L1134
+    - `clearFilters` (fn) L1154
+    - `panel` (fn) L1163

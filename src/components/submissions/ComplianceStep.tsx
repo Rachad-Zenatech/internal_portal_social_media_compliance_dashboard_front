@@ -142,33 +142,35 @@ export default function ComplianceStep({
   const mediaFindings = findings.filter((f) => f.v.image_regions?.length || f.where === "Image or on-screen text" || f.where === "Video");
 
   const header = (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="flex min-w-0 gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-          <ShieldCheck className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-lg font-bold leading-tight text-foreground">Compliance check</h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Regulatory, legal and brand rules for the rule sets, audience and region you picked.
-          </p>
+    <div className="@container/compliance-header">
+      <div className="grid gap-4 @[34rem]/compliance-header:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold leading-tight text-foreground">Compliance check</h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              Regulatory, legal and brand rules for the rule sets, audience and region you picked.
+            </p>
+          </div>
         </div>
+        {editable && (
+          <div className="flex flex-col items-start gap-1.5 pl-[52px] @[34rem]/compliance-header:items-end @[34rem]/compliance-header:pl-0">
+            <Button
+              type="button"
+              variant="default"
+              onClick={onCheck}
+              disabled={checking}
+              className="h-10 shrink-0 gap-2 whitespace-nowrap rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
+            >
+              {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : check ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+              {check ? "Check again" : "Run compliance check"}
+            </Button>
+            <span className="text-xs leading-relaxed text-muted-foreground">Run again after editing.</span>
+          </div>
+        )}
       </div>
-      {editable && (
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            type="button"
-            variant="default"
-            onClick={onCheck}
-            disabled={checking}
-            className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-          >
-            {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : check ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-            {check ? "Check again" : "Run compliance check"}
-          </Button>
-          <span className="text-xs text-muted-foreground">Runs only when you click; run again after editing</span>
-        </div>
-      )}
     </div>
   );
 

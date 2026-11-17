@@ -222,6 +222,7 @@ export interface Submission extends SubmissionSourceFields {
   submitted_at?: string | null;
   created_at: string;
   updated_at: string;
+  content_edited_at?: string | null;
 }
 
 /** The five steps a creator works through on a post. */
@@ -237,11 +238,10 @@ export interface SubmissionSteps {
   sentiment: PostStepState;
   mood: PostStepState;
   send: PostStepState;
-  /** Where to carry on: the first of the first four steps not done, else send. Null once it has been sent. */
-  next: PostStepKey | null;
-  /** Steps 1 to 4 are all done and up to date: the only time it can be sent for review. */
+  revision?: boolean;
+  suggestions?: PostStepState;
+  next: PostStepKey | "suggestions" | null;
   ready_to_send: boolean;
-  /** Sent (in review, approved or published): nothing can be edited or re-run. */
   locked: boolean;
   /** What the details step still lacks, by field name. */
   missing: string[];
