@@ -127,9 +127,7 @@ import type {
   SubmissionUpdate,
 } from "@/types/submission";
 
-// ---------------------------------------------------------------------------
 // Static presentation config (allowed values themselves come from the API)
-// ---------------------------------------------------------------------------
 
 const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
   { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
@@ -139,6 +137,7 @@ const CONTENT_TYPES: { value: ContentType; label: string; description: string; i
   { value: "BLOG", label: "Blog / Article", description: "Long-form content", icon: FileText },
   { value: "AD", label: "Paid Ad", description: "Sponsored post or ad creative", icon: Megaphone },
 ];
+const VISIBLE_CONTENT_TYPES = CONTENT_TYPES.filter(({ value }) => value !== "BLOG" && value !== "AD");
 
 const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
   VIDEO: { main: "your video" },
@@ -418,7 +417,7 @@ export default function NewSubmissionPage() {
   const reviewerOptions = useMemo(() => reviewersQuery.data ?? [], [reviewersQuery.data]);
   // Picks who review none of the post's brands (they changed) are dropped, once those brands' reviewers are known.
   const pickedReviewers = reviewersQuery.data
-    ? reviewerIds.filter((id) => reviewerOptions.some((r) => r.id === id))
+    ? reviewerIds.filter((id) => lockedReviewerIds.includes(id) || reviewerOptions.some((r) => r.id === id))
     : reviewerIds;
   // Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
   const approverOptions = useMemo(() => reviewerOptions.filter((r) => r.kind !== "SUGGESTER"), [reviewerOptions]);
@@ -549,7 +548,7 @@ export default function NewSubmissionPage() {
         setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
         setReviewerIds(s.reviewer_ids ?? []);
-        setLockedReviewerIds(s.status === "CHANGES_REQUESTED" ? s.reviewer_ids ?? [] : []);
+        setLockedReviewerIds(s.status === "CHANGES_REQUESTED" || s.script_status === "APPROVED" ? s.reviewer_ids ?? [] : []);
         // Sent back: every detail is open, so any file (image, video, script) can be uploaded again.
         if (s.status === "CHANGES_REQUESTED") setShowAllDetails(true);
         // The editor mounts after the loading state clears; the effect below fills it in.
@@ -1041,11 +1040,11 @@ export default function NewSubmissionPage() {
   const ranSinceSentBack = (at?: string | null) =>
     Boolean(at && revisionHistory) && (sentBackAt == null || new Date(at!).getTime() > sentBackAt);
   const recheck = {
-    compliance: hasCheck && !checkStale && ranSinceSentBack(checkedSub?.latest_check?.checked_at),
-    sentiment: sentimentAnalysis?.status === "COMPLETED" && ranSinceSentBack(sentimentAnalysis.completed_at),
+    compliance: hasCheck && !checkStale && ranSinceSentBack(checkedSub?.latest_check?.checked_at) && (!checkedSub?.content_edited_at || Date.parse(checkedSub.content_edited_at) <= Date.parse(checkedSub.latest_check?.checked_at ?? "")),
+    sentiment: sentimentAnalysis?.status === "COMPLETED" && ranSinceSentBack(sentimentAnalysis.completed_at) && (!checkedSub?.content_edited_at || Date.parse(checkedSub.content_edited_at) <= Date.parse(sentimentAnalysis.completed_at ?? "")),
     mood: Boolean(mood),
   };
-  const changesMade = editCounter > 0 || recheck.compliance;
+  const changesMade = editCounter > 0 || recheck.compliance || Boolean(sentBackAt && checkedSub?.content_edited_at && Date.parse(checkedSub.content_edited_at) > sentBackAt);
 
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
@@ -1114,12 +1113,12 @@ export default function NewSubmissionPage() {
       return;
     }
     // Sent back by a reviewer: the changes are checked again before the new version goes back (see RECHECK_AFTER_EDITS).
-    if (RECHECK_AFTER_EDITS && resubmitting && !recheck.compliance) {
+    if (resubmitting && !recheck.compliance) {
       toast.error("Run the compliance check on your changes before resubmitting.");
       openStep("compliance");
       return;
     }
-    if (RECHECK_AFTER_EDITS && resubmitting && !recheck.sentiment) {
+    if (resubmitting && !scriptOnly && !recheck.sentiment) {
       toast.error("Run the sentiment analysis on your changes before resubmitting.");
       openStep("sentiment");
       return;
@@ -1351,10 +1350,10 @@ export default function NewSubmissionPage() {
           steps={revisionSteps}
           current={currentStep}
           states={{
-            suggestions: reviewComments.some((c) => !c.resolved_at) ? "todo" : "done",
-            details: changesMade ? "done" : "stale",
-            compliance: recheck.compliance ? "done" : "stale",
-            sentiment: recheck.sentiment ? "done" : "stale",
+            suggestions: changesMade && !reviewComments.some((c) => !c.resolved_at) ? "done" : "todo",
+            details: changesMade ? "done" : "todo",
+            compliance: recheck.compliance ? "done" : "todo",
+            sentiment: recheck.sentiment ? "done" : "todo",
             mood: recheck.mood ? "done" : "stale",
           }}
           onGo={openStep}
@@ -1455,7 +1454,7 @@ export default function NewSubmissionPage() {
                     <div className="space-y-2">
                       <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
                       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
-                        {CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
+                        {VISIBLE_CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
                           const selected = contentType === value;
                           return (
                             <button

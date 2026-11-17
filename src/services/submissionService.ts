@@ -240,6 +240,8 @@ export const submissionService = {
   requestCreatorFlagDismissal: (id: string, ruleId: string, data: { reason: FlagDismissReason; note: string | null }) =>
     apiClient.put<CreatorFlagDismissalRequest>(`/api/submissions/${id}/creator-flag-dismissals/${ruleId}`, data, quiet),
   approveCreatorFlagDismissal: (id: string, ruleId: string) => apiClient.put<FlagReview>(`/api/submissions/${id}/creator-flag-dismissals/${ruleId}/approve`, {}, quiet),
+  rejectCreatorFlagDismissal: (id: string, ruleId: string, notes: string) =>
+    apiClient.put<Submission>(`/api/submissions/${id}/creator-flag-dismissals/${ruleId}/reject`, { notes }, quiet),
   /** Reviewers' calls on the flags (right, or a false alarm), on every version. */
   flagVerdicts: (id: string) => apiClient.get<FlagVerdict[]>(`/api/submissions/${id}/flag-verdicts`, quiet),
   /** Say a flag is right: kept as an example of wording the rule should catch. */

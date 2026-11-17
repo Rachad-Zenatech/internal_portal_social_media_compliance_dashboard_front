@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
+import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
@@ -108,6 +109,9 @@ export default function ComplianceStep({
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
+  // The editable compliance step is the creator workflow. Creators may request,
+  // but never directly apply, a dismissal.
+  const canRequestDismissal = editable;
   const parts = check ? timelineOf(sub!, duration) : [];
   const selected = findings.find((f) => f.key === picked) ?? null;
 
@@ -138,33 +142,35 @@ export default function ComplianceStep({
   const mediaFindings = findings.filter((f) => f.v.image_regions?.length || f.where === "Image or on-screen text" || f.where === "Video");
 
   const header = (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="flex min-w-0 gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-          <ShieldCheck className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-lg font-bold leading-tight text-foreground">Compliance check</h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Regulatory, legal and brand rules for the rule sets, audience and region you picked.
-          </p>
+    <div className="@container/compliance-header">
+      <div className="grid gap-4 @[34rem]/compliance-header:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold leading-tight text-foreground">Compliance check</h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              Regulatory, legal and brand rules for the rule sets, audience and region you picked.
+            </p>
+          </div>
         </div>
+        {editable && (
+          <div className="flex flex-col items-start gap-1.5 pl-[52px] @[34rem]/compliance-header:items-end @[34rem]/compliance-header:pl-0">
+            <Button
+              type="button"
+              variant="default"
+              onClick={onCheck}
+              disabled={checking}
+              className="h-10 shrink-0 gap-2 whitespace-nowrap rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
+            >
+              {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : check ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+              {check ? "Check again" : "Run compliance check"}
+            </Button>
+            <span className="text-xs leading-relaxed text-muted-foreground">Run again after editing.</span>
+          </div>
+        )}
       </div>
-      {editable && (
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            type="button"
-            variant="default"
-            onClick={onCheck}
-            disabled={checking}
-            className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-          >
-            {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : check ? <RefreshCw className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-            {check ? "Check again" : "Run compliance check"}
-          </Button>
-          <span className="text-xs text-muted-foreground">Runs only when you click; run again after editing</span>
-        </div>
-      )}
     </div>
   );
 
@@ -260,7 +266,7 @@ export default function ComplianceStep({
             const critical = f.v.traffic_light === "RED";
             const on = f.key === picked;
             const tone = critical || st === "VIOLATION" ? "red" : "amber";
-            const edit = f.where === "Caption" || f.where === "Title" || f.where === "Missing disclaimer";
+            const edit = f.where === "Caption" || f.where === "Title";
             return (
               <article
                 key={f.key}
@@ -293,19 +299,16 @@ export default function ComplianceStep({
                 </button>
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
-                    {f.v.flagged_terms.length > 0 && (
-                      <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">
-                        {f.v.flagged_terms.map((t) => `"${t}"`).join(", ")}
-                      </p>
-                    )}
+                    {f.v.flagged_terms.length > 0 && <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">{f.v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>}
                     <p className="text-[13px] leading-relaxed text-foreground/80">
                       <strong className="font-semibold">What to do:</strong> {f.v.remediation_guidance || f.v.explanation}
                     </p>
                     {editable && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>
-                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : "Replace the media"}
+                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : f.where === "Video" ? "Edit the video" : "Fix in image"}
                       </Button>
                     )}
+                    {canRequestDismissal && f.v.rule_id && <FlagReviewControl submissionId={sub!.id} ruleId={f.v.rule_id} ruleNumber={f.v.rule_number} currentVersion={sub!.current_version} canDismiss={false} canRequest evidence={f.v.status === "EVIDENCE_REQUIRED"} />}
                   </div>
                 )}
               </article>
@@ -387,7 +390,7 @@ export default function ComplianceStep({
 
           {mainFile && isVideo && (
             <>
-              <FlaggedVideo src={authedFileUrl(mainFile.url)} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
+              <FlaggedVideo src={authedFileUrl(mainFile.url)} fileId={mainFile.id} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} currentTime={now} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
               <FlaggedMoments
                 parts={parts}
                 now={now}

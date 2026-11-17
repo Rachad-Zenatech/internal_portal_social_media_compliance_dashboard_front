@@ -3,8 +3,9 @@ import test from "node:test";
 import { loadService } from "./loadTypeScriptService.mjs";
 
 const postSteps = loadService("postSteps", {}, "lib");
+const revisionSteps = loadService("revisionSteps", { "@/lib/postSteps": postSteps }, "lib");
 const { creatorSubmissionSteps, creatorProgressText } = loadService("submissionProgress", {
-   "@/lib/postSteps": postSteps,
+   "@/lib/postSteps": postSteps, "@/lib/revisionSteps": revisionSteps,
 }, "lib");
 
 function script(over = {}) {
@@ -94,4 +95,36 @@ test("display normalization preserves the server response without mutating its s
   const before = JSON.stringify(row);
   creatorSubmissionSteps(row);
   assert.equal(JSON.stringify(row), before);
+});
+
+
+test("an approved script has three completed steps and hands off to video upload", () => {
+  const row = displayed(script({ script_status: "APPROVED" }));
+  for (const key of ["details", "compliance", "send"]) assert.equal(row.steps[key], "done");
+  assert.equal(row.steps.ready_to_send, false);
+  assert.equal(row.steps.next, null);
+  assert.equal(row.steps.locked, false);
+  assert.match(creatorProgressText(row, "Draft"), /^Script approved .*Upload video$/);
+  assert.equal(postSteps.stepStatusText("send", "done", row.steps), "Sent for review.");
+});
+
+
+test("a returned post resets the previous submission's checks and shows five steps", () => {
+  const row = displayed(script({ status: "CHANGES_REQUESTED", content_type: "IMAGE", script_status: null,
+    steps: { details: "done", compliance: "done", sentiment: "done", mood: "done", send: "done",
+      locked: false, ready_to_send: true, next: "send", missing: [] } }));
+  assert.equal(row.steps.next, "suggestions");
+  assert.equal(row.steps.ready_to_send, false);
+  assert.equal(row.steps.send, "todo");
+  assert.equal(creatorProgressText(row, "Changes requested"), "0 of 5 steps done");
+});
+
+test("revision dots use the server's fresh round progress without promoting stale checks", () => {
+  const row = displayed(script({ status: "CHANGES_REQUESTED", content_type: "IMAGE", script_status: null,
+    steps: { revision: true, suggestions: "done", details: "done", compliance: "stale", sentiment: "todo",
+      mood: "todo", send: "todo", locked: false, ready_to_send: false, next: "compliance", missing: [] } }));
+  assert.equal(row.steps.compliance, "stale");
+  assert.equal(creatorProgressText(row, "Changes requested"), "2 of 5 steps done");
+  assert.equal(revisionSteps.creatorPreparationSteps(false, true).length, 5);
+  assert.equal(revisionSteps.creatorPreparationSteps(true, true).length, 4);
 });

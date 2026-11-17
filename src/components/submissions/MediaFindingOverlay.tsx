@@ -4,20 +4,22 @@ import { useComplianceRules } from "@/hooks/useComplianceRules";
 interface Props {
   findings: ComplianceViolation[];
   fileId?: string;
+  currentTime?: number;
   showRuleTooltip?: boolean;
 }
 
 /** Only measured regions are shown; never place a finding in an arbitrary area. */
-export default function MediaFindingOverlay({ findings, fileId, showRuleTooltip = false }: Props) {
+export default function MediaFindingOverlay({ findings, fileId, currentTime, showRuleTooltip = false }: Props) {
   const { data: rules } = useComplianceRules();
   const descriptions = new Map((rules ?? []).map((rule) => [rule.id, rule.summary]));
   const boxes = findings.flatMap((finding, index) => {
     const regions = fileId
       ? (finding.image_regions ?? []).filter((region) => region.file_id === fileId)
-      : [{ x: finding.region_x, y: finding.region_y, w: finding.region_w, h: finding.region_h }];
+      : [{ x: finding.region_x, y: finding.region_y, w: finding.region_w, h: finding.region_h, start_sec: undefined, end_sec: undefined }];
     return regions.filter((r) =>
       [r.x, r.y, r.w, r.h].every((v) => typeof v === "number" && Number.isFinite(v)) &&
-      r.x! >= 0 && r.y! >= 0 && r.w! > 0 && r.h! > 0 && r.x! + r.w! <= 1.000001 && r.y! + r.h! <= 1.000001,
+      r.x! >= 0 && r.y! >= 0 && r.w! > 0 && r.h! > 0 && r.x! + r.w! <= 1.000001 && r.y! + r.h! <= 1.000001 &&
+      (currentTime == null || r.start_sec == null || r.end_sec == null || (currentTime >= r.start_sec && currentTime <= r.end_sec)),
     ).map((region, n) => ({
       region,
       finding,

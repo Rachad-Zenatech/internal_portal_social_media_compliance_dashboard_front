@@ -53,21 +53,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
 - `useScrapeTwitter` (export function) L111 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
 
-## src/hooks/useReview.ts (198 lines) - The comment being replied to, per post.
+## src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12
 - `useCommentReply` (export function) L18 - The comment being replied to on this post, and setting or clearing it.
 - `invalidateSubmission` (function) L30 - Everything that shows a submission's status or review state.
 - `useReviewComments` (export function) L38 - Saved review comments for a submission, with add / resolve / delete.
 - `useFlagReviews` (export function) L72 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
-- `useReviewDecision` (export function) L157
-- `useApprovalActions` (export function) L176 - Approved content: a reviewer reschedules it or reopens it for changes.
+- `useReviewDecision` (export function) L166
+- `useApprovalActions` (export function) L185 - Approved content: a reviewer reschedules it or reopens it for changes.
 
-## src/hooks/useScript.ts (235 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (237 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.
-- `useScriptActions` (export function) L45 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
-- `useDebounced` (export function) L156 - The value, once it has stopped changing for `ms`.
-- `useLiveScriptCheck` (export function) L170 - The rulebook check of wording being edited.
-- `useScriptHighlights` (export function) L205 - The reviewer's highlights and notes on a script version.
+- `useScriptActions` (export function) L47 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
+- `useDebounced` (export function) L158 - The value, once it has stopped changing for `ms`.
+- `useLiveScriptCheck` (export function) L172 - The rulebook check of wording being edited.
+- `useScriptHighlights` (export function) L207 - The reviewer's highlights and notes on a script version.
 
 ## src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - `message` (const) L11
@@ -78,6 +78,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
+
+## src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
+- `useScriptReviewQueue` (export function) L5
 
 ## src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - `useScriptReviewerLabel` (export function) L5 - Older script responses omit names; resolve the post's actual review assignment.

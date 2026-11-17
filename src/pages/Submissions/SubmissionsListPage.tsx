@@ -87,21 +87,21 @@ import { useAuth } from "@/lib/AuthContext";
 import { useSubmitForReview } from "@/hooks/useSubmitForReview";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { submissionService } from "@/services/submissionService";
+import { creatorPreparationSteps, type CreatorStepKey } from "@/lib/revisionSteps";
 import PostSteps from "@/components/submissions/PostSteps";
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
-import { POST_STEPS, missingText, resumePath, stepPath } from "@/lib/postSteps";
+import { missingText, resumePath, stepPath } from "@/lib/postSteps";
 import { creatorSubmissionSteps, creatorProgressText, isScriptPreparation } from "@/lib/submissionProgress";
-import type { PostStepKey, Submission, SubmissionSummary } from "@/types/submission";
+import type { Submission, SubmissionSummary } from "@/types/submission";
 
 // ---------------------------------------------------------------------------
 // Stages, filters and sorting
 // ---------------------------------------------------------------------------
 
-/** The status as the team thinks of it: approved content with a future publish date is "Scheduled". */
+/** The review status remains Approved when a planned publishing date is set. */
 type Stage = "DRAFT" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "SCHEDULED" | "REJECTED";
 
 function stageOf(s: { status: string; publish_at?: string | null }): Stage {
-  if (s.status === "APPROVED" && s.publish_at && !isPast(new Date(s.publish_at))) return "SCHEDULED";
   return s.status as Stage;
 }
 
@@ -391,7 +391,7 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
   }
   if (stage === "SCHEDULED") return { text: `Approved · goes out ${friendlyDate(s.publish_at!)}`, tone: muted };
   if (stage === "APPROVED")
-    return { text: s.publish_at ? `Approved · publish date ${format(new Date(s.publish_at), "MMM d")}` : "Approved", tone: muted };
+    return { text: s.publish_at ? `Approved \u00b7 planned for ${friendlyDate(s.publish_at)}` : "Approved", tone: muted };
   return { text: STAGES[stage]?.label ?? s.status, tone: muted };
 }
 
@@ -470,7 +470,7 @@ function PostRow({
   s: SubmissionSummary;
   labels: Labels;
   onOpen: (s: SubmissionSummary) => void;
-  onOpenStep: (s: SubmissionSummary, step: PostStepKey) => void;
+  onOpenStep: (s: SubmissionSummary, step: CreatorStepKey) => void;
   onDelete: (s: SubmissionSummary) => void;
 }) {
   const stage = stageOf(s);
@@ -529,7 +529,7 @@ function PostRow({
           {pill.label}
         </span>
         {s.steps && !locked && s.steps.next && !s.steps.ready_to_send && (
-          <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Next: {POST_STEPS.find((p) => p.key === s.steps!.next)?.label}</span>
+          <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Next: {creatorPreparationSteps(isScriptPreparation(s), s.steps.revision).find((p) => p.key === s.steps!.next)?.label}</span>
         )}
         {fix && <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Unlocked: edit and re-run</span>}
       </div>
@@ -553,7 +553,7 @@ function PostRow({
           </Button>
         ) : (
           <Button className="h-10 rounded-[10px] bg-blue-700 px-4 text-[13px] font-semibold text-white hover:bg-blue-800 2xl:h-11 2xl:px-6 2xl:text-sm" onClick={() => onOpen(s)}>
-            {fix ? "Make changes" : s.script_status === "APPROVED" ? "Upload video" : "Continue"}
+            {fix ? "Make changes" : s.script_status === "APPROVED" && isScriptPreparation(s) ? "Review script & continue" : "Continue"}
           </Button>
         )}
         {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
@@ -704,11 +704,11 @@ function ReviewCard({
   } else if (summary.status === "DRAFT" && summary.script_status === "APPROVED" && mine && !sub?.files?.some((f) => f.kind === "MAIN")) {
     // The script is approved and there's no video yet: the video is what's left to add, so it comes before sending.
     footerTitle = "Script approved";
-    footerNote = "Film from the approved script, then upload the video.";
+    footerNote = "Review and download your approved script, then film and upload the video.";
     actions = (
       <div className="flex flex-wrap justify-end gap-2">
-        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/new?id=${summary.id}`)}>
-          <Upload className="w-3.5 h-3.5" /> Upload the video
+        <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white" onClick={() => navigate(`/submissions/${summary.id}/script`)}>
+          <Upload className="w-3.5 h-3.5" /> Review script & continue
         </Button>
       </div>
     );
@@ -716,7 +716,7 @@ function ReviewCard({
     // Nothing goes for review until all the steps are done and up to date.
     const steps = summary.steps;
     const ready = !steps || steps.ready_to_send;
-    const nextLabel = steps?.next ? POST_STEPS.find((p) => p.key === steps.next)?.label : null;
+    const nextLabel = steps?.next ? creatorPreparationSteps(isScriptPreparation(summary), steps.revision).find((p) => p.key === steps.next)?.label : null;
     footerTitle = ready ? "Your next step" : "Finish the steps first";
     footerNote = !ready
       ? `It can be sent once every step is done${nextLabel ? `. Next: ${nextLabel}` : ""}.${
@@ -1024,11 +1024,11 @@ export default function SubmissionsListPage() {
   // Creators browse a gallery and open details in a side sheet; reviewers keep the list beside the review panel.
   const gallery = !isReviewer;
 
-  // A click on a post you can still change opens the step you left off on. A post that has been sent (it is locked), or a
-  // script a reviewer sent back, opens in the side sheet, which has what each needs.
   const openPost = (item: SubmissionSummary) => {
     // In review: the same steps, locked, opened on its compliance result.
-    if (item.status === "IN_REVIEW") {
+    if (item.status === "DRAFT" && item.script_status === "APPROVED" && isScriptPreparation(item)) {
+      navigate(`/submissions/${item.id}/script`);
+    } else if (item.status === "IN_REVIEW") {
       navigate(stepPath(item.id, "compliance"));
     } else if (item.status === "CHANGES_REQUESTED" && !scriptNeedsChanges(item)) {
       // Sent back: it opens on the first step, the reviewers' suggestions.
@@ -1039,8 +1039,7 @@ export default function SubmissionsListPage() {
       setSelectedId(item.id);
     }
   };
-  // A click on one step opens that step. On a locked post it opens the read-only view in the side sheet.
-  const openStep = (item: SubmissionSummary, step: PostStepKey) => {
+  const openStep = (item: SubmissionSummary, step: CreatorStepKey) => {
     if (item.status === "IN_REVIEW") navigate(stepPath(item.id, step));
     else if (!item.steps || item.steps.locked) setSelectedId(item.id);
     else navigate(stepPath(item.id, step));

@@ -53,10 +53,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `formatRelativeTime` (function) L22
 - `NotificationDropdownContent` (export function) L38
 
-## src/components/AppShell/Sidebar.tsx (261 lines) - The page an item stands for, as the address bar shows it.
-- `SidebarProps` (interface) L12
-- `isItemActive` (function) L18 - The page an item stands for, as the address bar shows it.
-- `Sidebar` (export function) L30
+## src/components/AppShell/Sidebar.tsx (291 lines) - The page an item stands for, as the address bar shows it.
+- `SidebarProps` (interface) L13
+- `isItemActive` (function) L19 - The page an item stands for, as the address bar shows it.
+- `ReviewerQueueBadge` (function) L31
+- `Sidebar` (export function) L43
 
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - `ThemeSwitch` (export function) L5

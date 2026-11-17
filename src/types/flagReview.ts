@@ -16,7 +16,7 @@ export interface FlagReview {
 
 /** A creator's request for a reviewer to dismiss a finding; it is not a dismissal itself. */
 export interface CreatorFlagDismissalRequest extends FlagReview {
-  status: "PENDING" | "APPROVED";
+  status: "PENDING" | "APPROVED" | "REJECTED";
   requested_by_name?: string | null;
 }
 

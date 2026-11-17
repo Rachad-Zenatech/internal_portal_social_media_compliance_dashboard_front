@@ -25,8 +25,10 @@ export default function ComplianceView({
   emptyText?: string;
   outdatedText?: string;
 }) {
-  const { creatorView } = useAuth();
+  const { creatorView, user } = useAuth();
   const canReview = Boolean(sub.can_review) && !creatorView;
+  // `creatorView` only covers super admins who switched modes. Regular creators need the same request action on posts they own.
+  const canRequestDismissal = creatorView || sub.created_by === user?.id;
   const check = sub.latest_check;
   if (!check) {
     return <p className="text-xs text-muted-foreground">{emptyText}</p>;
@@ -72,7 +74,7 @@ export default function ComplianceView({
       <ScoreBreakdown check={check} />
       <OtherFindings violations={check.violations} />
       {/* Creators can request a dismissal; a reviewer must approve it before the flag is cleared. */}
-      {(canReview || creatorView) && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
+      {(canReview || canRequestDismissal) && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
         <div className="space-y-2 border-t border-border/60 pt-3">
           {check.violations.filter((v) => statusOf(v) !== "CLEARED").map((v) => (
             <div key={v.rule_id} className="space-y-1 text-xs">
@@ -85,7 +87,7 @@ export default function ComplianceView({
                 ruleNumber={v.rule_number}
                 currentVersion={sub.current_version}
                 canDismiss={canReview}
-                canRequest={creatorView}
+                canRequest={canRequestDismissal}
                 evidence={v.status === "EVIDENCE_REQUIRED"}
               />
             </div>

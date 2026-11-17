@@ -15,15 +15,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useNotes` (function) L23 - The notes document as a list, kept up to date as anyone changes it.
 - `ScriptDocPage` (export function) L40 - A script open for review.
 
-## src/pages/Scripts/ScriptReviewPage.tsx (314 lines) - script review page (pages  scripts)
-- `ReviewTab` (type) L27
-- `CreatorFilter` (type) L34
-- `Progress` (function) L47 - How far a batch has got: a bar split by where its scripts are.
-- `BatchCard` (function) L67
-- `ScriptCard` (function) L107 - A script that was uploaded on its own (not in a batch).
-- `Empty` (function) L136
-- `ScriptReviewTabs` (function) L147 - The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter.
-- `ScriptReviewPage` (export function) L204 - Script review: every script, whether it was uploaded alone or in a batch of several.
+## src/pages/Scripts/ScriptReviewPage.tsx (299 lines) - script review page (pages  scripts)
+- `CreatorFilter` (type) L27
+- `Progress` (function) L40 - How far a batch has got: a bar split by where its scripts are.
+- `BatchCard` (function) L60
+- `ScriptCard` (function) L100 - A script that was uploaded on its own (not in a batch).
+- `Empty` (function) L129
+- `ScriptReviewTabs` (function) L140 - The row of pills above the list: a reviewer's tabs (to review, sent back, done), or a creator's filter.
+- `ScriptReviewPage` (export function) L197 - Script review: every script, whether it was uploaded alone or in a batch of several.
 
 ## src/pages/Scripts/ScriptReviewScriptPage.tsx (50 lines) - script review script page (pages  scripts)
 - `ScriptReviewScriptPage` (export function) L14 - One video script, reviewed in the Script review section: the script marked up beside its flags, highlights,  sentiment and history, and t...

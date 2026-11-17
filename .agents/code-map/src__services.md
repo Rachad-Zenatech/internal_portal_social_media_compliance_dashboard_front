@@ -30,7 +30,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const) L7
 
-## src/services/complianceService.ts (375 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (378 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type) L4
 - `TrafficLight` (export type) L5
 - `ComplianceRule` (export interface) L7
@@ -38,22 +38,22 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `EvaluationMode` (export type) L71 - RULE: a match is a finding.
 - `ComplianceRuleUpdate` (export interface) L73
 - `ImageFindingRegion` (export interface) L99
-- `ComplianceViolation` (export interface) L107
-- `FindingStatus` (export type) L147 - VIOLATION breaks a rule (costs points; a critical one blocks).
-- `ContextEvaluation` (export interface) L149
-- `ComplianceCheckResponse` (export interface) L164
-- `SourceVerdict` (export type) L204 - SUPPORTED: the source says it.
-- `SourceClaim` (export interface) L206
-- `SourceCheck` (export interface) L224
-- `CheckSignals` (export interface) L243 - What the check read from the post's symbols, before its wording was matched against the rules.
-- `ManualReviewRule` (export interface) L258 - An applicable rule the automated check can't test from text (e.g.
-- `RuleExampleResult` (export interface) L266 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
-- `RuleSelfTest` (export interface) L276
-- `ComplianceCheckRequest` (export interface) L287 - Who and where the content is for; only rules whose scope matches are run.
-- `ComplianceStats` (export interface) L298
-- `VideoJobStage` (export interface) L310
-- `VideoJob` (export interface) L316
-- `complianceService` (export const) L335
+- `ComplianceViolation` (export interface) L110
+- `FindingStatus` (export type) L150 - VIOLATION breaks a rule (costs points; a critical one blocks).
+- `ContextEvaluation` (export interface) L152
+- `ComplianceCheckResponse` (export interface) L167
+- `SourceVerdict` (export type) L207 - SUPPORTED: the source says it.
+- `SourceClaim` (export interface) L209
+- `SourceCheck` (export interface) L227
+- `CheckSignals` (export interface) L246 - What the check read from the post's symbols, before its wording was matched against the rules.
+- `ManualReviewRule` (export interface) L261 - An applicable rule the automated check can't test from text (e.g.
+- `RuleExampleResult` (export interface) L269 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
+- `RuleSelfTest` (export interface) L279
+- `ComplianceCheckRequest` (export interface) L290 - Who and where the content is for; only rules whose scope matches are run.
+- `ComplianceStats` (export interface) L301
+- `VideoJobStage` (export interface) L313
+- `VideoJob` (export interface) L319
+- `complianceService` (export const) L338
 
 ## src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L12
@@ -98,9 +98,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptDocService.ts (49 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - `scriptDocService` (export const) L10 - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 
-## src/services/scriptService.ts (62 lines) - The script stage of video posts (see the backend's script_review_service).
-- `scriptService` (export const) L9 - The script stage of video posts (see the backend's script_review_service).
+## src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
+- `scriptService` (export const) L10 - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (371 lines) - submission service (services)
+## src/services/submissionService.ts (373 lines) - submission service (services)
 - `ScrapeStatus` (export interface) L47
 - `submissionService` (export const) L61

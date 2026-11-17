@@ -4,13 +4,13 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostPreview.tsx (354 lines) - post preview (components submissions)
-- `formatDuration` (function) L26
-- `initials` (function) L30
-- `ChannelAvatar` (export function) L41
-- `FitMedia` (function) L77 - A picture or video frame shown whole in whatever box it's given, whatever its shape.
-- `CoverThumb` (export function) L87 - Card/list thumbnail: the picked video frame, the image itself, or a styled placeholder.
-- `Media` (function) L177
-- `VideoMedia` (function) L186
-- `Caption` (function) L217
-- `PostPreview` (export function) L236 - Approximate look of the post on a platform: who it posts as, the caption and the media.
+## src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
+- `formatDuration` (function) L27
+- `initials` (function) L31
+- `ChannelAvatar` (export function) L42
+- `FitMedia` (function) L78 - A picture or video frame shown whole in whatever box it's given, whatever its shape.
+- `CoverThumb` (export function) L88 - Card/list thumbnail: the picked video frame, the image itself, or a styled placeholder.
+- `Media` (function) L179
+- `VideoMedia` (function) L188
+- `Caption` (function) L219
+- `PostPreview` (export function) L238 - Approximate look of the post on a platform: who it posts as, the caption and the media.

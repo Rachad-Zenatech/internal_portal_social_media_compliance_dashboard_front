@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import ListPager from "@/components/common/ListPager";
+import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +33,8 @@ import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIc
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
 import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
-import ImageAnnotator from "@/components/submissions/ImageAnnotator";
+import ReviewerImageViewer from "@/components/submissions/ReviewerImageViewer";
+import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
@@ -164,13 +166,18 @@ function ScoreBadge({ s }: { s: ReviewQueueItem }) {
 
 function Thumb({ s }: { s: ReviewQueueItem }) {
   const image = s.images?.[0];
+  const [unavailable, setUnavailable] = useState(false);
   return (
     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-      {s.video ? (
+      {unavailable ? (
+        <span className="grid h-full w-full place-items-center px-1 text-center text-[9px] leading-tight text-muted-foreground">
+          Media unavailable
+        </span>
+      ) : s.video ? (
         // A frame a second in: many videos open on black.
-        <video src={`${authedFileUrl(s.video.url)}#t=1`} preload="metadata" muted className="h-full w-full object-cover" />
+        <video src={`${authedFileUrl(s.video.url)}#t=1`} preload="metadata" muted onError={() => setUnavailable(true)} className="h-full w-full object-cover" />
       ) : image ? (
-        <img src={authedFileUrl(image.url)} alt="" className="h-full w-full object-cover" />
+        <img src={authedFileUrl(image.url)} alt="" onError={() => setUnavailable(true)} className="h-full w-full object-cover" />
       ) : (
         <span className="grid h-full w-full place-items-center text-[10px] text-muted-foreground">Text</span>
       )}
@@ -427,10 +434,6 @@ export function FlaggedMoments({
   );
 }
 
-// ---------------------------------------------------------------------------
-// The post: header, media (vertical for reels), flagged moments, the comment box, caption
-// ---------------------------------------------------------------------------
-
 function PostView({
   s,
   flags,
@@ -595,23 +598,21 @@ function PostView({
                   {atFlag.critical ? "Critical" : "Needs review"} · {atFlag.v.rule_number} · {atFlag.v.title}
                 </span>
               )}
+              <MediaFindingOverlay findings={flags.map((flag) => flag.v)} fileId={s.video.id} currentTime={now} showRuleTooltip />
             </div>
-
             <FlaggedMoments parts={parts} now={now} duration={duration} playing={playing} onToggle={toggle} onStep={step} seek={seek} />
           </>
         ) : image ? (
           <div className="flex flex-col gap-2">
             <div className="flex justify-center">
-              <ImageAnnotator
-                key={image.id}
-                imageClassName="max-h-[60vh] w-auto rounded-xl object-contain shadow-md ring-1 ring-border/60"
+              <ReviewerImageViewer
                 submissionId={s.id}
                 file={image}
+                findings={flags.map((flag) => flag.v)}
                 canDraw={canComment}
                 activeId={activeCommentId}
                 onActive={onActiveComment}
                 onPlainClick={onComment}
-                findings={flags.map((flag) => flag.v)}
               />
             </div>
             {canComment && (
@@ -1467,10 +1468,7 @@ export default function ContentScreenerPage() {
               >
                 {t.label}{" "}
                 <span className="text-muted-foreground">
-                  {counts.data
-                    ? counts.data[t.value] +
-                      ((t.value === "review" ? counts.data.scripts : t.value === "sent_back" ? counts.data.scripts_sent_back : counts.data.scripts_done) ?? 0)
-                    : ""}
+                  {counts.data?.[t.value] ?? ""}
                 </span>
               </button>
             ))}
@@ -1498,6 +1496,7 @@ export default function ContentScreenerPage() {
             />
           </div>
           <ActiveFilterChips filters={filters} setFilters={setFilters} brandLabel={brandLabel} />
+          <ScriptReviewNotice />
         </div>
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading

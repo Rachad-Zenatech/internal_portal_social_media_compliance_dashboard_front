@@ -1,5 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type { ScriptQueueItem, ScriptStage, SuggesterDashboard } from "@/types/script";
+import type { ScriptQueueSummary } from "@/types/scriptQueue";
 import type { ScriptHighlight } from "@/types/script";
 import type { StoredCheck } from "@/types/submission";
 
@@ -7,6 +8,7 @@ const quiet = { skipGlobalLoading: true };
 
 /** The script stage of video posts (see the backend's script_review_service). */
 export const scriptService = {
+  queueSummary: () => apiClient.get<ScriptQueueSummary[]>("/api/submissions/scripts/queue/summary", quiet),
   queue: (tab: "review" | "sent_back" | "done" = "review") =>
     apiClient.get<ScriptQueueItem[]>(`/api/submissions/scripts/queue?tab=${tab}`, quiet),
 
@@ -14,6 +16,7 @@ export const scriptService = {
   suggesterDashboard: () => apiClient.get<SuggesterDashboard>("/api/submissions/scripts/suggester-dashboard", quiet),
 
   get: (id: string) => apiClient.get<ScriptStage>(`/api/submissions/${id}/script`, quiet),
+  download: (id: string, version: number, filename: string) => apiClient.downloadFile(`/api/submissions/${id}/script/export?version=${version}`, filename),
 
   /** Send the uploaded script for review. confirmRepost: send the same script again for another publish date (the
    * server asks with a 409 REPOST_CONFIRM; the same script for the same place and date is a 409 DUPLICATE_SCRIPT). */

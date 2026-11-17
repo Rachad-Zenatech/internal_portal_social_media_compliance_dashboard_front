@@ -41,7 +41,7 @@ export function postPreparationSteps(scriptOnly = false) {
 
 
 /** Where each step opens. Every step of a post is a page of its own; the editor reads ?step= to land on the right one. */
-export function stepPath(id: string, step: PostStepKey): string {
+export function stepPath(id: string, step: PostStepKey | "suggestions"): string {
   return `/submissions/new?id=${id}&step=${step}`;
 }
 
@@ -68,10 +68,12 @@ export function ranOnce(steps: SubmissionSteps, scriptOnly = false): SubmissionS
 }
 
 /** What a step is up to, as a sentence for the hover. */
-export function stepStatusText(key: PostStepKey, state: PostStepState, steps: SubmissionSteps): string {
+export function stepStatusText(key: PostStepKey | "suggestions", state: PostStepState, steps: SubmissionSteps): string {
   if (steps.locked) return "Sent for review. It is locked: you can look, but not change it or run it again.";
+  if (key === "suggestions") return state === "done" ? "Feedback addressed." : "Read and address the reviewer feedback.";
+  if (key === "send" && state === "done") return "Sent for review.";
   if (key === "send") {
-    return steps.ready_to_send ? "Ready: every step is done." : "Locked until steps 1 to 3 are done.";
+    return steps.ready_to_send ? "Ready: every step is done." : "Available once the earlier steps are complete.";
   }
   if (key === "details" && state === "todo" && steps.missing.length) return "Not finished yet.";
   switch (state) {
