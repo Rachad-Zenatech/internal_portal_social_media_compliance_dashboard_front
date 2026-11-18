@@ -1,5 +1,7 @@
 import type { PostStepKey, PostStepState, SubmissionSteps } from "@/types/submission";
 
+export const RAN_STEP_STATES: ReadonlySet<PostStepState> = new Set(["done", "stale", "unavailable"]);
+
 /**
  * The four steps a creator works through, in order. `purpose` is what a hover on the step says it is for.
  * Steps 2 and 3 are tools for the creator, to improve the post before a reviewer sees it.
@@ -73,6 +75,8 @@ export function stepStatusText(key: PostStepKey | "suggestions", state: PostStep
       return key === "details" ? "Done." : "Done and up to date.";
     case "stale":
       return "Out of date: the media changed after this ran. Run it again.";
+    case "unavailable":
+      return "The check ran, but the AI review was interrupted. Run it again to get a score.";
     case "running":
       return "Running now.";
     default:
@@ -91,6 +95,7 @@ const FIELD_WORDS: Record<string, string> = {
   rule_sets: "rule set",
   caption: "caption",
   main_file: "media",
+  ai_generated_images: "answer to the AI image question",
   script_approval: "an approved script",
 };
 

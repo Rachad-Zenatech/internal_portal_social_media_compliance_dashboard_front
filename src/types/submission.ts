@@ -1,3 +1,4 @@
+import type { ImageProvenance } from "@/types/imageProvenance";
 import type { ScriptMatch } from "@/types/scriptMatch";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 import type { ScriptStatus } from "@/types/script";
@@ -146,7 +147,7 @@ export interface AnalysisProgress {
   from_history?: boolean;
 }
 
-export interface Submission extends SubmissionSourceFields {
+export interface Submission extends SubmissionSourceFields, ImageProvenance {
   /** The saved check was made before the rulebook last changed. */
   check_outdated?: boolean;
   id: string;
@@ -225,7 +226,7 @@ export interface Submission extends SubmissionSourceFields {
 export type PostStepKey = "details" | "compliance" | "sentiment" | "mood" | "send";
 
 /** done; stale (run before the post was last edited, so run it again); running; todo (not done yet). */
-export type PostStepState = "done" | "stale" | "running" | "todo";
+export type PostStepState = "done" | "stale" | "running" | "unavailable" | "todo";
 
 /** How far a post has got through its steps (see the server's post_steps_service). */
 export interface SubmissionSteps {
@@ -333,6 +334,7 @@ export interface SubmissionUpdate extends SubmissionSourceFields {
   caption_text?: string;
   /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
   context_picks?: Record<string, string[]>;
+  ai_generated_images?: boolean;
   platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];
