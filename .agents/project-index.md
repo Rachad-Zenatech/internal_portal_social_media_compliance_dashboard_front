@@ -197,6 +197,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+- src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
@@ -290,6 +291,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/complianceService.ts (378 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
+- src/services/emailTimezoneService.ts (23 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)

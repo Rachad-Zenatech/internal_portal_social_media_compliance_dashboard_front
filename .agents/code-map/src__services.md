@@ -58,6 +58,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L12
 
+## src/services/emailTimezoneService.ts (23 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
+- `syncEmailTimezone` (export function) L7 - Save the signed-in person's browser time zone; the API identifies the user from their session.
+
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
 - `ClientErrorType` (export type) L3
 - `ClientErrorReport` (interface) L5

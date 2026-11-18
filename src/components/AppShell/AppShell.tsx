@@ -6,6 +6,7 @@ import TopBar from "./TopBar";
 import Breadcrumbs from "./Breadcrumbs";
 import { GlobalProgressOverlay } from "./GlobalProgressOverlay";
 import AiStatusBanner from "./AiStatusBanner";
+import { useEmailTimezone } from "@/hooks/useEmailTimezone";
 
 interface Props {
   children: ReactNode;
@@ -15,6 +16,7 @@ interface Props {
 const LAPTOP_QUERY = "(min-width: 992px)";
 
 export default function AppShell({ children }: Props) {
+  useEmailTimezone();
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     () => typeof window === "undefined" || window.matchMedia(LAPTOP_QUERY).matches
   );

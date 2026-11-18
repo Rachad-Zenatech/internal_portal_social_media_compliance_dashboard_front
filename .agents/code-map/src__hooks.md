@@ -23,6 +23,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - `useComplianceRules` (export function) L6 - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 
+## src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
+- `useEmailTimezone` (export function) L6 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
+
 ## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
 
