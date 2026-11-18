@@ -15,6 +15,7 @@ export default function EditorLayoutBar({
   onTogglePanel,
   view,
   onView,
+  notesCount = 0,
 }: {
   position: number;
   total: number;
@@ -25,6 +26,7 @@ export default function EditorLayoutBar({
   /** For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text. */
   view?: "edit" | "marks";
   onView?: (v: "edit" | "marks") => void;
+  notesCount?: number;
 }) {
   return (
     <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-2 py-1">
@@ -41,6 +43,9 @@ export default function EditorLayoutBar({
           <Button size="sm" variant={view === "marks" ? "secondary" : "ghost"} className="h-7 gap-1.5 text-xs" onClick={() => onView("marks")} aria-pressed={view === "marks"}>
             <Highlighter className="h-3.5 w-3.5" />
             Reviewers' marks
+            {notesCount > 0 && (
+              <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold leading-4 text-white">{notesCount}</span>
+            )}
           </Button>
         </span>
       ) : (

@@ -39,7 +39,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useEntryMutations` (function) L27 - Saving, turning on/off and removing entries, each refreshing the list and the analyses that used it.
 - `useMessagingContext` (export function) L64 - Everything the Messaging Context page shows and does: the entries of the open kind, the audience profile picked,  the fact search, and ad...
 
-## src/hooks/useNotificationStream.tsx (72 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+## src/hooks/useNotificationStream.tsx (76 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
 - `LiveNotification` (type) L12
 - `useNotificationStream` (export function) L19 - Live notifications: refresh the lists and counts, show a toast (inAppAlerts) and a desktop alert  (windowsNotifications).
 
@@ -74,12 +74,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
 
-## src/hooks/useScript.ts (237 lines) - A post's script stage, refreshed while its file is still being read.
+## src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.
-- `useScriptActions` (export function) L47 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
-- `useDebounced` (export function) L158 - The value, once it has stopped changing for `ms`.
-- `useLiveScriptCheck` (export function) L172 - The rulebook check of wording being edited.
-- `useScriptHighlights` (export function) L207 - The reviewer's highlights and notes on a script version.
+- `useScriptActions` (export function) L48 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.
+- `useDebounced` (export function) L160 - The value, once it has stopped changing for `ms`.
+- `useLiveScriptCheck` (export function) L174 - The rulebook check of wording being edited.
+- `useScriptHighlights` (export function) L209 - The reviewer's highlights and notes on a script version.
 
 ## src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - `message` (const) L11

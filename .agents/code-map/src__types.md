@@ -91,17 +91,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `MatchTestResult` (export interface) L139
 - `XTrendOpportunity` (export interface) L144
 
-## src/types/script.ts (150 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
+## src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - `ScriptStatus` (export type) L5 - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...
 - `ScriptVersion` (export interface) L7
 - `ScriptSuggestion` (export interface) L25 - A suggesting reviewer's own suggestion on a script version: their edited wording and their notes on it.
 - `ScriptBatchRef` (export interface) L33 - Where a script sits in the batch it was uploaded with, for stepping through the batch one script at a time.
 - `ScriptStage` (export interface) L48
-- `ScriptQueueItem` (export interface) L81
-- `ScriptHighlight` (export interface) L108 - Wording the reviewer highlighted (with an optional note) in a script version.
-- `SuggesterItem` (export interface) L120 - A post or script sent to a suggesting reviewer, and what they have done on it so far.
-- `SuggesterActivity` (export interface) L137
-- `SuggesterDashboard` (export interface) L146
+- `ScriptQueueItem` (export interface) L83
+- `ScriptHighlight` (export interface) L110 - Wording the reviewer highlighted (with an optional note) in a script version.
+- `SuggesterItem` (export interface) L122 - A post or script sent to a suggesting reviewer, and what they have done on it so far.
+- `SuggesterActivity` (export interface) L139
+- `SuggesterDashboard` (export interface) L148
 
 ## src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - `BatchStatus` (export type) L4 - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
@@ -114,7 +114,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ItemResult` (export interface) L85
 - `BatchReviewResult` (export interface) L94
 
-## src/types/scriptDoc.ts (186 lines) - script doc (types)
+## src/types/scriptDoc.ts (190 lines) - script doc (types)
 - `DocStatus` (export type) L3
 - `Capacity` (export type) L4
 - `Vote` (export type) L5
@@ -128,12 +128,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocSetSummary` (export interface) L95 - A creator's document in the hub.
 - `BulkResult` (export interface) L108
 - `DocSummary` (export interface) L113
-- `DocEvent` (export interface) L129
-- `DocVersion` (export interface) L138
-- `DocHistory` (export interface) L148
-- `ReviewerOption` (export interface) L153
-- `DocLiveState` (export interface) L162 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
-- `DocNote` (export interface) L172 - A highlight or comment on a stretch of the script, shared live through the notes document.
+- `DocEvent` (export interface) L133
+- `DocVersion` (export interface) L142
+- `DocHistory` (export interface) L152
+- `ReviewerOption` (export interface) L157
+- `DocLiveState` (export interface) L166 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
+- `DocNote` (export interface) L176 - A highlight or comment on a stretch of the script, shared live through the notes document.
 
 ## src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - `ScriptMatch` (export type) L2 - Result of comparing a video with its retained approved script.

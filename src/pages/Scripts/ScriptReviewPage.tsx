@@ -12,7 +12,7 @@ import { useScriptBatches } from "@/hooks/useScriptBatches";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 import { useScriptReviewQueue } from "@/hooks/useScriptReviewQueue";
-import { SCRIPT_REVIEW_TABS as TABS, scriptReviewCounts, visibleScripts, type ReviewTab } from "@/lib/scriptReviewLists";
+import { SCRIPT_REVIEW_TABS as TABS, scriptReviewCounts, type ReviewTab } from "@/lib/scriptReviewLists";
 import type { ScriptQueueItem } from "@/types/script";
 import type { BatchStatus, BatchSummary } from "@/types/scriptBatch";
 
@@ -210,23 +210,26 @@ export default function ScriptReviewPage() {
     if (reviewer) return all.filter((b) => b.status === TABS.find((t) => t.value === tab)!.status);
     return filter === "all" ? all : all.filter((b) => b.status === filter);
   }, [batches.data, reviewer, tab, filter]);
-  const shownSingles = useMemo(() => visibleScripts(singles.data ?? [], shownBatches), [singles.data, shownBatches]);
-  const counts = useMemo(() => scriptReviewCounts(batches.data ?? [], singles.summary), [batches.data, singles.summary]);
+  const shownSingles = useMemo(() => {
+    const seen = new Set<string>();
+    return (singles.data ?? []).filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+  }, [singles.data]);
+  const counts = useMemo(() => scriptReviewCounts(reviewer ? [] : batches.data ?? [], singles.summary), [reviewer, batches.data, singles.summary]);
 
-  // Batches and single scripts together, 24 to a page; a new tab or filter starts from the first page.
+  // Batches for creators; reviewers always see each script separately.
   type ListCard = { kind: "batch"; b: BatchSummary } | { kind: "single"; s: ScriptQueueItem };
   const cards = useMemo<ListCard[]>(
-    () => [
-      ...shownBatches.map((b) => ({ kind: "batch" as const, b })),
-      ...(reviewer ? shownSingles.map((s) => ({ kind: "single" as const, s })) : []),
-    ],
+    () =>
+      reviewer
+        ? shownSingles.map((s) => ({ kind: "single" as const, s }))
+        : shownBatches.map((b) => ({ kind: "batch" as const, b })),
     [shownBatches, shownSingles, reviewer]
   );
   const paged = usePaged(cards, 24, [tab, filter]);
 
-  const loading = batches.isLoading || (reviewer && singles.isLoading);
-  const error = batches.error ?? (reviewer ? singles.error : null);
-  const nothing = shownBatches.length === 0 && (!reviewer || shownSingles.length === 0);
+  const loading = reviewer ? singles.isLoading : batches.isLoading;
+  const error = reviewer ? singles.error : batches.error;
+  const nothing = reviewer ? shownSingles.length === 0 : shownBatches.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-5 pb-8 min-[112.5rem]:max-w-[2200px]">

@@ -1,3 +1,4 @@
+import { SharedScriptReviewLink } from "@/components/script/SharedScriptReviewEntry";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, CheckCircle2, FileText, Loader2, Send } from "lucide-react";
@@ -39,7 +40,9 @@ export default function ScriptStageCard({
     stage?.file_status === "PENDING" ||
     stage?.file_status === "PROCESSING" ||
     (Boolean(stage?.file_name) && stage?.file_status == null);
-  const scriptLink = submissionId ? `/submissions/${submissionId}/script` : "#";
+  const scriptLink = stage?.script_document_id ? `/script-docs/${stage.script_document_id}` : submissionId ? `/submissions/${submissionId}/script` : "#";
+
+  if (stage?.script_document_id && status !== "APPROVED") return <SharedScriptReviewLink submissionId={submissionId ?? stage.submission_id} documentId={stage.script_document_id} />;
 
   if (status === "APPROVED") {
     return (
@@ -48,7 +51,7 @@ export default function ScriptStageCard({
           <CheckCircle2 className="w-4 h-4" /> Script approved. Add your video below; it's checked against the approved script.
         </p>
         <div className="flex items-center gap-2">
-          {canEdit && (
+          {canEdit && !stage?.script_document_id && (
             <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onAddScript}>
               <FileText className="w-3.5 h-3.5" /> Replace script
             </Button>

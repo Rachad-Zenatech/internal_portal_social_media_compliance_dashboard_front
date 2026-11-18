@@ -1,21 +1,24 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { CheckCheck, Flag, History as HistoryIcon, Loader2, MessageSquare, Trash2, Users } from "lucide-react";
+import { CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CheckInList, Dot } from "@/components/scriptdoc/ReviewDialogs";
 import type { CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
 import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
 import ScriptFindings from "@/components/script/ScriptFindings";
+import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
+import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSentiment } from "@/hooks/useSentiment";
 import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
-import type { DocDetail, DocNote } from "@/types/scriptDoc";
+import type { DocDetail, DocHistory, DocNote } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
 
-export type PanelTab = "notes" | "checks" | "reviewers" | "history";
+export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers";
 
 /** The box for the comment on the wording that was selected. */
 function NoteComposer({ quote, onCompose, onCancel }: { quote: string; onCompose: (text: string) => void; onCancel: () => void }) {
@@ -142,19 +145,25 @@ function NotesTab({
 }
 
 /** The rulebook flags on the script as it reads now, with the same finding cards a post shows. */
-function ChecksTab({ doc, editor }: { doc: DocDetail; editor: React.RefObject<CollabEditorHandle | null> }) {
-  const [check, setCheck] = useState<StoredCheck | null>(null);
-  const run = useMutation({
-    mutationFn: () => scriptDocService.check(doc.id, editor.current?.getText()),
-    onSuccess: setCheck,
-    onError: (e: any) => toast.error(e?.message ?? "The check couldn't run"),
-  });
+function ChecksTab({
+  doc,
+  editor,
+  check,
+  running,
+  onRun,
+}: {
+  doc: DocDetail;
+  editor: React.RefObject<CollabEditorHandle | null>;
+  check: StoredCheck | null;
+  running: boolean;
+  onRun: () => void;
+}) {
   const flags = activeFlagCount(check);
   return (
     <div className="flex flex-col gap-3 p-3">
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={() => run.mutate()} disabled={run.isPending}>
-          {run.isPending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+        <Button size="sm" onClick={onRun} disabled={running}>
+          {running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
           {check ? "Check again" : "Check against the rulebook"}
         </Button>
         {check && <span className="text-xs text-muted-foreground">{flags} to look at</span>}
@@ -167,9 +176,6 @@ function ChecksTab({ doc, editor }: { doc: DocDetail; editor: React.RefObject<Co
           onReplace={doc.access.can_edit ? (q, r) => editor.current?.replace(q, r) ?? false : undefined}
         />
       )}
-      <p className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
-        Sentiment and public mood read a post, so they become available when this script is attached to a post.
-      </p>
     </div>
   );
 }
@@ -185,8 +191,7 @@ const EVENT_LABEL: Record<string, string> = {
   NOTE: "added or changed notes",
 };
 
-function HistoryTab({ doc }: { doc: DocDetail }) {
-  const { data, isLoading } = useQuery({ queryKey: ["script-doc-history", doc.id, doc.status, doc.round], queryFn: () => scriptDocService.history(doc.id) });
+function HistoryTab({ data, isLoading }: { data?: DocHistory; isLoading: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   if (isLoading) return <p className="p-3 text-sm text-muted-foreground">Loading…</p>;
   return (
@@ -282,34 +287,85 @@ export default function DocSidePanel(props: {
   onCancelCompose: () => void;
 }) {
   const { doc, tab, onTab } = props;
+  const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set([tab]));
+  const pickTab = (t: PanelTab) => {
+    setSeen((prev) => (prev.has(t) ? prev : new Set(prev).add(t)));
+    onTab(t);
+  };
+
+  const [check, setCheck] = useState<StoredCheck | null>(null);
+  const runCheck = useMutation({
+    mutationFn: () => scriptDocService.check(doc.id, props.editor.current?.getText()),
+    onSuccess: setCheck,
+    onError: (e: any) => toast.error(e?.message ?? "The check couldn't run"),
+  });
+  const historyQuery = useQuery({
+    queryKey: ["script-doc-history", doc.id, doc.status, doc.round],
+    queryFn: () => scriptDocService.history(doc.id),
+  });
+  const submissionId = doc.posts[0]?.submission_id ?? "";
+  const { analysis: sentiment } = useSentiment(submissionId);
+
   const openNotes = useMemo(() => props.notes.filter((n) => !n.resolved).length, [props.notes]);
   const waiting = doc.reviewers.filter((r) => r.capacity === "EDIT" && !r.checked_in).length;
-  const tabs: { key: PanelTab; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { key: "notes", label: "Notes", icon: <MessageSquare className="h-4 w-4" />, badge: openNotes },
-    { key: "checks", label: "Flags", icon: <Flag className="h-4 w-4" /> },
-    { key: "reviewers", label: "Review", icon: <Users className="h-4 w-4" />, badge: doc.status === "IN_REVIEW" ? waiting : undefined },
-    { key: "history", label: "History", icon: <HistoryIcon className="h-4 w-4" /> },
+  const flags = activeFlagCount(check);
+  const violations = check?.violations ?? [];
+  const criticalCount = violations.filter((v) => v.traffic_light === "RED").length;
+  const needsReviewCount = violations.filter((v) => v.status === "NEEDS_REVIEW").length;
+  const evidenceCount = violations.filter((v) => v.status === "EVIDENCE_REQUIRED").length;
+  const flagWords = [
+    criticalCount > 0 ? `${criticalCount} critical` : "",
+    needsReviewCount > 0 ? `${needsReviewCount} to check` : "",
+    evidenceCount > 0 ? `${evidenceCount} need${evidenceCount === 1 ? "s" : ""} a source` : "",
+  ].filter(Boolean);
+
+  const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
+  const sentimentDone = sentiment?.status === "COMPLETED" && sentiment.result;
+  const versionCount = historyQuery.data?.versions.length ?? 0;
+
+  const tiles: GlanceTile[] = [
+    {
+      key: "checks",
+      label: "Flags",
+      value: check?.ai_unavailable ? "No check" : check ? (flags > 0 ? `${flags} open` : "Nothing open") : "Not run",
+      sub: check?.ai_unavailable ? "The check couldn't run" : check ? flagWords.join(" · ") || "No flags on the script" : "Run rulebook check",
+      tone: check?.ai_unavailable ? "muted" : criticalCount > 0 ? "bad" : flags > 0 ? "warn" : check ? "ok" : "muted",
+      seen: seen.has("checks"),
+    },
+    {
+      key: "notes",
+      label: "Highlighted",
+      value: openNotes > 0 ? `${openNotes} marked` : "None",
+      sub: openNotes > 0 ? "Places marked for changes" : "Select text in the script to mark it",
+      tone: openNotes > 0 ? "warn" : "muted",
+      seen: seen.has("notes"),
+    },
+    {
+      key: "sentiment",
+      label: "Sentiment",
+      value: sentimentDone ? sentiment.result!.overall_assessment.replace(/_/g, " ") : sentimentBusy ? "Running" : "Not run",
+      sub: sentimentDone ? "Read on the script" : sentimentBusy ? "Will appear here" : submissionId ? "Run it from here" : "Available on post",
+      tone: "muted",
+      seen: seen.has("sentiment"),
+    },
+    {
+      key: "history",
+      label: "History",
+      value: versionCount ? `${versionCount} version${versionCount === 1 ? "" : "s"}` : "0 versions",
+      sub: versionCount <= 1 ? "First version" : `Previous: version ${versionCount - 1}`,
+      tone: "muted",
+      seen: seen.has("history"),
+    },
   ];
+
   return (
     <aside className="flex min-h-0 w-full flex-col border-t bg-background lg:w-[22rem] lg:shrink-0 lg:border-l lg:border-t-0">
-      <div role="tablist" className="grid grid-cols-4 border-b">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={tab === t.key}
-            onClick={() => onTab(t.key)}
-            className={cn(
-              "relative flex flex-col items-center gap-0.5 px-1 py-2 text-xs font-medium",
-              tab === t.key ? "border-b-2 border-blue-600 text-blue-700 dark:text-blue-300" : "text-muted-foreground hover:bg-muted/60",
-            )}
-          >
-            {t.icon}
-            {t.label}
-            {!!t.badge && <span className="absolute right-2 top-1 rounded-full bg-blue-600 px-1.5 text-[10px] leading-4 text-white">{t.badge}</span>}
-          </button>
-        ))}
-      </div>
+      <ReviewGlance
+        tiles={tiles}
+        active={tab}
+        onPick={(key) => pickTab(key as PanelTab)}
+        extra={[{ key: "reviewers", label: doc.status === "IN_REVIEW" && waiting > 0 ? `Review (${waiting} waiting)` : "Review & people" }]}
+      />
       <div className="min-h-0 flex-1 overflow-auto">
         {tab === "notes" && (
           <NotesTab
@@ -327,9 +383,26 @@ export default function DocSidePanel(props: {
             onCancelCompose={props.onCancelCompose}
           />
         )}
-        {tab === "checks" && <ChecksTab doc={doc} editor={props.editor} />}
+        {tab === "checks" && (
+          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} />
+        )}
+        {tab === "sentiment" && (
+          <div className="p-3">
+            {submissionId ? (
+              <SentimentPanel
+                key={submissionId}
+                submissionId={submissionId}
+                canRun={doc.access.role !== "VIEWER"}
+              />
+            ) : (
+              <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                Sentiment and public mood read a post, so they become available when this script is attached to a post.
+              </p>
+            )}
+          </div>
+        )}
         {tab === "reviewers" && <ReviewersTab doc={doc} online={props.online} />}
-        {tab === "history" && <HistoryTab doc={doc} />}
+        {tab === "history" && <HistoryTab data={historyQuery.data} isLoading={historyQuery.isLoading} />}
       </div>
     </aside>
   );

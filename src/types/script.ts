@@ -46,6 +46,8 @@ export interface ScriptBatchRef {
 }
 
 export interface ScriptStage {
+  script_document_id?: string | null;
+  shared_review_available?: boolean;
   /** Sent, and still being read and scored in the background (it reaches the reviewers when that's done). */
   processing?: boolean;
   /** Why the last send failed, and at which step. */

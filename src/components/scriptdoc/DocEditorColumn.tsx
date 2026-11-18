@@ -130,6 +130,9 @@ export default function DocEditorColumn({
   onSelectNote,
   onStartNote,
   sharedDocId,
+  sharedReadOnly,
+  goToNote,
+  onEmbedSelection,
   mirrorHtml,
   bar,
 }: {
@@ -147,6 +150,9 @@ export default function DocEditorColumn({
   onStartNote: (kind: "highlight" | "comment", color?: string) => void;
   /** This script's id when it is edited in the Share Document portal: that editor is shown here instead of this one. */
   sharedDocId?: string | null;
+  sharedReadOnly?: boolean;
+  goToNote?: { id: string; seq: number } | null;
+  onEmbedSelection?: (sel: { quote: string; start: number } | null) => void;
   /** For a reviewer of a script written in the Share Document portal: its text, shown read-only to highlight and comment on. */
   mirrorHtml?: string | null;
   /** A strip above the shared editor (see EditorLayoutBar). */
@@ -156,7 +162,16 @@ export default function DocEditorColumn({
     return (
       <div className="flex min-h-[24rem] min-w-0 flex-1 flex-col">
         {bar}
-        <SharedEditorFrame docId={sharedDocId} />
+        <SharedEditorFrame
+          docId={sharedDocId}
+          readOnly={sharedReadOnly}
+          notes={notes}
+          activeNoteId={activeNoteId}
+          goToNote={goToNote}
+          onSelectionChange={onEmbedSelection}
+          onSelectNote={onSelectNote}
+          toolbarExtra={canNote && sharedReadOnly ? <NoteButtons onStart={onStartNote} /> : undefined}
+        />
       </div>
     );
   }
