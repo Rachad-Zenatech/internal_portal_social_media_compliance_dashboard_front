@@ -4,5 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewerSentimentPanel.tsx (31 lines) - The expanded sentiment view shared by reviewer-facing screens.
-- `ReviewerSentimentPanel` (export function) L5 - The expanded sentiment view shared by reviewer-facing screens.
+## src/components/submissions/ReviewerSentimentPanel.tsx (58 lines) - A short reviewer overview of the same saved sentiment analysis the creator sees.
+- `SentimentReviewState` (function) L9
+- `ReviewerSentimentPanel` (export function) L20 - A short reviewer overview of the same saved sentiment analysis the creator sees.

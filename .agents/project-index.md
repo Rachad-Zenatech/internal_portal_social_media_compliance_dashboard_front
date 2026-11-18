@@ -131,7 +131,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/ReviewerImageViewer.tsx (59 lines) - Reviewer image with comments plus the full-size rule-inspection view.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
-- src/components/submissions/ReviewerSentimentPanel.tsx (31 lines) - The expanded sentiment view shared by reviewer-facing screens.
+- src/components/submissions/ReviewerSentimentConcerns.tsx (71 lines) - reviewer sentiment concerns (components submissions)
+- src/components/submissions/ReviewerSentimentOverview.tsx (52 lines) - reviewer sentiment overview (components submissions)
+- src/components/submissions/ReviewerSentimentPanel.tsx (58 lines) - A short reviewer overview of the same saved sentiment analysis the creator sees.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
 - src/components/submissions/RevisionWorkspace.tsx (203 lines) - revision workspace (components submissions)
@@ -219,6 +221,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - src/lib/postSteps.ts (109 lines) - post steps (lib)
 - src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
+- src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
 - src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)

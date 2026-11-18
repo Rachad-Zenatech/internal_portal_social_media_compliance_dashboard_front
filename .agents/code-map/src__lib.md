@@ -107,6 +107,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `replaceInText` (export function) L28 - The text with the quoted wording replaced, or null when it isn't there.
 - `replaceInEditable` (export function) L37 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
 
+## src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
+- `REVIEW_ASSESSMENTS` (export const) L3
+- `readableSentiment` (export function) L8
+- `prioritiseSentiment` (export function) L14 - Preserve the creator's findings and put the most serious points first.
+- `sentimentBrandFit` (export function) L19
+- `sentimentContext` (export function) L26 - Brief supporting context, using the same saved result the creator sees.
+- `sentimentWatchouts` (export function) L41 - Keep important audience and media caveats visible without expanding the full report.
+
 ## src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
 - `CreatorStepKey` (export type) L4
 - `REVISION_STEPS` (export const) L5
