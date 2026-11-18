@@ -64,14 +64,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (329 lines) - script doc hub (components scriptdoc)
+## src/components/scriptdoc/ScriptDocHub.tsx (342 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L26
 - `DocCard` (function) L28
 - `SetCard` (function) L68 - A creator's document: its scripts (pages) and where each stands.
 - `NewScriptDialog` (function) L113
-- `TemplateGrid` (function) L161 - Start from a template, or attach a script from a file.
-- `DocLists` (function) L201 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
-- `ScriptDocHub` (export function) L243 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+- `TemplateGrid` (function) L165 - Start from a template, or attach a script from a file.
+- `DocLists` (function) L205 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
+- `ScriptDocHub` (export function) L247 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16

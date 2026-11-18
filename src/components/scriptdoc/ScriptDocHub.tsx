@@ -112,10 +112,14 @@ function SetCard({ d, onDelete }: { d: DocSetSummary; onDelete: (id: string) => 
 
 function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | null; onClose: () => void }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const create = useMutation({
     mutationFn: () => scriptDocService.create(title.trim(), template!.key),
-    onSuccess: (d) => navigate(`/script-docs/${d.id}`),
+    onSuccess: async (d) => {
+      await queryClient.invalidateQueries({ queryKey: ["script-docs"] });
+      navigate(`/script-docs/${d.id}`);
+    },
     onError: (e: any) => toast.error(e?.message ?? "Couldn't create the script"),
   });
   return (
@@ -260,9 +264,18 @@ export default function ScriptDocHub() {
   const docs = useQuery({
     queryKey: ["script-docs", scope],
     queryFn: () => scriptDocService.list(scope),
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
-  const sets = useQuery({ queryKey: ["script-docs", "sets"], queryFn: scriptDocService.sets, enabled: scope === "mine", refetchOnWindowFocus: true });
+  const sets = useQuery({
+    queryKey: ["script-docs", "sets"],
+    queryFn: scriptDocService.sets,
+    enabled: scope === "mine",
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+  });
 
   const removeSet = async (id: string) => {
     await scriptDocService.removeSet(id);
