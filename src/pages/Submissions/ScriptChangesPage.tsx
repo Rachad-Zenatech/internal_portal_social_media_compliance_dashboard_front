@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import CreatorScriptDownload from "@/components/script/CreatorScriptDownload";
 import NoteField from "@/components/script/NoteField";
+import { OpenSharedScriptReview } from "@/components/script/SharedScriptReviewEntry";
 import ScriptEditor from "@/components/script/ScriptEditor";
 import { displayText } from "@/lib/scriptDoc";
 import { updatedWording } from "@/lib/highlightChange";
@@ -26,12 +27,7 @@ import type { ScriptStage, ScriptVersion } from "@/types/script";
 type View = "inline" | "side";
 
 const initials = (name?: string | null) =>
-  (name ?? "?")
-    .split(/\s+/)
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  (name ?? "?").split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
 /** Which two versions to compare: what the creator sent and what came back (or the last round's change). */
 function comparison(stage: ScriptStage): { base: ScriptVersion | null; shown: ScriptVersion } | null {
@@ -62,6 +58,9 @@ export default function ScriptChangesPage() {
   }
   if (stage.isError || !stage.data) {
     return <p className="p-8 text-sm text-red-600">Couldn't load the script: {(stage.error as Error | null)?.message ?? "not found"}</p>;
+  }
+  if (id && stage.data.versions.length && (stage.data.script_document_id || stage.data.shared_review_available)) {
+    return <OpenSharedScriptReview submissionId={id} documentId={stage.data.script_document_id} />;
   }
   return <Changes key={`${stage.data.submission_id}-${stage.data.versions.length}`} stage={stage.data} />;
 }

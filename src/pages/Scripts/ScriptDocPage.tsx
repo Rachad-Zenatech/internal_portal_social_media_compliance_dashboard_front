@@ -11,6 +11,7 @@ import EditorLayoutBar from "@/components/scriptdoc/EditorLayoutBar";
 import DocHeader, { DocStatusStrip } from "@/components/scriptdoc/DocHeader";
 import DocSidePanel, { type PanelTab } from "@/components/scriptdoc/DocSidePanel";
 import PagesRail from "@/components/scriptdoc/PagesRail";
+import { useAuth } from "@/lib/AuthContext";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocNote, Vote } from "@/types/scriptDoc";
@@ -39,6 +40,7 @@ function useNotes(provider: LiveProvider | null) {
  */
 export default function ScriptDocPage() {
   const { id = "" } = useParams();
+  const { user: authUser } = useAuth();
   const qc = useQueryClient();
   const editor = useRef<CollabEditorHandle>(null);
 
@@ -73,10 +75,12 @@ export default function ScriptDocPage() {
   // (highlights and comments). The writer sees that portal's editor; reviewers a read-only copy of the text to mark up.
   const live = Boolean(doc);
   const shared = Boolean(doc?.share_document_id);
-  const writerSide = shared && doc?.access.role === "CREATOR";
-  // The writer edits in the Share Document portal's editor, or looks at the reviewers' highlights on a read-only copy.
+  const canEditShared = shared && Boolean(doc?.access.can_edit) && (doc?.access.role === "CREATOR" || Boolean(authUser?.is_super_admin));
+  const writerSide = canEditShared;
+  // The writer edits in the Share Document portal's editor, or looks at the reviewers' highlights on the read-only shared iframe.
   const [writerView, setWriterView] = useState<"edit" | "marks">("edit");
-  const inEditor = writerSide && writerView === "edit";
+  const sharedReadOnly = !canEditShared || writerView === "marks";
+  const inEditor = canEditShared && writerView === "edit";
   useEffect(() => {
     if (!live) return;
     const p = new LiveProvider(id, {
@@ -138,6 +142,8 @@ export default function ScriptDocPage() {
   const [tab, setTab] = useState<PanelTab>("notes");
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [composer, setComposer] = useState<{ quote: string; start: number } | null>(null);
+  const [embedSelection, setEmbedSelection] = useState<{ quote: string; start: number } | null>(null);
+  const [goToNote, setGoToNote] = useState<{ id: string; seq: number } | null>(null);
 
   const status_ = doc?.status;
   // Reviewers asked again after the script changed; the Level 2 question once everyone has checked in.
@@ -179,7 +185,7 @@ export default function ScriptDocPage() {
     setTab("notes");
   };
   const startNote = (kind: "highlight" | "comment", color?: string) => {
-    const sel = editor.current?.selection();
+    const sel = shared ? embedSelection : editor.current?.selection();
     if (!sel) {
       toast.info("Select some wording in the script first.");
       return;
@@ -325,8 +331,11 @@ export default function ScriptDocPage() {
           onChange={onEdited}
           onSelectNote={(nid) => { setActiveNote(nid); setTab("notes"); }}
           onStartNote={startNote}
-          sharedDocId={inEditor ? id : null}
-          mirrorHtml={shared && !inEditor ? doc.body_html : null}
+          sharedDocId={shared ? id : null}
+          sharedReadOnly={sharedReadOnly}
+          goToNote={goToNote}
+          onEmbedSelection={setEmbedSelection}
+          mirrorHtml={null}
           bar={
             <EditorLayoutBar
               position={Math.max(1, doc.pages.findIndex((p) => p.id === id) + 1)}
@@ -337,10 +346,11 @@ export default function ScriptDocPage() {
               onTogglePanel={() => toggle("script-doc-panel", setShowPanel, showPanel)}
               view={writerSide ? writerView : undefined}
               onView={writerSide ? setWriterView : undefined}
+              notesCount={notes.filter((n) => !n.resolved).length}
             />
           }
         />
-        {(showPanel || !writerSide) && <DocSidePanel
+        {(showPanel || !writerSide || doc.status === "CHANGES_REQUESTED") && <DocSidePanel
           doc={doc}
           tab={tab}
           onTab={setTab}
@@ -350,7 +360,15 @@ export default function ScriptDocPage() {
           me={me}
           activeId={activeNote}
           composer={composer}
-          onPick={(n) => { setActiveNote(n.id); editor.current?.goTo(n); }}
+          onPick={(n) => {
+            setActiveNote(n.id);
+            if (shared) {
+              if (inEditor) setWriterView("marks");
+              setGoToNote((g) => ({ id: n.id, seq: (g?.seq ?? 0) + 1 }));
+            } else {
+              editor.current?.goTo(n);
+            }
+          }}
           onReply={(nid, text) => mutateNote(nid, (n) => ({ ...n, replies: [...n.replies, { author_name: myName, text, created_at: new Date().toISOString() }] }))}
           onResolve={(nid, resolved) => mutateNote(nid, (n) => ({ ...n, resolved }))}
           onDelete={(nid) => provider?.notes.getMap<DocNote>("notes").delete(nid)}

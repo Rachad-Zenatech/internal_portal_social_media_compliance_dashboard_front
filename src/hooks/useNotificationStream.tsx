@@ -61,7 +61,11 @@ export function useNotificationStream({ inAppAlerts, windowsNotifications }: { i
           const n = JSON.parse(data) as LiveNotification;
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
           queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
-          if (isForMe(n)) show(n, own);
+          if (isForMe(n)) {
+            queryClient.invalidateQueries({ queryKey: ["script-docs"] });
+            queryClient.invalidateQueries({ queryKey: ["script-queue"] });
+            show(n, own);
+          }
         } catch (err) {
           console.error("Failed to parse SSE notification:", err);
         }

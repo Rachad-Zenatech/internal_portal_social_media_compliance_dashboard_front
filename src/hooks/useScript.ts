@@ -33,8 +33,9 @@ export function useScriptStage(submissionId?: string | null, enabled = true) {
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
       queryClient.invalidateQueries({ queryKey: ["script-queue"] });
-    queryClient.invalidateQueries({ queryKey: ["script-batches"] });
-    queryClient.invalidateQueries({ queryKey: ["script-batch"] });
+      queryClient.invalidateQueries({ queryKey: ["script-batches"] });
+      queryClient.invalidateQueries({ queryKey: ["script-batch"] });
+      queryClient.invalidateQueries({ queryKey: ["script-docs"] });
       if (query.data.send_error) toast.error(query.data.send_error);
       else toast.success("Script sent for review. Reviewers have been notified.");
     }
@@ -51,6 +52,7 @@ export function useScriptActions(submissionId: string) {
   const done = (stage: ScriptStage) => {
     queryClient.setQueryData(["script", submissionId], stage);
     queryClient.invalidateQueries({ queryKey: ["script-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["script-docs"] });
     queryClient.invalidateQueries({ queryKey: ["review-queue"] });
     queryClient.invalidateQueries({ queryKey: ["submission", submissionId] });
     queryClient.invalidateQueries({ queryKey: ["submissions"] });
