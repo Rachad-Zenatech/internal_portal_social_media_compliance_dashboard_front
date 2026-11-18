@@ -177,9 +177,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `EditorStep` (export type) L18
 - `submissionRevisionSteps` (export function) L29 - Every revision starts with feedback; only explicitly authorized revisions end at Publish.
 
-## src/lib/submissionSchedule.ts (17 lines) - An intended date alone does not mean the creator scheduled the post.
+## src/lib/submissionSchedule.ts (25 lines) - An intended date alone does not mean the creator scheduled the post.
 - `applySubmissionSchedule` (export function) L6 - An intended date alone does not mean the creator scheduled the post.
 - `stageOf` (export function) L13
+- `scheduleCorrectedPost` (export function) L19 - Schedule a corrected post only after its submission has passed server checks.
 
 ## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).

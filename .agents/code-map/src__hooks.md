@@ -71,6 +71,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useReviewDecision` (export function) L166
 - `useApprovalActions` (export function) L185 - Approved content: a reviewer reschedules it or reopens it for changes.
 
+## src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
+- `useRevisionPublishing` (export function) L6 - Confirm timing before the corrected post is checked and submitted.
+
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
 

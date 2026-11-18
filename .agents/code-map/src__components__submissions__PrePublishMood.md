@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PrePublishMood.tsx (24 lines) - Optional final timing check for approved content immediately before publication.
-- `PrePublishMood` (export function) L7 - Optional final timing check for approved content immediately before publication.
+## src/components/submissions/PrePublishMood.tsx (33 lines) - Optional final timing check for approved content immediately before publication.
+- `PrePublishMood` (export function) L8 - Optional final timing check for approved content immediately before publication.

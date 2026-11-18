@@ -72,6 +72,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ReviewerSentimentOverview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerSentimentPanel.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionGuide.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__RevisionPublishActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionTimelinePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionWorkspace.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RuleNumberBadge.md | 1 | 1 KB |
@@ -96,7 +97,7 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 27 | 9 KB |
+| .agents/code-map/src__hooks.md | 28 | 10 KB |
 | .agents/code-map/src__lib.md | 26 | 13 KB |
 | .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |

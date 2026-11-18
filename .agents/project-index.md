@@ -123,7 +123,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (109 lines) - lg: the dots grow on wide screens (the My posts rows).
 - src/components/submissions/PostTextPreview.tsx (27 lines) - A formatted script document, or the post's caption with its flagged words marked.
-- src/components/submissions/PrePublishMood.tsx (24 lines) - Optional final timing check for approved content immediately before publication.
+- src/components/submissions/PrePublishMood.tsx (33 lines) - Optional final timing check for approved content immediately before publication.
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
 - src/components/submissions/PublishPostButton.tsx (13 lines) - publish post button (components submissions)
 - src/components/submissions/ReviewCommentsPanel.tsx (167 lines) - What other pages import from here.
@@ -137,6 +137,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewerSentimentOverview.tsx (52 lines) - reviewer sentiment overview (components submissions)
 - src/components/submissions/ReviewerSentimentPanel.tsx (58 lines) - A short reviewer overview of the same saved sentiment analysis the creator sees.
 - src/components/submissions/RevisionGuide.tsx (156 lines) - revision guide (components submissions)
+- src/components/submissions/RevisionPublishActions.tsx (54 lines) - revision publish actions (components submissions)
 - src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
 - src/components/submissions/RevisionWorkspace.tsx (203 lines) - revision workspace (components submissions)
 - src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
@@ -149,7 +150,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
-- src/components/submissions/SubmissionSendActions.tsx (55 lines) - The final action, including timing for reviewer-authorized direct publishing.
+- src/components/submissions/SubmissionSendActions.tsx (46 lines) - The final action, including timing for reviewer-authorized direct publishing.
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
 - src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
@@ -202,6 +203,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
+- src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
@@ -233,7 +235,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
-- src/lib/submissionSchedule.ts (17 lines) - An intended date alone does not mean the creator scheduled the post.
+- src/lib/submissionSchedule.ts (25 lines) - An intended date alone does not mean the creator scheduled the post.
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/utils.ts (7 lines) - utils (lib)
@@ -268,7 +270,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (302 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2548 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2545 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
