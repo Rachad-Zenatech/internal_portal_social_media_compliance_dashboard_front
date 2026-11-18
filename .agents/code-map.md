@@ -20,6 +20,8 @@ to find the right file.
 | .agents/code-map/src__components__scriptdoc.md | 14 | 7 KB |
 | .agents/code-map/src__components__submissions__ApprovalActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovedPostChecks.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ApprovedPostPublishing.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ApprovedPublishActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CanvaImportDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CanvaReimportBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CaptionExtras.md | 1 | 1 KB |
@@ -37,6 +39,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__DelegateReview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DeleteDraftDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DuplicateNotice.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__FinalPublishDate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FindingStatus.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlagReviewControl.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlaggedVideo.md | 1 | 1 KB |
@@ -77,6 +80,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceLinksField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ZoomableImageDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__commentParts.md | 1 | 1 KB |
@@ -86,8 +90,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 23 | 8 KB |
-| .agents/code-map/src__lib.md | 23 | 12 KB |
+| .agents/code-map/src__hooks.md | 27 | 9 KB |
+| .agents/code-map/src__lib.md | 24 | 12 KB |
 | .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 10 | 5 KB |
@@ -100,4 +104,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 15 | 6 KB |
-| .agents/code-map/src__types.md | 17 | 14 KB |
+| .agents/code-map/src__types.md | 18 | 14 KB |

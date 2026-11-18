@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
+- `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
+
 ## src/hooks/useAutomaticAnalyses.ts (26 lines) - use automatic analyses (hooks)
 - `AutomaticAnalysesOptions` (type) L3
 - `useAutomaticAnalyses` (export function) L11
@@ -11,11 +14,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - `useBackgroundSourceChecks` (export function) L6 - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 
+## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
+- `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
+
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) L7 - Caption suggestions for a draft, and how many are left today.
 
 ## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - `useComplianceRules` (export function) L6 - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+
+## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
+- `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
 
 ## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
@@ -61,6 +70,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useFlagReviews` (export function) L72 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
 - `useReviewDecision` (export function) L166
 - `useApprovalActions` (export function) L185 - Approved content: a reviewer reschedules it or reopens it for changes.
+
+## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
+- `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
 
 ## src/hooks/useScript.ts (237 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.

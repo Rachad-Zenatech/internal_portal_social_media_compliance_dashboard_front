@@ -25,7 +25,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `GlobalProgressProvider` (export function) L54
 - `useGlobalProgress` (export function) L170
 
-## src/lib/contentCalendar.ts (430 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+## src/lib/contentCalendar.ts (433 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) L16 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) L27 - A platform's publish info with its caption limit always set.
 - `PUBLISH_INFO` (export const) L29
@@ -43,14 +43,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `publishKey` (export const) L338
 - `usePublished` (export function) L341 - Simulated publish results, shared by the calendar and the publish page.
 - `recordPublish` (export function) L345
-- `clearPublished` (export function) L361
-- `SproutRecord` (export interface) L370 - One approved post handed to Sprout Social, which then schedules and publishes it on each profile.
-- `readSprout` (function) L381
-- `writeSprout` (function) L398
-- `subscribeSprout` (function) L407
-- `useSentToSprout` (export function) L417 - Posts sent to Sprout Social (simulated), by calendar item id.
-- `recordSproutSend` (export function) L421
-- `clearSproutSends` (export function) L427
+- `clearPublished` (export function) L362
+- `SproutRecord` (export interface) L371 - One approved post handed to Sprout Social, which then schedules and publishes it on each profile.
+- `readSprout` (function) L384
+- `writeSprout` (function) L401
+- `subscribeSprout` (function) L410
+- `useSentToSprout` (export function) L420 - Posts sent to Sprout Social (simulated), by calendar item id.
+- `recordSproutSend` (export function) L424
+- `clearSproutSends` (export function) L430
 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
@@ -162,6 +162,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `STEP_DESCRIPTION` (export const) L10
 - `EditorStep` (export type) L18
 - `submissionRevisionSteps` (export function) L29 - Every revision starts with feedback; only explicitly authorized revisions end at Publish.
+
+## src/lib/submissionSchedule.ts (17 lines) - An intended date alone does not mean the creator scheduled the post.
+- `applySubmissionSchedule` (export function) L6 - An intended date alone does not mean the creator scheduled the post.
+- `stageOf` (export function) L13
 
 ## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).

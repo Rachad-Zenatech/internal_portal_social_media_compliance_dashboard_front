@@ -1,6 +1,5 @@
 import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
-import PublishPostButton from "@/components/submissions/PublishPostButton";
-import ApprovedPostChecks from "@/components/submissions/ApprovedPostChecks";
+import ApprovedPostPublishing from "@/components/submissions/ApprovedPostPublishing";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListPager from "@/components/common/ListPager";
 import { CheckCard, HistoryView } from "@/components/submissions/PostDetailParts";
@@ -92,25 +91,21 @@ import PostSteps from "@/components/submissions/PostSteps";
 import BulkScriptDialog from "@/components/script/BulkScriptDialog";
 import { missingText, resumePath, stepPath } from "@/lib/postSteps";
 import { creatorSubmissionSteps, creatorProgressText, isScriptPreparation } from "@/lib/submissionProgress";
-import type { Submission, SubmissionSummary } from "@/types/submission";
+import type { Submission } from "@/types/submission";
+import type { CalendarSubmission as SubmissionSummary, SubmissionStage as Stage } from "@/types/submissionSchedule";
+import { stageOf } from "@/lib/submissionSchedule";
+import { useScheduledSubmissions } from "@/hooks/useScheduledSubmissions";
 
 // ---------------------------------------------------------------------------
 // Stages, filters and sorting
 // ---------------------------------------------------------------------------
-
-/** The review status remains Approved when a planned publishing date is set. */
-type Stage = "DRAFT" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "SCHEDULED" | "REJECTED";
-
-function stageOf(s: { status: string; publish_at?: string | null }): Stage {
-  return s.status as Stage;
-}
 
 /**
  * The tab a post is counted under. A script that has been sent isn't a draft: with a reviewer (or being sent) or
  * approved it's with "In review", and sent back it's under "Changes requested". Only a script not yet sent, or one
  * that failed to send, stays a draft.
  */
-function tabOf(s: { status: string; publish_at?: string | null; script_status?: string | null; script_send_status?: string | null }): Stage {
+function tabOf(s: Pick<SubmissionSummary, "status" | "script_status" | "script_send_status" | "calendar_scheduled_for">): Stage {
   const stage = stageOf(s);
   if (stage !== "DRAFT") return stage;
   if (s.script_send_status === "PROCESSING" || s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") return "IN_REVIEW";
@@ -389,7 +384,7 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
     if (due) return { text: `Waiting on reviewer · due ${format(due, "EEE, MMM d")}`, tone: muted };
     return { text: `Waiting on reviewer · sent ${format(new Date(s.submitted_at ?? s.updated_at), "MMM d")}`, tone: muted };
   }
-  if (stage === "SCHEDULED") return { text: `Approved · goes out ${friendlyDate(s.publish_at!)}`, tone: muted };
+  if (stage === "SCHEDULED") return { text: `Scheduled · goes out ${friendlyDate(s.publish_at!)}`, tone: muted };
   if (stage === "APPROVED")
     return { text: s.publish_at ? `Approved \u00b7 planned for ${friendlyDate(s.publish_at)}` : "Approved", tone: muted };
   return { text: STAGES[stage]?.label ?? s.status, tone: muted };
@@ -616,7 +611,7 @@ function ReviewCard({
   });
 
   const mine = summary.created_by === userId;
-  const stage = stageOf(sub ?? summary);
+  const stage = stageOf({ ...(sub ?? summary), calendar_scheduled_for: summary.calendar_scheduled_for });
   const media =
     sub?.files.find((f) => f.kind === "MAIN" && /^(video|image)\//.test(f.mime_type)) ??
     sub?.files.find((f) => f.mime_type.startsWith("image/")) ??
@@ -745,18 +740,11 @@ function ReviewCard({
       </div>
     );
   } else if (summary.status === "APPROVED" && (mine || summary.can_manage_approval)) {
-    footerTitle = "Approved";
-    footerNote = mine
+    footerTitle = stage === "SCHEDULED" ? "Scheduled" : "Approved";
+    footerNote = stage === "SCHEDULED" ? `Your post is scheduled for ${friendlyDate(summary.publish_at!)}. View it on the calendar below.` : mine
       ? "Your post is approved! You can now publish it directly to your channels or view it on the calendar."
       : "It's on the content calendar. Reschedule it or reopen it if something changes.";
-    actions = (
-      <div className="flex flex-wrap justify-end gap-2">
-        {mine && summary.platforms[0] && (
-          <PublishPostButton onClick={() => navigate(`/content-calendar/publish/sub-${summary.id}/${summary.platforms[0]}`)} />
-        )}
-        <ApprovalActions target={sub ?? summary} isCreator={mine} buttonClassName="h-9 text-xs font-semibold gap-1.5" />
-      </div>
-    );
+    actions = mine ? null : <ApprovalActions target={sub ?? summary} buttonClassName="h-9 text-xs font-semibold gap-1.5" />;
   } else if (summary.status === "IN_REVIEW") {
     footerTitle = "In review";
     footerNote = sub?.approver_names?.length
@@ -813,7 +801,7 @@ function ReviewCard({
 
       {/* The next step and its buttons, up top so it's the first thing to act on */}
       <section className="border-y border-border/70 bg-muted/30 px-5 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className={`flex gap-3 ${summary.status === "APPROVED" && mine ? "flex-col items-start" : "flex-wrap items-center justify-between"}`}>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">{footerTitle}</p>
             {footerNote && <p className="text-[11px] text-muted-foreground">{footerNote}</p>}
@@ -876,7 +864,7 @@ function ReviewCard({
       </div>
 
       {/* Review checks */}
-      {summary.status === "APPROVED" ? <ApprovedPostChecks submissionId={summary.id} canPublish={mine} /> : (
+      {summary.status === "APPROVED" ? <ApprovedPostPublishing submissionId={summary.id} canPublish={mine} platform={summary.platforms[0]} intended={sub ? sub.publish_at : summary.publish_at} /> : (
       <section className="border-t border-border/70 px-5 py-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
@@ -1054,7 +1042,7 @@ export default function SubmissionsListPage() {
 
   // My posts is your own posts only; the reviewers' list keeps its "Everyone's" switch.
   const scope = canSeeAll && !gallery ? prefs.scope : "mine";
-  const { data = [], isLoading, isError, error } = useQuery({
+  const { data: submissions = [], isLoading, isError, error } = useQuery({
     queryKey: ["submissions", scope],
     queryFn: () => submissionService.list(undefined, scope),
     // Dots, counts and resume links share the same script-aware progress state.
@@ -1063,6 +1051,7 @@ export default function SubmissionsListPage() {
     staleTime: 0,
     refetchInterval: refetchWhileAnalysing,
   });
+  const data = useScheduledSubmissions(submissions);
   const { data: options } = useQuery({
     queryKey: ["submission-options"],
     queryFn: submissionService.getOptions,
@@ -1077,11 +1066,11 @@ export default function SubmissionsListPage() {
     [options]
   );
 
-  // Creators see one month at a time, by when each post was first created. Work waiting on them (drafts and
-  // changes requested) is never hidden by the month: those two tabs count and show every month.
+  // Creators browse by creation month. Drafts, requested changes and scheduled posts remain available
+  // across every month in their respective tabs.
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const onCurrentMonth = isSameMonth(month, new Date());
-  const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED";
+  const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED" || stage === "SCHEDULED";
   const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month]);
   const inView = gallery && !monthless ? inMonth : data;
 
@@ -1095,6 +1084,7 @@ export default function SubmissionsListPage() {
     if (gallery) {
       counts.DRAFT = data.filter((s) => tabOf(s) === "DRAFT").length;
       counts.CHANGES_REQUESTED = data.filter((s) => tabOf(s) === "CHANGES_REQUESTED").length;
+      counts.SCHEDULED = data.filter((s) => tabOf(s) === "SCHEDULED").length;
     }
     return counts;
   }, [data, inMonth, gallery]);

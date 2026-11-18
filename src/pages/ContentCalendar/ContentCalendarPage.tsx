@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCalendarSelection } from "@/hooks/useCalendarSelection";
 import { useQuery } from "@tanstack/react-query";
 import {
   addDays,
@@ -163,8 +164,7 @@ export default function ContentCalendarPage() {
   const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
 
   const [view, setView] = useState<View>("week");
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { weekStart, setWeekStart, selectedId, setSelectedId } = useCalendarSelection();
   // Each filter takes several values; none picked means all.
   const [profileSel, setProfileSel] = useState<string[]>([]);
   const [brandSel, setBrandSel] = useState<string[]>([]);
@@ -184,9 +184,9 @@ export default function ContentCalendarPage() {
   const brandName = (code: string) => brands.find((b) => b.code === code)?.name ?? (code || null);
 
   const items = useMemo(() => {
-    const real = submissions.map(fromSubmission).filter((i): i is CalendarItem => Boolean(i));
+    const real = submissions.map((s) => fromSubmission({ ...s, publish_at: sent[`sub-${s.id}`]?.scheduled_for ?? s.publish_at })).filter((i): i is CalendarItem => Boolean(i));
     return [...real, ...sampleItems()].sort((a, b) => a.scheduled_for.localeCompare(b.scheduled_for));
-  }, [submissions]);
+  }, [submissions, sent]);
   const hasSamples = items.some((i) => i.is_sample);
 
   const profiles = useMemo(() => {
