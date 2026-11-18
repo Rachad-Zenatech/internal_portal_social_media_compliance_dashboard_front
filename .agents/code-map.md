@@ -102,7 +102,7 @@ to find the right file.
 | .agents/code-map/src__lib.md | 29 | 15 KB |
 | .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
-| .agents/code-map/src__pages__Configurations.md | 11 | 5 KB |
+| .agents/code-map/src__pages__Configurations.md | 12 | 6 KB |
 | .agents/code-map/src__pages__ContentCalendar.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Dashboard.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Delegations.md | 1 | 1 KB |
