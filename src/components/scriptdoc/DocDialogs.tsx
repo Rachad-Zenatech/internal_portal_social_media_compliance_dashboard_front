@@ -34,14 +34,14 @@ export default function DocDialogs({
       <SubmitDialog doc={doc} open={open.bulk} onOpenChange={(o) => onOpen("bulk", o)} busy={busy} bulkCount={sendable} onSubmit={handlers.sendAll} />
       <CheckInDialog
         doc={doc}
-        open={open.checkIn}
+        open={open.checkIn && doc.access.can_check_in}
         onOpenChange={(o) => onOpen("checkIn", o)}
         changedBy={changedBy}
         busy={busy}
         onCheckIn={handlers.checkIn}
       />
-      <Level2Dialog doc={doc} open={open.level2} onOpenChange={(o) => onOpen("level2", o)} busy={busy} onFinalize={handlers.finalize} />
-      <DecisionDialog doc={doc} open={open.decide} onOpenChange={(o) => onOpen("decide", o)} busy={busy} onDecide={handlers.decide} />
+      <Level2Dialog doc={doc} open={open.level2 && doc.access.can_finalize} onOpenChange={(o) => onOpen("level2", o)} busy={busy} onFinalize={handlers.finalize} />
+      <DecisionDialog doc={doc} open={open.decide && doc.access.can_decide} onOpenChange={(o) => onOpen("decide", o)} busy={busy} onDecide={handlers.decide} />
     </>
   );
 }

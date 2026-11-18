@@ -98,9 +98,9 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 32 | 11 KB |
-| .agents/code-map/src__lib.md | 29 | 15 KB |
-| .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
+| .agents/code-map/src__hooks.md | 33 | 11 KB |
+| .agents/code-map/src__lib.md | 31 | 15 KB |
+| .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 10 | 5 KB |
 | .agents/code-map/src__pages__ContentCalendar.md | 2 | 1 KB |

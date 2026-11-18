@@ -212,6 +212,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
+- src/hooks/useScreenerQueue.ts (40 lines) - Keep the screener aligned with the creator's existing calendar scheduling workflow.
 - src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
@@ -238,8 +239,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
 - src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
+- src/lib/screenerApprovalQueue.ts (20 lines) - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
 - src/lib/scriptDoc.ts (218 lines) - script doc (lib)
 - src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
+- src/lib/scriptReviewAccess.ts (18 lines) - A document creator may write and submit, but cannot review or decide on their own script.
 - src/lib/scriptReviewLists.ts (25 lines) - A script stays visible on its own when its batch belongs to another tab.
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
@@ -252,10 +255,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
 - src/main.tsx (51 lines) - Create a client
-- src/pages/Auth/Login.tsx (251 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+- src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
+- src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1516 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1508 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
@@ -276,7 +280,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (384 lines) - The notes document as a list, kept up to date as anyone changes it.
+- src/pages/Scripts/ScriptDocPage.tsx (385 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (302 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)

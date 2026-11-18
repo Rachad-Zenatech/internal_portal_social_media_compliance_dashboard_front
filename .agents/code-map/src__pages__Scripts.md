@@ -10,10 +10,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptBatchPage` (export function) L44 - A batch of scripts.
 - `BatchView` (function) L60
 
-## src/pages/Scripts/ScriptDocPage.tsx (384 lines) - The notes document as a list, kept up to date as anyone changes it.
-- `errText` (const) L19
-- `useNotes` (function) L24 - The notes document as a list, kept up to date as anyone changes it.
-- `ScriptDocPage` (export function) L41 - A script open for review.
+## src/pages/Scripts/ScriptDocPage.tsx (385 lines) - The notes document as a list, kept up to date as anyone changes it.
+- `errText` (const) L20
+- `useNotes` (function) L25 - The notes document as a list, kept up to date as anyone changes it.
+- `ScriptDocPage` (export function) L42 - A script open for review.
 
 ## src/pages/Scripts/ScriptReviewPage.tsx (302 lines) - script review page (pages  scripts)
 - `CreatorFilter` (type) L27

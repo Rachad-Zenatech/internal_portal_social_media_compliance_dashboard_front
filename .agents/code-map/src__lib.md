@@ -144,6 +144,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `copyClean` (function) L22
 - `sanitizeCaptionHtml` (export function) L52 - The HTML with only safe formatting left, as a string for innerHTML or insertHTML.
 
+## src/lib/screenerApprovalQueue.ts (20 lines) - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
+- `ScreenerTab` (export type) L4
+- `splitApprovedQueue` (export function) L7 - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
+
 ## src/lib/scriptDoc.ts (218 lines) - script doc (lib)
 - `Mark` (type) L19
 - `displayText` (export function) L25 - A piece of a script for showing in a list (what changed): the wording alone, without the page, heading, bold, italic,  list or table marks.
@@ -168,6 +172,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `unb64` (const) L14
 - `LiveHandlers` (export interface) L16
 - `LiveProvider` (export class) L32 - The browser's side of a script's live editing connection: two shared documents (the script's text, and its notes),  and the cursors and n...
+
+## src/lib/scriptReviewAccess.ts (18 lines) - A document creator may write and submit, but cannot review or decide on their own script.
+- `scriptReviewDocument` (export function) L4 - A document creator may write and submit, but cannot review or decide on their own script.
 
 ## src/lib/scriptReviewLists.ts (25 lines) - A script stays visible on its own when its batch belongs to another tab.
 - `ReviewTab` (export type) L4

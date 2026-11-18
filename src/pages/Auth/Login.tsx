@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SIGNED_OUT_KEY, useAuth } from "@/lib/AuthContext";
 import { apiClient } from "@/services/apiClient";
+import { TestLoginAccounts, type TestAccount } from "./TestLoginAccounts";
 
 /** Why the last session ended mid-use and where the user was, if it did (see AuthProvider). */
 function readSignedOut(): { reason?: string; returnTo?: string } | null {
@@ -138,7 +139,7 @@ export default function Login() {
       .catch(() => setTestLogin(false));
   }, []);
 
-  const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3" | "suggester") => {
+  const handleTestLogin = async (as: TestAccount) => {
     setIsLoading(true);
     try {
       sessionStorage.removeItem("token");
@@ -209,31 +210,7 @@ export default function Login() {
                 "Sign in with Microsoft"
               )}
             </Button>
-            {testLogin && (
-              <div className="space-y-2 rounded-xl border border-dashed border-amber-400/70 bg-amber-50/60 p-3 dark:border-amber-500/40 dark:bg-amber-500/5">
-                <p className="text-center text-xs font-medium text-amber-800 dark:text-amber-300">Local testing only</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("creator")}>
-                    Test creator
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer")}>
-                    Test reviewer
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("manager")}>
-                    Test manager
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer2")}>
-                    Test reviewer 2
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer3")}>
-                    Test reviewer 3
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("suggester")}>
-                    Test suggester
-                  </Button>
-                </div>
-              </div>
-            )}
+            {testLogin && <TestLoginAccounts disabled={isLoading} onSignIn={handleTestLogin} />}
           </CardContent>
           <CardFooter className="flex justify-center pb-8 pt-4 border-t border-slate-100 dark:border-zinc-800/50 mt-2 bg-slate-50/50 dark:bg-zinc-950/30">
             <p className="text-sm text-slate-500 dark:text-zinc-400">
