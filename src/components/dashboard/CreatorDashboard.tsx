@@ -27,6 +27,7 @@ import PostSteps from "@/components/submissions/PostSteps";
 import { POST_STEPS, ranOnce, stepPath } from "@/lib/postSteps";
 import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useAuth } from "@/lib/AuthContext";
+import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 import { submissionService } from "@/services/submissionService";
 import type { SubmissionSummary } from "@/types/submission";
 
@@ -230,11 +231,7 @@ export default function CreatorDashboard() {
     staleTime: 0,
     refetchInterval: refetchWhileAnalysing,
   });
-  const summary = useQuery({
-    queryKey: ["dashboard-summary", "mine"],
-    queryFn: () => submissionService.dashboard("mine"),
-    staleTime: 60_000,
-  });
+  const summary = useDashboardSummary("mine");
 
   const mine = useMemo(() => (submissions.data ?? []).filter((s) => s.created_by === user?.id), [submissions.data, user?.id]);
 
@@ -278,8 +275,8 @@ export default function CreatorDashboard() {
     [mine, filter]
   );
 
-  // What reviewers did on their posts; their own actions (sending for review) aren't news to them.
-  const activity = (summary.data?.activity ?? []).filter((a) => a.actor_id !== user?.id).slice(0, ACTIVITY_LIMIT);
+  // Include the creator's sends and resubmissions alongside reviewer decisions.
+  const activity = (summary.data?.activity ?? []).slice(0, ACTIVITY_LIMIT);
 
   const loading = submissions.isLoading;
   const waiting = nextSteps.length;
@@ -434,8 +431,8 @@ export default function CreatorDashboard() {
         <div className="flex min-w-0 flex-col gap-6">
           <DayAgenda posts={mine} loading={loading} />
 
-          <Section title="Activity" subtitle="What reviewers did on your posts">
-            <ActivityList items={activity} loading={summary.isLoading} empty="No reviewer activity on your posts yet." />
+          <Section title="Activity" subtitle="Recent updates on your posts">
+            <ActivityList items={activity} loading={summary.isLoading} error={summary.error} onRetry={() => void summary.refetch()} empty="No activity on your posts yet." />
           </Section>
         </div>
       </div>

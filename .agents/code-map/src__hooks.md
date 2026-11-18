@@ -29,6 +29,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - `useComplianceRules` (export function) L6 - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 
+## src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
+- `useDashboardSummary` (export function) L5 - Returning from a workflow action must show its activity; polling catches other sessions too.
+
 ## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
 
@@ -45,7 +48,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useEntryMutations` (function) L27 - Saving, turning on/off and removing entries, each refreshing the list and the analyses that used it.
 - `useMessagingContext` (export function) L64 - Everything the Messaging Context page shows and does: the entries of the open kind, the audience profile picked,  the fact search, and ad...
 
-## src/hooks/useNotificationStream.tsx (76 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+## src/hooks/useNotificationStream.tsx (80 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
 - `LiveNotification` (type) L12
 - `useNotificationStream` (export function) L19 - Live notifications: refresh the lists and counts, show a toast (inAppAlerts) and a desktop alert  (windowsNotifications).
 
