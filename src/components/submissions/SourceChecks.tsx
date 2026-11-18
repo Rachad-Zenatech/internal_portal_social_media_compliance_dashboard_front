@@ -6,6 +6,7 @@ import SourceTrustBar from "@/components/submissions/SourceTrustBar";
 import { SourceConfirmationsProvider, useSourceCalls } from "@/components/submissions/sourceConfirmationsContext";
 import type { SourceCheck, SourceClaim, SourceVerdict } from "@/services/complianceService";
 import type { SourceLinkCheck } from "@/types/sourceLink";
+import { visibleSourceChecks } from "@/lib/sourceCheckVisibility";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
   SUPPORTED: { label: "Matches the source", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
@@ -26,7 +27,7 @@ const WHERE: Record<SourceCheck["where"], string> = {
   image: "cited on the image",
   attached: "attached document",
   source_links: "added source link",
-  newsroom: "company newsroom",
+  newsroom: "automatic supporting cross-check",
   script: "cited in the script",
 };
 
@@ -35,7 +36,7 @@ function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<s
   const merged = [...(checks ?? [])];
   const knownUrls = new Set(
     merged
-      .filter((check) => check.kind === "URL")
+      .filter((check) => check.kind === "URL" && check.where !== "newsroom")
       .flatMap((check) => [check.url, check.reference])
       .filter((url): url is string => Boolean(url))
       .map((url) => url.toLowerCase())
@@ -55,7 +56,7 @@ function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<s
       })),
     });
   }
-  return merged;
+  return visibleSourceChecks(merged);
 }
 
 function counts(claims: SourceClaim[]) {
@@ -160,7 +161,7 @@ function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
           {matchedClaims.length > 0 && (
             <details className="rounded-lg border border-border/70 bg-background">
               <summary className="cursor-pointer px-3 py-2.5 font-medium text-emerald-700 dark:text-emerald-300">
-                Matched claims ({matchedClaims.length})
+                {source.where === "newsroom" ? "Supporting evidence" : "Matched claims"} ({matchedClaims.length})
               </summary>
               <div className="space-y-2 px-3 pb-3">
                 {matchedClaims.map((claim, index) => <ClaimRow key={`${claim.claim}-${index}`} claim={claim} sourceUrl={source.url} creator />)}

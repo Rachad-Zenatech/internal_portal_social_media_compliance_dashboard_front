@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadService } from "./loadTypeScriptService.mjs";
-const sourceFacts = loadService("contextSourceFacts", {}, "lib");
+const visibility = loadService("sourceCheckVisibility", {}, "lib");
+const sourceFacts = loadService("contextSourceFacts", { "@/lib/sourceCheckVisibility": visibility }, "lib");
 const { contextFeedbackCards } = loadService("contextFeedback", { "@/lib/contextSourceFacts": sourceFacts }, "lib");
 
 function report() {
@@ -73,7 +74,7 @@ test("card ordering leaves the saved analysis untouched", () => {
 });
 
 function checkedSource(verdict, reference = "ZenaTech newsroom") {
-  return { reference, title: reference, where: "newsroom", status: "READ", url: "https://www.zenatech.com/newsroom/", claims: [{ claim: "Cuts inspection time by 80%", verdict, where: "image", confidence: 1, evidence: "The source describes the inspection trial.", note: verdict === "SUPPORTED" ? null : "Confirm the trial figures against the published report." }] };
+  return { reference, title: reference, where: reference === "ZenaTech newsroom" ? "newsroom" : "source_links", status: "READ", url: "https://www.zenatech.com/newsroom/", claims: [{ claim: "Cuts inspection time by 80%", verdict, where: "image", confidence: 1, evidence: "The source describes the inspection trial.", note: verdict === "SUPPORTED" ? null : "Confirm the trial figures against the published report." }] };
 }
 
 test("Facts includes newsroom and cited-source comparisons when sentiment omitted its claims", () => {
@@ -105,7 +106,7 @@ test("unreadable sources do not become verified facts", () => {
 
 
 test("source suggestions do not repeat the whole caption already shown as evidence", () => {
-  const source = checkedSource("NOT_FOUND"); source.claims[0].note = null;
+  const source = checkedSource("NOT_FOUND", "Product page"); source.claims[0].note = null;
   const facts = contextFeedbackCards(report(), [], [source])[1];
   assert.equal(facts.items[0].evidence, "Cuts inspection time by 80%");
   assert.doesNotMatch(facts.items[0].improvement, /Cuts inspection time by 80%/);

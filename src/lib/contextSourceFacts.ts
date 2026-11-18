@@ -1,5 +1,6 @@
 import type { SourceCheck, SourceClaim } from "@/services/complianceService";
 import type { ContextFeedback } from "@/lib/contextFeedback";
+import { visibleSourceChecks } from "@/lib/sourceCheckVisibility";
 
 export function claimKey(text: string): string {
   return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -23,7 +24,7 @@ function sourceFeedback(rows: ComparedClaim[]): ContextFeedback {
 /** Read the actual compliance source comparisons, including the newsroom, without inventing new checks. */
 export function contextSourceFacts(checks: SourceCheck[]): ContextFeedback[] {
   const groups = new Map<string, ComparedClaim[]>();
-  for (const source of checks) {
+  for (const source of visibleSourceChecks(checks)) {
     if (source.status !== "READ") continue;
     for (const claim of source.claims) {
       if (!claim.claim.trim()) continue;

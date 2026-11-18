@@ -20,7 +20,7 @@ import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPa
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
 
-const DEFAULT_MIN_SCORE = 80;
+const DEFAULT_MIN_SCORE = 90;
 
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -38,7 +38,7 @@ interface Finding {
 }
 
 function ring(score: number, minimumScore: number) {
-  return score >= 85 ? "#059669" : score >= minimumScore ? "#D97706" : "#DC2626";
+  return score >= Math.max(85, minimumScore) ? "#059669" : score >= minimumScore ? "#D97706" : "#DC2626";
 }
 
 function timecode(seconds: number) {
@@ -242,7 +242,7 @@ export default function ComplianceStep({
   );
   const unavailable = check.ai_unavailable;
   const score = check.score;
-  const minimumScore = reviewState?.min_approval_score ?? DEFAULT_MIN_SCORE;
+  const minimumScore = Math.max(DEFAULT_MIN_SCORE, reviewState?.min_approval_score ?? 0);
   const gap = score - minimumScore;
   const count = (s: string) => findings.filter(({ v }) => statusOf(v) === s).length;
   const headline = [

@@ -63,11 +63,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `audienceCard` (function) L52
 - `contextFeedbackCards` (export function) L63 - Each card leads with an observed issue and its fix, rather than a generic assessment.
 
-## src/lib/contextSourceFacts.ts (36 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
-- `claimKey` (export function) L4
-- `ComparedClaim` (type) L8
-- `sourceFeedback` (function) L10
-- `contextSourceFacts` (export function) L24 - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
+## src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
+- `claimKey` (export function) L5
+- `ComparedClaim` (type) L9
+- `sourceFeedback` (function) L11
+- `contextSourceFacts` (export function) L25 - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
@@ -188,6 +188,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const) L4
 - `scriptVerdict` (export function) L11 - Score ring colours and the verdict line for a script check.
+
+## src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
+- `visibleSourceChecks` (export function) L4 - Automatic newsroom summaries only surface corroboration or an explicit conflict.
 
 ## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - `isScriptPreparation` (export function) L5

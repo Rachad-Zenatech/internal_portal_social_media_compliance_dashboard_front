@@ -94,7 +94,7 @@ export default function ReviewDecisionPanel({
   layout?: "panel" | "bar" | "inline";
 }) {
   const openCritical = target.open_critical_flags ?? 0;
-  const minScore = target.min_approval_score ?? 80;
+  const minScore = Math.max(90, target.min_approval_score ?? 0);
   const approvalScore = target.approval_score ?? null;
   // Shown once critical flags are dealt with, since those come first (and cap the score anyway).
   const scoreTooLow = openCritical === 0 && approvalScore != null && approvalScore < minScore;
