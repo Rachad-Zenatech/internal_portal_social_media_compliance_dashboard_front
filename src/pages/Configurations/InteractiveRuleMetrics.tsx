@@ -100,9 +100,9 @@ function MetricDetailDialog({
                       {t.passed ? "Passing" : "Needs review"}
                     </span>
                   </div>
-                  {t.cases.map((c, idx) => (
+                  {t.results.map((c, idx) => (
                     <p key={idx} className="mt-1 text-muted-foreground">
-                      [{c.expect_flag ? "Should flag" : "Allowed"}] “{c.text}” {c.matched_terms.length > 0 && `(matched: ${c.matched_terms.join(", ")})`}
+                      [{c.expected === "FLAG" ? "Should flag" : "Allowed"}] “{c.example}” {c.matched_terms.length > 0 && `(matched: ${c.matched_terms.join(", ")})`}
                     </p>
                   ))}
                 </div>
