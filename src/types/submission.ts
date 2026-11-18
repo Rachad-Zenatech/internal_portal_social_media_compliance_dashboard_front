@@ -1,3 +1,4 @@
+import type { ScriptMatch } from "@/types/scriptMatch";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 import type { ScriptStatus } from "@/types/script";
 import type { SubmissionSourceFields } from "@/types/sourceLink";
@@ -89,20 +90,12 @@ export interface SegmentFlag {
 }
 
 /** The video's speech against the approved script: said but not approved (added), approved but not said (missing). */
-export type ScriptMatch = {
-  status: "MATCH" | "PARTIAL" | "MISMATCH";
-  similarity: number;
-  script_words: number;
-  spoken_words: number;
-  added: string[];
-  missing: string[];
-  added_more: number;
-  missing_more: number;
-};
+export type { ScriptMatch } from "@/types/scriptMatch";
 
 /** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
   checked_at?: string;
+  checked_media_edited_at?: string | null;
   /** Which AI models answered during this check, and how long it took. Missing on checks saved before this was kept. */
   models?: { attempts: CheckAttempt[]; duration_ms: number } | null;
   includes_transcript?: boolean;
@@ -225,6 +218,7 @@ export interface Submission extends SubmissionSourceFields {
   created_at: string;
   updated_at: string;
   content_edited_at?: string | null;
+  media_edited_at?: string | null;
 }
 
 /** The five steps a creator works through on a post. */

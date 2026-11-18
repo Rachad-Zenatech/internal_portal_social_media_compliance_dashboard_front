@@ -1,5 +1,6 @@
-import { CheckCircle2, Eye, FileWarning, Hash, Info, Loader2, UserCheck } from "lucide-react";
+import { Eye, Hash, Info, Loader2, UserCheck } from "lucide-react";
 
+import ScriptComparisonNotice from "@/components/submissions/ScriptComparisonNotice";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import type { StoredCheck } from "@/types/submission";
 
@@ -55,46 +56,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
           <span>{note}</span>
         </p>
       ))}
-      {match && (
-        <div className={match.status === "MATCH" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}>
-          <p className="flex items-start gap-1.5">
-            {match.status === "MATCH" ? (
-              <CheckCircle2 className="mt-px w-3.5 h-3.5 shrink-0" />
-            ) : (
-              <FileWarning className="mt-px w-3.5 h-3.5 shrink-0" />
-            )}
-            <span>
-              {match.status === "MATCH"
-                ? `The video follows the approved script (${match.similarity}% alike).`
-                : match.status === "PARTIAL"
-                  ? `The video differs from the approved script (${match.similarity}% alike).`
-                  : `The video doesn't match the approved script (${match.similarity}% alike). Check the right video was uploaded.`}
-            </span>
-          </p>
-          {match.added.length > 0 && (
-            <div className="ml-5">
-              <p className="font-semibold">Said in the video, not in the script:</p>
-              <ul className="list-disc ml-4">
-                {match.added.map((a) => (
-                  <li key={a}>“{a}”</li>
-                ))}
-              </ul>
-              {match.added_more > 0 && <p>and {match.added_more} more.</p>}
-            </div>
-          )}
-          {match.missing.length > 0 && (
-            <div className="ml-5">
-              <p className="font-semibold">In the script, not said in the video:</p>
-              <ul className="list-disc ml-4">
-                {match.missing.map((m) => (
-                  <li key={m}>“{m}”</li>
-                ))}
-              </ul>
-              {match.missing_more > 0 && <p>and {match.missing_more} more.</p>}
-            </div>
-          )}
-        </div>
-      )}
+      {match && <ScriptComparisonNotice match={match} />}
       {docsPending > 0 && (
         <p className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
           <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />

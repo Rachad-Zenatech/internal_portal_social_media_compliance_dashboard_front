@@ -9,6 +9,8 @@ import FlaggedVideo from "@/components/submissions/FlaggedVideo";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import SyntheticMediaFixNote from "@/components/submissions/SyntheticMediaFixNote";
+import VideoTranscript from "@/components/submissions/VideoTranscript";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
@@ -128,6 +130,7 @@ export default function ComplianceStep({
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
+  const checkedVideo = sub?.files.find((file) => file.id === mainFile?.id);
   // The editable compliance step is the creator workflow. Creators may request,
   // but never directly apply, a dismissal.
   const canRequestDismissal = editable;
@@ -213,6 +216,22 @@ export default function ComplianceStep({
   }
 
   const analysing = isAnalysing(check);
+  const imagesPending = (check.images_pending ?? 0) > 0;
+  const processingLabel = check.transcript_pending && imagesPending ? "Processing video and images"
+    : check.transcript_pending ? "Processing video"
+    : imagesPending ? "Processing images"
+    : "Processing your post";
+  const pendingScore = (
+    <div role="status" className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
+      <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-8 border-muted bg-card" aria-hidden="true">
+        <Loader2 className="h-8 w-8 text-primary motion-safe:animate-spin" />
+      </span>
+      <div className="min-w-0 flex-1 basis-64 space-y-2">
+        <p className="text-base font-bold text-foreground">{processingLabel}</p>
+        <p className="text-[13px] leading-relaxed text-muted-foreground">Your compliance score will appear when processing finishes.</p>
+      </div>
+    </div>
+  );
   const unavailable = check.ai_unavailable;
   const score = check.score;
   const gap = score - MIN_SCORE;
@@ -235,10 +254,10 @@ export default function ComplianceStep({
           {header}
           {stale && (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-              <strong className="font-semibold">You've edited the post since this check.</strong> Check again to see the score for your latest changes.
+              <strong className="font-semibold">The media has changed since this check.</strong> Check again to score the updated media.
             </p>
           )}
-          {unavailable ? (
+          {analysing ? pendingScore : unavailable ? (
             <p className="rounded-xl bg-amber-50 px-3.5 py-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">{AI_UNAVAILABLE_MESSAGE}</p>
           ) : (
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
@@ -248,7 +267,7 @@ export default function ComplianceStep({
                 className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
               >
                 <span className="flex h-[78px] w-[78px] flex-col items-center justify-center rounded-full bg-card leading-none">
-                  <span className="text-3xl font-extrabold tabular-nums text-foreground">{analysing ? "…" : score}</span>
+                  <span className="text-3xl font-extrabold tabular-nums text-foreground">{score}</span>
                   <span className="mt-1 text-[11px] text-muted-foreground">of 100</span>
                 </span>
               </span>
@@ -267,7 +286,7 @@ export default function ComplianceStep({
           )}
           {extra}
           <CheckCoverage check={check} />
-          <ScoreBreakdown check={check} />
+          {!analysing && <ScoreBreakdown check={check} />}
         </section>
 
         <section className={`${card} flex flex-col gap-3`}>
@@ -275,7 +294,7 @@ export default function ComplianceStep({
             <h2 className="text-lg font-bold text-foreground">What the check found</h2>
             {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
           </div>
-          {findings.length === 0 && (
+          {!analysing && findings.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>
@@ -321,6 +340,7 @@ export default function ComplianceStep({
                     <p className="text-[13px] leading-relaxed text-foreground/80">
                       <strong className="font-semibold">What to do:</strong> {f.v.remediation_guidance || f.v.explanation}
                     </p>
+                    <SyntheticMediaFixNote finding={f.v} />
                     {editable && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>
                         {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : f.where === "Video" ? "Edit the video" : "Fix in image"}
@@ -421,6 +441,7 @@ export default function ComplianceStep({
                 onStep={(by) => seek(Math.max(0, now + by))}
                 seek={seek}
               />
+              <VideoTranscript file={checkedVideo ?? mainFile} check={stale || !checkedVideo ? null : check} now={now} seek={seek} />
             </>
           )}
           {!isVideo && (

@@ -228,7 +228,7 @@ export interface SourceCheck {
   /** The link, the cited document's name, or the attached file's name. */
   reference: string;
   kind: 'URL' | 'NAMED' | 'DOCUMENT';
-  where: 'caption' | 'image' | 'attached';
+  where: 'caption' | 'image' | 'attached' | 'source_links' | 'newsroom' | 'script';
   /** The words that marked it as a citation ("Source:", "Read the full article"). */
   cue?: string | null;
   /** READ: opened and checked. UNREADABLE: couldn't be opened or read. NOT_PROVIDED: cited by name only. */

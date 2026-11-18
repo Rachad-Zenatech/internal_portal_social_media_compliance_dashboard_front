@@ -74,6 +74,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__RuleNumberBadge.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ScanImageButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ScoreBreakdown.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ScriptComparisonNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SentimentPanel.md | 1 | 3 KB |
 | .agents/code-map/src__components__submissions__SourceCheckResult.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceChecks.md | 1 | 1 KB |
@@ -81,7 +82,9 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__VideoTranscript.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ZoomableImageDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__commentParts.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__sourceConfirmationsContext.md | 1 | 1 KB |
@@ -104,4 +107,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 15 | 6 KB |
-| .agents/code-map/src__types.md | 18 | 14 KB |
+| .agents/code-map/src__types.md | 19 | 14 KB |

@@ -4,16 +4,18 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ComplianceStep.tsx (464 lines) - compliance step (components submissions)
-- `escapeRe` (const) L21
-- `Finding` (interface) L23
-- `ring` (function) L36
-- `timecode` (function) L40
-- `videoEvidence` (function) L44
-- `ComplianceStep` (export function) L55 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
-    - `seek` (fn) L137
-    - `pick` (fn) L145
-    - `terms` (fn) L151
-    - `captionParts` (fn) L152
-    - `header` (fn) L163
-    - `count` (fn) L219
+## src/components/submissions/ComplianceStep.tsx (485 lines) - compliance step (components submissions)
+- `escapeRe` (const) L23
+- `Finding` (interface) L25
+- `ring` (function) L38
+- `timecode` (function) L42
+- `videoEvidence` (function) L46
+- `ComplianceStep` (export function) L57 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
+    - `seek` (fn) L140
+    - `pick` (fn) L148
+    - `terms` (fn) L154
+    - `captionParts` (fn) L155
+    - `header` (fn) L166
+    - `imagesPending` (fn) L219
+    - `pendingScore` (fn) L224
+    - `count` (fn) L238

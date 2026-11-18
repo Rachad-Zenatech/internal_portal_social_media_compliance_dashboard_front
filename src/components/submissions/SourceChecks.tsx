@@ -25,6 +25,9 @@ const WHERE: Record<SourceCheck["where"], string> = {
   caption: "cited in the caption",
   image: "cited on the image",
   attached: "attached document",
+  source_links: "added source link",
+  newsroom: "company newsroom",
+  script: "cited in the script",
 };
 
 /** Keep quick checks made from Post details visible when the rulebook response omitted that URL. */

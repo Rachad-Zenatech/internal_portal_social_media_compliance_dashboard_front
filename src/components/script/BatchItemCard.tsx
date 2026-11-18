@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthContext";
 import type { BatchDetails, BatchItem, BatchItemStatus } from "@/types/scriptBatch";
 
 export interface Decision {
@@ -138,7 +139,9 @@ export default function BatchItemCard({
   useEffect(() => setDraftDetails(null), [item.details]);
   // Only a script that hasn't been sent is changed here; a sent one is changed on its own page.
   const editable = canEdit && !item.submission_id && item.status === "DRAFT";
+  const { creatorView } = useAuth();
   const status = STATUS[item.status];
+  const statusLabel = item.status === "IN_REVIEW" && !creatorView ? "To be reviewed" : status.label;
   const flags = item.check?.violations ?? [];
 
   return (
@@ -154,7 +157,7 @@ export default function BatchItemCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground">#{item.position}</span>
-            <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", status.tone)}>{status.label}</span>
+            <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", status.tone)}>{statusLabel}</span>
             <CheckChip item={item} />
           </div>
           {editable ? (
