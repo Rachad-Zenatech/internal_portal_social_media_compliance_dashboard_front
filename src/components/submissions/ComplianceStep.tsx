@@ -6,6 +6,7 @@ import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
+import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/submissions/ManuallyCheckedClaims";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
@@ -102,7 +103,10 @@ export default function ComplianceStep({
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
 
-  const findings: Finding[] = useMemo(() => {
+  const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
+  const isManuallyChecked = useManuallyCheckedClaims(ownsSubmission ? sub?.id : undefined, check);
+  const checkedClaims = check?.violations.filter(isManuallyChecked) ?? [];
+  const allFindings: Finding[] = useMemo(() => {
     if (!check) return [];
     const cap = caption.toLowerCase();
     const ttl = title.toLowerCase();
@@ -131,11 +135,11 @@ export default function ComplianceStep({
       })
       .sort((a, b) => Number(b.v.traffic_light === "RED") - Number(a.v.traffic_light === "RED") || (a.at ?? 1e9) - (b.at ?? 1e9));
   }, [check, caption, title, scriptText, mainFile?.id]);
+  const findings = allFindings.filter((finding) => !isManuallyChecked(finding.v));
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
   const checkedVideo = sub?.files.find((file) => file.id === mainFile?.id);
-  const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
   const canRequestDismissal = ownsSubmission && (editable || reviewState?.status === "IN_REVIEW");
   const canDismiss = !ownsSubmission && reviewState?.can_review === true;
   const parts = check ? timelineOf(sub!, duration) : [];
@@ -186,7 +190,7 @@ export default function ComplianceStep({
             <Button
               type="button"
               variant="default"
-              onClick={onCheck}
+              onClick={() => onCheck()}
               disabled={checking}
               className="h-10 shrink-0 gap-2 whitespace-nowrap rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
             >
@@ -239,7 +243,7 @@ export default function ComplianceStep({
   const unavailable = check.ai_unavailable;
   const score = check.score;
   const gap = score - MIN_SCORE;
-  const count = (s: string) => check.violations.filter((v) => statusOf(v) === s).length;
+  const count = (s: string) => findings.filter(({ v }) => statusOf(v) === s).length;
   const headline = [
     count("VIOLATION") ? `${count("VIOLATION")} issue${count("VIOLATION") === 1 ? "" : "s"} to fix` : "",
     count("EVIDENCE_REQUIRED") ? `${count("EVIDENCE_REQUIRED")} claim${count("EVIDENCE_REQUIRED") === 1 ? "" : "s"} need${count("EVIDENCE_REQUIRED") === 1 ? "s" : ""} a source` : "",
@@ -276,7 +280,7 @@ export default function ComplianceStep({
                 </span>
               </span>
               <div className="flex min-w-0 flex-1 basis-64 flex-col gap-2">
-                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : "No issues found"}</p>
+                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{advice}</p>
                 <div className="relative mt-1 h-2.5 rounded-full bg-muted">
                   <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score) }} />
@@ -298,7 +302,7 @@ export default function ComplianceStep({
             <h2 className="text-lg font-bold text-foreground">What the check found</h2>
             {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
           </div>
-          {!analysing && findings.length === 0 && (
+          {!analysing && findings.length === 0 && checkedClaims.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>
@@ -356,6 +360,7 @@ export default function ComplianceStep({
               </article>
             );
           })}
+          <ManuallyCheckedClaims findings={checkedClaims} />
           {cleared.length > 0 && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-[13px] leading-relaxed text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <button
@@ -366,8 +371,7 @@ export default function ComplianceStep({
               >
                 <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={3} />
                 <span className="min-w-0 flex-1">
-                  <strong className="font-semibold">{cleared.length} cleared by context.</strong> The wording matched a rule, but the sentence around it shows the
-                  rule doesn't apply. No points were taken off.
+                  <strong className="font-semibold">{cleared.length} cleared.</strong> The wording or supporting evidence resolved these findings. No points were taken off.
                 </span>
                 <span className="flex shrink-0 items-center gap-1 text-xs font-semibold">
                   {clearedOpen ? "Hide details" : "How?"}
@@ -429,7 +433,6 @@ export default function ComplianceStep({
             <h2 className="text-base font-bold text-foreground">Your post, marked up</h2>
             {mainFile && isVideo && <span className="text-[11px] text-muted-foreground">Video</span>}
           </div>
-
           {mainFile && isVideo && (
             <>
               <FlaggedVideo src={authedFileUrl(mainFile.url)} fileId={mainFile.id} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} currentTime={now} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
@@ -449,8 +452,7 @@ export default function ComplianceStep({
             </>
           )}
           {!isVideo && <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />}
-
-          <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
+            <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
           {selected && (
             <p className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-[13px] text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

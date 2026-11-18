@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/submissionUi.tsx (435 lines) - submission ui (components submissions)
+## src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) L39 - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
 - `isAiUnavailable` (export const) L43 - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
 - `AI_UNAVAILABLE_MESSAGE` (export const) L45
@@ -26,15 +26,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `countdown` (fn) L148
 - `FILE_KIND_LABELS` (export const) L167
 - `MISSING_LABELS` (export const) L175 - How the submit endpoint's `missing` field names read in messages.
-- `formatBytes` (export function) L194
-- `formatDuration` (function) L201
-- `authedFileUrl` (export function) L211 - URL a <video>/<img> can load directly.
-- `SubmissionStatusBadge` (export function) L223
-- `hoursUntil` (const) L232
-- `dueInfo` (export function) L235 - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
-- `DueBadge` (export function) L250 - Deadline for the next step: red when overdue, amber when it's close.
-- `isReadDocument` (function) L270 - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
-- `SubmissionFileRow` (export function) L274
-- `audienceCodes` (export function) L422 - Every audience a post targets, primary first (older records only have the one).
-- `audienceNames` (export function) L427 - Audience codes as names, comma separated; null when there are none.
-- `brandCodes` (export function) L432 - Every brand a post is for, primary first (older records only have the one).
+- `formatBytes` (export function) L195
+- `formatDuration` (function) L202
+- `authedFileUrl` (export function) L212 - URL a <video>/<img> can load directly.
+- `SubmissionStatusBadge` (export function) L224
+- `hoursUntil` (const) L233
+- `dueInfo` (export function) L236 - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
+- `DueBadge` (export function) L251 - Deadline for the next step: red when overdue, amber when it's close.
+- `isReadDocument` (function) L271 - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
+- `SubmissionFileRow` (export function) L275
+- `audienceCodes` (export function) L423 - Every audience a post targets, primary first (older records only have the one).
+- `audienceNames` (export function) L428 - Audience codes as names, comma separated; null when there are none.
+- `brandCodes` (export function) L433 - Every brand a post is for, primary first (older records only have the one).
