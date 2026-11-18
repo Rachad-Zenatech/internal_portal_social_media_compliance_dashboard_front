@@ -184,6 +184,7 @@ export const MISSING_LABELS: Record<string, string> = {
   script: "the script (upload it first)",
   reviewer_ids: "reviewers to send it to",
   main_file: "main content file",
+  ai_generated_images: "answer to the AI image question",
   content: "content file or caption",
   caption: "caption",
   publish_at: "a publish date in the future",
