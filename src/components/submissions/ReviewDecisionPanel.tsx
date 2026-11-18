@@ -12,6 +12,7 @@ import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import type { DueKind, ReviewJob } from "@/types/submission";
 import { DueBadge } from "@/components/submissions/submissionUi";
+import ReviewDecisionBar from "@/components/submissions/ReviewDecisionBar";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import { DelegateReviewButton } from "@/components/submissions/DelegateReview";
 import RevisionTimelinePicker, { DEFAULT_TIMELINE, timelineFields, timelineValid, type Timeline } from "@/components/submissions/RevisionTimelinePicker";
@@ -88,7 +89,7 @@ export default function ReviewDecisionPanel({
 }: {
   target: ReviewTarget;
   compact?: boolean;
-  /** "bar": only the buttons (stacked for a narrow side panel). "inline": only the buttons, in one wrapping row
+  /** "bar": primary decisions with quieter secondary actions. "inline": only the buttons, in one wrapping row
    * (the Content Portal's approval footer). Both use the same confirm dialog. */
   layout?: "panel" | "bar" | "inline";
 }) {
@@ -156,8 +157,6 @@ export default function ReviewDecisionPanel({
   };
 
   const bar = layout === "bar" || layout === "inline";
-  const barOutline =
-    "h-11 rounded-lg text-sm font-semibold border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10";
 
   return (
     <div className={bar ? "" : `@container rounded-xl border border-border/70 bg-muted/30 ${compact ? "p-3" : "p-4"} space-y-3`}>
@@ -210,19 +209,7 @@ export default function ReviewDecisionPanel({
           </Button>
         </div>
       ) : bar ? (
-        // The main action gets its own row so no label is cut off, however narrow the side panel is.
-        <div className="grid grid-cols-2 gap-2">
-          <Button className="col-span-2 h-11 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => start("schedule")} disabled={!mayApprove}>
-            Approve content
-          </Button>
-          <Button variant="outline" className={`col-span-2 ${barOutline}`} onClick={() => start("changes")}>
-            Request changes
-          </Button>
-          <Button variant="outline" className={`col-span-2 ${barOutline} border-amber-300 text-amber-800 dark:border-amber-500/40 dark:text-amber-300`} onClick={() => start("changes_publish")}>
-            Make changes & publish
-          </Button>
-
-        </div>
+        <ReviewDecisionBar target={target} mayApprove={mayApprove} onStart={start} />
       ) : (
       // The reviewer can approve the content or request changes.
       <div className="grid grid-cols-2 gap-2">
@@ -238,9 +225,9 @@ export default function ReviewDecisionPanel({
         </Button>
       </div>
       )}
-      {target.can_delegate && (
-        <div className={layout === "bar" ? "mt-2" : "flex justify-end"}>
-          <DelegateReviewButton target={target} className={layout === "bar" ? `w-full ${barOutline}` : layout === "inline" ? "h-9 text-xs font-semibold" : "text-xs"} />
+      {target.can_delegate && layout !== "bar" && (
+        <div className="flex justify-end">
+          <DelegateReviewButton target={target} className={layout === "inline" ? "h-9 text-xs font-semibold" : "text-xs"} />
         </div>
       )}
 

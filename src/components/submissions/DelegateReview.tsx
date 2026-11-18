@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/AuthContext";
@@ -64,10 +65,15 @@ export function DelegateReviewButton({ target, className = "" }: { target: Deleg
 
   return (
     <>
-      <Button variant="outline" size="sm" className={`gap-1.5 ${className}`} onClick={() => setOpen(true)}>
-        <Forward className="h-4 w-4" />
-        Delegate review
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline" size="sm" className={`gap-1.5 ${className}`} onClick={() => setOpen(true)}>
+            <Forward className="h-4 w-4" />
+            Delegate review
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Send this post to another reviewer while keeping access to it.</TooltipContent>
+      </Tooltip>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

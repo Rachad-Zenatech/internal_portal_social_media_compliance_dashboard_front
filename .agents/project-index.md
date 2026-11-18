@@ -100,7 +100,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ComplianceView.tsx (110 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
-- src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
+- src/components/submissions/DelegateReview.tsx (157 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FinalPublishDate.tsx (21 lines) - final publish date (components submissions)
@@ -127,8 +127,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PublishPostButton.tsx (13 lines) - publish post button (components submissions)
 - src/components/submissions/ReviewCommentsPanel.tsx (167 lines) - What other pages import from here.
 - src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
-- src/components/submissions/ReviewDecisionPanel.tsx (424 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
-- src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
+- src/components/submissions/ReviewDecisionBar.tsx (46 lines) - review decision bar (components submissions)
+- src/components/submissions/ReviewDecisionPanel.tsx (411 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+- src/components/submissions/ReviewGlance.tsx (58 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - src/components/submissions/ReviewerImageViewer.tsx (59 lines) - Reviewer image with comments plus the full-size rule-inspection view.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
 - src/components/submissions/ReviewerSentimentConcerns.tsx (71 lines) - reviewer sentiment concerns (components submissions)
@@ -240,7 +241,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/Login.tsx (251 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1556 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1538 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)

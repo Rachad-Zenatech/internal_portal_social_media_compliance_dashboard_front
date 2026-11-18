@@ -4,18 +4,18 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewDecisionPanel.tsx (424 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
-- `ReviewTarget` (export interface) L20 - The submission fields the review controls need (works for a full Submission or a queue item).
-- `Mode` (type) L55
-- `ReviewDecisionHeader` (function) L57
-- `toLocalInput` (const) L73
-- `defaultPublishTime` (function) L76 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
-- `ReviewDecisionPanel` (export function) L84 - The reviewer's decision for the version in review: approve it for the creator to publish, or  send it back with what to change.
-    - `decide` (fn) L103
-    - `start` (fn) L119
-    - `toggleConfirmed` (fn) L126
-    - `confirm` (fn) L137
-- `ApprovalBlockers` (function) L313 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
-- `ManualRulesChecklist` (function) L355 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
-- `ChangesRequestedBanner` (export function) L392 - For the creator: the reviewer sent it back.
-    - `navigate` (fn) L403
+## src/components/submissions/ReviewDecisionPanel.tsx (411 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
+- `ReviewTarget` (export interface) L21 - The submission fields the review controls need (works for a full Submission or a queue item).
+- `Mode` (type) L56
+- `ReviewDecisionHeader` (function) L58
+- `toLocalInput` (const) L74
+- `defaultPublishTime` (function) L77 - Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow.
+- `ReviewDecisionPanel` (export function) L85 - The reviewer's decision for the version in review: approve it for the creator to publish, or  send it back with what to change.
+    - `decide` (fn) L104
+    - `start` (fn) L120
+    - `toggleConfirmed` (fn) L127
+    - `confirm` (fn) L138
+- `ApprovalBlockers` (function) L300 - Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low.
+- `ManualRulesChecklist` (function) L342 - Rules the automated check can't test from text: the reviewer ticks each one off when approving.
+- `ChangesRequestedBanner` (export function) L379 - For the creator: the reviewer sent it back.
+    - `navigate` (fn) L390

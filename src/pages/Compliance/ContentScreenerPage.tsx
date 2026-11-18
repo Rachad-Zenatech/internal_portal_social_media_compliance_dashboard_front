@@ -37,6 +37,7 @@ import ReviewerImageViewer from "@/components/submissions/ReviewerImageViewer";
 import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
+import VideoTranscript from "@/components/submissions/VideoTranscript";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -748,7 +749,7 @@ function ReviewPanel({
       ? { text: "Check before publishing", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
       : { text: "Ready to approve", tone: "text-emerald-700 dark:text-emerald-400", ring: "border-emerald-300 dark:border-emerald-500/50" };
 
-  // The four things a reviewer looks at, each with its one-line answer.
+  // Each review section has the same visual weight; the transcript is a first-class section.
   const sentimentRead = sentiment?.status === "COMPLETED" && sentiment.result ? SENTIMENT_TILE[sentiment.result.overall_assessment] : null;
   const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
   const scoreTone: GlanceTile["tone"] = check?.ai_unavailable || score == null ? "muted" : openCritical ? "bad" : score >= 80 ? "ok" : score >= 60 ? "warn" : "bad";
@@ -771,14 +772,19 @@ function ReviewPanel({
       tone: sentimentRead?.tone ?? "muted",
       seen: seen.has("sentiment"),
     },
+    ...(hasVideo ? [{
+      key: "script", label: "Transcript", value: transcript.length ? `${transcript.length} lines` : "Video wording",
+      sub: transcript.length ? "Read and jump to any moment" : "View transcript status",
+      tone: "muted" as const, seen: seen.has("script"),
+    }] : []),
     {
       key: "comments",
-      label: canComment ? "Your input" : "Comments",
+      label: "Comments",
       value: canComment ? (comments.length ? `Comments (${comments.length})` : "Comments") : comments.length ? String(comments.length) : "None",
       sub: canComment
         ? comments.length
           ? "Add more suggestions as needed"
-          : "Suggestions, notes, anything to change"
+          : "Add feedback for the creator"
         : comments.length
         ? "Left on this post"
         : "None were left",
@@ -795,7 +801,6 @@ function ReviewPanel({
         tiles={tiles.filter((tile) => tile.key !== "sentiment" || s.content_type !== "VIDEO" || hasVideo)}
         active={tab}
         onPick={(key) => setTab(key as PanelTab)}
-        extra={hasVideo ? [{ key: "script", label: `Transcript${transcript.length ? ` (${transcript.length})` : ""}` }] : undefined}
       />
 
       {/* Tab content */}
@@ -1018,38 +1023,15 @@ function ReviewPanel({
           />
         )}
 
-        {tab === "script" &&
-          (s.video?.transcript_status && s.video.transcript_status !== "COMPLETED" ? (
-            <p className="text-sm text-muted-foreground">
-              {s.video.transcript_status === "FAILED" ? "The transcript couldn't be made for this video." : "The transcript is being prepared..."}
-            </p>
-          ) : transcript.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing was said or shown as text in this video.</p>
-          ) : (
-            transcript.map((seg, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => seek(seg.start_sec)}
-                className={`flex gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted ${
-                  now >= seg.start_sec && now < seg.end_sec ? "bg-muted" : ""
-                }`}
-              >
-                <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatSec(seg.start_sec)}</span>
-                <span className="text-[13px] text-foreground">
-                  {seg.source === "on_screen" && <span className="mr-1 text-xs text-muted-foreground">[on screen]</span>}
-                  {seg.text}
-                </span>
-              </button>
-            ))
-          ))}
+        {tab === "script" && s.video && <VideoTranscript file={s.video} check={check ?? null} now={now} seek={seek} fullHeight />}
+
       </div>
 
       {/* Decision: always in view */}
-      <div className="border-t border-border/70 bg-muted/30 p-4">
+      <div className="shrink-0 border-t border-border/70 bg-card px-4 py-3">
         {s.status === "IN_REVIEW" && canReview && (
-          <p className={`mb-3 text-xs ${toLookAt.length ? "text-muted-foreground" : "font-medium text-emerald-700 dark:text-emerald-300"}`} aria-live="polite">
-            {toLookAt.length ? `Still to look at: ${toLookAt.join(", ")}` : "You've looked at everything. Ready to decide."}
+          <p className="mb-3 text-xs text-muted-foreground" aria-live="polite">
+            {toLookAt.length ? `Still to review: ${toLookAt.join(", ")}` : "All sections opened. Ready for your decision."}
           </p>
         )}
         {s.status === "IN_REVIEW" ? (

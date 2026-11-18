@@ -4,7 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewGlance.tsx (107 lines) - The one thing to know at a glance: a score, a verdict, a count.
+## src/components/submissions/ReviewGlance.tsx (58 lines) - The one thing to know at a glance: a score, a verdict, a count.
 - `GlanceTone` (export type) L4
 - `GlanceTile` (export interface) L6
-- `ReviewGlance` (export function) L31 - What a reviewer needs to look at, as four tiles: each says the one thing to know and opens its details below.
+- `ReviewSectionTab` (function) L20
+- `ReviewGlance` (export function) L37 - Consistent, neutral navigation keeps the review sections easy to scan.

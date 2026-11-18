@@ -63,6 +63,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__PublishPostButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewCommentsPanel.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewConversation.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ReviewDecisionBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewDecisionPanel.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewGlance.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerImageViewer.md | 1 | 1 KB |

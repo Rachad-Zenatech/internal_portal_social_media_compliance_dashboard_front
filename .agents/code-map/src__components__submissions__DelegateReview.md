@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/DelegateReview.tsx (151 lines) - delegate review (components submissions)
-- `DelegateTarget` (interface) L16
-- `DelegateReviewButton` (export function) L30 - Hand the post in review to another reviewer.
-- `DelegationTrail` (export function) L124 - Who handed this post to whom, newest first.
+## src/components/submissions/DelegateReview.tsx (157 lines) - delegate review (components submissions)
+- `DelegateTarget` (interface) L17
+- `DelegateReviewButton` (export function) L31 - Hand the post in review to another reviewer.
+- `DelegationTrail` (export function) L130 - Who handed this post to whom, newest first.
