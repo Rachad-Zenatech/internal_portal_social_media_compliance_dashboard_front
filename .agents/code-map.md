@@ -97,7 +97,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 27 | 9 KB |
-| .agents/code-map/src__lib.md | 25 | 13 KB |
+| .agents/code-map/src__lib.md | 26 | 13 KB |
 | .agents/code-map/src__pages__Auth.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 10 | 5 KB |

@@ -444,9 +444,7 @@ export default function ComplianceStep({
               <VideoTranscript file={checkedVideo ?? mainFile} check={stale || !checkedVideo ? null : check} now={now} seek={seek} />
             </>
           )}
-          {!isVideo && (
-            <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />
-          )}
+          {!isVideo && <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />}
 
           <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
           {selected && (

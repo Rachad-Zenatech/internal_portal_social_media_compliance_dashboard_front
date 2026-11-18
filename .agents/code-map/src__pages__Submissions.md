@@ -4,21 +4,21 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2555 lines) - new submission page (pages  submissions)
-- `classifyFile` (function) L169 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- `SaveState` (type) L208
-- `timeOptions` (const) L215
-- `timeLabel` (function) L218 - 17:00" -> "5:00 PM".
-- `withTime` (function) L224 - A copy of the date at the given "HH:mm" time.
-- `SentBackHeader` (function) L250 - Who sent the post back, their note, and when it is due back.
-- `Section` (function) L270
-- `SummaryRow` (function) L282
-- `NewSubmissionPage` (export function) L296
-    - `navigate` (fn) L297
-    - `queryClient` (fn) L302
-    - `optionsQuery` (fn) L304
-    - `reviewState` (fn) L371
-    - `checking` (fn) L382
+## src/pages/Submissions/NewSubmissionPage.tsx (2547 lines) - new submission page (pages  submissions)
+- `classifyFile` (function) L170 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `SaveState` (type) L209
+- `timeOptions` (const) L216
+- `timeLabel` (function) L219 - 17:00" -> "5:00 PM".
+- `withTime` (function) L225 - A copy of the date at the given "HH:mm" time.
+- `SentBackHeader` (function) L251 - Who sent the post back, their note, and when it is due back.
+- `Section` (function) L271
+- `SummaryRow` (function) L283
+- `NewSubmissionPage` (export function) L297
+    - `navigate` (fn) L298
+    - `queryClient` (fn) L303
+    - `optionsQuery` (fn) L305
+    - `reviewState` (fn) L372
+    - `checking` (fn) L383
     - `markEdited` (fn) L404
     - `accounts` (fn) L410
     - `reviewersQuery` (fn) L412
@@ -58,18 +58,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `backToCaption` (fn) L958
     - `openStep` (fn) L962
     - `runComplianceCheck` (fn) L967 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-    - `sourceChecking` (fn) L1033
-    - `ranSinceSentBack` (fn) L1040
-    - `submit` (fn) L1049
-    - `exec` (fn) L1199 - ----- Caption editor -----
-    - `insertHashtag` (fn) L1207 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1219
-    - `typedTail` (fn) L1224 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1231 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1255 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1271 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1279
-    - `onConfirmRepostDate` (fn) L1292
+    - `sourceChecking` (fn) L1032
+    - `submit` (fn) L1047
+    - `exec` (fn) L1197 - ----- Caption editor -----
+    - `insertHashtag` (fn) L1205 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1217
+    - `typedTail` (fn) L1222 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1229 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1253 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1269 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1277
+    - `onConfirmRepostDate` (fn) L1290
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...

@@ -27,12 +27,8 @@ export const POST_STEPS: { key: PostStepKey; label: string; purpose: string }[] 
   },
 ];
 
-/**
- * Whether an edit after a check has to be checked again before sending: a post's compliance check and sentiment
- * analysis (and both again after a reviewer sends it back), and a script's compliance check. Off for now: a check only
- * has to have run once. The server still runs its own check when the post is sent.
- */
-export const RECHECK_AFTER_EDITS = false;
+/** The server marks checks stale only after media changes. Those changes require a rerun. */
+export const RECHECK_AFTER_EDITS = true;
 
 /** Scripts use compliance only; sentiment becomes available when the video is attached. */
 export function postPreparationSteps(scriptOnly = false) {
@@ -55,14 +51,10 @@ export function resumePath(id: string, steps?: SubmissionSteps | null): string {
   return stepPath(id, steps.next === "mood" ? "send" : steps.next);
 }
 
-/**
- * Steps 2 and 3 as the progress dots show them: done once they have run at least once, even if the post changed since.
- * Running them again after an edit is asked for in the compliance step and when sending, not on the dots.
- */
+/** Normalize progress without hiding stale media checks. Kept under its existing export for callers. */
 export function ranOnce(steps: SubmissionSteps, scriptOnly = false): SubmissionSteps {
   if (steps.locked) return steps;
-  const ran = (s: PostStepState): PostStepState => (s === "stale" ? "done" : s);
-  const out = { ...steps, compliance: ran(steps.compliance), sentiment: ran(steps.sentiment), mood: ran(steps.mood) };
+  const out = { ...steps };
   const next = postPreparationSteps(scriptOnly).find((step) => step.key !== "send" && out[step.key] !== "done")?.key ?? "send";
   return { ...out, next, ready_to_send: next === "send" };
 }
@@ -80,7 +72,7 @@ export function stepStatusText(key: PostStepKey | "suggestions", state: PostStep
     case "done":
       return key === "details" ? "Done." : "Done and up to date.";
     case "stale":
-      return "Out of date: the post changed after this ran. Run it again.";
+      return "Out of date: the media changed after this ran. Run it again.";
     case "running":
       return "Running now.";
     default:

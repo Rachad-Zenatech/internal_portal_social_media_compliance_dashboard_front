@@ -1,3 +1,4 @@
+import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -107,7 +108,7 @@ import { scriptService } from "@/services/scriptService";
 import { runPreparationCompliance } from "@/services/preparationComplianceService";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
-import { RECHECK_AFTER_EDITS, isStepKey, postPreparationSteps } from "@/lib/postSteps";
+import { isStepKey, postPreparationSteps } from "@/lib/postSteps";
 import PostStepNav, { StepFooter, StepGate } from "@/components/submissions/PostStepNav";
 import type { PostStepKey, SubmissionSummary } from "@/types/submission";
 import { safeHref, sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
@@ -380,7 +381,6 @@ export default function NewSubmissionPage() {
   const [sentAt, setSentAt] = useState<string | null>(null);
   const [requestChecking, setChecking] = useState(false);
   const checking = useScriptCheckStatus("script", submissionId).length > 0 || requestChecking;
-  const [checkedAtEdit, setCheckedAtEdit] = useState<number | null>(null);
   // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
   const [checkStartedAt, setCheckStartedAt] = useState(0);
@@ -995,7 +995,6 @@ export default function NewSubmissionPage() {
       });
       const updated = await running;
       setCheckedSub(updated);
-      setCheckedAtEdit(editCounter);
       setLastCheckMs(Date.now() - started); if (AUTO_RUN_WORKFLOW) startAutomaticAnalyses(id!);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
@@ -1033,15 +1032,14 @@ export default function NewSubmissionPage() {
   const sourceChecking = useBackgroundSourceChecks(submissionId, stepView === "compliance", localSourceChecking);
 
   const hasCheck = Boolean(checkedSub?.latest_check);
-  // Edited since the last check (a check loaded with the draft counts as current until something changes).
-  const checkStale = hasCheck && editCounter !== (checkedAtEdit ?? 0);
-  // In a revision, a check counts only once it has run again after the reviewer sent the post back.
+  const localMediaChanged = mediaChanged(files, checkedSub);
+  const checkStale = hasCheck && (localMediaChanged || (scriptOnly && videoLocked
+    ? Boolean(scriptStage.data?.precheck_stale)
+    : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
-  const ranSinceSentBack = (at?: string | null) =>
-    Boolean(at && revisionHistory) && (sentBackAt == null || new Date(at!).getTime() > sentBackAt);
   const recheck = {
-    compliance: hasCheck && !checkStale && ranSinceSentBack(checkedSub?.latest_check?.checked_at) && (!checkedSub?.content_edited_at || Date.parse(checkedSub.content_edited_at) <= Date.parse(checkedSub.latest_check?.checked_at ?? "")),
-    sentiment: sentimentAnalysis?.status === "COMPLETED" && ranSinceSentBack(sentimentAnalysis.completed_at) && (!checkedSub?.content_edited_at || Date.parse(checkedSub.content_edited_at) <= Date.parse(sentimentAnalysis.completed_at ?? "")),
+    compliance: hasCheck && !checkStale,
+    sentiment: sentimentAnalysis?.status === "COMPLETED" && sentimentAnalysis.is_current && !localMediaChanged && analysisIsCurrent(sentimentAnalysis.created_at, checkedSub?.media_edited_at),
     mood: Boolean(mood),
   };
   const changesMade = editCounter > 0 || recheck.compliance || Boolean(sentBackAt && checkedSub?.content_edited_at && Date.parse(checkedSub.content_edited_at) > sentBackAt);
@@ -1078,7 +1076,7 @@ export default function NewSubmissionPage() {
         );
         return;
       }
-      if (stage && (!stage.precheck || (RECHECK_AFTER_EDITS && stage.precheck_stale))) {
+      if (stage && (!stage.precheck || stage.precheck_stale)) {
         toast.info(
           stage.precheck
             ? "The script changed since its compliance check. Check it again on the script card, then send it."
@@ -1112,7 +1110,7 @@ export default function NewSubmissionPage() {
       }
       return;
     }
-    // Sent back by a reviewer: the changes are checked again before the new version goes back (see RECHECK_AFTER_EDITS).
+    // Reuse completed checks unless the actual media changed.
     if (resubmitting && !recheck.compliance) {
       toast.error("Run the compliance check on your changes before resubmitting.");
       openStep("compliance");
@@ -1123,22 +1121,22 @@ export default function NewSubmissionPage() {
       openStep("sentiment");
       return;
     }
-    // The steps count once they've run, but what's sent has to be what was checked: anything edited since is run again.
-    if (RECHECK_AFTER_EDITS && checkStale) {
-      toast.error("You've edited the post since the compliance check. Run the compliance check again before sending.");
+    // Replaced media must be checked before sending.
+    if (checkStale) {
+      toast.error("The media has changed. Run the compliance check again before sending.");
       openStep("compliance");
       return;
     }
-    if (RECHECK_AFTER_EDITS && submissionId) {
+    if (submissionId) {
       const saved = await submissionService.list(undefined, "mine").catch(() => [] as SubmissionSummary[]);
       const steps = saved.find((s) => s.id === submissionId)?.steps;
       if (steps?.compliance === "stale") {
-        toast.error("You've edited the post since the compliance check. Run the compliance check again before sending.");
+        toast.error("The media has changed. Run the compliance check again before sending.");
         openStep("compliance");
         return;
       }
       if (steps?.sentiment === "stale") {
-        toast.error("You've edited the post since the sentiment analysis. Run the sentiment analysis again before sending.");
+        toast.error("The media has changed. Run the sentiment analysis again before sending.");
         openStep("sentiment");
         return;
       }
@@ -1363,15 +1361,9 @@ export default function NewSubmissionPage() {
           current={stepView}
           states={{
             details: detailsComplete ? "done" : "todo",
-            // Done once it has run; the compliance step itself says when the post changed since.
-            compliance: resubmitting ? (recheck.compliance ? "done" : "stale") : hasCheck ? "done" : "todo",
-            sentiment: resubmitting
-              ? recheck.sentiment
-                ? "done"
-                : "stale"
-              : sentimentAnalysis?.status === "COMPLETED"
-                ? "done"
-                : "todo",
+            // Post detail edits preserve results; replaced media makes them stale.
+            compliance: hasCheck ? (checkStale ? "stale" : "done") : "todo",
+            sentiment: sentimentAnalysis?.status === "COMPLETED" ? (recheck.sentiment ? "done" : "stale") : "todo",
             mood: mood ? "done" : "todo",
             ...(readOnly ? { send: "done" as const } : {}),
           }}

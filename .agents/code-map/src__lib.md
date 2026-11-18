@@ -84,22 +84,28 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `flashRange` (function) L116
 - `locateOnPage` (export function) L141 - Go to the wording on the page (the next place it appears each time).
 
+## src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
+- `mediaKey` (export function) L4 - Supporting documents and extraction updates do not replace the post's media.
+- `analysisIsCurrent` (export function) L9
+- `mediaChanged` (export function) L13
+- `checkIsCurrent` (export function) L17
+
 ## src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - `unique` (function) L10
 - `CaptionSignals` (export interface) L20
 - `readSignals` (export function) L26
 - `hasTag` (export function) L35 - Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife").
 
-## src/lib/postSteps.ts (109 lines) - post steps (lib)
+## src/lib/postSteps.ts (101 lines) - post steps (lib)
 - `POST_STEPS` (export const) L7 - The four steps a creator works through, in order.
-- `RECHECK_AFTER_EDITS` (export const) L35 - Whether an edit after a check has to be checked again before sending: a post's compliance check and sentiment  analysis (and both again a...
-- `postPreparationSteps` (export function) L38 - Scripts use compliance only; sentiment becomes available when the video is attached.
-- `stepPath` (export function) L44 - Where each step opens.
-- `isStepKey` (export function) L48
-- `resumePath` (export function) L53 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
-- `ranOnce` (export function) L62 - Steps 2 and 3 as the progress dots show them: done once they have run at least once, even if the post changed since.
-- `stepStatusText` (export function) L71 - What a step is up to, as a sentence for the hover.
-- `missingText` (export function) L105
+- `RECHECK_AFTER_EDITS` (export const) L31 - The server marks checks stale only after media changes.
+- `postPreparationSteps` (export function) L34 - Scripts use compliance only; sentiment becomes available when the video is attached.
+- `stepPath` (export function) L40 - Where each step opens.
+- `isStepKey` (export function) L44
+- `resumePath` (export function) L49 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
+- `ranOnce` (export function) L55 - Normalize progress without hiding stale media checks.
+- `stepStatusText` (export function) L63 - What a step is up to, as a sentence for the hover.
+- `missingText` (export function) L97
 
 ## src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9
