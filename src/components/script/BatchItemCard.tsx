@@ -1,3 +1,4 @@
+import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Clock, ExternalLink, SlidersHorizontal, Trash2, Undo2 } from "lucide-react";
@@ -250,7 +251,7 @@ export default function BatchItemCard({
           {dirty && <p className="mt-1 text-[11px] text-muted-foreground">Save your changes, then check the script again.</p>}
         </div>
       )}
-
+      <ScriptSourcesChecked check={item.check} />
       {editable && item.check && (
         <div className="mt-3">
           <ScriptFindings

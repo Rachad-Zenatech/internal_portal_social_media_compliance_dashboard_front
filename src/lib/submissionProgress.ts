@@ -1,4 +1,4 @@
-import { ranOnce } from "@/lib/postSteps";
+import { ranOnce, RAN_STEP_STATES } from "@/lib/postSteps";
 import { creatorPreparationSteps } from "@/lib/revisionSteps";
 import type { SubmissionSteps, SubmissionSummary } from "@/types/submission";
 
@@ -34,7 +34,7 @@ export function creatorProgressText(s: SubmissionSummary, lockedLabel: string): 
   if (!steps) return "";
   if (isScriptPreparation(s) && s.script_status === "APPROVED") return "Script approved \u00b7 Upload video";
   const preparation = creatorPreparationSteps(isScriptPreparation(s), steps.revision);
-  const done = preparation.filter((step) => steps[step.key] === "done").length;
+  const done = preparation.filter((step) => RAN_STEP_STATES.has(steps[step.key] ?? "todo")).length;
   if (steps.locked) {
     return s.script_status === "IN_REVIEW"
       ? `${done} of ${preparation.length} steps complete \u00b7 Sent for review`

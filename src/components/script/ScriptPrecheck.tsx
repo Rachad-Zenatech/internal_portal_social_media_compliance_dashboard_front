@@ -1,3 +1,4 @@
+import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
 import { useState, type ComponentProps } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, ChevronDown, ChevronUp, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
@@ -100,6 +101,7 @@ function PrecheckBody({
       )}
       {open && !compact && (
         <div className="border-t border-border/70 p-3.5">
+          <ScriptSourcesChecked check={check} />
           <ScriptFindings check={check} />
         </div>
       )}

@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostSteps.tsx (109 lines) - lg: the dots grow on wide screens (the My posts rows).
+## src/components/submissions/PostSteps.tsx (102 lines) - lg: the dots grow on wide screens (the My posts rows).
 - `PostSteps` (export function) L13 - The five steps of a post as five dots, in order.

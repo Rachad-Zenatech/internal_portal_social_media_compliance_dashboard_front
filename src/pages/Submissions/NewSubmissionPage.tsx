@@ -1,3 +1,5 @@
+import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
+import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
 import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -5,6 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addBusinessDays, format, isFuture, isSameDay, isValid } from "date-fns";
 import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
+import SubmissionStartAnotherButton from "@/components/submissions/SubmissionStartAnotherButton";
 import { scheduleCorrectedPost } from "@/lib/submissionSchedule";
 import { toast } from "sonner";
 import {
@@ -20,7 +23,6 @@ import {
   Clock,
   CloudUpload,
   Download,
-  FilePlus2,
   FileText,
   GalleryHorizontalEnd,
   Globe,
@@ -69,6 +71,7 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceStep from "@/components/submissions/ComplianceStep";
+import ImageProvenanceField from "@/components/submissions/ImageProvenanceField";
 import { scriptTextOf } from "@/components/script/scriptPreview";
 import ComplianceView from "@/components/submissions/ComplianceView";
 import DuplicateNotice from "@/components/submissions/DuplicateNotice";
@@ -235,18 +238,7 @@ function withTime(date: Date, time: string) {
 // ---------------------------------------------------------------------------
 
 /** What each required detail is called when it is missing. */
-const MISSING_LABEL: Record<string, string> = {
-  title: "Title",
-  brand_code: "Brand",
-  account_id: "Account to post on",
-  audience: "Audience",
-  region: "Region",
-  platforms: "Platform",
-  script: "Script",
-  main_file: "Image or video",
-  caption: "Caption",
-  rule_sets: "Rule set",
-};
+
 
 /** Who sent the post back, their note, and when it is due back. */
 function SentBackHeader({ reviewer, note, dueAt }: { reviewer?: string | null; note?: string | null; dueAt?: string | null }) {
@@ -343,6 +335,7 @@ export default function NewSubmissionPage() {
   // Platforms with their own caption; the rest post the main one.
   const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
   const [sourceLinks, setSourceLinks] = useState<string[]>([]);
+  const [aiGeneratedImages, setAiGeneratedImages] = useState<boolean | null>(null);
   const [ruleSets, setRuleSets] = useState<string[]>(["Public Company Disclosure"]);
   const [reviewers, setReviewers] = useState<string[]>(["Marketing Review", "Compliance Review"]);
   // The people it's sent to for review; none picked sends it to every reviewer on the brand.
@@ -508,7 +501,6 @@ export default function NewSubmissionPage() {
     return () => window.clearInterval(t);
   }, [readingScript, submissionId]);
 
-  // ----- Load an existing draft (S08 resume) -----
   const applyServer = useCallback((s: Submission) => {
     setSubmissionId(s.id);
     idRef.current = s.id;
@@ -557,6 +549,7 @@ export default function NewSubmissionPage() {
         setCaption(s.caption_text || "");
         setPlatformCaptions(s.platform_captions ?? {});
         setSourceLinks(s.source_links ?? []);
+        setAiGeneratedImages(imageProvenanceAnswer(s));
         setSavedAt(new Date(s.updated_at));
         setSaveState("saved");
       })
@@ -604,6 +597,7 @@ export default function NewSubmissionPage() {
       // Only for platforms it still goes to; a platform that was taken off loses its caption.
       platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
       source_links: sourceLinks,
+      ...imageProvenancePayload(aiGeneratedImages),
       // The analysis picks its Messaging Context on its own (any choice saved by an earlier version is cleared).
       context_picks: {},
       rule_sets: ruleSets,
@@ -868,6 +862,7 @@ export default function NewSubmissionPage() {
   const mainFiles = files.filter((f) => f.kind === "MAIN");
   const clientMissing = {
     title: !title.trim(),
+    ai_generated_images: hasPostImages(files) && aiGeneratedImages == null,
     brand_code: brands.length === 0,
     account_id: accountIds.length === 0,
     audience: audiences.length === 0,
@@ -1305,23 +1300,7 @@ export default function NewSubmissionPage() {
       <DashboardHeader
         title={referenceCode ? "Edit Submission" : "New Submission"}
         subtitle={referenceCode ? `${referenceCode} · Create a new content submission for compliance review and approval.` : "Create a new content submission for compliance review and approval."}
-        actions={
-          <>
-            {submissionId && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5 font-semibold"
-                onClick={() => {
-                  // Full reload gives a clean form for the next submission.
-                  window.location.assign("/submissions/new");
-                }}
-              >
-                <FilePlus2 className="w-3.5 h-3.5" /> Start Another
-              </Button>
-            )}
-          </>
-        }
+        actions={submissionId ? <SubmissionStartAnotherButton /> : undefined}
       />
 
       {readOnly && (
@@ -1929,6 +1908,7 @@ export default function NewSubmissionPage() {
                       </div>
                     </div>
                   )}
+                  <ImageProvenanceField files={files} value={aiGeneratedImages} disabled={readOnly || checking} invalid={Boolean(errorFor("ai_generated_images"))} onChange={(answer) => { setAiGeneratedImages(answer); markEdited(); }} />
                   {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
                       <p className="text-xs text-foreground">
@@ -2239,6 +2219,7 @@ export default function NewSubmissionPage() {
                     {!scriptOnly && <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
                       <SentimentPanel
                         submissionId={submissionId}
+                        sourceChecks={checkedSub?.latest_check?.source_checks ?? []}
                         post={
                           platforms.length > 0 ? (
                             <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xs">
@@ -2312,7 +2293,7 @@ export default function NewSubmissionPage() {
                   )}
                   <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
-                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting}
+                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} score={isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
                     disabled={submitting || checking || uploading.length > 0}
                     publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
                     onSubmit={() => void submit()}
@@ -2408,7 +2389,7 @@ export default function NewSubmissionPage() {
               </div>
               <ul className="space-y-1.5 px-5 pb-5">
                 {Object.entries(MISSING_LABEL)
-                  .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
+                  .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "ai_generated_images" || hasPostImages(files)) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
                   .map(([key, label]) => {
                     const missing = (clientMissing as Record<string, boolean>)[key];
                     return (

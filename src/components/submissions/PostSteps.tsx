@@ -1,7 +1,7 @@
-import { Check, Loader2, RefreshCw } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { missingText, stepStatusText } from "@/lib/postSteps";
+import { missingText, RAN_STEP_STATES, stepStatusText } from "@/lib/postSteps";
 import { creatorPreparationSteps, type CreatorStepKey } from "@/lib/revisionSteps";
 import type { PostStepState, SubmissionSteps } from "@/types/submission";
 
@@ -29,16 +29,13 @@ export default function PostSteps({
       <ol aria-label="Steps" className={`flex items-center gap-1.5 ${size === "lg" ? "2xl:gap-2.5" : ""} ${className}`}>
         {creatorPreparationSteps(scriptOnly, steps.revision).map((step, i) => {
           const state: PostStepState = steps[step.key] ?? "todo";
-          // Where it was left off: the step a click on the post opens.
+          const ran = RAN_STEP_STATES.has(state);
           const current = !steps.locked && steps.next === step.key;
-          // Sending waits for the steps before it.
           const shut = !steps.locked && step.key === "send" && state !== "done" && !steps.ready_to_send;
           const tone = steps.locked
             ? "border-[#9AA9C9] bg-[#9AA9C9] text-white"
-            : state === "done"
+            : ran
             ? "border-blue-700 bg-blue-700 text-white"
-            : state === "stale"
-            ? "border-amber-500 bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
             : state === "running"
             ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
             : shut
@@ -50,7 +47,7 @@ export default function PostSteps({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    aria-label={`${step.label}${shut ? " (not available yet)" : ""}`}
+                    aria-label={`${step.label}${state === "unavailable" ? " (AI review interrupted)" : shut ? " (not available yet)" : ""}`}
                     aria-disabled={shut || undefined}
                     aria-current={current ? "step" : undefined}
                     onClick={(e) => {
@@ -62,12 +59,10 @@ export default function PostSteps({
                       shut ? "cursor-not-allowed" : "cursor-pointer hover:scale-110 hover:shadow-sm"
                     } ${current ? "ring-2 ring-blue-500/60 ring-offset-1 ring-offset-card" : ""}`}
                   >
-                    {state === "done" || steps.locked ? (
+                    {ran || steps.locked ? (
                       <Check className={size === "lg" ? "h-2.5 w-2.5 2xl:h-4 2xl:w-4" : "h-2.5 w-2.5"} strokeWidth={4} />
                     ) : state === "running" ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : state === "stale" ? (
-                      <RefreshCw className="h-2.5 w-2.5" />
                     ) : (
                       i + 1
                     )}
@@ -85,8 +80,6 @@ export default function PostSteps({
                     className={`font-medium ${
                       steps.locked
                         ? "text-muted-foreground"
-                        : state === "stale"
-                        ? "text-amber-700 dark:text-amber-300"
                         : state === "done"
                         ? "text-emerald-700 dark:text-emerald-300"
                         : "text-muted-foreground"

@@ -112,10 +112,14 @@ function SetCard({ d, onDelete }: { d: DocSetSummary; onDelete: (id: string) => 
 
 function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | null; onClose: () => void }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const create = useMutation({
     mutationFn: () => scriptDocService.create(title.trim(), template!.key),
-    onSuccess: (d) => navigate(`/script-docs/${d.id}`),
+    onSuccess: async (d) => {
+      await queryClient.invalidateQueries({ queryKey: ["script-docs"] });
+      navigate(`/script-docs/${d.id}`);
+    },
     onError: (e: any) => toast.error(e?.message ?? "Couldn't create the script"),
   });
   return (
@@ -245,7 +249,12 @@ export default function ScriptDocHub() {
   const manager = hasPermission("CONTENT_MANAGE_DRAFTS");
   // Reviewers review scripts; they don't start them.
   const reviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
-  const [scope, setScope] = useState<Scope>(reviewer ? "review" : "mine");
+  const tabs: { v: Scope; label: string }[] = [
+    reviewer ? { v: "review", label: "Sent to me" } : { v: "mine", label: "My scripts" },
+    ...(manager ? [{ v: "all" as Scope, label: "All scripts" }] : []),
+  ];
+  const [selectedScope, setScope] = useState<Scope | null>(null);
+  const scope = tabs.find((tab) => tab.v === selectedScope)?.v ?? (reviewer ? "review" : "mine");
   const [picked, setPicked] = useState<ScriptTemplate | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
   const navigate = useNavigate();
@@ -255,15 +264,19 @@ export default function ScriptDocHub() {
   const docs = useQuery({
     queryKey: ["script-docs", scope],
     queryFn: () => scriptDocService.list(scope),
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
   });
-  const sets = useQuery({ queryKey: ["script-docs", "sets"], queryFn: scriptDocService.sets, enabled: scope === "mine", refetchOnWindowFocus: true });
+  const sets = useQuery({
+    queryKey: ["script-docs", "sets"],
+    queryFn: scriptDocService.sets,
+    enabled: scope === "mine",
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+  });
 
-  const tabs: { v: Scope; label: string }[] = [
-    ...(reviewer ? [] : [{ v: "mine" as Scope, label: "My scripts" }]),
-    { v: "review", label: "Sent to me" },
-    ...(manager ? [{ v: "all" as Scope, label: "All scripts" }] : []),
-  ];
   const removeSet = async (id: string) => {
     await scriptDocService.removeSet(id);
     queryClient.invalidateQueries({ queryKey: ["script-docs"] });
@@ -280,7 +293,9 @@ export default function ScriptDocHub() {
         <div>
           <h2 id="script-docs-title" className="text-lg font-semibold tracking-tight">Script documents</h2>
           <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
-            Review scripts created here or uploaded through Create Post. Scripts sent to you appear together in this section.
+            {reviewer
+              ? "Review scripts assigned to you."
+              : "Open scripts you created here or uploaded through Create Post."}
           </p>
         </div>
       </div>

@@ -50,6 +50,12 @@ export interface EntryRef {
   title?: string | null;
 }
 
+export interface ActionableContext extends EntryRef {
+  evidence?: string | null;
+  evidence_type?: "WORDING" | "VISUAL" | "AUDIO";
+  improvement?: string | null;
+}
+
 export interface VoiceLine extends EntryRef {
   quote: string;
   why: string;
@@ -101,18 +107,18 @@ export interface SentimentResult {
     facts: {
       verdict: "CHECKS_OUT" | "NEEDS_FIX" | "UNVERIFIED" | "NO_CLAIMS";
       summary: string;
-      claims: (EntryRef & { claim: string; result: "MATCHES" | "CONFLICTS" | "NO_FACT"; note: string })[];
+      claims: (EntryRef & { claim: string; result: "MATCHES" | "CONFLICTS" | "NO_FACT"; note: string; improvement?: string | null })[];
       fix?: string | null;
     };
     platform_norms: {
       verdict: "FITS" | "MOSTLY_FITS" | "NEEDS_WORK" | "NO_NORMS";
       summary: string;
-      checks: (EntryRef & { aspect: string; norm: string; observation: string; status: "FITS" | "ADJUST" })[];
+      checks: (ActionableContext & { aspect: string; norm: string; observation: string; status: "FITS" | "ADJUST" })[];
     };
     audiences: {
       verdict: "RESONATES" | "MIXED" | "CAUTIOUS" | "NO_PROFILES";
       summary: string;
-      readings: (EntryRef & { audience: string; reading: string; reaction: "RESONATES" | "NEUTRAL" | "CAUTIOUS" | "NEGATIVE" })[];
+      readings: (ActionableContext & { audience: string; reading: string; reaction: "RESONATES" | "NEUTRAL" | "CAUTIOUS" | "NEGATIVE" })[];
     };
     gaps: string[];
   } | null;

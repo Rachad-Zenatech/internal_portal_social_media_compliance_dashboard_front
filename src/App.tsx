@@ -39,6 +39,7 @@ const ScriptBatchPage = lazy(() => import("./pages/Scripts/ScriptBatchPage"));
 const ScriptReviewScriptPage = lazy(() => import("./pages/Scripts/ScriptReviewScriptPage"));
 const ContentCalendarPage = lazy(() => import("./pages/ContentCalendar/ContentCalendarPage"));
 const PublishDraftPage = lazy(() => import("./pages/ContentCalendar/PublishDraftPage"));
+const PublicMoodPage = lazy(() => import("./pages/PublicMood/PublicMoodPage"));
 const AuditLog = lazy(() => import("./pages/Logs/AuditLog"));
 const SystemLogsPage = lazy(() => import("./pages/Logs/SystemLogsPage"));
 const Login = lazy(() => import("./pages/Auth/Login"));
@@ -60,6 +61,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/script-batches/:id", navigationCode: "DASHBOARD", element: <ScriptBatchPage /> },
   { path: "/content-calendar", navigationCode: "DASHBOARD", element: <ContentCalendarPage /> },
   { path: "/content-calendar/publish/:itemId/:platform", navigationCode: "DASHBOARD", element: <PublishDraftPage /> },
+  { path: "/public-mood", navigationCode: "DASHBOARD", element: <PublicMoodPage /> },
   { path: "/compliance/scanner", navigationCode: "DASHBOARD", element: <ContentScreenerPage /> },
   { path: "/compliance/scanner/classic", navigationCode: "DASHBOARD", element: <VideoComplianceScannerPage /> },
   { path: "/compliance/rules", navigationCode: "DASHBOARD", element: <ComplianceRulesPage /> },

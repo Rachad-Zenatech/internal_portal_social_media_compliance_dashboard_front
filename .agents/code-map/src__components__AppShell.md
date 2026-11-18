@@ -8,9 +8,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiStatus` (interface) L7
 - `AiStatusBanner` (export function) L20 - A strip across the top of every page, for every signed-in user, while the AI (Gemini) isn't working: an expired  or revoked key, a used-u...
 
-## src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
-- `Props` (interface) L10
-- `AppShell` (export function) L17
+## src/components/AppShell/AppShell.tsx (65 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
+- `Props` (interface) L11
+- `AppShell` (export function) L18
 
 ## src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - `BreadcrumbItem` (export interface) L7
@@ -42,12 +42,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `formatLastSeen` (fn) L366
     - `renderMetric` (fn) L388
 
-## src/components/AppShell/Navigation.tsx (155 lines) - navigation (components  app shell)
-- `NavigationSubItem` (export interface) L16
-- `NavigationItem` (export interface) L22
-- `AppView` (export type) L36
-- `navigation` (export const) L44 - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) L151 - Whether a page belongs to a view.
+## src/components/AppShell/Navigation.tsx (165 lines) - navigation (components  app shell)
+- `NavigationSubItem` (export interface) L17
+- `NavigationItem` (export interface) L23
+- `AppView` (export type) L37
+- `navigation` (export const) L45 - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
+- `pathInView` (export function) L161 - Whether a page belongs to a view.
 
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function) L22

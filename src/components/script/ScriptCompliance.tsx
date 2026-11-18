@@ -1,3 +1,4 @@
+import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
 import { CheckCircle2, Clock } from "lucide-react";
 
 import { FlagCard } from "@/components/script/ScriptReviewWorkspace";
@@ -49,6 +50,7 @@ export default function ScriptCompliance({ check }: { check?: StoredCheck | null
         </p>
       </div>
 
+      <ScriptSourcesChecked check={check} />
       {violations.length === 0 ? (
         !check.ai_unavailable && (
           <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center">

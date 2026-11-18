@@ -7,6 +7,32 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - `ApprovalPaths` (export function) L24 - Who gives final approval for which content.
 
+## src/pages/Configurations/InteractiveRuleMetrics.tsx (207 lines) - interactive rule metrics (pages  configurations)
+- `MetricKey` (type) L10
+- `isFinanceRule` (function) L15
+- `isEvidenceRule` (function) L19
+- `MetricCard` (function) L23
+- `MetricDetailDialog` (function) L54
+- `InteractiveRuleMetrics` (export function) L147
+
+## src/pages/Configurations/ModelStatusCard.tsx (196 lines) - model status card (pages  configurations)
+- `ModelStatus` (interface) L9
+- `StatKey` (type) L35
+- `Stat` (function) L48
+- `FeatureImportance` (function) L75
+- `StatExplainDialog` (function) L93
+- `ModelStatusCard` (export function) L160 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
+
+## src/pages/Configurations/MoodTrainingData.tsx (230 lines) - mood training data (pages  configurations)
+- `TrainingReadiness` (interface) L11
+- `TrainingData` (interface) L21
+- `featureSummary` (function) L39
+- `ContentTypeBadge` (function) L46
+- `ReadinessBar` (function) L57
+- `ExampleRow` (function) L114
+- `ExamplesTable` (function) L142
+- `MoodTrainingData` (export function) L187
+
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function) L8
 
@@ -26,6 +52,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `providerConnections` (fn) L363
     - `filteredProviders` (fn) L384 - Filter strictly to current sub-nav category
     - `counts` (fn) L388
+
+## src/pages/Configurations/ReviewPrecedentsTable.tsx (129 lines) - review precedents table (pages  configurations)
+- `ReviewPrecedentRecord` (export interface) L7
+- `ContentBadge` (function) L27
+- `toQuickOpenRow` (function) L38
+- `PrecedentRow` (function) L60
+- `ReviewPrecedentsTable` (export function) L88
 
 ## src/pages/Configurations/RoleApiPermissions.tsx (411 lines) - We order actions so they appear logically: CREATE, READ (VIEW), UPDATE, DELETE
 - `isActionSupported` (const) L37
@@ -89,13 +122,24 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `canDrop` (fn) L408
     - `handleMoveRole` (fn) L424
 
-## src/pages/Configurations/TrainingDataPage.tsx (66 lines) - training data page (pages  configurations)
-- `QualitySummary` (function) L13
-- `AiCapacity` (function) L27
-- `CapacityMetric` (function) L33
-- `FinanceCoverage` (function) L37
-- `RuleDataTable` (function) L52
-- `TrainingDataPage` (export function) L57
+## src/pages/Configurations/RuleTrainingTable.tsx (257 lines) - rule training table (pages  configurations)
+- `ExampleBox` (function) L9
+- `SelfTestList` (function) L42
+- `RuleExamplesDetail` (function) L78
+- `RuleRow` (function) L124
+- `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
+
+## src/pages/Configurations/TrainingContentQuickOpen.tsx (217 lines) - training content quick open (pages  configurations)
+- `TrainingEvidenceItem` (export interface) L12
+- `TrainingExampleRow` (export interface) L21
+- `MediaPlayer` (function) L43
+- `EvidenceSection` (function) L102
+- `TrainingContentQuickOpen` (export function) L129
+
+## src/pages/Configurations/TrainingDataPage.tsx (123 lines) - training data page (pages  configurations)
+- `CapacityMetric` (function) L16
+- `AiCapacity` (function) L30
+- `TrainingDataPage` (export function) L97
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.

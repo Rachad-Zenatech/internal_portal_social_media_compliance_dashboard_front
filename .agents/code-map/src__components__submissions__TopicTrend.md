@@ -4,12 +4,12 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+## src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
 - `REC_BADGE` (export const) L19
 - `overallPostDecision` (export function) L34
 - `TopicRow` (function) L73
 - `MarketTrendRow` (function) L220
 - `TopicTrend` (export function) L299 - How the topics this post touches are doing online right now (social listening),  plus live market & world-news trends so reviewers see bo...
-    - `scrapeTwitter` (fn) L324
-    - `handleScrape` (fn) L327
-    - `otherTrends` (fn) L344
+    - `scrapeTwitter` (fn) L327
+    - `handleScrape` (fn) L330
+    - `otherTrends` (fn) L347
