@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
+import ReviewerCaption from "@/components/compliance/screener/ReviewerCaption";
+import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
+import type { MarkedCaptionTerm as MarkedTerm } from "@/types/captionReview";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -246,12 +249,6 @@ export function HighlightedCaption({ text, terms }: { text: string; terms: strin
 }
 
 /** One flagged phrase in the caption: which rule found it, and whether it was dismissed. */
-interface MarkedTerm {
-  term: string;
-  ruleId: string;
-  dismissed: boolean;
-}
-
 /**
  * The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
  * Clicking marked wording opens that flag in the panel; clicking anything else opens a comment.
@@ -640,19 +637,9 @@ function PostView({
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-1.5 rounded-xl border border-border/70 px-4 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-foreground">Caption</span>
-            <span className="text-xs text-muted-foreground">Click marked wording to see its flag, or anything else to comment</span>
-          </div>
-          <p className="whitespace-pre-wrap text-sm text-foreground/90">
-            {s.caption_text ? (
-              <MarkedCaption text={s.caption_text} terms={terms} picked={picked} onFlag={onFlag} onComment={onComment} />
-            ) : (
-              <span className="text-muted-foreground">No caption.</span>
-            )}
-          </p>
-        </div>
+        <ReviewerCaption key={`${s.id}:${s.current_version}`} submissionId={s.id} canComment={canComment} hasCaption={Boolean(s.caption_text)} onSaved={(id) => onActiveComment(id)}>
+          <MarkedCaption text={s.caption_text ?? ""} terms={terms} picked={picked} onFlag={onFlag} onComment={onComment} />
+        </ReviewerCaption>
         <PlatformCaptionsView platforms={s.platforms} captions={s.platform_captions} mainCaption={s.caption_text} />
       </div>
     </div>
@@ -709,7 +696,7 @@ function ReviewPanel({
   activeComment: string | null;
   setActiveComment: (id: string | null) => void;
 }) {
-  const { comments } = useReviewComments(s.id);
+  const { comments, selectComment } = useCaptionCommentSelection(s.id, activeComment, setActiveComment);
   const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
@@ -1016,7 +1003,7 @@ function ReviewPanel({
             currentTime={hasVideo ? now : undefined}
             onSeek={seek}
             activeCommentId={activeComment}
-            onShowRegion={(c) => setActiveComment(activeComment === c.id ? null : c.id)}
+            onShowRegion={selectComment}
             showHeader={false}
             showComposer={false}
             emptyText="No comments yet. Add a suggestion above if anything should change."

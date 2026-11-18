@@ -17,6 +17,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
 
+## src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
+- `useCaptionCommentSelection` (export function) L7 - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
+
+## src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
+- `useCaptionNote` (export function) L7 - A reviewer note on selected caption wording, saved through the shared comment API.
+
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) L7 - Caption suggestions for a draft, and how many are left today.
 

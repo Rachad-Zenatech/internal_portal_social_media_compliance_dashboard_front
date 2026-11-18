@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewConversation.tsx (110 lines) - Sent back: the creator can reply.
-- `ReviewConversation` (export function) L13 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...
+## src/components/submissions/ReviewConversation.tsx (114 lines) - Sent back: the creator can reply.
+- `ReviewConversation` (export function) L14 - The review conversation for the creator, as the reviewer saw it: the post's image (or video) on the left with each  comment's area marked...

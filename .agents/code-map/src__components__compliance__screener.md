@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
+- `CaptionNoteDialog` (export function) L5
+
 ## src/components/compliance/screener/QueueFilters.tsx (196 lines) - Brand codes and platforms to show; none picked means all.
 - `DueFilter` (export type) L11
 - `CheckFilter` (export type) L12
@@ -21,6 +24,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SelectField` (function) L138
 - `ActiveFilterChips` (export function) L170 - The filters in use, each as a chip that clears it.
 - `FilterChip` (function) L186
+
+## src/components/compliance/screener/ReviewerCaption.tsx (35 lines) - reviewer caption (components compliance screener)
+- `ReviewerCaption` (export function) L8
 
 ## src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
 - `ScriptReviewNotice` (export function) L4

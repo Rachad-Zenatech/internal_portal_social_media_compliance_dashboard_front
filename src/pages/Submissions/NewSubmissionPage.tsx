@@ -1373,7 +1373,7 @@ export default function NewSubmissionPage() {
           is beside the edits instead (RevisionWorkspace), so it isn't shown twice. */}
       {submissionId && (status === "APPROVED" || onSuggestions) && (
         <ReviewConversation
-          submissionId={submissionId}
+          submissionId={submissionId} caption={caption}
           files={files}
           canReply={status === "CHANGES_REQUESTED"}
           emptyText="The reviewers didn't leave any comments on this post."

@@ -25,6 +25,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `GlobalProgressProvider` (export function) L54
 - `useGlobalProgress` (export function) L170
 
+## src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
+- `selectedCaptionText` (export function) L4 - Only accept a selection wholly inside the caption, including selections across flagged spans.
+- `captionNoteBody` (export function) L12 - Keep the exact caption excerpt in the saved comment, visible to both reviewer and creator.
+- `captionNoteExcerpt` (export function) L17 - Read the excerpt saved with a caption comment, without including its note text.
+- `captionTextId` (export const) L25
+- `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
+
 ## src/lib/contentCalendar.ts (433 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) L16 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) L27 - A platform's publish info with its caption limit always set.
@@ -69,20 +76,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useLinkToken` (export function) L41 - The link token, re-rendering when it changes (e.g.
 - `withLinkToken` (export function) L52 - A media URL with the link token added, for <img>, <video> and similar.
 
-## src/lib/locateOnPage.ts (159 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
-- `LOCATE_SKIP_ATTR` (export const) L9 - Wording inside an element with this attribute (the finding cards themselves) is never a match.
-- `HighlightRegistry` (type) L11
-- `registry` (const) L12
-- `norm` (const) L19 - Lowercase, plain quotes and dashes, single spaces: so the AI's quote matches what's on screen.
-- `collapse` (function) L27 - Text with whitespace runs collapsed, and where each kept character came from.
-- `cleanTerm` (const) L47
-- `shown` (const) L49
-- `skipped` (const) L51
-- `Hit` (type) L54
-- `textHits` (function) L56
-- `fieldHits` (function) L95
-- `flashRange` (function) L116
-- `locateOnPage` (export function) L141 - Go to the wording on the page (the next place it appears each time).
+## src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
+- `LOCATE_SKIP_ATTR` (export const) L11 - Wording inside an element with this attribute (the finding cards themselves) is never a match.
+- `HighlightRegistry` (type) L13
+- `registry` (const) L14
+- `norm` (const) L21 - Lowercase, plain quotes and dashes, single spaces: so the AI's quote matches what's on screen.
+- `collapse` (function) L29 - Text with whitespace runs collapsed, and where each kept character came from.
+- `cleanTerm` (const) L49
+- `shown` (const) L51
+- `skipped` (const) L53
+- `Hit` (type) L56
+- `textHits` (function) L58
+- `locateInElement` (export function) L98 - Highlight quoted wording within a specific text area until the returned cleanup runs.
+- `fieldHits` (function) L106
+- `flashRange` (function) L127
+- `locateOnPage` (export function) L152 - Go to the wording on the page (the next place it appears each time).
 
 ## src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
 - `mediaKey` (export function) L4 - Supporting documents and extraction updates do not replace the post's media.
@@ -165,6 +173,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const) L4
 - `scriptVerdict` (export function) L11 - Score ring colours and the verdict line for a script check.
+
+## src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
+- `holdTextHighlight` (export function) L4 - Highlight selected comment wording until its owner explicitly clears it.
 
 ## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - `isScriptPreparation` (export function) L5
