@@ -4,6 +4,7 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 import { SpikeBadge } from "@/components/submissions/MoodVisuals";
 import { REC_BADGE } from "@/components/submissions/TopicTrend";
 import type { ListeningPost, XTrendOpportunity } from "@/types/publicMood";
+import SearchDetails from "./SearchDetails";
 
 export const TODAY_REASON_LABEL: Record<string, string> = {
   scheduled_today: "Scheduled today",
@@ -114,6 +115,8 @@ export default function TrendItem({
       <p className="mt-1.5 text-[11px] text-muted-foreground">
         {compact.format(trend.volume)} items · {trend.trend_angle}
       </p>
+
+      <SearchDetails trend={trend} />
 
       {open && trend.top_posts.length > 0 && (
         <ul className="mt-2.5 ml-1 space-y-2">

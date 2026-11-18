@@ -15,11 +15,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/PublicMood/PublicMoodPage.tsx (104 lines) - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
 - `PublicMoodPage` (export function) L12 - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
 
-## src/pages/PublicMood/TrendItem.tsx (128 lines) - trend item (pages  public mood)
-- `TODAY_REASON_LABEL` (export const) L8
-- `SentimentBar` (export function) L21
-- `ScrapedArticleRow` (function) L43
-- `TrendItem` (export function) L66 - One scraped public-mood topic row with expandable supporting headlines/articles.
+## src/pages/PublicMood/SearchDetails.tsx (57 lines) - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
+- `TermList` (function) L7
+- `SearchDetails` (export function) L24 - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
+
+## src/pages/PublicMood/TrendItem.tsx (131 lines) - trend item (pages  public mood)
+- `TODAY_REASON_LABEL` (export const) L9
+- `SentimentBar` (export function) L22
+- `ScrapedArticleRow` (function) L44
+- `TrendItem` (export function) L67 - One scraped public-mood topic row with expandable supporting headlines/articles.
 
 ## src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - `PostGroupData` (export interface) L7

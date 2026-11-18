@@ -166,6 +166,9 @@ export interface XTrendOpportunity {
   post_title?: string | null;
   today_reason?: string | null;
   publish_at?: string | null;
+  search_method?: string | null;
+  search_keywords?: string[];
+  search_queries?: string[];
 }
 
 export interface TodayPostSummary {
