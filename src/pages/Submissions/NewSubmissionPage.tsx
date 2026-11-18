@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addBusinessDays, format, isFuture, isSameDay, isValid } from "date-fns";
 import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
+import { scheduleCorrectedPost } from "@/lib/submissionSchedule";
 import { toast } from "sonner";
 import {
   Bold,
@@ -1160,15 +1161,11 @@ export default function NewSubmissionPage() {
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
       toast.success(
         result.submission.status === "APPROVED"
-          ? `${result.submission.reference_code} was updated and published directly (version ${result.submission.current_version}).`
+          ? `${result.submission.reference_code} was updated and added to the calendar (simulated).`
           : `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.automated_check?.ai_unavailable ? "no score, the AI review couldn't run" : result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
-      // A reviewer-authorized revision goes straight to the existing publish flow; ordinary submissions return to My posts.
-      if (result.submission.status === "APPROVED" && result.submission.platforms[0]) {
-        navigate(`/content-calendar/publish/sub-${result.submission.id}/${result.submission.platforms[0]}`);
-      } else {
-        navigate("/submissions");
-      }
+      const calendarPath = scheduleCorrectedPost(result.submission, publishAfterChanges ? publishDate : undefined);
+      navigate(calendarPath ?? "/submissions");
     } catch (err) {
       if (err instanceof ApiError && err.status === 422 && err.detail && typeof err.detail === "object" && "missing" in err.detail) {
         const missing = (err.detail as { missing: string[] }).missing;
@@ -2320,7 +2317,7 @@ export default function NewSubmissionPage() {
                       error={errorFor("reviewer_ids", "Pick at least one reviewer")}
                     />
                   )}
-                  <SubmissionSendActions
+                  <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
                     hasCheck={hasCheck} checkStale={checkStale} submitting={submitting}
                     disabled={submitting || checking || uploading.length > 0}

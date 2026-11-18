@@ -1,5 +1,5 @@
-import type { SproutRecord } from "@/lib/contentCalendar";
-import type { SubmissionSummary } from "@/types/submission";
+import { recordSproutSend, type SproutRecord } from "@/lib/contentCalendar";
+import type { Submission, SubmissionSummary } from "@/types/submission";
 import type { CalendarSubmission, SubmissionStage } from "@/types/submissionSchedule";
 
 /** An intended date alone does not mean the creator scheduled the post. */
@@ -13,4 +13,12 @@ export function applySubmissionSchedule(submission: SubmissionSummary, record?: 
 export function stageOf(submission: { status: string; calendar_scheduled_for?: string }): SubmissionStage {
   return submission.status === "APPROVED" && submission.calendar_scheduled_for
     ? "SCHEDULED" : submission.status as SubmissionStage;
+}
+
+/** Schedule a corrected post only after its submission has passed server checks. */
+export function scheduleCorrectedPost(submission: Pick<Submission, "id" | "status">, publishDate?: Date): string | null {
+  if (submission.status !== "APPROVED" || !publishDate || !Number.isFinite(publishDate.getTime())) return null;
+  const scheduledFor = publishDate.toISOString();
+  recordSproutSend(`sub-${submission.id}`, scheduledFor);
+  return `/content-calendar?date=${encodeURIComponent(scheduledFor)}&post=sub-${submission.id}`;
 }
