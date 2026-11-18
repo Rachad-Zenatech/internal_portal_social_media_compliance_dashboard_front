@@ -20,7 +20,7 @@ import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPa
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
 
-const MIN_SCORE = 70;
+const DEFAULT_MIN_SCORE = 80;
 
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -37,8 +37,8 @@ interface Finding {
   frameCount: number;
 }
 
-function ring(score: number) {
-  return score >= 85 ? "#059669" : score >= MIN_SCORE ? "#D97706" : "#DC2626";
+function ring(score: number, minimumScore: number) {
+  return score >= 85 ? "#059669" : score >= minimumScore ? "#D97706" : "#DC2626";
 }
 
 function timecode(seconds: number) {
@@ -242,7 +242,8 @@ export default function ComplianceStep({
   );
   const unavailable = check.ai_unavailable;
   const score = check.score;
-  const gap = score - MIN_SCORE;
+  const minimumScore = reviewState?.min_approval_score ?? DEFAULT_MIN_SCORE;
+  const gap = score - minimumScore;
   const count = (s: string) => findings.filter(({ v }) => statusOf(v) === s).length;
   const headline = [
     count("VIOLATION") ? `${count("VIOLATION")} issue${count("VIOLATION") === 1 ? "" : "s"} to fix` : "",
@@ -252,8 +253,8 @@ export default function ComplianceStep({
   const advice = check.blocked
     ? "A critical rule is broken, so this post can't be sent until that's fixed."
     : gap >= 0
-    ? `A post needs ${MIN_SCORE} or more, and no critical issue, to be sent. You are ${gap} point${gap === 1 ? "" : "s"} above the line${findings.length ? ", and the fixes below will raise it" : ""}.`
-    : `A post needs ${MIN_SCORE} or more, and no critical issue, to be sent. You are ${-gap} point${gap === -1 ? "" : "s"} under the line: fix the findings below and check again.`;
+    ? `A post needs ${minimumScore} or more, and no critical issue, to be sent. You are ${gap} point${gap === 1 ? "" : "s"} above the line${findings.length ? ", and the fixes below will raise it" : ""}.`
+    : `A post needs ${minimumScore} or more, and no critical issue, to be sent. You are ${-gap} point${gap === -1 ? "" : "s"} under the line: fix the findings below and check again.`;
 
   return (
     <div className={`grid grid-cols-1 items-start gap-4 sm:gap-5 ${scriptText ? "2xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.4fr)]" : "xl:grid-cols-[minmax(0,1fr)_minmax(340px,440px)]"}`}>
@@ -271,7 +272,7 @@ export default function ComplianceStep({
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
               <span
                 title={`Score ${score} out of 100`}
-                style={{ background: `conic-gradient(${ring(score)} ${score * 3.6}deg, var(--muted) 0)` }}
+                style={{ background: `conic-gradient(${ring(score, minimumScore)} ${score * 3.6}deg, var(--muted) 0)` }}
                 className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
               >
                 <span className="flex h-[78px] w-[78px] flex-col items-center justify-center rounded-full bg-card leading-none">
@@ -283,11 +284,11 @@ export default function ComplianceStep({
                 <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{advice}</p>
                 <div className="relative mt-1 h-2.5 rounded-full bg-muted">
-                  <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score) }} />
-                  <span className="absolute -top-1 h-4.5 w-0.5 bg-foreground" style={{ left: `${MIN_SCORE}%`, height: 18 }} />
+                  <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score, minimumScore) }} />
+                  <span className="absolute -top-1 h-4.5 w-0.5 bg-foreground" style={{ left: `${minimumScore}%`, height: 18 }} />
                 </div>
-                <span className="text-[11px] text-muted-foreground" style={{ marginLeft: `${MIN_SCORE - 4}%` }}>
-                  Minimum {MIN_SCORE}
+                <span className="text-[11px] text-muted-foreground" style={{ marginLeft: `${minimumScore - 4}%` }}>
+                  Minimum {minimumScore}
                 </span>
               </div>
             </div>
@@ -478,7 +479,7 @@ export default function ComplianceStep({
           <ul className="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted-foreground">
             <li>Every post starts at 100.</li>
             <li>A broken rule takes off 10 to 35 points. A claim that needs a source takes off 5.</li>
-            <li>Approval needs {MIN_SCORE} or more and no critical issue.</li>
+            <li>Approval needs {minimumScore} or more and no critical issue.</li>
             <li>Fix an issue and check again: the score updates.</li>
           </ul>
         </section>
