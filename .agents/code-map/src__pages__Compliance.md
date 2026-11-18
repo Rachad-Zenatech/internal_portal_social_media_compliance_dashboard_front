@@ -29,57 +29,57 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleSubmitForm` (fn) L460
     - `handleRunScanner` (fn) L532
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1525 lines) - content screener page (pages  compliance)
-- `scoreOf` (const) L102
-- `isFailing` (const) L103
-- `hasCritical` (const) L107
-- `deadlineOf` (const) L109 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
-- `matches` (function) L111
-- `dueText` (function) L131 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
-- `CheckingBadge` (function) L146 - Checking · ~35 s" while the post is still being read.
-    - `countdown` (fn) L147
-- `ScoreBadge` (function) L158
-- `Thumb` (function) L171
-- `Flag` (interface) L196
-- `flagsOf` (function) L205
-    - `caption` (fn) L208
-- `escapeRe` (const) L230
-- `HighlightedCaption` (export function) L233 - The caption with every flagged phrase highlighted.
-- `MarkedCaption` (function) L256 - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
-- `TimelinePart` (interface) L306
-- `timelineOf` (export function) L314 - The video split into its checked parts, each coloured by what was found there.
-- `FlaggedMoments` (export function) L326 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
-    - `count` (fn) L343
-- `PostView` (function) L435
-    - `toggle` (fn) L498
-    - `step` (fn) L504
-- `PanelTab` (type) L661
-- `ReviewPanel` (function) L663
-    - `canComment` (fn) L703
-- `useFlags` (function) L1086 - Flags, with this version's dismissals, for one post.
-    - `flags` (fn) L1087
-    - `dismissed` (fn) L1089
-- `Workspace` (function) L1094 - The selected post: media in the middle, the review panel on the right.
-    - `seek` (fn) L1122
-- `QueueStrip` (function) L1198 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
-- `ContentScreenerPage` (export function) L1250
-    - `navigate` (fn) L1257
-    - `queue` (fn) L1273
-    - `counts` (fn) L1280
-    - `options` (fn) L1285
-    - `labels` (fn) L1286
-    - `items` (fn) L1295
-    - `visible` (fn) L1297
-    - `rows` (fn) L1299 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
-    - `time` (fn) L1300
-    - `paged` (fn) L1308 - 20 to a page; a new tab, search, filter or order starts from the first page.
-    - `shownLinked` (fn) L1310 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
-    - `renderPostRow` (fn) L1320
-    - `brands` (fn) L1356
-    - `platforms` (fn) L1357
-    - `brandLabel` (fn) L1358
-    - `setCollapsed` (fn) L1368
-    - `pick` (fn) L1377
+## src/pages/Compliance/ContentScreenerPage.tsx (1516 lines) - content screener page (pages  compliance)
+- `scoreOf` (const) L103
+- `isFailing` (const) L104
+- `hasCritical` (const) L108
+- `deadlineOf` (const) L110 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
+- `matches` (function) L112
+- `dueText` (function) L132 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
+- `CheckingBadge` (function) L147 - Checking · ~35 s" while the post is still being read.
+    - `countdown` (fn) L148
+- `ScoreBadge` (function) L159
+- `Thumb` (function) L172
+- `Flag` (interface) L197
+- `flagsOf` (function) L206
+    - `caption` (fn) L209
+- `escapeRe` (const) L231
+- `HighlightedCaption` (export function) L234 - The caption with every flagged phrase highlighted.
+- `MarkedCaption` (function) L257 - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
+- `TimelinePart` (interface) L307
+- `timelineOf` (export function) L315 - The video split into its checked parts, each coloured by what was found there.
+- `FlaggedMoments` (export function) L327 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
+    - `count` (fn) L344
+- `PostView` (function) L436
+    - `toggle` (fn) L491
+    - `step` (fn) L497
+- `PanelTab` (type) L654
+- `ReviewPanel` (function) L656
+    - `canComment` (fn) L697
+- `useFlags` (function) L1079 - Flags, with this version's dismissals, for one post.
+    - `flags` (fn) L1080
+    - `dismissed` (fn) L1082
+- `Workspace` (function) L1087 - The selected post: media in the middle, the review panel on the right.
+    - `seek` (fn) L1113
+- `QueueStrip` (function) L1189 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
+- `ContentScreenerPage` (export function) L1241
+    - `navigate` (fn) L1248
+    - `queue` (fn) L1264
+    - `counts` (fn) L1271
+    - `options` (fn) L1276
+    - `labels` (fn) L1277
+    - `items` (fn) L1286
+    - `visible` (fn) L1288
+    - `rows` (fn) L1290 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
+    - `time` (fn) L1291
+    - `paged` (fn) L1299 - 20 to a page; a new tab, search, filter or order starts from the first page.
+    - `shownLinked` (fn) L1301 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
+    - `renderPostRow` (fn) L1311
+    - `brands` (fn) L1347
+    - `platforms` (fn) L1348
+    - `brandLabel` (fn) L1349
+    - `setCollapsed` (fn) L1359
+    - `pick` (fn) L1368
 
 ## src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - `MessagingContextPage` (export function) L22 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...

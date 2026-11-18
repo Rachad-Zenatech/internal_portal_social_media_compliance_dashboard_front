@@ -99,7 +99,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceStep.tsx (487 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceStep.tsx (493 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (110 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
@@ -210,6 +210,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
 - src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
+- src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
 - src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
@@ -225,6 +226,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
 - src/lib/contentCalendar.ts (433 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
+- src/lib/findingImage.ts (33 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
@@ -252,7 +254,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/Login.tsx (251 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1525 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1516 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)

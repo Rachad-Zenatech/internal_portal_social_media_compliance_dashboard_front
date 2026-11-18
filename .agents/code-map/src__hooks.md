@@ -83,6 +83,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
 
+## src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
+- `useScreenerMediaNavigation` (export function) L8 - Rule selection also navigates the carousel, including repeated clicks on the same rule.
+
 ## src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.
 - `useScriptActions` (export function) L48 - The script stage's actions: send it, decide on it, accept or revise the reviewer's edits.

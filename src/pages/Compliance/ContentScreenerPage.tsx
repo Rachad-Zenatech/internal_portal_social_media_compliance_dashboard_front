@@ -3,6 +3,7 @@ import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
 import ReviewerCaption from "@/components/compliance/screener/ReviewerCaption";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
+import { useScreenerMediaNavigation } from "@/hooks/useScreenerMediaNavigation";
 import type { MarkedCaptionTerm as MarkedTerm } from "@/types/captionReview";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -71,7 +72,7 @@ import {
   audienceNames,
 } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
-import { useFlagReviews, useReviewComments } from "@/hooks/useReview";
+import { useFlagReviews } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
@@ -441,7 +442,7 @@ function PostView({
   now,
   duration,
   playing,
-  picked,
+  picked, imageIndex, onImageIndex,
   onFlag,
   onComment,
   onTime,
@@ -462,6 +463,7 @@ function PostView({
   duration: number;
   playing: boolean;
   picked: string | null;
+  imageIndex: number; onImageIndex: (index: number) => void;
   onFlag: (ruleId: string) => void;
   onComment: () => void;
   onTime: (t: number) => void;
@@ -474,17 +476,8 @@ function PostView({
   activeCommentId: string | null;
   onActiveComment: (id: string | null) => void;
 }) {
-  const [imageIndex, setImageIndex] = useState(0);
   const images = s.images ?? [];
   const image = images[Math.min(imageIndex, images.length - 1)];
-  const { comments: allComments } = useReviewComments(s.id);
-  // A comment picked in the list shows its image.
-  useEffect(() => {
-    const c = allComments.find((x) => x.id === activeCommentId);
-    const at = c?.file_id ? images.findIndex((i) => i.id === c.file_id) : -1;
-    if (at >= 0) setImageIndex(at);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCommentId]);
   const account = s.account;
   const needBy = s.approval_needed_by ? new Date(s.approval_needed_by) : null;
   // The frame takes the uploaded video's own shape (width / height), read when it loads. Until then, a guess from
@@ -624,7 +617,7 @@ function PostView({
                   <button
                     key={img.id}
                     type="button"
-                    onClick={() => setImageIndex(i)}
+                    onClick={() => onImageIndex(i)}
                     aria-label={`Image ${i + 1}`}
                     aria-pressed={i === imageIndex}
                     className={`h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 ${i === imageIndex ? "border-blue-600" : "border-transparent"}`}
@@ -672,7 +665,7 @@ function ReviewPanel({
   tab,
   setTab,
   seen,
-  picked,
+  picked, pickedFinding,
   setPicked,
   activeComment,
   setActiveComment,
@@ -691,7 +684,8 @@ function ReviewPanel({
   /** The tabs the reviewer has opened on this post. */
   seen: Set<PanelTab>;
   picked: string | null;
-  setPicked: (ruleId: string | null) => void;
+  pickedFinding?: ComplianceViolation | null;
+  setPicked: (ruleId: string | null, finding?: ComplianceViolation) => void;
   /** The comment picked on the image, and the way to pick one from the list. */
   activeComment: string | null;
   setActiveComment: (id: string | null) => void;
@@ -836,7 +830,7 @@ function ReviewPanel({
                   key={f.v.rule_id}
                   id={`flag-${f.v.rule_id}`}
                   onClick={() => {
-                    setPicked(f.v.rule_id);
+                    setPicked(f.v.rule_id, f.v);
                     if (f.at != null) seek(f.at);
                   }}
                   className={`flex cursor-pointer flex-col gap-2 rounded-xl border-2 border-dashed border-violet-500 bg-violet-50/60 p-3.5 dark:bg-violet-500/10 ${
@@ -892,17 +886,16 @@ function ReviewPanel({
             <>
               {FINDING_ORDER.map((status) => (
                 <FindingGroup key={status} status={status} count={grouped[status].length}>
-              {grouped[status].map((f) => {
-                const selected = picked === f.v.rule_id || (f.at != null && Math.abs(now - f.at) < 0.75);
+              {grouped[status].map((f, index) => {
+                const selected = (pickedFinding ? pickedFinding === f.v : picked === f.v.rule_id) || (f.at != null && Math.abs(now - f.at) < 0.75);
                 const jump = () => {
-                  setPicked(f.v.rule_id);
+                  setPicked(f.v.rule_id, f.v);
                   if (f.at != null) seek(f.at);
                 };
                 return (
                   <article
-                    key={f.v.rule_id}
+                    key={`${f.v.rule_id}-${index}`}
                     id={`flag-${f.v.rule_id}`}
-                    // The whole card jumps the video to where it was found (as on the previous screener).
                     onClick={jump}
                     onKeyDown={(e) => {
                       if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) {
@@ -1112,9 +1105,7 @@ function Workspace({
   useEffect(() => {
     setSeen((prev) => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   }, [tab]);
-  const [picked, setPicked] = useState<string | null>(null);
-  // The comment picked on the image or in the list, so each shows the other.
-  const [activeComment, setActiveComment] = useState<string | null>(null);
+  const { picked, pickedFinding, setPicked, imageIndex, setImageIndex, activeComment, setActiveComment } = useScreenerMediaNavigation(s);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -1139,7 +1130,7 @@ function Workspace({
           now={now}
           duration={duration || Math.max(0, ...(s.latest_check?.segment_flags ?? []).map((f) => f.end_sec))}
           playing={playing}
-          picked={picked}
+          picked={picked} imageIndex={imageIndex} onImageIndex={setImageIndex}
           onFlag={(ruleId) => {
             setPicked(ruleId);
             setTab("compliance");
@@ -1180,7 +1171,7 @@ function Workspace({
           tab={tab}
           setTab={setTab}
           seen={seen}
-          picked={picked}
+          picked={picked} pickedFinding={pickedFinding}
           setPicked={setPicked}
           activeComment={activeComment}
           setActiveComment={setActiveComment}

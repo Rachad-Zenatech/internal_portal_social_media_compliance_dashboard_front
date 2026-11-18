@@ -4,12 +4,12 @@ import type { KeyboardEvent } from "react";
 import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
-import { useImageSlideshow } from "@/hooks/useImageSlideshow";
+import type { useImageSlideshow } from "@/hooks/useImageSlideshow";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { SubmissionFile } from "@/types/submission";
 
 interface Props {
-  files: SubmissionFile[];
+  slideshow: ReturnType<typeof useImageSlideshow>;
   findings: ComplianceViolation[];
 }
 
@@ -26,8 +26,8 @@ function SlideThumbnail({ file, index, selected, onSelect }: {
 }
 
 /** Every image in the post, with highlights scoped to the currently displayed file. */
-export default function MarkedUpImageSlideshow({ files, findings }: Props) {
-  const { slides, active, activeIndex, select, move, imageOpen, setImageOpen } = useImageSlideshow(files);
+export default function MarkedUpImageSlideshow({ slideshow, findings }: Props) {
+  const { slides, active, activeIndex, select, move, imageOpen, setImageOpen } = slideshow;
   if (!active) return null;
   const multiple = slides.length > 1;
   const counter = `Image ${activeIndex + 1} of ${slides.length}`;
