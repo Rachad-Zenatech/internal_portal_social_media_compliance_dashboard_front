@@ -54,7 +54,15 @@ function ContentTypeBadge({ type }: { type?: string | null }) {
   );
 }
 
-function ReadinessBar({ readiness }: { readiness?: TrainingReadiness }) {
+function ReadinessBar({
+  readiness,
+  activeClass,
+  onSelectClass,
+}: {
+  readiness?: TrainingReadiness;
+  activeClass: string | null;
+  onSelectClass: (cls: string | null) => void;
+}) {
   if (!readiness) return null;
   const needed = readiness.total_needed_per_class || 30;
   const classes = ["POST", "WAIT", "HOLD"] as const;
@@ -66,25 +74,36 @@ function ReadinessBar({ readiness }: { readiness?: TrainingReadiness }) {
             XGBoost Training Readiness · {readiness.ready ? "Ready to train" : `${needed} reviewed examples per decision needed (20 train · 5 val · 5 test)`}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Reviewer decisions & comment notes on assessments or post approvals automatically feed these buckets.
+            Click any decision class below to filter the training rows. Reviewer decisions & comment notes automatically feed these buckets.
             {readiness.unreviewed_assessments > 0 && ` (${readiness.unreviewed_assessments} assessed drafts awaiting review decision)`}
           </p>
         </div>
+        {activeClass && (
+          <Button type="button" variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSelectClass(null)}>
+            Show all classes
+          </Button>
+        )}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {classes.map((cls) => {
           const count = readiness.class_totals?.[cls] ?? 0;
           const pct = Math.min(100, Math.round((count / needed) * 100));
+          const active = activeClass === cls;
           return (
-            <div key={cls} className="rounded-lg border bg-card p-3">
+            <button
+              key={cls}
+              type="button"
+              onClick={() => onSelectClass(active ? null : cls)}
+              className={`rounded-lg border bg-card p-3 text-left transition hover:border-primary/60 ${active ? "ring-2 ring-primary" : ""}`}
+            >
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold">{cls}</span>
-                <span className="text-muted-foreground">{count} / {needed}</span>
+                <span className="text-muted-foreground">{count} / {needed} · Click to filter</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
                 <div className={pct >= 100 ? "h-full bg-emerald-500" : "h-full bg-primary"} style={{ width: `${pct}%` }} />
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -120,11 +139,22 @@ function ExampleRow({ example, onSelect }: { example: TrainingExampleRow; onSele
   );
 }
 
-function ExamplesTable({ data, onSelect }: { data: TrainingData; onSelect: (e: TrainingExampleRow) => void }) {
-  if (data.examples.length === 0) {
+function ExamplesTable({
+  data,
+  activeClass,
+  onSelect,
+}: {
+  data: TrainingData;
+  activeClass: string | null;
+  onSelect: (e: TrainingExampleRow) => void;
+}) {
+  const rows = activeClass ? data.examples.filter((e) => e.reviewer_label === activeClass) : data.examples;
+  if (rows.length === 0) {
     return (
       <p className="p-4 text-sm text-muted-foreground">
-        No reviewed assessments have been recorded yet. When a reviewer approves/requests changes on an assessed post or confirms/corrects a public-mood recommendation, the post&apos;s video/image/carousel, features, and reviewer comments appear here.
+        {activeClass
+          ? `No reviewed examples for class ${activeClass} yet.`
+          : "No reviewed assessments have been recorded yet. When a reviewer approves/requests changes on an assessed post or confirms/corrects a public-mood recommendation, the post's video/image/carousel, features, and reviewer comments appear here."}
       </p>
     );
   }
@@ -132,7 +162,7 @@ function ExamplesTable({ data, onSelect }: { data: TrainingData; onSelect: (e: T
   return (
     <div>
       <p className="px-4 py-2 text-xs text-muted-foreground">
-        {data.dataset_version ? `Dataset ${data.dataset_version}` : "Live reviewed examples queued for next XGBoost build"} · {data.total} examples ({splits}).
+        {data.dataset_version ? `Dataset ${data.dataset_version}` : "Live reviewed examples queued for next XGBoost build"} · {rows.length} shown ({splits}).
       </p>
       <div className="max-h-[480px] overflow-auto">
         <table className="w-full text-left text-xs">
@@ -144,7 +174,7 @@ function ExamplesTable({ data, onSelect }: { data: TrainingData; onSelect: (e: T
             </tr>
           </thead>
           <tbody>
-            {data.examples.map((e) => (
+            {rows.map((e) => (
               <ExampleRow key={e.assessment_id} example={e} onSelect={onSelect} />
             ))}
           </tbody>
@@ -156,6 +186,7 @@ function ExamplesTable({ data, onSelect }: { data: TrainingData; onSelect: (e: T
 
 export default function MoodTrainingData() {
   const [selected, setSelected] = useState<TrainingExampleRow | null>(null);
+  const [activeClass, setActiveClass] = useState<string | null>(null);
   const query = useQuery({
     queryKey: ["training-data", "mood-examples"],
     queryFn: () => apiClient.get<TrainingData>("/api/listening/model/training-data", { skipGlobalLoading: true }),
@@ -184,8 +215,8 @@ export default function MoodTrainingData() {
         )}
         {query.data && (
           <>
-            <ReadinessBar readiness={query.data.readiness} />
-            <ExamplesTable data={query.data} onSelect={setSelected} />
+            <ReadinessBar readiness={query.data.readiness} activeClass={activeClass} onSelectClass={setActiveClass} />
+            <ExamplesTable data={query.data} activeClass={activeClass} onSelect={setSelected} />
           </>
         )}
       </Card>

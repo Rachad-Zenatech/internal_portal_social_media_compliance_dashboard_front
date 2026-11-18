@@ -7,21 +7,31 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - `ApprovalPaths` (export function) L24 - Who gives final approval for which content.
 
-## src/pages/Configurations/ModelStatusCard.tsx (88 lines) - model status card (pages  configurations)
-- `ModelStatus` (interface) L7
-- `Stat` (function) L28
-- `FeatureImportance` (function) L37
-- `ModelStatusCard` (export function) L56 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
+## src/pages/Configurations/InteractiveRuleMetrics.tsx (207 lines) - interactive rule metrics (pages  configurations)
+- `MetricKey` (type) L10
+- `isFinanceRule` (function) L15
+- `isEvidenceRule` (function) L19
+- `MetricCard` (function) L23
+- `MetricDetailDialog` (function) L54
+- `InteractiveRuleMetrics` (export function) L147
 
-## src/pages/Configurations/MoodTrainingData.tsx (199 lines) - mood training data (pages  configurations)
+## src/pages/Configurations/ModelStatusCard.tsx (196 lines) - model status card (pages  configurations)
+- `ModelStatus` (interface) L9
+- `StatKey` (type) L35
+- `Stat` (function) L48
+- `FeatureImportance` (function) L75
+- `StatExplainDialog` (function) L93
+- `ModelStatusCard` (export function) L160 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
+
+## src/pages/Configurations/MoodTrainingData.tsx (230 lines) - mood training data (pages  configurations)
 - `TrainingReadiness` (interface) L11
 - `TrainingData` (interface) L21
 - `featureSummary` (function) L39
 - `ContentTypeBadge` (function) L46
 - `ReadinessBar` (function) L57
-- `ExampleRow` (function) L95
-- `ExamplesTable` (function) L123
-- `MoodTrainingData` (export function) L157
+- `ExampleRow` (function) L114
+- `ExamplesTable` (function) L142
+- `MoodTrainingData` (export function) L187
 
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function) L8
@@ -126,10 +136,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `EvidenceSection` (function) L102
 - `TrainingContentQuickOpen` (export function) L129
 
-## src/pages/Configurations/TrainingDataPage.tsx (109 lines) - training data page (pages  configurations)
-- `CapacityMetric` (function) L13
-- `AiCapacity` (function) L27
-- `TrainingDataPage` (export function) L84
+## src/pages/Configurations/TrainingDataPage.tsx (123 lines) - training data page (pages  configurations)
+- `CapacityMetric` (function) L16
+- `AiCapacity` (function) L30
+- `TrainingDataPage` (export function) L97
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.
