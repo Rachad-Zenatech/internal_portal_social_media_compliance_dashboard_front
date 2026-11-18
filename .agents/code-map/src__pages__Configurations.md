@@ -7,6 +7,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - `ApprovalPaths` (export function) L24 - Who gives final approval for which content.
 
+## src/pages/Configurations/ModelStatusCard.tsx (88 lines) - model status card (pages  configurations)
+- `ModelStatus` (interface) L7
+- `Stat` (function) L28
+- `FeatureImportance` (function) L37
+- `ModelStatusCard` (export function) L56 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
+
 ## src/pages/Configurations/MoodTrainingData.tsx (121 lines) - mood training data (pages  configurations)
 - `TrainingExample` (interface) L9
 - `TrainingData` (interface) L20
@@ -104,12 +110,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `RuleRow` (function) L124
 - `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
 
-## src/pages/Configurations/TrainingDataPage.tsx (62 lines) - training data page (pages  configurations)
-- `QualitySummary` (function) L14
-- `AiCapacity` (function) L28
-- `CapacityMetric` (function) L34
-- `FinanceCoverage` (function) L38
-- `TrainingDataPage` (export function) L53
+## src/pages/Configurations/TrainingDataPage.tsx (74 lines) - training data page (pages  configurations)
+- `QualitySummary` (function) L16
+- `AiCapacity` (function) L30
+- `CapacityMetric` (function) L36
+- `FinanceCoverage` (function) L40
+- `RulebookSection` (function) L55
+- `CollapsibleSection` (function) L63
+- `TrainingDataPage` (export function) L68
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.

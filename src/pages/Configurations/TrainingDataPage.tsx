@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, CheckCircle2, Database, FileCheck2, Landmark, Loader2, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
 
@@ -10,6 +11,7 @@ import { submissionService } from "@/services/submissionService";
 import type { AiUsage } from "@/types/sentiment";
 import RuleDataTable from "./RuleTrainingTable";
 import MoodTrainingData from "./MoodTrainingData";
+import ModelStatusCard from "./ModelStatusCard";
 
 function QualitySummary({ rules, tests }: { rules: ComplianceRule[]; tests: RuleSelfTest[] }) {
   const active = rules.filter((rule) => rule.is_active).length;
@@ -50,12 +52,22 @@ function FinanceCoverage({ rules }: { rules: ComplianceRule[] }) {
   return <Card className="overflow-hidden py-0 shadow-xs"><div className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3"><Landmark className="h-4 w-4 text-primary" /><h2 className="text-sm font-semibold">Finance-content coverage</h2><span className="text-xs text-muted-foreground">Investor claims, disclosure, and market-risk training signals</span></div><div className="grid gap-px bg-border/70 sm:grid-cols-3">{metrics.map(({ label, value, detail, icon: Icon }) => <div key={label} className="bg-card p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tracking-tight">{value}</p></div><Icon className="h-5 w-5 text-primary" /></div><p className="mt-2 text-xs text-muted-foreground">{detail}</p></div>)}</div><div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-muted-foreground"><span>Recommended evidence source for a finance claim: filing and XBRL data from the SEC’s EDGAR APIs.</span><a className="font-medium text-primary hover:underline" href="https://www.sec.gov/search-filings/edgar-application-programming-interfaces" target="_blank" rel="noreferrer">View SEC EDGAR data</a></div></Card>;
 }
 
-export default function TrainingDataPage() {
+function RulebookSection() {
   const rules = useQuery({ queryKey: ["training-data", "rules"], queryFn: () => complianceService.getRules() });
   const selfTests = useQuery({ queryKey: ["training-data", "self-tests"], queryFn: complianceService.selfTest });
-  const aiUsage = useQuery({ queryKey: ["training-data", "ai-usage"], queryFn: () => submissionService.aiUsage() });
-  const loading = rules.isLoading || selfTests.isLoading || aiUsage.isLoading;
-  const refresh = () => { void rules.refetch(); void selfTests.refetch(); void aiUsage.refetch(); };
+  if (rules.isLoading || selfTests.isLoading) return <Card className="flex items-center gap-2 p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading rulebook examples...</Card>;
+  if (rules.isError || selfTests.isError) return <Card className="flex items-center gap-2 border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-amber-600" />Rulebook data could not be loaded.</Card>;
+  return <div className="space-y-4"><QualitySummary rules={rules.data ?? []} tests={selfTests.data ?? []} /><FinanceCoverage rules={rules.data ?? []} /><RuleDataTable rules={rules.data ?? []} tests={selfTests.data ?? []} /></div>;
+}
 
-  return <div className="mx-auto w-full max-w-[1200px] space-y-4 pb-6 animate-in fade-in duration-300"><DashboardHeader title="Training data & quality" subtitle="Review the rulebook examples that guide compliance checks, their automated validation, and the AI service capacity behind them." actions={<Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={refresh} disabled={loading}><RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />Refresh</Button>} />{loading ? <Card className="flex items-center gap-2 p-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading training data...</Card> : <><QualitySummary rules={rules.data ?? []} tests={selfTests.data ?? []} /><FinanceCoverage rules={rules.data ?? []} /><MoodTrainingData /><AiCapacity usage={aiUsage.data} />{rules.isError || selfTests.isError ? <Card className="flex items-center gap-2 border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-amber-600" />Some quality data could not be loaded. Refresh to try again.</Card> : <RuleDataTable rules={rules.data ?? []} tests={selfTests.data ?? []} />}</>}</div>;
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return <div><button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-sm font-semibold text-primary hover:underline">{open ? "Hide" : "Show"} {title}</button>{open && <div className="mt-3">{children}</div>}</div>;
+}
+
+export default function TrainingDataPage() {
+  const aiUsage = useQuery({ queryKey: ["training-data", "ai-usage"], queryFn: () => submissionService.aiUsage() });
+  const refresh = () => { void aiUsage.refetch(); };
+
+  return <div className="mx-auto w-full max-w-[1200px] space-y-4 pb-6 animate-in fade-in duration-300"><DashboardHeader title="Training data & quality" subtitle="The XGBoost decision model: what it was trained on, how it performs and what it weighs most." actions={<Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={refresh} disabled={aiUsage.isFetching}><RefreshCw className={aiUsage.isFetching ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />Refresh</Button>} /><ModelStatusCard /><MoodTrainingData defaultOpen /><AiCapacity usage={aiUsage.data} /><CollapsibleSection title="rulebook examples & self-tests"><RulebookSection /></CollapsibleSection></div>;
 }
