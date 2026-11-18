@@ -74,23 +74,23 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
 
-## src/pages/Submissions/ScriptChangesPage.tsx (558 lines) - script changes page (pages  submissions)
-- `View` (type) L26
-- `initials` (const) L28
-- `comparison` (function) L37 - Which two versions to compare: what the creator sent and what came back (or the last round's change).
-- `ScriptChangesPage` (export function) L53 - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
-    - `stage` (fn) L55
-- `noop` (const) L69
-- `Changes` (function) L71
-    - `navigate` (fn) L72
-    - `noteValue` (fn) L83 - The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
-    - `parts` (fn) L89
-    - `changes` (fn) L90
-    - `decide` (fn) L94
-    - `merged` (fn) L104 - The script with the reviewer's changes applied except where the creator kept their own wording.
-    - `toggleDone` (fn) L112
-    - `goToHighlight` (fn) L139 - A highlight card was clicked: find that wording in the script and flash it.
-    - `pick` (fn) L145
+## src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
+- `View` (type) L27
+- `initials` (const) L29
+- `comparison` (function) L33 - Which two versions to compare: what the creator sent and what came back (or the last round's change).
+- `ScriptChangesPage` (export function) L49 - The creator's view of their script after review: both versions (marked in place or side by side), the list of  changes, and accept or edit.
+    - `stage` (fn) L51
+- `noop` (const) L68
+- `Changes` (function) L70
+    - `navigate` (fn) L71
+    - `noteValue` (fn) L82 - The note for the reviewer lives in its own box (see NoteField), so typing does not redraw the script.
+    - `parts` (fn) L88
+    - `changes` (fn) L89
+    - `decide` (fn) L93
+    - `merged` (fn) L103 - The script with the reviewer's changes applied except where the creator kept their own wording.
+    - `toggleDone` (fn) L111
+    - `goToHighlight` (fn) L138 - A highlight card was clicked: find that wording in the script and flash it.
+    - `pick` (fn) L144
 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) L4 - One content area: the portal and the new-submission form.

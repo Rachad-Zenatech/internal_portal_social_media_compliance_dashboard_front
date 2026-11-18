@@ -8,6 +8,7 @@ const quiet = { skipGlobalLoading: true };
 
 /** Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service). */
 export const scriptDocService = {
+  fromSubmission: (id: string) => apiClient.post<{ document_id: string | null }>(`/api/script-docs/from-submission/${id}`, undefined, quiet),
   templates: () => apiClient.get<ScriptTemplate[]>("/api/script-docs/templates", quiet),
   /** The creator's documents, each with its scripts as pages. */
   sets: () => apiClient.get<DocSetSummary[]>("/api/script-docs/sets", quiet),

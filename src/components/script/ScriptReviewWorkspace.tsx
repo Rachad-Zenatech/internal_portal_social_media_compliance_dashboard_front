@@ -1,12 +1,12 @@
 import ScriptWorkspaceState from "@/components/script/ScriptWorkspaceState";
 import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
 import { useAuth } from "@/lib/AuthContext";
+import { SharedScriptReviewLink } from "@/components/script/SharedScriptReviewEntry";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { locateOnPage } from "@/lib/locateOnPage";
 import ApprovedScriptNextStep from "@/components/script/ApprovedScriptNextStep";
 import { format, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -74,9 +74,9 @@ export default function ScriptReviewWorkspace({
   const data = stage.data;
   const sent = data?.versions.at(-1);
   if (stage.isLoading || !data || !sent) return <ScriptWorkspaceState loading={stage.isLoading || !data} error={stage.isError ? (stage.error as Error).message : undefined} onUploadScript={onUploadScript} />;
+  if (data.script_document_id || data.shared_review_available) return <SharedScriptReviewLink submissionId={submissionId} documentId={data.script_document_id} />;
   if (data.status === "IN_REVIEW" && (creatorView || (!isReviewer && !data.can_suggest))) return <ScriptInReviewDetails summary={{ id: submissionId, reference_code: data.reference_code, title: data.title }} stage={data} />;
   return (
-    // A script from a batch has the batch's strip across the top; the script and its review panel sit side by side below.
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {data.batch && <ScriptBatchBar batch={data.batch} reviewer={isReviewer} onOpen={onOpenScript} />}
       <div className="flex min-h-0 min-w-0 flex-1">

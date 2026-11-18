@@ -22,7 +22,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (203 lines) - Highlight color palette (preset swatches + custom color picker).
+## src/components/scriptdoc/DocEditorColumn.tsx (218 lines) - Highlight color palette (preset swatches + custom color picker).
 - `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
 - `NoteButtons` (function) L94 - Highlight and Comment, in the editor's toolbar.
 - `DocEditorColumn` (export function) L119 - The script page itself, once the live connection is up (until then, a short wait).
@@ -35,16 +35,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (337 lines) - The box for the comment on the wording that was selected.
-- `PanelTab` (export type) L18
-- `NoteComposer` (function) L21 - The box for the comment on the wording that was selected.
-- `NotesTab` (function) L40 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L145 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L188
-- `ReviewersTab` (function) L225
-- `DocSidePanel` (export function) L267 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+## src/components/scriptdoc/DocSidePanel.tsx (410 lines) - The box for the comment on the wording that was selected.
+- `PanelTab` (export type) L21
+- `NoteComposer` (function) L24 - The box for the comment on the wording that was selected.
+- `NotesTab` (function) L43 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L148 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L194
+- `ReviewersTab` (function) L230
+- `DocSidePanel` (export function) L272 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L291
+    - `runCheck` (fn) L297
+    - `historyQuery` (fn) L302
+    - `openNotes` (fn) L309
 
-## src/components/scriptdoc/EditorLayoutBar.tsx (60 lines) - For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text.
+## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
 
 ## src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
@@ -60,21 +64,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (320 lines) - script doc hub (components scriptdoc)
+## src/components/scriptdoc/ScriptDocHub.tsx (327 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L26
 - `DocCard` (function) L28
 - `SetCard` (function) L68 - A creator's document: its scripts (pages) and where each stands.
 - `NewScriptDialog` (function) L113
 - `TemplateGrid` (function) L161 - Start from a template, or attach a script from a file.
 - `DocLists` (function) L201 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
-- `ScriptDocHub` (export function) L239 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+- `ScriptDocHub` (export function) L243 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (173 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
-- `SharedEditorFrame` (export function) L21 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
+## src/components/scriptdoc/SharedEditorFrame.tsx (233 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+- `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
 ## src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - `LatestProps` (export class) L9 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.

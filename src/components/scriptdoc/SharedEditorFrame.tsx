@@ -4,6 +4,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { scriptDocService } from "@/services/scriptDocService";
+import type { DocNote } from "@/types/scriptDoc";
 
 // Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 const FALLBACK_REFRESH_MS = 10 * 60 * 1000;
@@ -18,7 +19,25 @@ const AUTH_REQUIRED = "script-embed:auth-required";
  * It arrives signed in as this person (a short-lived token in the address, kept fresh by messages); only messages from that
  * window and that origin are listened to, and they only make this page read the script's state again.
  */
-export default function SharedEditorFrame({ docId }: { docId: string }) {
+export default function SharedEditorFrame({
+  docId,
+  readOnly = false,
+  notes = [],
+  activeNoteId = null,
+  goToNote = null,
+  toolbarExtra,
+  onSelectionChange,
+  onSelectNote,
+}: {
+  docId: string;
+  readOnly?: boolean;
+  notes?: DocNote[];
+  activeNoteId?: string | null;
+  goToNote?: { id: string; seq: number } | null;
+  toolbarExtra?: React.ReactNode;
+  onSelectionChange?: (sel: { quote: string; start: number } | null) => void;
+  onSelectNote?: (id: string) => void;
+}) {
   const qc = useQueryClient();
   const frame = useRef<HTMLIFrameElement>(null);
   const [frameKey, setFrameKey] = useState(0);
@@ -72,11 +91,12 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
     };
   }, [session, refetch]);
 
-  // The frame is loaded once per script (or after an expired session): a refreshed token is sent to it, never by reloading it.
+  const initialReadOnly = useRef(readOnly);
+  // The frame is loaded once per script (or after an expired session): readOnly switches via postMessage without reloading the iframe.
   const src = useMemo(() => {
     if (!session) return null;
     const parent = encodeURIComponent(window.location.origin);
-    return `${session.url}?mode=editor&parent=${parent}#token=${session.token}`;
+    return `${session.url}?mode=editor${initialReadOnly.current ? "&readonly=1" : ""}&parent=${parent}#token=${session.token}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.share_document_id, frameKey]);
 
@@ -97,9 +117,25 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
     if (!session) return;
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== session.origin || e.source !== frame.current?.contentWindow) return;
-      const type = (e.data as { type?: string } | null)?.type ?? "";
+      const data = e.data as { type?: string; quote?: string; start?: number; id?: string } | null;
+      const type = data?.type ?? "";
       if (type === AUTH_REQUIRED) {
         void refetch();
+        return;
+      }
+      if (type === "script-embed:ready" && frame.current?.contentWindow) {
+        frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
+        if (readOnly) {
+          frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
+        }
+        return;
+      }
+      if (type === "script-embed:selection" && typeof data?.quote === "string") {
+        onSelectionChange?.({ quote: data.quote, start: Number(data.start ?? 0) });
+        return;
+      }
+      if (type === "script-embed:select-note" && typeof data?.id === "string") {
+        onSelectNote?.(data.id);
         return;
       }
       if (!NEWS.has(type)) return;
@@ -109,7 +145,22 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [session?.origin, qc, docId, refetch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.origin, qc, docId, refetch, readOnly, notes, activeNoteId, onSelectionChange, onSelectNote]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (session && loaded.current && frame.current?.contentWindow) {
+      frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
+      if (readOnly) {
+        frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
+      }
+    }
+  }, [readOnly, session, notes, activeNoteId]);
+
+  useEffect(() => {
+    if (readOnly && goToNote && session && loaded.current && frame.current?.contentWindow) {
+      frame.current.contentWindow.postMessage({ type: "script-embed:go-to-note", id: goToNote.id }, session.origin);
+    }
+  }, [readOnly, goToNote, session]);
 
   const reconnect = () => {
     needsReload.current = true;
@@ -121,6 +172,9 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
     const bootToken = src?.split("#token=")[1];
     if (session && frame.current?.contentWindow && session.token !== bootToken) {
       frame.current.contentWindow.postMessage({ type: "script-embed:token", token: session.token }, session.origin);
+    }
+    if (readOnly && session && frame.current?.contentWindow) {
+      frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
     }
   };
 
@@ -145,6 +199,12 @@ export default function SharedEditorFrame({ docId }: { docId: string }) {
   }
   return (
     <div className="flex min-h-[24rem] flex-1 flex-col">
+      {readOnly && toolbarExtra && (
+        <div className="flex flex-wrap items-center gap-2 border-b bg-background/95 px-3 py-1.5">
+          <span className="text-xs text-muted-foreground">Read-only · select wording in the document to highlight it or leave a comment.</span>
+          <span className="ml-auto flex items-center gap-1">{toolbarExtra}</span>
+        </div>
+      )}
       <iframe
         key={frameKey}
         ref={frame}

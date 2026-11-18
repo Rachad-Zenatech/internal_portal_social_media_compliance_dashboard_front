@@ -112,11 +112,15 @@ export interface BulkResult {
 
 export interface DocSummary {
   id: string;
+  /** Set for uploaded Create Post scripts; these open in the submission script reviewer. */
+  submission_id?: string | null;
+  reference_code?: string | null;
+  source_status?: "IN_REVIEW" | "CHANGES_REQUESTED" | "EDITS_PROPOSED" | "APPROVED" | null;
   title: string;
   template_key: string;
   status: DocStatus;
   round: number;
-  creator_id: string;
+  creator_id: string | null;
   creator_name: string | null;
   reviewer_names: string[];
   checked_in: number;

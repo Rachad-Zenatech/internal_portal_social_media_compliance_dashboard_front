@@ -26,11 +26,11 @@ const STATUS: Record<DocStatus, { label: string; tone: string }> = {
 type Scope = "mine" | "review" | "all";
 
 function DocCard({ d, scope }: { d: DocSummary; scope: Scope }) {
-  const s = STATUS[d.status];
+  const s = d.source_status === "EDITS_PROPOSED" ? { ...STATUS.CHANGES_REQUESTED, label: "Edits proposed" } : STATUS[d.status];
   return (
     <li className="min-w-0">
       <Link
-        to={`/script-docs/${d.id}`}
+        to={d.submission_id ? `/script-review/scripts/${d.submission_id}` : `/script-docs/${d.id}`}
         className={cn(
           "flex h-full flex-col gap-2 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-muted/30",
           d.needs_you && "border-blue-400 ring-1 ring-blue-200 dark:ring-blue-500/30",
@@ -43,14 +43,14 @@ function DocCard({ d, scope }: { d: DocSummary; scope: Scope }) {
           <div className="min-w-0 flex-1">
             <p className="line-clamp-2 text-sm font-semibold leading-snug">{d.title}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {scope === "mine" ? (d.reviewer_names.length ? `Reviewers: ${d.reviewer_names.join(", ")}` : "Not sent yet") : `by ${d.creator_name}`}
+              {scope === "mine" ? (d.reviewer_names.length ? `Reviewers: ${d.reviewer_names.join(", ")}` : "Not sent yet") : `by ${d.creator_name || "Unknown creator"}${d.reference_code ? ` - ${d.reference_code}` : ""}`}
             </p>
           </div>
         </div>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-xs">
           <span className="flex items-center gap-1.5">
             <span className={cn("rounded-full px-2 py-0.5 font-medium", s.tone)}>{s.label}</span>
-            {d.status === "IN_REVIEW" && d.required > 0 && (
+            {!d.submission_id && d.status === "IN_REVIEW" && d.required > 0 && (
               <span className="text-muted-foreground">
                 {d.checked_in}/{d.required} checked in
               </span>
@@ -210,12 +210,16 @@ function DocLists({
   onDeleteSet: (id: string) => Promise<void>;
 }) {
   if (scope === "mine") {
-    if (sets.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-    if (!sets.data?.length) return <p className={EMPTY}>You haven't written a script yet. Pick a template above.</p>;
+    const uploads = (docs.data ?? []).filter((d) => Boolean(d.submission_id));
+    if (sets.isLoading && docs.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+    if (!sets.data?.length && !uploads.length) return <p className={EMPTY}>You haven't written a script yet. Pick a template above.</p>;
     return (
       <ul className={GRID}>
-        {sets.data.map((d) => (
-          <SetCard key={d.id} d={d} onDelete={onDeleteSet} />
+        {(sets.data ?? []).map((d) => (
+          <SetCard key={`set-${d.id}`} d={d} onDelete={onDeleteSet} />
+        ))}
+        {uploads.map((d) => (
+          <DocCard key={`doc-${d.id}`} d={d} scope={scope} />
         ))}
       </ul>
     );
@@ -237,10 +241,10 @@ function DocLists({
  * (Content Managers) every script. Scripts open in the live editor, where reviewers edit together.
  */
 export default function ScriptDocHub() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, creatorView } = useAuth();
   const manager = hasPermission("CONTENT_MANAGE_DRAFTS");
   // Reviewers review scripts; they don't start them.
-  const reviewer = hasPermission("CONTENT_REVIEW_VIEW");
+  const reviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
   const [scope, setScope] = useState<Scope>(reviewer ? "review" : "mine");
   const [picked, setPicked] = useState<ScriptTemplate | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -250,7 +254,7 @@ export default function ScriptDocHub() {
   const templates = useQuery({ queryKey: ["script-doc-templates"], queryFn: scriptDocService.templates, staleTime: 3_600_000 });
   const docs = useQuery({
     queryKey: ["script-docs", scope],
-    queryFn: () => (scope === "mine" ? Promise.resolve([] as DocSummary[]) : scriptDocService.list(scope)),
+    queryFn: () => scriptDocService.list(scope),
     refetchOnWindowFocus: true,
   });
   const sets = useQuery({ queryKey: ["script-docs", "sets"], queryFn: scriptDocService.sets, enabled: scope === "mine", refetchOnWindowFocus: true });
@@ -265,7 +269,10 @@ export default function ScriptDocHub() {
     queryClient.invalidateQueries({ queryKey: ["script-docs"] });
     toast.success("Script deleted");
   };
-  const waiting = scope === "mine" ? (sets.data ?? []).filter((d) => d.needs_you).length : (docs.data ?? []).filter((d) => d.needs_you).length;
+  const waiting =
+    scope === "mine"
+      ? (sets.data ?? []).filter((d) => d.needs_you).length + (docs.data ?? []).filter((d) => Boolean(d.submission_id) && d.needs_you).length
+      : (docs.data ?? []).filter((d) => d.needs_you).length;
 
   return (
     <section className="space-y-4" aria-labelledby="script-docs-title">
@@ -273,7 +280,7 @@ export default function ScriptDocHub() {
         <div>
           <h2 id="script-docs-title" className="text-lg font-semibold tracking-tight">Script documents</h2>
           <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
-            Write a script from a template and send it to reviewers. They open it together and edit it live, each in their own colour.
+            Review scripts created here or uploaded through Create Post. Scripts sent to you appear together in this section.
           </p>
         </div>
       </div>

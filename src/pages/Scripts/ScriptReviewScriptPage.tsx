@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+import { OpenSharedScriptReview } from "@/components/script/SharedScriptReviewEntry";
 import ScriptReviewWorkspace from "@/components/script/ScriptReviewWorkspace";
 import { useScriptStage } from "@/hooks/useScript";
 import { useAuth } from "@/lib/AuthContext";
@@ -25,6 +26,10 @@ export default function ScriptReviewScriptPage() {
       new CustomEvent("set-breadcrumb-title", { detail: { path: `/script-review/scripts/${id}`, title: label } })
     );
   }, [id, data?.reference_code, data?.title]);
+
+  if (id && data?.versions.length && (data.script_document_id || data.shared_review_available)) {
+    return <OpenSharedScriptReview submissionId={id} documentId={data.script_document_id} />;
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 min-[112.5rem]:max-w-[2200px]">
