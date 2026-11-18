@@ -105,7 +105,10 @@ export default function Login() {
           sessionStorage.setItem("token", token);
           // How they signed in decides how they sign out (see logout in AuthContext).
           sessionStorage.setItem("auth_provider", "microsoft");
-          await refreshPermissions();
+          const perms = await refreshPermissions();
+          if (!perms) {
+            throw new Error("Sign-in could not be verified. Please try again.");
+          }
           toast.success("Successfully logged in");
           window.history.replaceState({}, document.title, window.location.pathname);
           // Signed out mid-use: go back to the page they were on.
@@ -138,11 +141,18 @@ export default function Login() {
   const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3" | "suggester") => {
     setIsLoading(true);
     try {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("ms_id_token");
+      sessionStorage.removeItem(SIGNED_OUT_KEY);
       const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
       sessionStorage.setItem("token", token);
       // Never signed in to Microsoft: signing out skips Microsoft's sign-out page.
       sessionStorage.setItem("auth_provider", "test");
-      await refreshPermissions();
+      const perms = await refreshPermissions();
+      if (!perms) {
+        throw new Error("Test sign-in could not be verified. Please try again.");
+      }
       toast.success(`Signed in as the test ${as.replace(/(\d)$/, " $1")}`);
       navigate("/");
     } catch (error) {
