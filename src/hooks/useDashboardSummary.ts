@@ -6,6 +6,7 @@ export function useDashboardSummary(scope: "all" | "mine") {
   return useQuery({
     queryKey: ["dashboard-summary", scope],
     queryFn: () => submissionService.dashboard(scope),
+    select: (summary) => ({ ...summary, activity: summary.activity.filter((item) => item.action.trim().toLowerCase() !== "commented on") }),
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
