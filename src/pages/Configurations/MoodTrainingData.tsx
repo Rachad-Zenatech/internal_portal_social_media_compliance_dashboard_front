@@ -91,8 +91,8 @@ function ExamplesTable({ data }: { data: TrainingData }) {
 }
 
 /** Quick panel: the reviewed assessments the XGBoost decision model was trained on (loaded when opened). */
-export default function MoodTrainingData() {
-  const [open, setOpen] = useState(false);
+export default function MoodTrainingData({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   const query = useQuery({
     queryKey: ["training-data", "mood-examples"],
     queryFn: () => apiClient.get<TrainingData>("/api/listening/model/training-data", { skipGlobalLoading: true }),
