@@ -7,6 +7,7 @@ import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
+import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/submissions/ManuallyCheckedClaims";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
@@ -22,7 +23,7 @@ import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPa
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
 
-const MIN_SCORE = 70;
+const DEFAULT_MIN_SCORE = 90;
 
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -39,8 +40,8 @@ interface Finding {
   frameCount: number;
 }
 
-function ring(score: number) {
-  return score >= 85 ? "#059669" : score >= MIN_SCORE ? "#D97706" : "#DC2626";
+function ring(score: number, minimumScore: number) {
+  return score >= Math.max(85, minimumScore) ? "#059669" : score >= minimumScore ? "#D97706" : "#DC2626";
 }
 
 function timecode(seconds: number) {
@@ -106,7 +107,10 @@ export default function ComplianceStep({
   const [playing, setPlaying] = useState(false);
   const slideshow = useImageSlideshow(files ?? sub?.files ?? (mainFile ? [mainFile] : []));
 
-  const findings: Finding[] = useMemo(() => {
+  const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
+  const isManuallyChecked = useManuallyCheckedClaims(ownsSubmission ? sub?.id : undefined, check);
+  const checkedClaims = check?.violations.filter(isManuallyChecked) ?? [];
+  const allFindings: Finding[] = useMemo(() => {
     if (!check) return [];
     const cap = caption.toLowerCase();
     const ttl = title.toLowerCase();
@@ -135,11 +139,11 @@ export default function ComplianceStep({
       })
       .sort((a, b) => Number(b.v.traffic_light === "RED") - Number(a.v.traffic_light === "RED") || (a.at ?? 1e9) - (b.at ?? 1e9));
   }, [check, caption, title, scriptText, mainFile?.id]);
+  const findings = allFindings.filter((finding) => !isManuallyChecked(finding.v));
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
   const checkedVideo = sub?.files.find((file) => file.id === mainFile?.id);
-  const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
   const canRequestDismissal = ownsSubmission && (editable || reviewState?.status === "IN_REVIEW");
   const canDismiss = !ownsSubmission && reviewState?.can_review === true;
   const parts = check ? timelineOf(sub!, duration) : [];
@@ -192,7 +196,7 @@ export default function ComplianceStep({
             <Button
               type="button"
               variant="default"
-              onClick={onCheck}
+              onClick={() => onCheck()}
               disabled={checking}
               className="h-10 shrink-0 gap-2 whitespace-nowrap rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
             >
@@ -244,8 +248,9 @@ export default function ComplianceStep({
   );
   const unavailable = check.ai_unavailable;
   const score = check.score;
-  const gap = score - MIN_SCORE;
-  const count = (s: string) => check.violations.filter((v) => statusOf(v) === s).length;
+  const minimumScore = Math.max(DEFAULT_MIN_SCORE, reviewState?.min_approval_score ?? 0);
+  const gap = score - minimumScore;
+  const count = (s: string) => findings.filter(({ v }) => statusOf(v) === s).length;
   const headline = [
     count("VIOLATION") ? `${count("VIOLATION")} issue${count("VIOLATION") === 1 ? "" : "s"} to fix` : "",
     count("EVIDENCE_REQUIRED") ? `${count("EVIDENCE_REQUIRED")} claim${count("EVIDENCE_REQUIRED") === 1 ? "" : "s"} need${count("EVIDENCE_REQUIRED") === 1 ? "s" : ""} a source` : "",
@@ -254,8 +259,8 @@ export default function ComplianceStep({
   const advice = check.blocked
     ? "A critical rule is broken, so this post can't be sent until that's fixed."
     : gap >= 0
-    ? `A post needs ${MIN_SCORE} or more, and no critical issue, to be sent. You are ${gap} point${gap === 1 ? "" : "s"} above the line${findings.length ? ", and the fixes below will raise it" : ""}.`
-    : `A post needs ${MIN_SCORE} or more, and no critical issue, to be sent. You are ${-gap} point${gap === -1 ? "" : "s"} under the line: fix the findings below and check again.`;
+    ? `A post needs ${minimumScore} or more, and no critical issue, to be sent. You are ${gap} point${gap === 1 ? "" : "s"} above the line${findings.length ? ", and the fixes below will raise it" : ""}.`
+    : `A post needs ${minimumScore} or more, and no critical issue, to be sent. You are ${-gap} point${gap === -1 ? "" : "s"} under the line: fix the findings below and check again.`;
 
   return (
     <div className={`grid grid-cols-1 items-start gap-4 sm:gap-5 ${scriptText ? "2xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.4fr)]" : "xl:grid-cols-[minmax(0,1fr)_minmax(340px,440px)]"}`}>
@@ -273,7 +278,7 @@ export default function ComplianceStep({
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
               <span
                 title={`Score ${score} out of 100`}
-                style={{ background: `conic-gradient(${ring(score)} ${score * 3.6}deg, var(--muted) 0)` }}
+                style={{ background: `conic-gradient(${ring(score, minimumScore)} ${score * 3.6}deg, var(--muted) 0)` }}
                 className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
               >
                 <span className="flex h-[78px] w-[78px] flex-col items-center justify-center rounded-full bg-card leading-none">
@@ -282,14 +287,14 @@ export default function ComplianceStep({
                 </span>
               </span>
               <div className="flex min-w-0 flex-1 basis-64 flex-col gap-2">
-                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : "No issues found"}</p>
+                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{advice}</p>
                 <div className="relative mt-1 h-2.5 rounded-full bg-muted">
-                  <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score) }} />
-                  <span className="absolute -top-1 h-4.5 w-0.5 bg-foreground" style={{ left: `${MIN_SCORE}%`, height: 18 }} />
+                  <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score, minimumScore) }} />
+                  <span className="absolute -top-1 h-4.5 w-0.5 bg-foreground" style={{ left: `${minimumScore}%`, height: 18 }} />
                 </div>
-                <span className="text-[11px] text-muted-foreground" style={{ marginLeft: `${MIN_SCORE - 4}%` }}>
-                  Minimum {MIN_SCORE}
+                <span className="text-[11px] text-muted-foreground" style={{ marginLeft: `${minimumScore - 4}%` }}>
+                  Minimum {minimumScore}
                 </span>
               </div>
             </div>
@@ -304,7 +309,7 @@ export default function ComplianceStep({
             <h2 className="text-lg font-bold text-foreground">What the check found</h2>
             {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
           </div>
-          {!analysing && findings.length === 0 && (
+          {!analysing && findings.length === 0 && checkedClaims.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>
@@ -362,6 +367,7 @@ export default function ComplianceStep({
               </article>
             );
           })}
+          <ManuallyCheckedClaims findings={checkedClaims} />
           {cleared.length > 0 && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-[13px] leading-relaxed text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <button
@@ -372,8 +378,7 @@ export default function ComplianceStep({
               >
                 <Check className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={3} />
                 <span className="min-w-0 flex-1">
-                  <strong className="font-semibold">{cleared.length} cleared by context.</strong> The wording matched a rule, but the sentence around it shows the
-                  rule doesn't apply. No points were taken off.
+                  <strong className="font-semibold">{cleared.length} cleared.</strong> The wording or supporting evidence resolved these findings. No points were taken off.
                 </span>
                 <span className="flex shrink-0 items-center gap-1 text-xs font-semibold">
                   {clearedOpen ? "Hide details" : "How?"}
@@ -435,7 +440,6 @@ export default function ComplianceStep({
             <h2 className="text-base font-bold text-foreground">Your post, marked up</h2>
             {mainFile && isVideo && <span className="text-[11px] text-muted-foreground">Video</span>}
           </div>
-
           {mainFile && isVideo && (
             <>
               <FlaggedVideo src={authedFileUrl(mainFile.url)} fileId={mainFile.id} videoRef={videoRef} findings={mediaFindings.map((f) => f.v)} currentTime={now} onTime={setNow} onDuration={setDuration} onPlaying={setPlaying} />
@@ -482,7 +486,7 @@ export default function ComplianceStep({
           <ul className="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted-foreground">
             <li>Every post starts at 100.</li>
             <li>A broken rule takes off 10 to 35 points. A claim that needs a source takes off 5.</li>
-            <li>Approval needs {MIN_SCORE} or more and no critical issue.</li>
+            <li>Approval needs {minimumScore} or more and no critical issue.</li>
             <li>Fix an issue and check again: the score updates.</li>
           </ul>
         </section>

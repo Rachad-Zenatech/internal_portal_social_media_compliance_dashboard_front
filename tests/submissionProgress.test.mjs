@@ -119,12 +119,13 @@ test("a returned post resets the previous submission's checks and shows five ste
   assert.equal(creatorProgressText(row, "Changes requested"), "0 of 5 steps done");
 });
 
-test("revision dots use the server's fresh round progress without promoting stale checks", () => {
+test("revision progress counts prior checks without making stale results ready to send", () => {
   const row = displayed(script({ status: "CHANGES_REQUESTED", content_type: "IMAGE", script_status: null,
     steps: { revision: true, suggestions: "done", details: "done", compliance: "stale", sentiment: "todo",
       mood: "todo", send: "todo", locked: false, ready_to_send: false, next: "compliance", missing: [] } }));
   assert.equal(row.steps.compliance, "stale");
-  assert.equal(creatorProgressText(row, "Changes requested"), "2 of 5 steps done");
+  assert.equal(creatorProgressText(row, "Changes requested"), "3 of 5 steps done");
+  assert.equal(creatorProgressText({ ...row, steps: { ...row.steps, compliance: "unavailable" } }, "Changes requested"), "3 of 5 steps done");
   assert.equal(revisionSteps.creatorPreparationSteps(false, true).length, 5);
   assert.equal(revisionSteps.creatorPreparationSteps(true, true).length, 4);
 });

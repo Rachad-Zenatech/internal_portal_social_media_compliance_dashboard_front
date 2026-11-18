@@ -8,9 +8,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiStatus` (interface) L7
 - `AiStatusBanner` (export function) L20 - A strip across the top of every page, for every signed-in user, while the AI (Gemini) isn't working: an expired  or revoked key, a used-u...
 
-## src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
-- `Props` (interface) L10
-- `AppShell` (export function) L17
+## src/components/AppShell/AppShell.tsx (65 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
+- `Props` (interface) L11
+- `AppShell` (export function) L18
 
 ## src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - `BreadcrumbItem` (export interface) L7

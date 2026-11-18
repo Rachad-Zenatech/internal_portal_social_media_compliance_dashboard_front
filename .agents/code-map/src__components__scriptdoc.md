@@ -64,7 +64,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (327 lines) - script doc hub (components scriptdoc)
+## src/components/scriptdoc/ScriptDocHub.tsx (329 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L26
 - `DocCard` (function) L28
 - `SetCard` (function) L68 - A creator's document: its scripts (pages) and where each stands.

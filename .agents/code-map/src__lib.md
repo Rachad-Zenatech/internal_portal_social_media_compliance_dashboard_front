@@ -59,6 +59,23 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `recordSproutSend` (export function) L424
 - `clearSproutSends` (export function) L430
 
+## src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
+- `MessagingReport` (export type) L5
+- `ContextFeedback` (export type) L6
+- `ContextCard` (export type) L7
+- `suggestedEdit` (function) L9
+- `brandCard` (function) L15
+- `factsCard` (function) L25
+- `platformCard` (function) L41
+- `audienceCard` (function) L52
+- `contextFeedbackCards` (export function) L63 - Each card leads with an observed issue and its fix, rather than a generic assessment.
+
+## src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
+- `claimKey` (export function) L5
+- `ComparedClaim` (type) L9
+- `sourceFeedback` (function) L11
+- `contextSourceFacts` (export function) L25 - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
+
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
 
@@ -72,6 +89,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `plain` (const) L5
 - `escapeRe` (const) L6
 - `updatedWording` (export function) L12 - What a highlighted stretch of wording reads now, given the changes between the version the reviewer read and the one  being sent.
+
+## src/lib/imageProvenance.ts (14 lines) - image provenance (lib)
+- `hasPostImages` (export function) L3
+- `imageProvenanceAnswer` (export function) L7
+- `imageProvenancePayload` (export function) L11
 
 ## src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - `set` (function) L18
@@ -109,16 +131,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `readSignals` (export function) L26
 - `hasTag` (export function) L35 - Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife").
 
-## src/lib/postSteps.ts (101 lines) - post steps (lib)
-- `POST_STEPS` (export const) L7 - The four steps a creator works through, in order.
-- `RECHECK_AFTER_EDITS` (export const) L31 - The server marks checks stale only after media changes.
-- `postPreparationSteps` (export function) L34 - Scripts use compliance only; sentiment becomes available when the video is attached.
-- `stepPath` (export function) L40 - Where each step opens.
-- `isStepKey` (export function) L44
-- `resumePath` (export function) L49 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
-- `ranOnce` (export function) L55 - Normalize progress without hiding stale media checks.
-- `stepStatusText` (export function) L63 - What a step is up to, as a sentence for the hover.
-- `missingText` (export function) L97
+## src/lib/postSteps.ts (106 lines) - post steps (lib)
+- `RAN_STEP_STATES` (export const) L3
+- `POST_STEPS` (export const) L9 - The four steps a creator works through, in order.
+- `RECHECK_AFTER_EDITS` (export const) L33 - The server marks checks stale only after media changes.
+- `postPreparationSteps` (export function) L36 - Scripts use compliance only; sentiment becomes available when the video is attached.
+- `stepPath` (export function) L42 - Where each step opens.
+- `isStepKey` (export function) L46
+- `resumePath` (export function) L51 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
+- `ranOnce` (export function) L57 - Normalize progress without hiding stale media checks.
+- `stepStatusText` (export function) L65 - What a step is up to, as a sentence for the hover.
+- `missingText` (export function) L102
 
 ## src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9
@@ -182,10 +205,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
 - `holdTextHighlight` (export function) L4 - Highlight selected comment wording until its owner explicitly clears it.
 
+## src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
+- `visibleSourceChecks` (export function) L4 - Automatic newsroom summaries only surface corroboration or an explicit conflict.
+
 ## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - `isScriptPreparation` (export function) L5
 - `creatorSubmissionSteps` (export function) L10 - Use one state for the dots, count and resume link, including script-only requirements.
 - `creatorProgressText` (export function) L32
+
+## src/lib/submissionRequiredFields.ts (15 lines) - Required post-detail fields, as shown in the creator checklist.
+- `SUBMISSION_REQUIRED_LABELS` (export const) L2 - Required post-detail fields, as shown in the creator checklist.
 
 ## src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
 - `STEP_TITLE` (export const) L3

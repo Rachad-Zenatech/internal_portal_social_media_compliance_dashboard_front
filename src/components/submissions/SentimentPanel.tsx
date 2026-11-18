@@ -1,3 +1,4 @@
+import type { SourceCheck } from "@/services/complianceService";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -690,31 +691,18 @@ const VERDICT_PILL: Record<SentimentAssessment, string> = {
   INSUFFICIENT_INFORMATION: "bg-muted text-foreground",
 };
 
-/** The editor's version of the result: the verdict, then tone, brand fit and reputational concern in three tiles. */
-function DesignHead({ r, ctx }: { r: SentimentResult; ctx?: FindingContext }) {
+/** The creator's short verdict; detailed context feedback sits beside the post. */
+function DesignHead({ r }: { r: SentimentResult }) {
   const a = ASSESSMENT[r.overall_assessment];
-  const brandTone = r.brand_alignment.rating === "MISALIGNED" ? LEVEL_TONE.HIGH : r.brand_alignment.rating === "PARTIALLY_ALIGNED" ? LEVEL_TONE.MODERATE : "";
-  const tile = (label: string, value: string, note?: string | null, tone = "") => (
-    <div className="flex flex-col gap-1.5 rounded-xl border border-border/70 p-3.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className={`text-base font-bold ${tone}`}>{value}</span>
-      {note && <span className="text-xs leading-relaxed text-muted-foreground">{note}</span>}
-    </div>
-  );
   return (
     <>
-      {ctx?.analysis.comparison && <ComparisonView c={ctx.analysis.comparison} r={r} />}
       <div className="flex flex-wrap items-start gap-4 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:p-5">
         <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-bold ${VERDICT_PILL[r.overall_assessment]}`}>
           <a.Icon className="h-4 w-4" /> {a.label}
         </span>
         <p className="min-w-0 flex-1 basis-80 text-sm leading-relaxed text-foreground/90">{r.summary}</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {tile("Tone", r.tone.primary, [r.tone.secondary, `${titleCase(r.tone.intensity)} intensity`].filter(Boolean).join(" · "))}
-        {tile("Fit with the brand", BRAND_LABELS[r.brand_alignment.rating], r.brand_alignment.explanation, brandTone)}
-        {tile("Reputational concern", titleCase(r.reputational_concern), null, LEVEL_TONE[r.reputational_concern])}
-      </div>
+
     </>
   );
 }
@@ -727,108 +715,90 @@ const READING: Record<string, { label: string; cls: string }> = {
 };
 
 /** Audiences, the controversy dial and what was flagged, each in its own card, as in the design. */
-function DesignRest({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: number) => void; ctx?: FindingContext }) {
+function DesignRest({ r }: { r: SentimentResult }) {
   // A report on the messaging context has the audience readings in it; older analyses keep their own section.
   const hasReport = Boolean(r.context_report);
   const c = r.controversy;
-  const findings = bySeverity(r.findings);
   return (
     <>
-      {((!hasReport && r.audience_interpretations.length > 0) || (c.applies && c.level)) && (
+      {!hasReport && r.audience_interpretations.length > 0 && (
         <details className={`${CARD} group flex flex-col gap-3.5`}>
           <summary className="cursor-pointer list-none text-lg font-bold text-foreground marker:hidden">
-            {hasReport ? "Controversy" : "How each audience may read it"}
+            How each audience may read it
             <span className="ml-2 text-xs font-normal text-muted-foreground group-open:hidden">Show</span>
           </summary>
-          {!hasReport && r.audience_interpretations.length > 0 && (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {r.audience_interpretations.map((ai, i) => {
-                const reading = READING[ai.concern_level] ?? READING.LOW;
-                return (
-                  <div key={i} className="flex flex-col gap-2 rounded-xl border border-border/70 p-3.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold text-foreground">{ai.audience}</span>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${reading.cls}`}>{reading.label}</span>
-                    </div>
-                    <p className="text-[13px] leading-relaxed text-foreground/80">{ai.likely_reading}</p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {r.audience_interpretations.map((ai, i) => {
+              const reading = READING[ai.concern_level] ?? READING.LOW;
+              return (
+                <div key={i} className="flex flex-col gap-2 rounded-xl border border-border/70 p-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-foreground">{ai.audience}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${reading.cls}`}>{reading.label}</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
-          {c.applies && c.level ? (
-            <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 p-3.5">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm font-bold text-foreground">Controversy: level {c.level} of 6</span>
-                {c.style && <span className="text-xs text-muted-foreground">{c.style}</span>}
-              </div>
-              <div className="grid grid-cols-6 gap-1.5" role="img" aria-label={`Controversy level ${c.level} of 6`}>
-                {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <span
-                    key={n}
-                    className={`grid h-8 place-items-center rounded-lg border text-xs font-bold ${
-                      n === c.level
-                        ? "border-blue-700 bg-blue-700 text-white"
-                        : n <= 4
-                        ? "border-blue-100 bg-blue-50 text-blue-900 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200"
-                        : "border-red-100 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200"
-                    }`}
-                  >
-                    {n}
-                  </span>
-                ))}
-              </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground">
-                <span>Educational</span>
-                <span>Confrontational</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">
-                {c.target && (
-                  <span className={`rounded-md px-2 py-0.5 ${c.target === "PEOPLE_OR_INSTITUTIONS" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground"}`}>
-                    {TARGET_LABELS[c.target]}
-                  </span>
-                )}
-                {c.professional_and_nonpartisan != null && (
-                  <span className={`rounded-md px-2 py-0.5 ${c.professional_and_nonpartisan ? "bg-muted text-muted-foreground" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
-                    {c.professional_and_nonpartisan ? "Professional & nonpartisan" : "Not professional / nonpartisan"}
-                  </span>
-                )}
-                {c.capability_claims_precise != null && (
-                  <span className={`rounded-md px-2 py-0.5 ${c.capability_claims_precise ? "bg-muted text-muted-foreground" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>
-                    {c.capability_claims_precise ? "Capability claims precise" : "Capability claims overstated"}
-                  </span>
-                )}
-                {c.defense_buyer_credibility_risk && (
-                  <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
-                    Defense-buyer credibility risk: <strong className={LEVEL_TONE[c.defense_buyer_credibility_risk]}>{titleCase(c.defense_buyer_credibility_risk)}</strong>
-                  </span>
-                )}
-              </div>
-              {c.explanation && <p className="text-xs leading-relaxed text-muted-foreground">{c.explanation}</p>}
-            </div>
-          ) : null}
+                  <p className="text-[13px] leading-relaxed text-foreground/80">{ai.likely_reading}</p>
+                </div>
+              );
+            })}
+          </div>
         </details>
       )}
+      {c.applies && c.level ? (
+        <section className={`${CARD} flex flex-col gap-3.5`}>
+          <h2 className="text-lg font-bold text-foreground">Controversy</h2>
+          <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 p-3.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-sm font-bold text-foreground">Controversy: level {c.level} of 6</span>
+              {c.style && <span className="text-xs text-muted-foreground">{c.style}</span>}
+            </div>
+            <div className="grid grid-cols-6 gap-1.5" role="img" aria-label={`Controversy level ${c.level} of 6`}>
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <span
+                  key={n}
+                  className={`grid h-8 place-items-center rounded-lg border text-xs font-bold ${
+                    n === c.level
+                      ? "border-blue-700 bg-blue-700 text-white"
+                      : n <= 4
+                      ? "border-blue-100 bg-blue-50 text-blue-900 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200"
+                      : "border-red-100 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200"
+                  }`}
+                >
+                  {n}
+                </span>
+              ))}
+            </div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Educational</span>
+              <span>Confrontational</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
+              {c.target && (
+                <span className={`rounded-md px-2 py-0.5 ${c.target === "PEOPLE_OR_INSTITUTIONS" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground"}`}>
+                  {TARGET_LABELS[c.target]}
+                </span>
+              )}
+              {c.professional_and_nonpartisan != null && (
+                <span className={`rounded-md px-2 py-0.5 ${c.professional_and_nonpartisan ? "bg-muted text-muted-foreground" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
+                  {c.professional_and_nonpartisan ? "Professional & nonpartisan" : "Not professional / nonpartisan"}
+                </span>
+              )}
+              {c.capability_claims_precise != null && (
+                <span className={`rounded-md px-2 py-0.5 ${c.capability_claims_precise ? "bg-muted text-muted-foreground" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>
+                  {c.capability_claims_precise ? "Capability claims precise" : "Capability claims overstated"}
+                </span>
+              )}
+              {c.defense_buyer_credibility_risk && (
+                <span className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground">
+                  Defense-buyer credibility risk: <strong className={LEVEL_TONE[c.defense_buyer_credibility_risk]}>{titleCase(c.defense_buyer_credibility_risk)}</strong>
+                </span>
+              )}
+            </div>
+            {c.explanation && <p className="text-xs leading-relaxed text-muted-foreground">{c.explanation}</p>}
+          </div>
+        </section>
+      ) : null}
       {r.precedents && r.precedents.length > 0 && <PrecedentsView precedents={r.precedents} />}
-
-      <section className={`${CARD} flex flex-col gap-3.5`}>
-        <h2 className="text-lg font-bold text-foreground">Things it noticed</h2>
-        {findings.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">Nothing in the post stood out.</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
-            {findings.map((f, i) => (
-              <FindingCard key={f.id ?? i} f={f} onSeek={onSeek} ctx={ctx} />
-            ))}
-          </div>
-        )}
-        {r.audio && <AudioCard audio={r.audio} />}
-        {r.information_gaps.length > 0 && (
-          <div className="border-t border-border/60 pt-3 text-[13px] leading-relaxed text-muted-foreground">
-            <strong className="font-semibold text-foreground">What it couldn't see:</strong> {r.information_gaps.join(" ")}
-          </div>
-        )}
-      </section>
+      {r.audio && <AudioCard audio={r.audio} />}
     </>
   );
 }
@@ -879,6 +849,7 @@ export default function SentimentPanel({
   beforeAnalyse,
   showTopicTrends = true,
   design = false,
+  sourceChecks = [],
   post,
   className = "",
 }: {
@@ -897,6 +868,7 @@ export default function SentimentPanel({
   showTopicTrends?: boolean;
   /** The editor's layout: cards and a side column, as in the design. */
   design?: boolean;
+  sourceChecks?: SourceCheck[];
   /** The post itself (picture and captions), shown with the messaging context report. */
   post?: ReactNode;
   className?: string;
@@ -1007,7 +979,7 @@ export default function SentimentPanel({
               <strong className="font-semibold">You've changed the post since this was run.</strong> Run it again to see how the new version reads.
             </p>
           )}
-          <DesignHead r={result} ctx={ctx} />
+          <DesignHead r={result} />
         </>
       ) : result ? (
         <>
@@ -1082,7 +1054,7 @@ export default function SentimentPanel({
 
   if (design) {
     return (
-      <div className={`@container grid grid-cols-1 items-start gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] ${className}`}>
+      <div className={`@container space-y-4 sm:space-y-5 ${className}`}>
         <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
           <section className={`${CARD} flex flex-col gap-4`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1123,19 +1095,11 @@ export default function SentimentPanel({
             )}
             {statusChain}
           </section>
-          {result?.context_report ? (
-            <ContextReportView
-              report={result.context_report}
-              visual={result.visual_alignment}
-              entries={analysis?.context_entries ?? []}
-              post={post}
-            />
-          ) : (
-            post
-          )}
-          {result && <DesignRest r={result} onSeek={onSeek} ctx={ctx} />}
+          {result ? (
+            <ContextReportView report={result.context_report} visual={result.visual_alignment} sourceChecks={sourceChecks} entries={analysis?.context_entries ?? []} post={post} findings={result.findings}
+              details={<><DesignRest r={result} /><DesignAside analysis={analysis} result={result} /></>} />
+          ) : post}
         </div>
-        <DesignAside analysis={analysis} result={result} />
       </div>
     );
   }

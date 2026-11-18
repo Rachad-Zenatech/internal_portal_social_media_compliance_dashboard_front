@@ -4,13 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ContextReportView.tsx (421 lines) - context report view (components submissions)
-- `Report` (type) L12
-- `sourceLabel` (function) L54 - How a source reads in the table: a link from the newsroom reads "Newsroom article", not its whole address.
-    - `isUrl` (fn) L55
-- `pretty` (const) L71
-- `Pill` (function) L73
-- `Chip` (function) L81
-- `Tile` (function) L85
-- `CardHead` (function) L95
-- `ContextReportView` (export function) L112 - How the post measures against the Messaging Context its brand, audiences and platforms bring in: four summary  tiles, then brand voice, f...
+## src/components/submissions/ContextReportView.tsx (59 lines) - context report view (components submissions)
+- `Report` (type) L10
+- `CaptionVisualComparison` (function) L12
+- `ContextReportView` (export function) L30 - Keep the post beside four actionable context checks, with supporting material below.

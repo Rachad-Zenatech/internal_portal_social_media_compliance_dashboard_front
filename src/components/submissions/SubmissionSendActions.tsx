@@ -12,6 +12,8 @@ interface Props {
   resubmitting: boolean;
   hasCheck: boolean;
   checkStale: boolean;
+  score?: number;
+  minimumScore: number;
   submitting: boolean;
   disabled: boolean;
   publishDate?: Date;
@@ -26,7 +28,9 @@ export default function SubmissionSendActions(props: Props) {
   if (publishAfterChanges) return <RevisionPublishActions {...props} />;
   const label = videoLocked ? "Send Script for Review" : resubmitting
     ? "Resubmit for Review" : "Send for Review";
-  const description = videoLocked ? "Sends your script to the reviewers you picked."
+  const scoreTooLow = !videoLocked && !checkStale && props.score != null && props.score < props.minimumScore;
+  const description = scoreTooLow ? `Your compliance score is ${props.score}/100. Sending for review requires at least ${props.minimumScore}.`
+    : videoLocked ? "Sends your script to the reviewers you picked."
     : !hasCheck ? "You haven't run the compliance check yet. It also runs when you send."
     : checkStale ? "Edited since your last check. It runs again when you send."
     : "Ready when you are. The reviewer sees the same check and analysis.";
@@ -35,7 +39,7 @@ export default function SubmissionSendActions(props: Props) {
     <div className="space-y-3 border-t border-border/60 pt-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[11px] text-muted-foreground">{description}</p>
-        <Button type="button" onClick={props.onSubmit} disabled={props.disabled} className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
+        <Button type="button" onClick={props.onSubmit} disabled={props.disabled || scoreTooLow} className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">
           {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           {label}
         </Button>
