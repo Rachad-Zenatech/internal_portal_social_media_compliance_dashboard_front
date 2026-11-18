@@ -33,7 +33,7 @@ function ReviewerQueueBadge({ count }: { count: number }) {
   return (
     <span
       aria-label={`${count} item${count === 1 ? "" : "s"} waiting for review`}
-      className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white"
+      className="ml-auto shrink-0 rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-800 dark:bg-blue-500/20 dark:text-blue-200"
     >
       {count}
     </span>
