@@ -1,3 +1,4 @@
+import type { ReviewScoreFields } from "@/types/reviewScore";
 import type { ImageProvenance } from "@/types/imageProvenance";
 import type { ScriptMatch } from "@/types/scriptMatch";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
@@ -147,7 +148,7 @@ export interface AnalysisProgress {
   from_history?: boolean;
 }
 
-export interface Submission extends SubmissionSourceFields, ImageProvenance {
+export interface Submission extends SubmissionSourceFields, ImageProvenance, ReviewScoreFields {
   /** The saved check was made before the rulebook last changed. */
   check_outdated?: boolean;
   id: string;
@@ -204,9 +205,6 @@ export interface Submission extends SubmissionSourceFields, ImageProvenance {
   can_delegate?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
-  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
-  approval_score?: number | null;
-  min_approval_score?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
   /** Video posts: the script is approved before the video goes in. Null when the post has no script stage. */
@@ -244,7 +242,7 @@ export interface SubmissionSteps {
   missing: string[];
 }
 
-export interface SubmissionSummary {
+export interface SubmissionSummary extends ReviewScoreFields {
   /** How far the creator has got through the five steps (missing on very old servers). */
   steps?: SubmissionSteps | null;
   /** Video drafts in the script stage: where the script is (null when there's no script stage). */
@@ -310,9 +308,6 @@ export interface SubmissionSummary {
   can_approve?: boolean;
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
-  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
-  approval_score?: number | null;
-  min_approval_score?: number;
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
 }
@@ -462,7 +457,7 @@ export interface SubmissionHistory {
   events: SubmissionEvent[];
 }
 
-export interface ReviewQueueItem {
+export interface ReviewQueueItem extends ReviewScoreFields {
   /** Video posts with a script stage: where the script is (to link to it). */
   script_status?: ScriptStatus | null;
   id: string;
@@ -498,9 +493,6 @@ export interface ReviewQueueItem {
   reviewer_ids?: string[];
   /** Critical flags on the current version that no reviewer has dismissed; approval waits on these. */
   open_critical_flags?: number;
-  /** Rulebook score counting only flags nobody has dismissed (null: no score yet), and the least approval needs. */
-  approval_score?: number | null;
-  min_approval_score?: number;
   publish_at?: string | null;
   brand_code?: string | null;
   audience?: string | null;

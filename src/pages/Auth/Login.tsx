@@ -129,39 +129,6 @@ export default function Login() {
     handleSsoCallback();
   }, [searchParams, navigate, refreshPermissions]);
 
-  // Local testing: the backend offers test sign-in only when DEV_TEST_LOGIN is on, outside production, at localhost.
-  const [testLogin, setTestLogin] = useState(false);
-  useEffect(() => {
-    apiClient
-      .get<{ enabled: boolean }>("/api/auth/test-login", { skipGlobalLoading: true })
-      .then((r) => setTestLogin(Boolean(r.enabled)))
-      .catch(() => setTestLogin(false));
-  }, []);
-
-  const handleTestLogin = async (as: "creator" | "reviewer" | "manager" | "reviewer2" | "reviewer3" | "suggester") => {
-    setIsLoading(true);
-    try {
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
-      sessionStorage.removeItem("ms_id_token");
-      sessionStorage.removeItem(SIGNED_OUT_KEY);
-      const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
-      sessionStorage.setItem("token", token);
-      // Never signed in to Microsoft: signing out skips Microsoft's sign-out page.
-      sessionStorage.setItem("auth_provider", "test");
-      const perms = await refreshPermissions();
-      if (!perms) {
-        throw new Error("Test sign-in could not be verified. Please try again.");
-      }
-      toast.success(`Signed in as the test ${as.replace(/(\d)$/, " $1")}`);
-      navigate("/");
-    } catch (error) {
-      toast.error(error instanceof Error && error.message ? error.message : "Test sign-in failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleLogin = () => {
     // Redirect to backend Microsoft SSO endpoint
     const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
@@ -194,7 +161,7 @@ export default function Login() {
               Sign in with your @zenatech.com account
             </CardDescription>
           </CardHeader>
-                    <CardContent className="space-y-4">
+          <CardContent className="space-y-4">
             <Button
               onClick={handleLogin}
               className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all"
@@ -209,31 +176,6 @@ export default function Login() {
                 "Sign in with Microsoft"
               )}
             </Button>
-            {testLogin && (
-              <div className="space-y-2 rounded-xl border border-dashed border-amber-400/70 bg-amber-50/60 p-3 dark:border-amber-500/40 dark:bg-amber-500/5">
-                <p className="text-center text-xs font-medium text-amber-800 dark:text-amber-300">Local testing only</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("creator")}>
-                    Test creator
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer")}>
-                    Test reviewer
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("manager")}>
-                    Test manager
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer2")}>
-                    Test reviewer 2
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("reviewer3")}>
-                    Test reviewer 3
-                  </Button>
-                  <Button variant="outline" className="h-9 rounded-lg text-sm" disabled={isLoading} onClick={() => handleTestLogin("suggester")}>
-                    Test suggester
-                  </Button>
-                </div>
-              </div>
-            )}
           </CardContent>
           <CardFooter className="flex justify-center pb-8 pt-4 border-t border-slate-100 dark:border-zinc-800/50 mt-2 bg-slate-50/50 dark:bg-zinc-950/30">
             <p className="text-sm text-slate-500 dark:text-zinc-400">

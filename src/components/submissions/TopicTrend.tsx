@@ -306,6 +306,7 @@ export default function TopicTrend({
   onRestore,
   hasRun = true,
   onRun,
+  showAllMarketTrends = false,
 }: {
   submissionId?: string | null;
   mood?: PublicMood | null;
@@ -318,6 +319,8 @@ export default function TopicTrend({
   /** Public mood only runs when asked: until it has, this shows a Run button instead of results. */
   hasRun?: boolean;
   onRun?: () => void;
+  /** Render the shared public-mood radar without first selecting a post. */
+  showAllMarketTrends?: boolean;
 }) {
   const { data: marketTrends, isLoading: trendsLoading } = useMarketTrends(hasRun);
   const [showAllTrends, setShowAllTrends] = useState(false);
@@ -342,6 +345,7 @@ export default function TopicTrend({
   const decision = overallPostDecision(mood);
   const matchedIds = new Set<string | null | undefined>((mood?.topics ?? []).map((t) => t.topic_id));
   const otherTrends = (marketTrends ?? []).filter((t) => !matchedIds.has(t.topic_id));
+  const displayedTrends = showAllMarketTrends ? marketTrends ?? [] : mood?.topics.length === 0 ? marketTrends ?? [] : otherTrends;
 
   return (
     <div className="space-y-2.5">
@@ -447,7 +451,7 @@ export default function TopicTrend({
       )}
 
       {/* Live market trends radar (always available so reviewers see what's trending to jump on or avoid) */}
-      {(otherTrends.length > 0 || (mood && mood.topics.length === 0 && (marketTrends?.length ?? 0) > 0)) && (
+      {(showAllMarketTrends || otherTrends.length > 0 || (mood && mood.topics.length === 0 && (marketTrends?.length ?? 0) > 0)) && (
         <div className="pt-1">
           <button
             type="button"
@@ -455,24 +459,24 @@ export default function TopicTrend({
             className="flex w-full items-center justify-between rounded-md bg-muted/60 px-2.5 py-1.5 text-left text-[11px] font-semibold text-foreground/90 hover:bg-muted"
           >
             <span>
-              {mood && mood.topics.length === 0
+              {showAllMarketTrends || (mood && mood.topics.length === 0)
                 ? `Live market & news trends right now (${marketTrends?.length ?? 0})`
                 : `Other live market trends to jump on or avoid (${otherTrends.length})`}
             </span>
             <ChevronDown
               className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${
-                showAllTrends || (mood?.topics.length === 0) ? "rotate-180" : ""
+                showAllTrends || showAllMarketTrends || (mood?.topics.length === 0) ? "rotate-180" : ""
               }`}
             />
           </button>
-          {(showAllTrends || mood?.topics.length === 0) && (
+          {(showAllTrends || showAllMarketTrends || mood?.topics.length === 0) && (
             trendsLoading ? (
               <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="w-3 h-3 animate-spin" /> Loading market trends...
               </p>
             ) : (
               <ul className="mt-1.5 divide-y divide-border/60 rounded-lg border border-border/70 px-2.5 py-2">
-                {(mood?.topics.length === 0 ? marketTrends ?? [] : otherTrends).map((t) => (
+                {displayedTrends.map((t) => (
                   <MarketTrendRow key={t.topic_id} t={t} />
                 ))}
               </ul>

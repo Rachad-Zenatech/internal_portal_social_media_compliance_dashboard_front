@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ConversationImages, ConversationVideo } from "@/components/submissions/ConversationMedia";
 import ReviewCommentsPanel from "@/components/submissions/ReviewCommentsPanel";
-import { useReviewComments } from "@/hooks/useReview";
+import ReviewCaptionPreview from "@/components/submissions/ReviewCaptionPreview";
+import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import type { SubmissionFile } from "@/types/submission";
 
 /**
@@ -13,21 +14,23 @@ import type { SubmissionFile } from "@/types/submission";
 export default function ReviewConversation({
   submissionId,
   files,
+  caption = "",
   canReply,
   header,
   emptyText,
 }: {
   submissionId: string;
   files: SubmissionFile[];
+  caption?: string;
   /** Sent back: the creator can reply. Approved: read-only. */
   canReply: boolean;
   header?: ReactNode;
   emptyText?: string;
 }) {
-  const { comments } = useReviewComments(submissionId);
   const images = files.filter((f) => (f.kind === "MAIN" || f.kind === "IMAGE") && f.mime_type.startsWith("image/"));
   const video = files.find((f) => f.kind === "MAIN" && f.mime_type.startsWith("video/"));
   const [active, setActive] = useState<string | null>(null);
+  const { comments, selectComment } = useCaptionCommentSelection(submissionId, active, setActive);
   const [imageIndex, setImageIndex] = useState(0);
   const image = images[Math.min(imageIndex, Math.max(0, images.length - 1))];
 
@@ -51,7 +54,7 @@ export default function ReviewConversation({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  const hasMedia = Boolean(image || video);
+  const hasContent = Boolean(image || video || caption.trim());
 
   const list = (
     <ReviewCommentsPanel
@@ -63,7 +66,7 @@ export default function ReviewConversation({
       onSeek={video ? seek : undefined}
       activeCommentId={active}
       onShowRegion={(c) => {
-        setActive(active === c.id ? null : c.id);
+        selectComment(c);
         if (c.start_sec != null) seek(c.start_sec);
       }}
       placeholder="Reply to the reviewer..."
@@ -74,7 +77,7 @@ export default function ReviewConversation({
   return (
     <div className="space-y-3 rounded-2xl border border-border/80 bg-card px-5 py-4">
       {header}
-      {!hasMedia ? (
+      {!hasContent ? (
         list
       ) : (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] min-[112.5rem]:grid-cols-[minmax(0,1fr)_520px]">
@@ -98,6 +101,7 @@ export default function ReviewConversation({
                 }}
               />
             ) : null}
+            <ReviewCaptionPreview submissionId={submissionId} caption={caption} />
           </div>
 
           {/* The comments */}

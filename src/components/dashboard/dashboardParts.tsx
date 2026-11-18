@@ -100,12 +100,17 @@ export function ActivityList({
   items,
   loading,
   empty,
+  error,
+  onRetry,
 }: {
   items: DashboardSummary["activity"];
   loading: boolean;
   empty: string;
+  error?: Error | null;
+  onRetry?: () => void;
 }) {
   if (loading) return <Loading />;
+  if (error && !items.length) return <div role="alert" className="space-y-2 px-4 py-5 text-sm text-destructive"><p>Could not load activity.</p>{onRetry && <Button type="button" variant="outline" size="sm" onClick={onRetry}>Try again</Button>}</div>;
   if (!items.length) return <Empty>{empty}</Empty>;
   return (
     <ul className="divide-y divide-border/60 border-t border-border/60">

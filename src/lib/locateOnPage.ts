@@ -3,6 +3,8 @@
  * script viewer of their own. Each call for the same wording goes to the next place it appears.
  */
 
+import { holdTextHighlight } from "@/lib/selectedTextHighlight";
+
 const FLASH_NAME = "page-locate-flash";
 const FLASH_COLOR = "#fb923c";
 /** Wording inside an element with this attribute (the finding cards themselves) is never a match. */
@@ -51,11 +53,11 @@ let exclude: Element | null = null;
 const skipped = (el: Element | null) =>
   !el || !!el.closest(`[${LOCATE_SKIP_ATTR}],script,style,noscript,textarea`) || !!exclude?.contains(el);
 
-type Hit = { at: Node; flash: () => void };
+type Hit = { at: Node; flash: () => void; range?: Range };
 
-function textHits(needle: string): Hit[] {
+function textHits(needle: string, root: HTMLElement = document.body): Hit[] {
   const nodes: Text[] = [];
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (n) =>
       skipped(n.parentElement) || !shown(n.parentElement) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
@@ -87,9 +89,18 @@ function textHits(needle: string): Hit[] {
     const range = document.createRange();
     range.setStart(sNode, sOff);
     range.setEnd(eNode, eOff + 1);
-    hits.push({ at: sNode, flash: () => flashRange(range) });
+    hits.push({ at: sNode, range, flash: () => flashRange(range) });
   }
   return hits;
+}
+
+/** Highlight quoted wording within a specific text area until the returned cleanup runs. */
+export function locateInElement(term: string, root: HTMLElement): (() => void) | null {
+  const needle = cleanTerm(term);
+  if (!needle) return null;
+  exclude = null;
+  const hit = textHits(needle, root)[0];
+  return hit?.range ? holdTextHighlight(hit.range) : null;
 }
 
 function fieldHits(needle: string): Hit[] {

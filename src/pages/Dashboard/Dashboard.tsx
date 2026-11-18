@@ -26,6 +26,7 @@ import {
 import { audienceCodes, audienceNames, refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useVideoUploadQueue } from "@/context/VideoUploadQueueContext";
 import { useAuth } from "@/lib/AuthContext";
+import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 import { scriptService } from "@/services/scriptService";
 import { submissionService } from "@/services/submissionService";
 import type { ScriptQueueItem } from "@/types/script";
@@ -66,11 +67,7 @@ function ReviewerDashboard() {
     staleTime: 0,
     refetchInterval: refetchWhileAnalysing,
   });
-  const summary = useQuery({
-    queryKey: ["dashboard-summary", "all"],
-    queryFn: () => submissionService.dashboard("all"),
-    staleTime: 60_000,
-  });
+  const summary = useDashboardSummary("all");
   // Scripts waiting for a review are part of the queue too.
   const scripts = useQuery({
     queryKey: ["script-queue", "review"],
@@ -188,8 +185,8 @@ function ReviewerDashboard() {
     );
   };
 
-  // The team's activity, minus the reviewer's own actions.
-  const activity = (summary.data?.activity ?? []).filter((a) => a.actor_id !== user?.id).slice(0, ACTIVITY_LIMIT);
+  // Keep the reviewer's own decisions visible alongside creator handoffs.
+  const activity = (summary.data?.activity ?? []).slice(0, ACTIVITY_LIMIT);
 
   const loading = submissions.isLoading || scripts.isLoading;
   const waiting = needsMyReview.length;
@@ -346,7 +343,7 @@ function ReviewerDashboard() {
         <div className="flex min-w-0 flex-col gap-6">
           <DayAgenda posts={all} loading={loading} />
           <Section title="Activity" subtitle="What creators and other reviewers did">
-            <ActivityList items={activity} loading={summary.isLoading} empty="No recent activity from your team." />
+            <ActivityList items={activity} loading={summary.isLoading} error={summary.error} onRetry={() => void summary.refetch()} empty="No recent activity from your team." />
           </Section>
         </div>
       </div>

@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
-import { ArrowRight, FileText, Loader2, PenLine, RefreshCw } from "lucide-react";
+import { ArrowRight, FileText, Loader2, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
-import { useReviewComments } from "@/hooks/useReview";
+import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
+import ReviewCaptionPreview from "@/components/submissions/ReviewCaptionPreview";
 import type { ReviewComment, SubmissionFile } from "@/types/submission";
 
 /**
@@ -39,13 +40,13 @@ export default function RevisionWorkspace({
   /** The changes are made: save and go on to run the checks again. */
   onDone: () => void;
 }) {
-  const { comments } = useReviewComments(submissionId);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   // The area of the image a reviewer commented on, picked here or in the list.
   const [activeComment, setActiveComment] = useState<string | null>(null);
+  const { comments, selectComment } = useCaptionCommentSelection(submissionId, activeComment, setActiveComment);
 
   const open = comments.filter((c) => !c.resolved_at).length;
   const due = dueInfo(dueAt, "REVISION");
@@ -134,7 +135,7 @@ export default function RevisionWorkspace({
             {mainFile && <span className="text-[11px] text-muted-foreground truncate min-w-0">{mainFile.original_name}</span>}
           </div>
 
-          <CaptionCard caption={caption} onEdit={onEditCaption} />
+          <ReviewCaptionPreview submissionId={submissionId} caption={caption} onEdit={onEditCaption} />
         </div>
 
         {/* Comments */}
@@ -146,7 +147,7 @@ export default function RevisionWorkspace({
             onSeek={isVideo ? seek : undefined}
             activeCommentId={activeComment}
             onShowRegion={(c) => {
-              setActiveComment(activeComment === c.id ? null : c.id);
+              selectComment(c);
               if (c.start_sec != null) seek(c.start_sec);
             }}
             placeholder="Reply to the reviewer..."
@@ -181,22 +182,6 @@ function CommentMarks({ pinned, now, duration, onSeek }: { pinned: ReviewComment
         })}
       </div>
       <p className="mt-1 text-[10px] text-muted-foreground">Blue marks are open comments, grey are resolved. Click one to jump there.</p>
-    </div>
-  );
-}
-
-function CaptionCard({ caption, onEdit }: { caption: string; onEdit: () => void }) {
-  return (
-    <div className="rounded-lg border border-border/80 p-3 space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-foreground">Caption / copy</p>
-        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={onEdit}>
-          <PenLine className="w-3.5 h-3.5" /> Edit caption
-        </Button>
-      </div>
-      <p className="text-xs text-foreground whitespace-pre-wrap break-words line-clamp-6">
-        {caption.trim() || <span className="text-muted-foreground">No caption.</span>}
-      </p>
     </div>
   );
 }

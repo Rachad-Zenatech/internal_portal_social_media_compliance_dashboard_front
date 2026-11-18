@@ -17,11 +17,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
 
+## src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
+- `useCaptionCommentSelection` (export function) L7 - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
+
+## src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
+- `useCaptionNote` (export function) L7 - A reviewer note on selected caption wording, saved through the shared comment API.
+
 ## src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - `useCaptionSuggestions` (export function) L7 - Caption suggestions for a draft, and how many are left today.
 
 ## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - `useComplianceRules` (export function) L6 - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+
+## src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
+- `useDashboardSummary` (export function) L5 - Returning from a workflow action must show its activity; polling catches other sessions too.
 
 ## src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - `useEmailTimezone` (export function) L6 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
@@ -42,7 +51,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useEntryMutations` (function) L27 - Saving, turning on/off and removing entries, each refreshing the list and the analyses that used it.
 - `useMessagingContext` (export function) L64 - Everything the Messaging Context page shows and does: the entries of the open kind, the audience profile picked,  the fact search, and ad...
 
-## src/hooks/useNotificationStream.tsx (76 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
+## src/hooks/useNotificationStream.tsx (80 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.
 - `LiveNotification` (type) L12
 - `useNotificationStream` (export function) L19 - Live notifications: refresh the lists and counts, show a toast (inAppAlerts) and a desktop alert  (windowsNotifications).
 
@@ -60,10 +69,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
-## src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+## src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
-- `useScrapeTwitter` (export function) L111 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
+- `useNavPublicMood` (export function) L111 - Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood.
+- `useScrapeTwitter` (export function) L121 - Trigger live scraping of ZenaTech financial and/or today's posts (scope=all|financial|today) and refresh queries.
 
 ## src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12
@@ -79,6 +89,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
+
+## src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
+- `useScreenerMediaNavigation` (export function) L8 - Rule selection also navigates the carousel, including repeated clicks on the same rule.
 
 ## src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - `useScriptStage` (export function) L14 - A post's script stage, refreshed while its file is still being read.

@@ -53,7 +53,10 @@ export function useNotificationStream({ inAppAlerts, windowsNotifications }: { i
     {
       // The server ends each stream every couple of minutes and the browser reconnects; catch up on anything sent between.
       onOpen: () => {
-        if (connectedBefore.current) queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        if (connectedBefore.current) {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+        }
         connectedBefore.current = true;
       },
       onMessage: (data, own) => {
@@ -62,6 +65,7 @@ export function useNotificationStream({ inAppAlerts, windowsNotifications }: { i
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
           queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
           if (isForMe(n)) {
+            queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
             queryClient.invalidateQueries({ queryKey: ["script-docs"] });
             queryClient.invalidateQueries({ queryKey: ["script-queue"] });
             show(n, own);

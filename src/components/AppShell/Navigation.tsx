@@ -7,6 +7,7 @@ import {
   ScanSearch,
   BookCheck,
   CalendarDays,
+  Globe2,
   BookOpenText,
   Forward,
   FileStack,
@@ -115,6 +116,15 @@ export const navigation: NavigationItem[] = [
     label: "Content calendar",
     path: "/content-calendar",
     icon: CalendarDays,
+    section: "MAIN",
+    navigationCode: "DASHBOARD",
+    views: ["reviewer", "creator"],
+  },
+  {
+    // Use the normal Dashboard permission so all dashboard roles, including admins, can open it.
+    label: "Public mood",
+    path: "/public-mood",
+    icon: Globe2,
     section: "MAIN",
     navigationCode: "DASHBOARD",
     views: ["reviewer", "creator"],

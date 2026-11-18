@@ -10,6 +10,7 @@ export interface ListeningPost {
   confidence?: number | null;
   engagements: number;
   posted_on?: string | null;
+  url?: string | null;
 }
 
 export interface TopicSnapshot {
@@ -141,6 +142,8 @@ export interface MatchTestResult {
   topics: MatchTestTopic[];
 }
 
+export type ScrapeScope = "all" | "financial" | "today";
+
 export interface XTrendOpportunity {
   topic_id?: string | null;
   external_id: string;
@@ -158,4 +161,41 @@ export interface XTrendOpportunity {
   can_jump_on_trend: boolean;
   trend_angle: string;
   top_posts: ListeningPost[];
+  scrape_track?: string | null;
+  post_id?: string | null;
+  post_title?: string | null;
+  today_reason?: string | null;
+  publish_at?: string | null;
+  search_method?: string | null;
+  search_keywords?: string[];
+  search_queries?: string[];
+}
+
+export interface TodayPostSummary {
+  id: string;
+  title: string;
+  status: string;
+  publish_at?: string | null;
+  today_reason: string;
+  has_searches: boolean;
+}
+
+export interface NavScrapeTrack {
+  key: "financial_zenatech" | "today_posts";
+  title: string;
+  subtitle: string;
+  status: string;
+  collected_at?: string | null;
+  empty_reason?: string | null;
+  posts: TodayPostSummary[];
+  trends: XTrendOpportunity[];
+}
+
+export interface NavPublicMoodResponse {
+  financial_zenatech: NavScrapeTrack;
+  today_posts: NavScrapeTrack;
+  scrape_state: string;
+  schedule_enabled?: boolean;
+  schedule_label?: string | null;
+  next_scrape_at?: string | null;
 }

@@ -7,6 +7,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - `ApprovalPaths` (export function) L24 - Who gives final approval for which content.
 
+## src/pages/Configurations/MoodTrainingData.tsx (121 lines) - mood training data (pages  configurations)
+- `TrainingExample` (interface) L9
+- `TrainingData` (interface) L20
+- `featureSummary` (function) L35
+- `ExampleRow` (function) L42
+- `ExamplesTable` (function) L63
+- `MoodTrainingData` (export function) L94 - Quick panel: the reviewed assessments the XGBoost decision model was trained on (loaded when opened).
+
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function) L8
 
@@ -89,13 +97,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `canDrop` (fn) L408
     - `handleMoveRole` (fn) L424
 
-## src/pages/Configurations/TrainingDataPage.tsx (66 lines) - training data page (pages  configurations)
-- `QualitySummary` (function) L13
-- `AiCapacity` (function) L27
-- `CapacityMetric` (function) L33
-- `FinanceCoverage` (function) L37
-- `RuleDataTable` (function) L52
-- `TrainingDataPage` (export function) L57
+## src/pages/Configurations/RuleTrainingTable.tsx (257 lines) - rule training table (pages  configurations)
+- `ExampleBox` (function) L9
+- `SelfTestList` (function) L42
+- `RuleExamplesDetail` (function) L78
+- `RuleRow` (function) L124
+- `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
+
+## src/pages/Configurations/TrainingDataPage.tsx (62 lines) - training data page (pages  configurations)
+- `QualitySummary` (function) L14
+- `AiCapacity` (function) L28
+- `CapacityMetric` (function) L34
+- `FinanceCoverage` (function) L38
+- `TrainingDataPage` (export function) L53
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.

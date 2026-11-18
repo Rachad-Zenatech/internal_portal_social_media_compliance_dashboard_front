@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -16,6 +17,8 @@ import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submis
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
+import { findingSelectionKey, selectFindingImage } from "@/lib/findingImage";
+import { useImageSlideshow } from "@/hooks/useImageSlideshow";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
@@ -102,6 +105,7 @@ export default function ComplianceStep({
   const [now, setNow] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const slideshow = useImageSlideshow(files ?? sub?.files ?? (mainFile ? [mainFile] : []));
 
   const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
   const isManuallyChecked = useManuallyCheckedClaims(ownsSubmission ? sub?.id : undefined, check);
@@ -112,7 +116,7 @@ export default function ComplianceStep({
     const ttl = title.toLowerCase();
     return check.violations
       .filter((v) => statusOf(v) !== "CLEARED")
-      .map((v) => {
+      .map((v, index) => {
         const videoSegments = (check.segment_flags ?? [])
           .filter((f) => f.rule_numbers.includes(v.rule_number))
           .sort((a, b) => a.start_sec - b.start_sec);
@@ -130,7 +134,7 @@ export default function ComplianceStep({
           : v.kind === "MISSING_DISCLAIMER"
           ? "Missing disclaimer"
           : "Image or on-screen text";
-        return { v, key: `${v.rule_id}-${v.kind ?? ""}`, where, at: seg ? seg.start_sec : null,
+        return { v, key: findingSelectionKey(v, index), where, at: seg ? seg.start_sec : null,
           until: videoSegments.at(-1)?.end_sec ?? null, frameCount };
       })
       .sort((a, b) => Number(b.v.traffic_light === "RED") - Number(a.v.traffic_light === "RED") || (a.at ?? 1e9) - (b.at ?? 1e9));
@@ -154,9 +158,11 @@ export default function ComplianceStep({
     setNow(t);
   };
   const pick = (f: Finding) => {
-    const next = picked === f.key ? null : f.key;
+    const imageFinding = !isVideo && f.where === "Image or on-screen text";
+    const next = !imageFinding && picked === f.key ? null : f.key;
     setPicked(next);
-    if (next && f.at != null) seek(f.at);
+    if (imageFinding && !selectFindingImage(f.v, slideshow, check?.violations)) toast.info("The saved check does not identify which image to open for this finding.");
+    if (next && isVideo && f.at != null) seek(f.at);
   };
 
   const terms = (list: Finding[]) => list.flatMap((f) => f.v.flagged_terms).filter(Boolean);
@@ -452,8 +458,9 @@ export default function ComplianceStep({
               <VideoTranscript file={checkedVideo ?? mainFile} check={stale || !checkedVideo ? null : check} now={now} seek={seek} />
             </>
           )}
-          {!isVideo && <MarkedUpImageSlideshow files={files ?? sub?.files ?? (mainFile ? [mainFile] : [])} findings={mediaFindings.map((f) => f.v)} />}
-            <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
+          {!isVideo && <MarkedUpImageSlideshow slideshow={slideshow} findings={mediaFindings.map((f) => f.v)} />}
+
+          <PostTextPreview scriptText={scriptText} captionParts={captionParts} terms={terms(findings.filter((f) => f.where === "Script"))} />
           {selected && (
             <p className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-[13px] text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

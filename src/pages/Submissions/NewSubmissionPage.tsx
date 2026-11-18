@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addBusinessDays, format, isFuture, isSameDay, isValid } from "date-fns";
 import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
+import SubmissionStartAnotherButton from "@/components/submissions/SubmissionStartAnotherButton";
 import { scheduleCorrectedPost } from "@/lib/submissionSchedule";
 import { toast } from "sonner";
 import {
@@ -22,7 +23,6 @@ import {
   Clock,
   CloudUpload,
   Download,
-  FilePlus2,
   FileText,
   GalleryHorizontalEnd,
   Globe,
@@ -1300,23 +1300,7 @@ export default function NewSubmissionPage() {
       <DashboardHeader
         title={referenceCode ? "Edit Submission" : "New Submission"}
         subtitle={referenceCode ? `${referenceCode} · Create a new content submission for compliance review and approval.` : "Create a new content submission for compliance review and approval."}
-        actions={
-          <>
-            {submissionId && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs gap-1.5 font-semibold"
-                onClick={() => {
-                  // Full reload gives a clean form for the next submission.
-                  window.location.assign("/submissions/new");
-                }}
-              >
-                <FilePlus2 className="w-3.5 h-3.5" /> Start Another
-              </Button>
-            )}
-          </>
-        }
+        actions={submissionId ? <SubmissionStartAnotherButton /> : undefined}
       />
 
       {readOnly && (
@@ -1368,7 +1352,7 @@ export default function NewSubmissionPage() {
           is beside the edits instead (RevisionWorkspace), so it isn't shown twice. */}
       {submissionId && (status === "APPROVED" || onSuggestions) && (
         <ReviewConversation
-          submissionId={submissionId}
+          submissionId={submissionId} caption={caption}
           files={files}
           canReply={status === "CHANGES_REQUESTED"}
           emptyText="The reviewers didn't leave any comments on this post."
