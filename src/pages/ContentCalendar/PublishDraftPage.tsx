@@ -1,9 +1,11 @@
 import PublishPostButton from "@/components/submissions/PublishPostButton";
 import PrePublishMood from "@/components/submissions/PrePublishMood";
+import FinalPublishDate from "@/components/submissions/FinalPublishDate";
+import { useFinalPublishDate } from "@/hooks/useFinalPublishDate";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, isBefore } from "date-fns";
+import { format, isFuture, isValid } from "date-fns";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,7 +14,6 @@ import {
   Copy,
   ExternalLink,
   FlaskConical,
-  Info,
   Loader2,
   ShieldCheck,
   XCircle,
@@ -49,6 +50,9 @@ export default function PublishDraftPage() {
   const navigate = useNavigate();
   const published = usePublished();
   const record = published[publishKey(itemId, platform)];
+  const { state } = useLocation();
+  const handoff = state as { submissionId?: string; publishAt?: string } | null;
+  const publishAtFromCreator = handoff?.submissionId === itemId.slice(4) && typeof handoff?.publishAt === "string" && isValid(new Date(handoff.publishAt)) ? handoff.publishAt : undefined;
 
   const { hasPermission, user } = useAuth();
   const scope = hasPermission("CONTENT_SUBMISSIONS_VIEW") ? "all" : "mine";
@@ -61,8 +65,9 @@ export default function PublishDraftPage() {
   const item: CalendarItem | undefined = useMemo(() => {
     if (!isSubmission) return sampleItems().find((i) => i.id === itemId);
     const s = submissions.find((x) => `sub-${x.id}` === itemId);
-    return s ? fromSubmission(s) ?? undefined : undefined;
-  }, [isSubmission, itemId, submissions]);
+    return s ? fromSubmission({ ...s, publish_at: publishAtFromCreator ?? s.publish_at }) ?? undefined : undefined;
+  }, [isSubmission, itemId, submissions, publishAtFromCreator]);
+  const finalDate = useFinalPublishDate(publishKey(itemId, platform), item?.scheduled_for, record?.scheduled_for);
 
   const rawSub = isSubmission ? submissions.find((x) => "sub-" + x.id === itemId) : null;
   const isCreator = !isSubmission || (rawSub ? Boolean(user && rawSub.created_by === user.id) : true);
@@ -104,16 +109,20 @@ export default function PublishDraftPage() {
     );
   }
 
-  const publishAt = new Date(item.scheduled_for);
+  const publishAt = finalDate.date ?? new Date(item.scheduled_for);
   // The caption written for this platform's account, else the post's main caption.
   const caption = item.captions_by_platform?.[platform] ?? item.caption;
   const captionLength = caption.length;
   const overLimit = captionLength > info.max_characters;
-  const pastDate = isBefore(publishAt, new Date());
   const remaining = item.platforms.filter((p) => p !== platform && !published[publishKey(item.id, p)]);
 
   const start = () => {
-    if (running) return;
+    if (running || record || !isCreator || overLimit) return;
+    if (!finalDate.date || !isFuture(finalDate.date)) {
+      toast.error(finalDate.error ?? "Choose a final publish date and time in the future.");
+      return;
+    }
+    const scheduledFor = finalDate.date.toISOString();
     setRunning(true);
     setStepIndex(0);
     steps.forEach((_, i) => {
@@ -122,7 +131,7 @@ export default function PublishDraftPage() {
           if (i < steps.length - 1) {
             setStepIndex(i + 1);
           } else {
-            recordPublish(item.id, platform, info.style);
+            recordPublish(item.id, platform, info.style, scheduledFor);
             setRunning(false);
             setStepIndex(-1);
             toast.success(`${MODE_LABELS[info.style]} created for ${name} (simulated).`);
@@ -191,6 +200,7 @@ export default function PublishDraftPage() {
         <div className="space-y-4">
           <Card className="p-4 gap-3 border-border/80 shadow-xs">
             <p className="text-sm font-semibold">Before publishing</p>
+            <FinalPublishDate intended={item.scheduled_for} value={finalDate.value} onChange={finalDate.onChange} disabled={!isCreator || running || Boolean(record)} error={finalDate.error} />
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -204,13 +214,6 @@ export default function PublishDraftPage() {
                 <span>
                   Posts as <strong>{item.account?.account_name ?? "no channel selected"}</strong>
                   {item.account?.handle && <span className="text-muted-foreground"> @{item.account.handle}</span>}
-                </span>
-              </li>
-              <li className="flex items-center gap-2">
-                {pastDate ? <Info className="w-4 h-4 text-amber-600 shrink-0" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                <span>
-                  Planned for {format(publishAt, "EEE MMM d, h:mm a")}
-                  {pastDate && <span className="text-amber-700 dark:text-amber-300"> · that time has passed</span>}
                 </span>
               </li>
               <li className="flex items-center gap-2">
@@ -251,7 +254,7 @@ export default function PublishDraftPage() {
                   )}
                 </div>
                 {remaining.length > 0 ? (
-                  <Button size="sm" className="w-full text-xs gap-1.5" onClick={() => navigate(`/content-calendar/publish/${item.id}/${remaining[0]}`)}>
+                  <Button size="sm" className="w-full text-xs gap-1.5" onClick={() => navigate(`/content-calendar/publish/${item.id}/${remaining[0]}`, { state: { submissionId: item.submission_id, publishAt: publishAt.toISOString() } })}>
                     Next: publish to {platformName(remaining[0])} <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 ) : (
@@ -280,7 +283,7 @@ export default function PublishDraftPage() {
                 )}
                 {isSubmission && rawSub?.status === "APPROVED" && <PrePublishMood submissionId={rawSub.id} canRun={isCreator && !running} />}
                 {isCreator ? (
-                  <PublishPostButton onClick={start} disabled={overLimit} busy={running} label={info.action} />
+                  <PublishPostButton onClick={start} disabled={overLimit || Boolean(finalDate.error)} busy={running} label={info.action} />
                 ) : (
                   <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200">
                     This post is approved. As a reviewer, publishing is reserved for the post's creator.
@@ -290,7 +293,7 @@ export default function PublishDraftPage() {
                 <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                   {info.style === "SCHEDULED"
-                    ? `This goes live automatically at the planned time; it can be edited or cancelled on ${name} until then.`
+                    ? `This goes live automatically at the final publish time; it can be edited or cancelled on ${name} until then.`
                     : `Nothing goes live from here: the ${MODE_LABELS[info.style].toLowerCase()} gets a final check before it's posted.`}
                 </p>
               </div>

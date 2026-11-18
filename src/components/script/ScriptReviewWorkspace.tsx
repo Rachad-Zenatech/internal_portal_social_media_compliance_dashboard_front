@@ -7,7 +7,6 @@ import { locateOnPage } from "@/lib/locateOnPage";
 import ApprovedScriptNextStep from "@/components/script/ApprovedScriptNextStep";
 import { format, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

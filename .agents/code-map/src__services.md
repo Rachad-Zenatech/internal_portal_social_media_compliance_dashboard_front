@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/services/apiClient.ts (336 lines) - api client (services)
+## src/services/apiClient.ts (343 lines) - api client (services)
 - `ActiveApiAction` (export interface) L3
 - `subscribeToApiActions` (export function) L15
 - `notifyActionListeners` (function) L23
@@ -13,7 +13,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `BASE_URL` (export const) L121
 - `getAuthHeaders` (const) L123
 - `monitoredFetch` (function) L137
-- `apiClient` (export const) L239
+- `apiClient` (export const) L246
 
 ## src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - `approvalPathService` (export const) L4

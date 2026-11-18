@@ -5,18 +5,18 @@
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
 ## src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
-- `SproutState` (type) L44
-- `stateOf` (function) L46
-- `View` (type) L84
-- `platformName` (const) L85
-- `scoreTone` (const) L86
-- `profileKey` (const) L92
-- `profileLabel` (const) L93
-- `Thumb` (function) L99
-- `Networks` (function) L111
-- `PostCard` (function) L124 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
-- `ContentCalendarPage` (export function) L158
-    - `navigate` (fn) L159
+- `SproutState` (type) L45
+- `stateOf` (function) L47
+- `View` (type) L85
+- `platformName` (const) L86
+- `scoreTone` (const) L87
+- `profileKey` (const) L93
+- `profileLabel` (const) L94
+- `Thumb` (function) L100
+- `Networks` (function) L112
+- `PostCard` (function) L125 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
+- `ContentCalendarPage` (export function) L159
+    - `navigate` (fn) L160
     - `sent` (fn) L173
     - `published` (fn) L174
     - `brandName` (fn) L184
@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `send` (fn) L230
 - `SelectedPost` (function) L529
 
-## src/pages/ContentCalendar/PublishDraftPage.tsx (304 lines) - publish draft page (pages  content calendar)
-- `platformName` (const) L33
-- `stepsFor` (function) L36 - Mock steps; each becomes a real API call once the platform is connected.
-- `PublishDraftPage` (export function) L47
+## src/pages/ContentCalendar/PublishDraftPage.tsx (307 lines) - publish draft page (pages  content calendar)
+- `platformName` (const) L34
+- `stepsFor` (function) L37 - Mock steps; each becomes a real API call once the platform is connected.
+- `PublishDraftPage` (export function) L48

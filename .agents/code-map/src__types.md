@@ -215,3 +215,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DuplicateReport` (export interface) L621 - blocked: a match overlaps on every detail and the publish date.
 - `DelegationDirection` (export type) L628
 - `Delegation` (export interface) L631 - One hand-off of a post in review, with where the post stands now.
+
+## src/types/submissionSchedule.ts (7 lines) - Calendar timing displayed alongside the server's review status.
+- `SubmissionStage` (export type) L3
+- `CalendarSubmission` (export type) L6 - Calendar timing displayed alongside the server's review status.

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { addBusinessDays, format, isSameDay } from "date-fns";
+import { addBusinessDays, format, isFuture, isSameDay, isValid } from "date-fns";
+import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
 import { toast } from "sonner";
 import {
   Bold,
@@ -33,7 +34,6 @@ import {
   Megaphone,
   MessageSquareText,
   Redo2,
-  Send,
   Sparkles,
   Underline,
   Undo2,
@@ -882,7 +882,7 @@ export default function NewSubmissionPage() {
     reviewer_ids: !publishAfterChanges && pickedApprovers.length === 0,
     approval_needed_by: !publishAfterChanges && !approvalBy,
     // Checked on submit (and by the server); comparing to "now" during render isn't stable.
-    publish_at: false,
+    publish_at: publishAfterChanges && (!publishDate || !isValid(publishDate)),
   };
   const isMissing = (field: keyof typeof clientMissing) =>
     showErrors && (clientMissing[field] || serverMissing.includes(field));
@@ -1049,7 +1049,7 @@ export default function NewSubmissionPage() {
   const submit = async (confirmRepost = false) => {
     const missingNow = Object.entries(clientMissing).filter(([, v]) => v).map(([k]) => k);
     const badDates: string[] = [];
-    if (!publishAfterChanges && publishDate && publishDate.getTime() < Date.now()) badDates.push("publish_at");
+    if (publishDate && (!isValid(publishDate) || !isFuture(publishDate))) badDates.push("publish_at");
     if (!publishAfterChanges && approvalBy && approvalBy.getTime() < Date.now()) badDates.push("approval_needed_by");
     if (badDates.length) {
       missingNow.push(...badDates.filter((d) => !missingNow.includes(d)));
@@ -2320,28 +2320,13 @@ export default function NewSubmissionPage() {
                       error={errorFor("reviewer_ids", "Pick at least one reviewer")}
                     />
                   )}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3">
-                    <p className="text-[11px] text-muted-foreground">
-                      {publishAfterChanges
-                        ? "Your changes will be checked and published directly; they will not return to review."
-                        : videoLocked
-                        ? "Sends your script to the reviewers you picked."
-                        : !hasCheck
-                          ? "You haven't run the compliance check yet. It also runs when you send."
-                          : checkStale
-                            ? "Edited since your last check. It runs again when you send."
-                            : "Ready when you are. The reviewer sees the same check and analysis."}
-                    </p>
-                    <Button
-                      type="button"
-                      onClick={() => submit()}
-                      disabled={submitting || checking || uploading.length > 0}
-                      className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      {videoLocked ? "Send Script for Review" : resubmitting ? publishAfterChanges ? "Publish" : "Resubmit for Review" : "Send for Review"}
-                    </Button>
-                  </div>
+                  <SubmissionSendActions
+                    publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
+                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting}
+                    disabled={submitting || checking || uploading.length > 0}
+                    publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
+                    onSubmit={() => void submit()}
+                  />
                 </div>
               </div>
             </Section>

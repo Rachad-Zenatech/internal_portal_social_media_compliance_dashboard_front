@@ -342,7 +342,7 @@ export function usePublished() {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
 
-export function recordPublish(itemId: string, platform: string, style: PublishStyle): PublishRecord {
+export function recordPublish(itemId: string, platform: string, style: PublishStyle, scheduledFor?: string): PublishRecord {
   const ref = `${platform.slice(0, 2)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const record: PublishRecord = {
     id: ref,
@@ -352,6 +352,7 @@ export function recordPublish(itemId: string, platform: string, style: PublishSt
     style,
     status: style === "SCHEDULED" ? "SCHEDULED" : "PENDING",
     remote_post_id: ref,
+    scheduled_for: scheduledFor,
     created_at: new Date().toISOString(),
   };
   write({ ...read(), [publishKey(itemId, platform)]: record });
@@ -369,6 +370,8 @@ export function clearPublished() {
 /** One approved post handed to Sprout Social, which then schedules and publishes it on each profile. */
 export interface SproutRecord {
   at: string;
+  /** Creator-confirmed final time; older sends use the submission's intended date. */
+  scheduled_for?: string;
   /** Mock Sprout post reference. */
   ref: string;
 }
@@ -418,8 +421,8 @@ export function useSentToSprout() {
   return useSyncExternalStore(subscribeSprout, readSprout, () => NONE);
 }
 
-export function recordSproutSend(itemId: string): SproutRecord {
-  const record: SproutRecord = { at: new Date().toISOString(), ref: `SPR-${Math.random().toString(36).slice(2, 8).toUpperCase()}` };
+export function recordSproutSend(itemId: string, scheduledFor?: string): SproutRecord {
+  const record: SproutRecord = { at: new Date().toISOString(), scheduled_for: scheduledFor, ref: `SPR-${Math.random().toString(36).slice(2, 8).toUpperCase()}` };
   writeSprout({ ...readSprout(), [itemId]: record });
   return record;
 }
