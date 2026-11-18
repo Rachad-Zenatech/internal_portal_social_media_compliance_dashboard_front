@@ -2140,6 +2140,7 @@ export default function NewSubmissionPage() {
               )}
               <ComplianceStep
                 sub={checkedSub}
+                reviewState={reviewState}
                 title={title}
                 caption={caption}
                 mainFile={mainFiles[0]} files={files} scriptText={videoLocked ? scriptTextOf(files, scriptStage.data?.versions) : undefined}

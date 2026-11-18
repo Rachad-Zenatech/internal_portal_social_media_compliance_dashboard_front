@@ -14,6 +14,7 @@ import VideoTranscript from "@/components/submissions/VideoTranscript";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/AuthContext";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { Submission, SubmissionFile } from "@/types/submission";
@@ -56,6 +57,7 @@ function videoEvidence(finding: Finding) {
  */
 export default function ComplianceStep({
   sub,
+  reviewState,
   title,
   caption,
   scriptText = "",
@@ -72,6 +74,7 @@ export default function ComplianceStep({
   onReplaceMedia,
 }: {
   sub: Submission | null;
+  reviewState: Submission | null;
   title: string;
   caption: string;
   scriptText?: string;
@@ -90,6 +93,7 @@ export default function ComplianceStep({
   onEditCaption: () => void;
   onReplaceMedia: () => void;
 }) {
+  const { user } = useAuth();
   const check = sub?.latest_check ?? null;
   const [picked, setPicked] = useState<string | null>(null);
   const [clearedOpen, setClearedOpen] = useState(false);
@@ -131,9 +135,9 @@ export default function ComplianceStep({
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
   const checkedVideo = sub?.files.find((file) => file.id === mainFile?.id);
-  // The editable compliance step is the creator workflow. Creators may request,
-  // but never directly apply, a dismissal.
-  const canRequestDismissal = editable;
+  const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
+  const canRequestDismissal = ownsSubmission && (editable || reviewState?.status === "IN_REVIEW");
+  const canDismiss = !ownsSubmission && reviewState?.can_review === true;
   const parts = check ? timelineOf(sub!, duration) : [];
   const selected = findings.find((f) => f.key === picked) ?? null;
 
@@ -346,7 +350,7 @@ export default function ComplianceStep({
                         {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : f.where === "Video" ? "Edit the video" : "Fix in image"}
                       </Button>
                     )}
-                    {canRequestDismissal && f.v.rule_id && <FlagReviewControl submissionId={sub!.id} ruleId={f.v.rule_id} ruleNumber={f.v.rule_number} currentVersion={sub!.current_version} canDismiss={false} canRequest evidence={f.v.status === "EVIDENCE_REQUIRED"} />}
+                    {reviewState && (canRequestDismissal || canDismiss) && f.v.rule_id && <FlagReviewControl submissionId={reviewState.id} ruleId={f.v.rule_id} ruleNumber={f.v.rule_number} currentVersion={reviewState.current_version} canDismiss={canDismiss} canRequest={canRequestDismissal} evidence={f.v.status === "EVIDENCE_REQUIRED"} />}
                   </div>
                 )}
               </article>

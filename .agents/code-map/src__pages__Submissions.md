@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2547 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2548 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L170 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L209
 - `timeOptions` (const) L216
