@@ -82,7 +82,7 @@ import type { FlagReview, QueueTab, ReviewQueueItem } from "@/types/submission";
 const TABS: { value: QueueTab; label: string }[] = [
   { value: "review", label: "To review" },
   { value: "sent_back", label: "Sent back" },
-  { value: "done", label: "Done" },
+  { value: "done", label: "Scheduled" },
 ];
 
 const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
