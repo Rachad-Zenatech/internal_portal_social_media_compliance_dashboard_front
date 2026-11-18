@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, CheckCircle2, Database, FileCheck2, Landmark, Loader2, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
 
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { complianceService, type ComplianceRule, type RuleSelfTest } from "@/services/complianceService";
 import { submissionService } from "@/services/submissionService";
 import type { AiUsage } from "@/types/sentiment";
+import RuleDataTable from "./RuleTrainingTable";
 
 function QualitySummary({ rules, tests }: { rules: ComplianceRule[]; tests: RuleSelfTest[] }) {
   const active = rules.filter((rule) => rule.is_active).length;
@@ -47,11 +47,6 @@ function FinanceCoverage({ rules }: { rules: ComplianceRule[] }) {
   ];
 
   return <Card className="overflow-hidden py-0 shadow-xs"><div className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3"><Landmark className="h-4 w-4 text-primary" /><h2 className="text-sm font-semibold">Finance-content coverage</h2><span className="text-xs text-muted-foreground">Investor claims, disclosure, and market-risk training signals</span></div><div className="grid gap-px bg-border/70 sm:grid-cols-3">{metrics.map(({ label, value, detail, icon: Icon }) => <div key={label} className="bg-card p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tracking-tight">{value}</p></div><Icon className="h-5 w-5 text-primary" /></div><p className="mt-2 text-xs text-muted-foreground">{detail}</p></div>)}</div><div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-muted-foreground"><span>Recommended evidence source for a finance claim: filing and XBRL data from the SEC’s EDGAR APIs.</span><a className="font-medium text-primary hover:underline" href="https://www.sec.gov/search-filings/edgar-application-programming-interfaces" target="_blank" rel="noreferrer">View SEC EDGAR data</a></div></Card>;
-}
-
-function RuleDataTable({ rules, tests }: { rules: ComplianceRule[]; tests: RuleSelfTest[] }) {
-  const testByRule = new Map(tests.map((test) => [test.rule_id, test]));
-  return <Card className="overflow-hidden py-0 shadow-xs"><div className="flex flex-wrap items-center gap-2 border-b border-border/70 px-4 py-3"><Database className="h-4 w-4 text-primary" /><h2 className="text-sm font-semibold">Configured training data</h2><span className="text-xs text-muted-foreground">Every compliance rule and its examples</span></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-muted/40 text-xs text-muted-foreground"><tr><th className="px-4 py-2.5 font-medium">Rule</th><th className="px-4 py-2.5 font-medium">Scope</th><th className="px-4 py-2.5 font-medium">Examples</th><th className="px-4 py-2.5 font-medium">Quality check</th></tr></thead><tbody className="divide-y divide-border/70">{rules.map((rule) => { const test = testByRule.get(rule.id); const exampleCount = Number(Boolean(rule.allowed_examples)) + Number(Boolean(rule.prohibited_examples)); return <tr key={rule.id}><td className="px-4 py-3"><p className="font-medium">{rule.rule_number} · {rule.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{rule.category}</p></td><td className="px-4 py-3 text-xs text-muted-foreground">{rule.evaluation_mode ?? "RULE"} · {rule.is_active ? "Active" : "Inactive"}</td><td className="px-4 py-3"><Badge variant="outline">{exampleCount} example{exampleCount === 1 ? "" : "s"}</Badge></td><td className="px-4 py-3">{!test?.testable ? <span className="text-xs text-muted-foreground">No self-test</span> : test.passed ? <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" /> Passing</span> : <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300"><AlertTriangle className="h-3.5 w-3.5" /> Needs review</span>}</td></tr>; })}</tbody></table></div></Card>;
 }
 
 export default function TrainingDataPage() {

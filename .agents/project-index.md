@@ -5,14 +5,14 @@
 Scan this index first to locate the right file and description without loading symbol trees or line numbers.
 For function and route definitions with their line numbers, grep `.agents/code-map/` (listed in `.agents/code-map.md`).
 
-- src/App.tsx (186 lines) - app
+- src/App.tsx (188 lines) - app
 - src/components/AppShell/AiStatusBanner.tsx (45 lines) - ai status banner (components  app shell)
 - src/components/AppShell/AppShell.tsx (63 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
 - src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
 - src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
-- src/components/AppShell/Navigation.tsx (155 lines) - navigation (components  app shell)
+- src/components/AppShell/Navigation.tsx (165 lines) - navigation (components  app shell)
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (291 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
@@ -155,7 +155,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/SubmissionSendActions.tsx (46 lines) - The final action, including timing for reviewer-authorized direct publishing.
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
-- src/components/submissions/TopicTrend.tsx (486 lines) - topic trend (components submissions)
+- src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
 - src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
@@ -207,7 +207,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useNotifications.ts (74 lines) - Live updates come from the single notification stream TopBar keeps open; it invalidates these queries.
 - src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
-- src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+- src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
 - src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
@@ -265,7 +265,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/RoleGroupPermissions.tsx (488 lines) - role group permissions (pages  configurations)
 - src/pages/Configurations/RoleMcpToolPermissions.tsx (306 lines) - Left panel search
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
-- src/pages/Configurations/TrainingDataPage.tsx (66 lines) - training data page (pages  configurations)
+- src/pages/Configurations/RuleTrainingTable.tsx (257 lines) - rule training table (pages  configurations)
+- src/pages/Configurations/TrainingDataPage.tsx (61 lines) - training data page (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
@@ -275,6 +276,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
 - src/pages/Performance/PostPerformancePage.tsx (782 lines) - post performance page (pages  performance)
+- src/pages/PublicMood/NavTrackSection.tsx (91 lines) - nav track section (pages  public mood)
+- src/pages/PublicMood/PostMoodGroup.tsx (85 lines) - post mood group (pages  public mood)
+- src/pages/PublicMood/PublicMoodPage.tsx (104 lines) - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
+- src/pages/PublicMood/TrendItem.tsx (128 lines) - trend item (pages  public mood)
+- src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (384 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (302 lines) - script review page (pages  scripts)
@@ -299,7 +305,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - src/services/scriptDocService.ts (50 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (373 lines) - submission service (services)
+- src/services/submissionService.ts (381 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.
@@ -309,7 +315,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
-- src/types/publicMood.ts (162 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
+- src/types/publicMood.ts (199 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
 - src/types/scriptDoc.ts (190 lines) - script doc (types)

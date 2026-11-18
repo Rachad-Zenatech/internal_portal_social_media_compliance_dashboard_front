@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { useGlobalProgress } from "@/lib/GlobalProgressContext";
 import { submissionService } from "@/services/submissionService";
-import type { MoodVerdict } from "@/types/publicMood";
+import type { MoodVerdict, ScrapeScope } from "@/types/publicMood";
 
 /**
  * Public mood for a submission's topics, and the action that writes (or reuses) its summary. It does not run by itself:
@@ -107,16 +107,27 @@ export function useMarketTrends(enabled = true) {
   });
 }
 
-/** Trigger live scraping of X / Twitter & news trends and refresh listening queries. */
+/** Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood. */
+export function useNavPublicMood(enabled = true) {
+  return useQuery({
+    queryKey: ["listening-nav"],
+    queryFn: () => submissionService.navPublicMood(),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+/** Trigger live scraping of ZenaTech financial and/or today's posts (scope=all|financial|today) and refresh queries. */
 export function useScrapeTwitter(_submissionId?: string | null, onAfterScrape?: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
     // The server scrapes in the background, so wait for it to finish before refreshing: refreshing straight
     // after "started" just shows the old data again.
-    mutationFn: async () => {
+    mutationFn: async (scope: ScrapeScope | void = "all") => {
+      const targetScope: ScrapeScope = scope ?? "all";
       try {
-        await submissionService.triggerScrapeTwitter();
+        await submissionService.triggerScrapeTwitter(targetScope);
       } catch (err) {
         // 409: one is already running (started elsewhere): wait for that one instead.
         if (!/already running/i.test((err as Error).message)) throw err;
@@ -132,14 +143,15 @@ export function useScrapeTwitter(_submissionId?: string | null, onAfterScrape?: 
     },
     onSuccess: (status) => {
       const sources = status.collection?.sources ?? [];
-      const drafts = sources.filter((s) => s.kind === "post:news");
+      const fin = sources.filter((s) => s.kind.startsWith("financial"));
+      const drafts = sources.filter((s) => s.kind.startsWith("post"));
       const found = sources.reduce((n, s) => n + (s.items || 0), 0);
       toast.success(
         `Scrape finished: ${found} items from ${sources.length} searches` +
-          (drafts.length ? ` (${drafts.length} from this app's drafts)` : " (no draft was searched)") +
+          ` (${fin.length} financial ZenaTech, ${drafts.length} post/today)` +
           `, ${status.collection?.topics ?? 0} topics.`,
       );
-      // Invalidate all public mood queries and global market trends
+      queryClient.invalidateQueries({ queryKey: ["listening-nav"] });
       queryClient.invalidateQueries({ queryKey: ["listening-trends"] });
       queryClient.invalidateQueries({ queryKey: ["listening-topics"] });
       queryClient.invalidateQueries({ queryKey: ["public-mood"] });

@@ -89,13 +89,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `canDrop` (fn) L408
     - `handleMoveRole` (fn) L424
 
-## src/pages/Configurations/TrainingDataPage.tsx (66 lines) - training data page (pages  configurations)
+## src/pages/Configurations/RuleTrainingTable.tsx (257 lines) - rule training table (pages  configurations)
+- `ExampleBox` (function) L9
+- `SelfTestList` (function) L42
+- `RuleExamplesDetail` (function) L78
+- `RuleRow` (function) L124
+- `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
+
+## src/pages/Configurations/TrainingDataPage.tsx (61 lines) - training data page (pages  configurations)
 - `QualitySummary` (function) L13
 - `AiCapacity` (function) L27
 - `CapacityMetric` (function) L33
 - `FinanceCoverage` (function) L37
-- `RuleDataTable` (function) L52
-- `TrainingDataPage` (export function) L57
+- `TrainingDataPage` (export function) L52
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.

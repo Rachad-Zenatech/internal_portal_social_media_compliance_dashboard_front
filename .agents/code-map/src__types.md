@@ -76,23 +76,27 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PerformanceReport` (export interface) L101
 - `PerformanceFilters` (export interface) L114
 
-## src/types/publicMood.ts (162 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
+## src/types/publicMood.ts (199 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - `PublishingRecommendation` (export type) L3
 - `ListeningPost` (export interface) L5
-- `TopicSnapshot` (export interface) L15
-- `MatchedTopic` (export interface) L33
-- `PublicMoodOverall` (export type) L46
-- `PublicMoodResult` (export interface) L48
-- `PublicMoodSummary` (export interface) L59
-- `ProcessStep` (export interface) L73
-- `PublicMood` (export interface) L80
-- `MoodVerdict` (export type) L94
-- `DismissedTopic` (export interface) L96
-- `ListeningTopic` (export interface) L103
-- `ListeningTopicUpdate` (export interface) L122
-- `MatchTestTopic` (export interface) L128
-- `MatchTestResult` (export interface) L139
-- `XTrendOpportunity` (export interface) L144
+- `TopicSnapshot` (export interface) L16
+- `MatchedTopic` (export interface) L34
+- `PublicMoodOverall` (export type) L47
+- `PublicMoodResult` (export interface) L49
+- `PublicMoodSummary` (export interface) L60
+- `ProcessStep` (export interface) L74
+- `PublicMood` (export interface) L81
+- `MoodVerdict` (export type) L95
+- `DismissedTopic` (export interface) L97
+- `ListeningTopic` (export interface) L104
+- `ListeningTopicUpdate` (export interface) L123
+- `MatchTestTopic` (export interface) L129
+- `MatchTestResult` (export interface) L140
+- `ScrapeScope` (export type) L145
+- `XTrendOpportunity` (export interface) L147
+- `TodayPostSummary` (export interface) L171
+- `NavScrapeTrack` (export interface) L180
+- `NavPublicMoodResponse` (export interface) L191
 
 ## src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - `ScriptStatus` (export type) L5 - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...

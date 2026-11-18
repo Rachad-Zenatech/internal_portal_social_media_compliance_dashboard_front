@@ -66,10 +66,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
-## src/hooks/usePublicMood.ts (153 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+## src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
-- `useScrapeTwitter` (export function) L111 - Trigger live scraping of X / Twitter & news trends and refresh listening queries.
+- `useNavPublicMood` (export function) L111 - Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood.
+- `useScrapeTwitter` (export function) L121 - Trigger live scraping of ZenaTech financial and/or today's posts (scope=all|financial|today) and refresh queries.
 
 ## src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12

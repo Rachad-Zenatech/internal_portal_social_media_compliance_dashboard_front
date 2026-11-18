@@ -3,7 +3,7 @@ import { ApiError, handleResponse } from "@/services/helper";
 import type { CaptionSuggestions, HashtagLibrary } from "@/types/caption";
 import type { PastedSourceRequest, SourceLinkCheck } from "@/types/sourceLink";
 import type { SourceConfirmationRequest, SourceConfirmationsResponse } from "@/types/sourceTrust";
-import type { MoodVerdict, PublicMood, XTrendOpportunity } from "@/types/publicMood";
+import type { MoodVerdict, NavPublicMoodResponse, PublicMood, ScrapeScope, XTrendOpportunity } from "@/types/publicMood";
 import type {
   AiUsage,
   FindingFeedback,
@@ -283,13 +283,21 @@ export const submissionService = {
   /** How people online feel about the topics this post touches (social listening), with any saved summary. */
   getPublicMood: (id: string) => apiClient.get<PublicMood>(`/api/submissions/${id}/public-mood`, quiet),
 
+  /** Both nav scrapings: Financial ZenaTech sentiment + Today's Posts public mood. */
+  navPublicMood: (refresh = false) =>
+    apiClient.get<NavPublicMoodResponse>(`/api/listening/nav${refresh ? "?refresh=true" : ""}`, quiet),
+
   /** Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations. */
   listeningTrends: (refresh = false) =>
     apiClient.get<XTrendOpportunity[]>(`/api/listening/trends${refresh ? "?refresh=true" : ""}`, quiet),
 
-  /** Trigger live scraping of X (Twitter) & news sentiment with Playwright + VADER (or future API). */
-  triggerScrapeTwitter: () =>
-    apiClient.post<{ status: string; message: string; source: string }>("/api/listening/scrape", undefined, quiet),
+  /** Trigger live scraping of ZenaTech financial coverage and/or today's posts (scope=all|financial|today). */
+  triggerScrapeTwitter: (scope: ScrapeScope = "all") =>
+    apiClient.post<{ status: string; scope?: ScrapeScope; message: string; source: string }>(
+      `/api/listening/scrape${scope !== "all" ? `?scope=${scope}` : ""}`,
+      undefined,
+      quiet,
+    ),
 
   /** Whether a scrape is running, and how the last one went (state, error, per-source results). */
   scrapeStatus: () =>
