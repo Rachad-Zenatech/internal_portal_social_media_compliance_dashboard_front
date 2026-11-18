@@ -27,10 +27,24 @@ interface Finding {
   where: "Caption" | "Script" | "Title" | "Video" | "Image or on-screen text" | "Missing disclaimer";
   /** The first moment of the video it was found at. */
   at: number | null;
+  /** The final matching moment, so video evidence can show its complete range. */
+  until: number | null;
+  /** Number of video frames with a saved, tight visual region for this rule. */
+  frameCount: number;
 }
 
 function ring(score: number) {
   return score >= 85 ? "#059669" : score >= MIN_SCORE ? "#D97706" : "#DC2626";
+}
+
+function timecode(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
+}
+
+function videoEvidence(finding: Finding) {
+  if (finding.where !== "Video" || finding.at == null) return finding.where;
+  const range = `${timecode(finding.at)} – ${timecode(finding.until ?? finding.at)}`;
+  return `Video · ${range}${finding.frameCount ? ` · found in ${finding.frameCount} frame${finding.frameCount === 1 ? "" : "s"}` : ""}`;
 }
 
 /**
@@ -89,9 +103,13 @@ export default function ComplianceStep({
     return check.violations
       .filter((v) => statusOf(v) !== "CLEARED")
       .map((v) => {
-        const seg = (check.segment_flags ?? [])
+        const videoSegments = (check.segment_flags ?? [])
           .filter((f) => f.rule_numbers.includes(v.rule_number))
-          .sort((a, b) => a.start_sec - b.start_sec)[0];
+          .sort((a, b) => a.start_sec - b.start_sec);
+        const seg = videoSegments[0];
+        const frameCount = new Set((v.image_regions ?? [])
+          .filter((r) => r.file_id === mainFile?.id && r.start_sec != null && r.end_sec != null)
+          .map((r) => `${r.start_sec}-${r.end_sec}`)).size;
         const terms = v.flagged_terms.map((t) => t.toLowerCase());
         const where: Finding["where"] = terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
           ? "Caption"
@@ -102,10 +120,11 @@ export default function ComplianceStep({
           : v.kind === "MISSING_DISCLAIMER"
           ? "Missing disclaimer"
           : "Image or on-screen text";
-        return { v, key: `${v.rule_id}-${v.kind ?? ""}`, where, at: seg ? seg.start_sec : null };
+        return { v, key: `${v.rule_id}-${v.kind ?? ""}`, where, at: seg ? seg.start_sec : null,
+          until: videoSegments.at(-1)?.end_sec ?? null, frameCount };
       })
       .sort((a, b) => Number(b.v.traffic_light === "RED") - Number(a.v.traffic_light === "RED") || (a.at ?? 1e9) - (b.at ?? 1e9));
-  }, [check, caption, title, scriptText]);
+  }, [check, caption, title, scriptText, mainFile?.id]);
   const cleared = check?.violations.filter((v) => statusOf(v) === "CLEARED") ?? [];
 
   const isVideo = Boolean(mainFile?.mime_type.startsWith("video/"));
@@ -287,8 +306,7 @@ export default function ComplianceStep({
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${FINDING_META[st].pill}`}>{st === "VIOLATION" ? "Issue" : FINDING_META[st].label}</span>
                       <RuleNumberBadge v={f.v} />
                       <span className="text-xs font-semibold text-muted-foreground">
-                        {f.where}
-                        {f.where === "Video" && f.at != null ? ` · ${Math.floor(f.at / 60)}:${String(Math.floor(f.at % 60)).padStart(2, "0")}` : ""}
+                        {videoEvidence(f)}
                       </span>
                       <span className={`ml-auto text-[13px] font-bold tabular-nums ${tone === "red" ? "text-red-600" : "text-amber-700 dark:text-amber-300"}`}>
                         {(f.v.penalty ?? 0) > 0 ? `−${f.v.penalty} points` : "No points"}
