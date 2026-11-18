@@ -13,13 +13,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `FeatureImportance` (function) L37
 - `ModelStatusCard` (export function) L56 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
 
-## src/pages/Configurations/MoodTrainingData.tsx (121 lines) - mood training data (pages  configurations)
-- `TrainingExample` (interface) L9
+## src/pages/Configurations/MoodTrainingData.tsx (194 lines) - mood training data (pages  configurations)
+- `TrainingReadiness` (interface) L10
 - `TrainingData` (interface) L20
-- `featureSummary` (function) L35
-- `ExampleRow` (function) L42
-- `ExamplesTable` (function) L63
-- `MoodTrainingData` (export function) L94 - Quick panel: the reviewed assessments the XGBoost decision model was trained on (loaded when opened).
+- `featureSummary` (function) L37
+- `ContentTypeBadge` (function) L44
+- `ReadinessBar` (function) L55
+- `ExampleRow` (function) L93
+- `ExamplesTable` (function) L121
+- `MoodTrainingData` (export function) L155
 
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function) L8
@@ -110,14 +112,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `RuleRow` (function) L124
 - `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
 
-## src/pages/Configurations/TrainingDataPage.tsx (74 lines) - training data page (pages  configurations)
-- `QualitySummary` (function) L16
-- `AiCapacity` (function) L30
-- `CapacityMetric` (function) L36
-- `FinanceCoverage` (function) L40
-- `RulebookSection` (function) L55
-- `CollapsibleSection` (function) L63
-- `TrainingDataPage` (export function) L68
+## src/pages/Configurations/TrainingContentQuickOpen.tsx (207 lines) - training content quick open (pages  configurations)
+- `TrainingEvidenceItem` (export interface) L12
+- `TrainingExampleRow` (export interface) L21
+- `MediaPlayer` (function) L41
+- `EvidenceSection` (function) L100
+- `TrainingContentQuickOpen` (export function) L127
+
+## src/pages/Configurations/TrainingDataPage.tsx (109 lines) - training data page (pages  configurations)
+- `CapacityMetric` (function) L13
+- `AiCapacity` (function) L27
+- `TrainingDataPage` (export function) L84
 
 ## src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - `UserBrands` (interface) L15 - A user's brand access, with every active brand to choose from.
