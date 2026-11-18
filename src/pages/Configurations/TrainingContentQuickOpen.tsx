@@ -33,6 +33,8 @@ export interface TrainingExampleRow {
   brand_code?: string | null;
   post_status?: string | null;
   file_count?: number;
+  script_text?: string | null;
+  caption_text?: string | null;
   reviewer_comments?: string[];
   decision_notes?: string | null;
   evidence_items?: TrainingEvidenceItem[];
@@ -143,6 +145,8 @@ export default function TrainingContentQuickOpen({
   const sub = subQuery.data;
   const comments = example.reviewer_comments ?? [];
   const evidence = example.evidence_items ?? [];
+  const scriptDoc = sub?.files?.find((f) => f.kind === "SCRIPT")?.doc_text || example.script_text;
+  const caption = sub?.caption_text || example.caption_text;
 
   return (
     <Dialog open={Boolean(example)} onOpenChange={(v) => !v && onClose()}>
@@ -167,10 +171,16 @@ export default function TrainingContentQuickOpen({
         ) : (
           <div className="space-y-4">
             <MediaPlayer files={sub?.files ?? []} />
-            {sub?.caption_text && (
+            {caption && (
               <div className="rounded-lg border bg-muted/20 p-3 text-xs">
                 <p className="mb-1 flex items-center gap-1 font-semibold text-foreground"><FileText className="h-3.5 w-3.5" /> Caption</p>
-                <p className="whitespace-pre-wrap text-muted-foreground">{sub.caption_text}</p>
+                <p className="whitespace-pre-wrap text-muted-foreground">{caption}</p>
+              </div>
+            )}
+            {scriptDoc && (
+              <div className="max-h-36 overflow-auto rounded-lg border bg-muted/20 p-3 text-xs">
+                <p className="mb-1 flex items-center gap-1 font-semibold text-foreground"><FileText className="h-3.5 w-3.5" /> Script</p>
+                <p className="whitespace-pre-wrap text-muted-foreground">{scriptDoc}</p>
               </div>
             )}
           </div>

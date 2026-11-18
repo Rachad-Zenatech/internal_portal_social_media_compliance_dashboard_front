@@ -13,15 +13,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `FeatureImportance` (function) L37
 - `ModelStatusCard` (export function) L56 - The XGBoost decision model: is it on, what it was trained on and what it weighs most.
 
-## src/pages/Configurations/MoodTrainingData.tsx (194 lines) - mood training data (pages  configurations)
-- `TrainingReadiness` (interface) L10
-- `TrainingData` (interface) L20
-- `featureSummary` (function) L37
-- `ContentTypeBadge` (function) L44
-- `ReadinessBar` (function) L55
-- `ExampleRow` (function) L93
-- `ExamplesTable` (function) L121
-- `MoodTrainingData` (export function) L155
+## src/pages/Configurations/MoodTrainingData.tsx (199 lines) - mood training data (pages  configurations)
+- `TrainingReadiness` (interface) L11
+- `TrainingData` (interface) L21
+- `featureSummary` (function) L39
+- `ContentTypeBadge` (function) L46
+- `ReadinessBar` (function) L57
+- `ExampleRow` (function) L95
+- `ExamplesTable` (function) L123
+- `MoodTrainingData` (export function) L157
 
 ## src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - `OAuthCallbackPage` (export function) L8
@@ -42,6 +42,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `providerConnections` (fn) L363
     - `filteredProviders` (fn) L384 - Filter strictly to current sub-nav category
     - `counts` (fn) L388
+
+## src/pages/Configurations/ReviewPrecedentsTable.tsx (129 lines) - review precedents table (pages  configurations)
+- `ReviewPrecedentRecord` (export interface) L7
+- `ContentBadge` (function) L27
+- `toQuickOpenRow` (function) L38
+- `PrecedentRow` (function) L60
+- `ReviewPrecedentsTable` (export function) L88
 
 ## src/pages/Configurations/RoleApiPermissions.tsx (411 lines) - We order actions so they appear logically: CREATE, READ (VIEW), UPDATE, DELETE
 - `isActionSupported` (const) L37
@@ -112,12 +119,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `RuleRow` (function) L124
 - `RuleDataTable` (export function) L193 - Expandable table of compliance rules and their allowed/prohibited training examples.
 
-## src/pages/Configurations/TrainingContentQuickOpen.tsx (207 lines) - training content quick open (pages  configurations)
+## src/pages/Configurations/TrainingContentQuickOpen.tsx (217 lines) - training content quick open (pages  configurations)
 - `TrainingEvidenceItem` (export interface) L12
 - `TrainingExampleRow` (export interface) L21
-- `MediaPlayer` (function) L41
-- `EvidenceSection` (function) L100
-- `TrainingContentQuickOpen` (export function) L127
+- `MediaPlayer` (function) L43
+- `EvidenceSection` (function) L102
+- `TrainingContentQuickOpen` (export function) L129
 
 ## src/pages/Configurations/TrainingDataPage.tsx (109 lines) - training data page (pages  configurations)
 - `CapacityMetric` (function) L13

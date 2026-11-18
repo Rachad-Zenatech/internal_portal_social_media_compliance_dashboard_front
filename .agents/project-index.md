@@ -271,15 +271,16 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - src/pages/Configurations/ModelStatusCard.tsx (88 lines) - model status card (pages  configurations)
-- src/pages/Configurations/MoodTrainingData.tsx (194 lines) - mood training data (pages  configurations)
+- src/pages/Configurations/MoodTrainingData.tsx (199 lines) - mood training data (pages  configurations)
 - src/pages/Configurations/OAuthCallbackPage.tsx (119 lines) - o auth callback page (pages  configurations)
 - src/pages/Configurations/OAuthIntegrations.tsx (802 lines) - o auth integrations (pages  configurations)
+- src/pages/Configurations/ReviewPrecedentsTable.tsx (129 lines) - review precedents table (pages  configurations)
 - src/pages/Configurations/RoleApiPermissions.tsx (411 lines) - We order actions so they appear logically: CREATE, READ (VIEW), UPDATE, DELETE
 - src/pages/Configurations/RoleGroupPermissions.tsx (488 lines) - role group permissions (pages  configurations)
 - src/pages/Configurations/RoleMcpToolPermissions.tsx (306 lines) - Left panel search
 - src/pages/Configurations/Roles.tsx (799 lines) - roles (pages  configurations)
 - src/pages/Configurations/RuleTrainingTable.tsx (257 lines) - rule training table (pages  configurations)
-- src/pages/Configurations/TrainingContentQuickOpen.tsx (207 lines) - training content quick open (pages  configurations)
+- src/pages/Configurations/TrainingContentQuickOpen.tsx (217 lines) - training content quick open (pages  configurations)
 - src/pages/Configurations/TrainingDataPage.tsx (109 lines) - training data page (pages  configurations)
 - src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)

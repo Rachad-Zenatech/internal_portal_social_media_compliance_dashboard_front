@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiClient } from "@/services/apiClient";
 import TrainingContentQuickOpen, { type TrainingExampleRow } from "./TrainingContentQuickOpen";
+import ReviewPrecedentsTable, { type ReviewPrecedentRecord } from "./ReviewPrecedentsTable";
 
 interface TrainingReadiness {
   ready: boolean;
@@ -24,6 +25,7 @@ interface TrainingData {
   splits: Record<string, number>;
   examples: TrainingExampleRow[];
   readiness?: TrainingReadiness;
+  review_precedents?: ReviewPrecedentRecord[];
 }
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -187,6 +189,9 @@ export default function MoodTrainingData() {
           </>
         )}
       </Card>
+      {query.data?.review_precedents && (
+        <ReviewPrecedentsTable records={query.data.review_precedents} onSelect={setSelected} />
+      )}
       <TrainingContentQuickOpen example={selected} onClose={() => setSelected(null)} />
     </>
   );
