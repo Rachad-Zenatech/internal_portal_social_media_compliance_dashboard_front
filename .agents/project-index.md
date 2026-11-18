@@ -49,7 +49,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/dashboard/dashboardParts.tsx (448 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
 - src/components/script/BatchDetailsForm.tsx (149 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- src/components/script/BatchItemCard.tsx (332 lines) - batch item card (components script)
+- src/components/script/BatchItemCard.tsx (333 lines) - batch item card (components script)
 - src/components/script/BatchReviewerFields.tsx (81 lines) - batch reviewer fields (components script)
 - src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - src/components/script/CreatorScriptDownload.tsx (33 lines) - creator script download (components script)
@@ -57,14 +57,15 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/HighlightableText.tsx (542 lines) - Scroll to the n-th place any of these phrases appears and flash it.
 - src/components/script/NoteField.tsx (42 lines) - Called when the box becomes empty or gets text.
 - src/components/script/ScriptBatchBar.tsx (80 lines) - Reviewers open scripts in the Content screener; the creator on the post's script page.
-- src/components/script/ScriptCompliance.tsx (71 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
+- src/components/script/ScriptCompliance.tsx (73 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
 - src/components/script/ScriptDiff.tsx (489 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptDocumentPreview.tsx (18 lines) - Read-only script preview using the same document renderer as the reviewer workspace.
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
 - src/components/script/ScriptFindings.tsx (235 lines) - script findings (components script)
 - src/components/script/ScriptInReviewDetails.tsx (45 lines) - The exact submitted script and saved check, without draft/video editing controls.
-- src/components/script/ScriptPrecheck.tsx (119 lines) - script precheck (components script)
+- src/components/script/ScriptPrecheck.tsx (121 lines) - script precheck (components script)
 - src/components/script/ScriptReviewWorkspace.tsx (931 lines) - script review workspace (components script)
+- src/components/script/ScriptSourcesChecked.tsx (18 lines) - script sources checked (components script)
 - src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
 - src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
 - src/components/script/ScriptWorkspaceState.tsx (21 lines) - Loading, error and empty states shared by the script review workspace.
