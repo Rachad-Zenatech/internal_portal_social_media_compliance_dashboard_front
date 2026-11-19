@@ -90,44 +90,40 @@ function SentimentFilterPills({
       <button
         type="button"
         onClick={() => onChange("ALL")}
-        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
-          active === "ALL"
-            ? "bg-foreground text-background"
-            : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-        }`}
+        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${active === "ALL"
+          ? "bg-foreground text-background"
+          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          }`}
       >
         All ({total})
       </button>
       <button
         type="button"
         onClick={() => onChange("POSITIVE")}
-        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
-          active === "POSITIVE"
-            ? "bg-emerald-600 text-white dark:bg-emerald-500"
-            : "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
-        }`}
+        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${active === "POSITIVE"
+          ? "bg-emerald-600 text-white dark:bg-emerald-500"
+          : "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
+          }`}
       >
         Positive ({positiveCount})
       </button>
       <button
         type="button"
         onClick={() => onChange("NEUTRAL")}
-        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
-          active === "NEUTRAL"
-            ? "bg-slate-700 text-white dark:bg-slate-300 dark:text-slate-900"
-            : "bg-slate-500/10 text-slate-700 hover:bg-slate-500/20 dark:text-slate-300"
-        }`}
+        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${active === "NEUTRAL"
+          ? "bg-slate-700 text-white dark:bg-slate-300 dark:text-slate-900"
+          : "bg-slate-500/10 text-slate-700 hover:bg-slate-500/20 dark:text-slate-300"
+          }`}
       >
         Neutral ({neutralCount})
       </button>
       <button
         type="button"
         onClick={() => onChange("NEGATIVE")}
-        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${
-          active === "NEGATIVE"
-            ? "bg-red-600 text-white dark:bg-red-500"
-            : "bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
-        }`}
+        className={`rounded-full px-2.5 py-0.5 font-medium transition-colors ${active === "NEGATIVE"
+          ? "bg-red-600 text-white dark:bg-red-500"
+          : "bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
+          }`}
       >
         Negative ({negativeCount})
       </button>

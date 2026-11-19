@@ -32,6 +32,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
+## src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
+- `compressUploadImage` (export function) L5 - Reduce large image uploads before they leave the browser.
+
 ## src/lib/contentCalendar.ts (433 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - `MODE_OF_STYLE` (export const) L16 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
 - `PublishInfo` (export type) L27 - A platform's publish info with its caption limit always set.

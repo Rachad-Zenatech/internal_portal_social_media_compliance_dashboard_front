@@ -458,7 +458,7 @@ export default function OAuthIntegrations() {
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground">MQTT Social Media Microservice Event Bus</h3>
               <Badge variant="outline" className="text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200">
-                Active (127.0.0.1:1883)
+                Active
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">

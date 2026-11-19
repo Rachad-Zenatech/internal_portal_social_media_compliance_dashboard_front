@@ -1,5 +1,6 @@
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
+import { compressUploadImage } from "@/lib/compressUploadImage";
 import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -135,7 +136,6 @@ import type {
 } from "@/types/submission";
 
 // Static presentation config (allowed values themselves come from the API)
-
 const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
   { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
   { value: "SOCIAL_POST", label: "Social Post", description: "Single image or text post", icon: MessageSquareText },
@@ -777,7 +777,7 @@ export default function NewSubmissionPage() {
 
     for (const { file, key, kind } of batch) {
       try {
-        const uploadPromise = submissionService.uploadFile(id, kind, file);
+        const uploadPromise = compressUploadImage(file).then((uploadFile) => submissionService.uploadFile(id, kind, uploadFile));
         addJob(file.name, uploadPromise, {
           description: kind === "SCRIPT" ? "Uploading & reading script..." : "Uploading content file...",
           type: kind === "SCRIPT" ? "document" : "upload",
