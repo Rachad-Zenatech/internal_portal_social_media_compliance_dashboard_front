@@ -156,12 +156,13 @@ export function DocStatusStrip({ doc, myCheckIn, changedBy }: { doc: DocDetail; 
     );
   }
   if (doc.status === "APPROVED") {
+    const isCreator = doc.access.role === "CREATOR";
     return (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-emerald-50 px-4 py-2 text-xs dark:bg-emerald-500/10">
         <span>
           Approved{doc.decided_by_name ? ` by ${doc.decided_by_name}` : ""}.{doc.decision_note ? ` ${doc.decision_note}` : ""}
         </span>
-        {posts.map((p) => (
+        {isCreator && posts.map((p) => (
           <Link key={p.position} to={`/submissions/${p.submission_id}`} className="font-medium text-emerald-800 underline dark:text-emerald-300">
             Attach the video
           </Link>

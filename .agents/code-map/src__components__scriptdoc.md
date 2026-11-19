@@ -34,7 +34,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `NoteButtons` (function) L94 - Highlight and Comment, in the editor's toolbar.
 - `DocEditorColumn` (export function) L119 - The script page itself, once the live connection is up (until then, a short wait).
 
-## src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
+## src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
 - `DOC_STATUS` (export const) L10
 - `HeaderActions` (export interface) L18
 - `HeaderButtons` (function) L28 - What the viewer can do next, as buttons: details, send, finish my review, decide.

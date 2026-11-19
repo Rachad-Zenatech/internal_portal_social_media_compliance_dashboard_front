@@ -91,7 +91,7 @@ function DocDetailsBody({
                   {p.title}
                   {p.reference_code && <span className="ml-2 text-xs text-muted-foreground">{p.reference_code}</span>}
                 </span>
-                {p.submission_id && (
+                {doc.access.role === "CREATOR" && p.submission_id && (
                   <Link to={`/submissions/${p.submission_id}`} className="flex shrink-0 items-center gap-1 text-xs text-blue-700 hover:underline dark:text-blue-300">
                     Attach the video <ExternalLink className="h-3 w-3" />
                   </Link>
@@ -99,7 +99,7 @@ function DocDetailsBody({
               </li>
             ))}
           </ul>
-          {doc.posts.length === 0 && (doc.access.role === "CREATOR" || doc.access.can_decide) && (
+          {doc.posts.length === 0 && doc.access.role === "CREATOR" && (
             <Button size="sm" className="mt-2" disabled={makePosts.isPending} onClick={() => makePosts.mutate()}>
               Make the post
             </Button>
