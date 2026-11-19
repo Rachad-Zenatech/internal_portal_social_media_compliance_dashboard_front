@@ -49,6 +49,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__FormFields.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__HashtagPicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageAnnotator.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ImagePersonField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageProvenanceField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ManuallyCheckedClaims.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MarkedUpImageSlideshow.md | 1 | 1 KB |

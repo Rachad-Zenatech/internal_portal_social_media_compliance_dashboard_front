@@ -118,6 +118,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
+- src/components/submissions/ImagePersonField.tsx (25 lines) - image person field (components submissions)
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
 - src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
@@ -306,7 +307,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/PostMoodGroup.tsx (85 lines) - post mood group (pages  public mood)
 - src/pages/PublicMood/PublicMoodPage.tsx (104 lines) - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
 - src/pages/PublicMood/SearchDetails.tsx (57 lines) - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
-- src/pages/PublicMood/TrendItem.tsx (357 lines) - trend item (pages  public mood)
+- src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (391 lines) - The notes document as a list, kept up to date as anyone changes it.
@@ -342,7 +343,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
 - src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
-- src/types/imageProvenance.ts (6 lines) - Saved answer to the post's required AI-image disclosure question.
+- src/types/imageProvenance.ts (9 lines) - Saved answer to the post's required AI-image disclosure question.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - src/types/publicMood.ts (202 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/reviewScore.ts (6 lines) - Effective score after dismissed flags, and the minimum required for approval.

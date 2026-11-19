@@ -329,7 +329,7 @@ export interface SubmissionUpdate extends SubmissionSourceFields {
   caption_text?: string;
   /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
   context_picks?: Record<string, string[]>;
-  ai_generated_images?: boolean;
+  ai_generated_images?: boolean; people_in_images?: boolean;
   platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];

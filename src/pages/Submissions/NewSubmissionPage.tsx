@@ -72,7 +72,7 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceStep from "@/components/submissions/ComplianceStep";
-import ImageProvenanceField from "@/components/submissions/ImageProvenanceField";
+import ImageProvenanceField from "@/components/submissions/ImageProvenanceField"; import ImagePersonField from "@/components/submissions/ImagePersonField";
 import { scriptTextOf } from "@/components/script/scriptPreview";
 import ComplianceView from "@/components/submissions/ComplianceView";
 import DuplicateNotice from "@/components/submissions/DuplicateNotice";
@@ -1894,7 +1894,7 @@ export default function NewSubmissionPage() {
                       </div>
                     </div>
                   )}
-                  <ImageProvenanceField files={files} value={aiGeneratedImages} disabled={readOnly || checking} invalid={Boolean(errorFor("ai_generated_images"))} onChange={(answer) => { setAiGeneratedImages(answer); markEdited(); }} />
+                  <ImageProvenanceField files={files} value={aiGeneratedImages} disabled={readOnly || checking} invalid={Boolean(errorFor("ai_generated_images"))} onChange={(answer) => { setAiGeneratedImages(answer); markEdited(); }} /><ImagePersonField files={files} value={checkedSub?.people_in_images_confirmed ? Boolean(checkedSub.people_in_images) : null} detected={checkedSub?.people_in_images_detected} disabled={readOnly || checking} onChange={(answer) => { if (submissionId) void submissionService.update(submissionId, { people_in_images: answer }).then(applyServer).catch((err: Error) => toast.error(`Couldn't save the answer: ${err.message}`)); }} />
                   {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
                       <p className="text-xs text-foreground">
