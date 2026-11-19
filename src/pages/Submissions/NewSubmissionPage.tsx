@@ -932,7 +932,7 @@ export default function NewSubmissionPage() {
   const [repostTarget, setRepostTarget] = useState<PostStepKey | null>(null);
   const [repostForCheck, setRepostForCheck] = useState(false);
   const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
-
+  const needsAutomaticComplianceCheck = editCounter > 0 || !checkedSub?.latest_check || mediaChanged(files, checkedSub);
   const leaveDetails = async (target: PostStepKey) => {
     setShowErrors(true);
     if (!detailsComplete) {
@@ -952,7 +952,7 @@ export default function NewSubmissionPage() {
         }
         if (report.repost) {
           if (repostOk === repostKey(report.repost)) {
-            if (AUTO_RUN_WORKFLOW) void runComplianceCheck(); goToStep(target);
+            if (AUTO_RUN_WORKFLOW && needsAutomaticComplianceCheck) void runComplianceCheck(); goToStep(target);
             return;
           }
           setRepostTarget(target);
@@ -960,7 +960,7 @@ export default function NewSubmissionPage() {
           return;
         }
       }
-      if (AUTO_RUN_WORKFLOW) void runComplianceCheck(); goToStep(target);
+      if (AUTO_RUN_WORKFLOW && needsAutomaticComplianceCheck) void runComplianceCheck(); goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
     } finally {
@@ -975,8 +975,7 @@ export default function NewSubmissionPage() {
   const openStep = (target: EditorStep) =>
     target !== "suggestions" && onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
 
-  /** Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
-   * Duplicates are settled first, just before the check: a duplicate is refused, a repost for another date is asked. */
+  /** Save and screen the post against the rulebook; settle duplicate/repost decisions first. */
   const runComplianceCheck = async (confirmRepost = false) => {
     if (!detailsComplete && !videoLocked) {
       toast.error(`Fill in the required fields before running the check: ${detailsMissing.join(", ")}.`);
@@ -1008,6 +1007,7 @@ export default function NewSubmissionPage() {
       });
       const updated = await running;
       setCheckedSub(updated);
+      setEditCounter((current) => (current === editCounter ? 0 : current));
       setLastCheckMs(Date.now() - started); if (AUTO_RUN_WORKFLOW) startAutomaticAnalyses(id!);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {

@@ -58,7 +58,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `leaveDetails` (fn) L936
     - `backToCaption` (fn) L971
     - `openStep` (fn) L975
-    - `runComplianceCheck` (fn) L980 - Save, then screen the post against the rulebook without sending it; the creator can edit and run it again.
+    - `runComplianceCheck` (fn) L979 - Save and screen the post against the rulebook; settle duplicate/repost decisions first.
     - `sourceChecking` (fn) L1045
     - `submit` (fn) L1060
     - `exec` (fn) L1206 - ----- Caption editor -----
