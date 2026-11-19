@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { type CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
-import DocDetailsDialog from "@/components/scriptdoc/DocDetailsPanel";
+import DocDetailsDialog, { DocDetailsAccordion } from "@/components/scriptdoc/DocDetailsPanel";
 import DocDialogs, { type DialogName } from "@/components/scriptdoc/DocDialogs";
 import DocEditorColumn from "@/components/scriptdoc/DocEditorColumn";
 import EditorLayoutBar from "@/components/scriptdoc/EditorLayoutBar";
@@ -206,6 +206,7 @@ export default function ScriptDocPage() {
   // The creator's pages: every script is its own page with its own review.
   const navigate = useNavigate();
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsAccordionOpen, setDetailsAccordionOpen] = useState(true);
   // The pages list and the review panel can be hidden to give the editor the room (the choice is kept for next time).
   const [showPages, setShowPages] = useState(() => localStorage.getItem("script-doc-pages") !== "off");
   const [showPanel, setShowPanel] = useState(() => localStorage.getItem("script-doc-panel") !== "off");
@@ -300,8 +301,9 @@ export default function ScriptDocPage() {
     decide: (decision: "APPROVE" | "SEND_BACK", note: string) =>
       doc.access.can_decide && run.mutate(() => scriptDocService.decide(id, decision, note), { onSuccess: () => setOpen("decide", false) }),
   };
+  const isCreator = doc.access.role === "CREATOR";
   const actions = {
-    onDetails: () => setDetailsOpen(true),
+    onDetails: () => (isCreator ? setDetailsAccordionOpen((v) => !v) : setDetailsOpen(true)),
     onSend: () => setOpen("submit", true),
     onFinish: () => setOpen("checkIn", true),
     onUndoCheckIn: () => run.mutate(() => scriptDocService.withdrawCheckIn(id)),
@@ -310,12 +312,16 @@ export default function ScriptDocPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-[34rem] flex-col overflow-hidden rounded-xl border bg-background shadow-sm">
+    <div className={`flex ${isCreator && detailsAccordionOpen ? "min-h-[calc(100dvh-9rem)]" : "h-[calc(100dvh-9rem)] overflow-hidden"} min-h-[34rem] flex-col rounded-xl border bg-background shadow-sm`}>
       <DocHeader doc={doc} live={status} people={presence} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
       <DocStatusStrip doc={doc} myCheckIn={myCheckIn} changedBy={changedBy} />
-      <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
+      {isCreator ? (
+        <DocDetailsAccordion key={doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} />
+      ) : (
+        <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
+      )}
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
         {doc.pages.length > 0 && showPages && (
           <PagesRail doc={doc} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}

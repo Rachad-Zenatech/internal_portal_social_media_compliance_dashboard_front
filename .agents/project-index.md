@@ -75,7 +75,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
-- src/components/scriptdoc/DocDetailsPanel.tsx (135 lines) - The button that opens the details, with how many are still to fill in.
+- src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - src/components/scriptdoc/DocEditorColumn.tsx (218 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (174 lines) - doc header (components scriptdoc)
@@ -307,7 +307,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/TrendItem.tsx (357 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (385 lines) - The notes document as a list, kept up to date as anyone changes it.
+- src/pages/Scripts/ScriptDocPage.tsx (391 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)

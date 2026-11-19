@@ -16,9 +16,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - `DeleteScriptMenu` (export function) L16 - The three dots on a script (or a document of scripts) with a Delete script action.
 
-## src/components/scriptdoc/DocDetailsPanel.tsx (135 lines) - The button that opens the details, with how many are still to fill in.
-- `DocDetailsButton` (export function) L18 - The button that opens the details, with how many are still to fill in.
-- `DocDetailsDialog` (export function) L38 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
+## src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+- `useDocDetails` (function) L18 - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+- `DocDetailsStatusBadges` (function) L50
+- `DocDetailsBody` (function) L64
+- `DocDetailsButton` (export function) L118 - The button that opens or toggles the details, with how many are still to fill in.
+- `DocDetailsAccordion` (export function) L134 - Creator-side collapsible accordion at the top of the script page, expanded by default.
+- `DocDetailsDialog` (export function) L178 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
 
 ## src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - `DialogName` (export type) L4
