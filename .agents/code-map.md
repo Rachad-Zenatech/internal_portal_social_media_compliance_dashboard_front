@@ -114,7 +114,7 @@ to find the right file.
 | .agents/code-map/src__pages__Logs.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Performance.md | 1 | 2 KB |
 | .agents/code-map/src__pages__PublicMood.md | 6 | 2 KB |
-| .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
+| .agents/code-map/src__pages__Scripts.md | 4 | 1 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 16 | 6 KB |

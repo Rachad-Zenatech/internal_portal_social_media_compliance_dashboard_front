@@ -24,6 +24,29 @@ const STATUS: Record<DocStatus, { label: string; tone: string }> = {
 };
 
 type Scope = "mine" | "review" | "all";
+type StatusFilter = "all" | "DRAFT" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED";
+
+const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "IN_REVIEW", label: "In review" },
+  { value: "CHANGES_REQUESTED", label: "Needs changes" },
+  { value: "APPROVED", label: "Approved" },
+  { value: "DRAFT", label: "Draft" },
+];
+
+const matchesStatus = (status: DocStatus, filter: StatusFilter): boolean => {
+  if (filter === "all") return true;
+  if (filter === "IN_REVIEW") return status === "IN_REVIEW" || status === "LEVEL2_REVIEW";
+  return status === filter;
+};
+
+const matchesSetStatus = (set: DocSetSummary, filter: StatusFilter): boolean => {
+  if (filter === "all") return true;
+  if (filter === "DRAFT") return set.draft > 0;
+  if (filter === "IN_REVIEW") return set.in_review > 0;
+  if (filter === "CHANGES_REQUESTED") return set.changes_requested > 0;
+  return set.approved > 0;
+};
 
 function DocCard({ d, scope }: { d: DocSummary; scope: Scope }) {
   const s = d.source_status === "EDITS_PROPOSED" ? { ...STATUS.CHANGES_REQUESTED, label: "Edits proposed" } : STATUS[d.status];
@@ -161,39 +184,35 @@ function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | nul
   );
 }
 
-/** Start from a template, or attach a script from a file. */
+/** Start a blank script, or attach a script from a file. */
 function TemplateGrid({ templates, onPick, onAttach }: { templates: ScriptTemplate[]; onPick: (t: ScriptTemplate) => void; onAttach: () => void }) {
+  const blank = templates.find((t) => t.key === "blank") ?? templates[0];
   return (
-    <div>
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <FilePlus2 className="h-3.5 w-3.5" /> Start from a template
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {templates.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onPick(t)}
-            className="flex flex-col gap-0.5 rounded-lg border bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
-          >
-            <span className="text-sm font-medium">{t.name}</span>
-            <span className="line-clamp-2 text-xs text-muted-foreground">{t.description}</span>
-            {t.duration && <span className="mt-1 text-[11px] text-muted-foreground">{t.duration}</span>}
-          </button>
-        ))}
+    <div className="grid gap-2 sm:grid-cols-2">
+      {blank && (
         <button
           type="button"
-          onClick={onAttach}
-          className="flex flex-col gap-0.5 rounded-lg border border-dashed bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
+          onClick={() => onPick(blank)}
+          className="flex flex-col gap-0.5 rounded-lg border bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
         >
           <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Paperclip className="h-3.5 w-3.5" /> Attach Script
+            <FilePlus2 className="h-3.5 w-3.5" /> {blank.name}
           </span>
-          <span className="line-clamp-2 text-xs text-muted-foreground">
-            Upload a PDF, Word or text file. It is split into scripts, each on its own page to review.
-          </span>
+          <span className="line-clamp-2 text-xs text-muted-foreground">{blank.description}</span>
         </button>
-      </div>
+      )}
+      <button
+        type="button"
+        onClick={onAttach}
+        className="flex flex-col gap-0.5 rounded-lg border border-dashed bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
+      >
+        <span className="flex items-center gap-1.5 text-sm font-medium">
+          <Paperclip className="h-3.5 w-3.5" /> Attach Script
+        </span>
+        <span className="line-clamp-2 text-xs text-muted-foreground">
+          Upload a PDF, Word or text file. It is split into scripts, each on its own page to review.
+        </span>
+      </button>
     </div>
   );
 }
@@ -204,22 +223,27 @@ const EMPTY = "rounded-xl border border-dashed px-4 py-8 text-center text-sm tex
 /** The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager. */
 function DocLists({
   scope,
+  statusFilter,
   sets,
   docs,
   onDeleteSet,
 }: {
   scope: Scope;
+  statusFilter: StatusFilter;
   sets: { isLoading: boolean; data?: DocSetSummary[] };
   docs: { isLoading: boolean; error: unknown; data?: DocSummary[] };
   onDeleteSet: (id: string) => Promise<void>;
 }) {
   if (scope === "mine") {
-    const uploads = (docs.data ?? []).filter((d) => Boolean(d.submission_id));
+    const filteredSets = (sets.data ?? []).filter((d) => matchesSetStatus(d, statusFilter));
+    const uploads = (docs.data ?? []).filter((d) => Boolean(d.submission_id) && matchesStatus(d.status, statusFilter));
     if (sets.isLoading && docs.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-    if (!sets.data?.length && !uploads.length) return <p className={EMPTY}>You haven't written a script yet. Pick a template above.</p>;
+    if (!filteredSets.length && !uploads.length) {
+      return <p className={EMPTY}>{statusFilter === "all" ? "You haven't written a script yet. Use Blank script or Attach Script above." : "No scripts match this filter."}</p>;
+    }
     return (
       <ul className={GRID}>
-        {(sets.data ?? []).map((d) => (
+        {filteredSets.map((d) => (
           <SetCard key={`set-${d.id}`} d={d} onDelete={onDeleteSet} />
         ))}
         {uploads.map((d) => (
@@ -230,10 +254,13 @@ function DocLists({
   }
   if (docs.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (docs.error) return <p className="text-sm text-destructive">{docs.error instanceof Error ? docs.error.message : "Couldn't load the scripts."}</p>;
-  if (!docs.data?.length) return <p className={EMPTY}>{scope === "review" ? "Nothing has been sent to you." : "No scripts yet."}</p>;
+  const filteredDocs = (docs.data ?? []).filter((d) => matchesStatus(d.status, statusFilter));
+  if (!filteredDocs.length) {
+    return <p className={EMPTY}>{statusFilter !== "all" ? "No scripts match this filter." : scope === "review" ? "Nothing has been sent to you." : "No scripts yet."}</p>;
+  }
   return (
     <ul className={GRID}>
-      {docs.data.map((d) => (
+      {filteredDocs.map((d) => (
         <DocCard key={d.id} d={d} scope={scope} />
       ))}
     </ul>
@@ -254,6 +281,7 @@ export default function ScriptDocHub() {
     ...(manager ? [{ v: "all" as Scope, label: "All scripts" }] : []),
   ];
   const [selectedScope, setScope] = useState<Scope | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const scope = tabs.find((tab) => tab.v === selectedScope)?.v ?? (reviewer ? "review" : "mine");
   const [picked, setPicked] = useState<ScriptTemplate | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -288,18 +316,7 @@ export default function ScriptDocHub() {
       : (docs.data ?? []).filter((d) => d.needs_you).length;
 
   return (
-    <section className="space-y-4" aria-labelledby="script-docs-title">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 id="script-docs-title" className="text-lg font-semibold tracking-tight">Script documents</h2>
-          <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
-            {reviewer
-              ? "Review scripts assigned to you."
-              : "Open scripts you created here or uploaded through Create Post."}
-          </p>
-        </div>
-      </div>
-
+    <section className="space-y-4" aria-label="Scripts">
       {!reviewer && scope === "mine" && <TemplateGrid templates={templates.data ?? []} onPick={setPicked} onAttach={() => setAttachOpen(true)} />}
       <UploadPagesDialog
         open={attachOpen}
@@ -313,27 +330,46 @@ export default function ScriptDocHub() {
         }}
       />
 
-      <div>
-        <div role="tablist" className="mb-3 flex flex-wrap gap-2">
-          {tabs.map((t) => (
-            <button
-              key={t.v}
-              role="tab"
-              aria-selected={scope === t.v}
-              type="button"
-              onClick={() => setScope(t.v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-                scope === t.v ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.v === "all" && <Users className="h-3.5 w-3.5" />}
-              {t.label}
-              {t.v === scope && waiting > 0 && <span className="rounded-full bg-white/25 px-1.5 text-[11px]">{waiting} for you</span>}
-            </button>
-          ))}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div role="tablist" aria-label="Scope" className="flex flex-wrap gap-2">
+            {tabs.map((t) => (
+              <button
+                key={t.v}
+                role="tab"
+                aria-selected={scope === t.v}
+                type="button"
+                onClick={() => setScope(t.v)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                  scope === t.v ? "border-blue-700 bg-blue-700 text-white" : "border-border bg-background text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.v === "all" && <Users className="h-3.5 w-3.5" />}
+                {t.label}
+                {t.v === scope && waiting > 0 && <span className="rounded-full bg-white/25 px-1.5 text-[11px]">{waiting} for you</span>}
+              </button>
+            ))}
+          </div>
+          <div role="tablist" aria-label="Filter by status" className="flex flex-wrap gap-1.5">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                role="tab"
+                aria-selected={statusFilter === f.value}
+                type="button"
+                onClick={() => setStatusFilter(f.value)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  statusFilter === f.value ? "border-foreground bg-foreground text-background" : "border-border bg-background text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <DocLists scope={scope} sets={sets} docs={docs} onDeleteSet={removeSet} />
+        <DocLists scope={scope} statusFilter={statusFilter} sets={sets} docs={docs} onDeleteSet={removeSet} />
       </div>
       <NewScriptDialog key={picked?.key ?? "none"} template={picked} onClose={() => setPicked(null)} />
     </section>

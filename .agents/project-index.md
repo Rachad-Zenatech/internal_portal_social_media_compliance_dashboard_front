@@ -81,7 +81,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
-- src/components/scriptdoc/ScriptDocHub.tsx (342 lines) - script doc hub (components scriptdoc)
+- src/components/scriptdoc/ScriptDocHub.tsx (378 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/SharedEditorFrame.tsx (233 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
@@ -300,7 +300,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (384 lines) - The notes document as a list, kept up to date as anyone changes it.
-- src/pages/Scripts/ScriptReviewPage.tsx (302 lines) - script review page (pages  scripts)
+- src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
 - src/pages/Submissions/NewSubmissionPage.tsx (2526 lines) - new submission page (pages  submissions)
@@ -314,7 +314,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/complianceService.ts (378 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
-- src/services/emailTimezoneService.ts (23 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
+- src/services/emailTimezoneService.ts (27 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
