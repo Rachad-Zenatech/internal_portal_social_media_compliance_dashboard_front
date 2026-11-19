@@ -303,7 +303,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/PostMoodGroup.tsx (85 lines) - post mood group (pages  public mood)
 - src/pages/PublicMood/PublicMoodPage.tsx (104 lines) - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
 - src/pages/PublicMood/SearchDetails.tsx (57 lines) - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
-- src/pages/PublicMood/TrendItem.tsx (131 lines) - trend item (pages  public mood)
+- src/pages/PublicMood/TrendItem.tsx (357 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (385 lines) - The notes document as a list, kept up to date as anyone changes it.

@@ -19,11 +19,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `TermList` (function) L7
 - `SearchDetails` (export function) L24 - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
 
-## src/pages/PublicMood/TrendItem.tsx (131 lines) - trend item (pages  public mood)
+## src/pages/PublicMood/TrendItem.tsx (357 lines) - trend item (pages  public mood)
 - `TODAY_REASON_LABEL` (export const) L9
-- `SentimentBar` (export function) L22
-- `ScrapedArticleRow` (function) L44
-- `TrendItem` (export function) L67 - One scraped public-mood topic row with expandable supporting headlines/articles.
+- `SentimentFilter` (export type) L22
+- `SentimentBar` (export function) L24
+- `SentimentFilterPills` (function) L73
+- `ScrapedArticleRow` (function) L138
+- `ScrapedArticlesList` (function) L160
+- `TrendItemHeader` (function) L205
+- `TrendItem` (export function) L280 - One scraped public-mood topic row with expandable supporting headlines/articles.
 
 ## src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - `PostGroupData` (export interface) L7
