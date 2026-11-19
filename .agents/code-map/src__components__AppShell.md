@@ -24,23 +24,23 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
 - `GlobalProgressOverlay` (export function) L10
 
-## src/components/AppShell/MessageHubStatusDropdown.tsx (571 lines) - message hub status dropdown (components  app shell)
-- `HubQueueOrStreamItem` (export interface) L27
-- `HubChannelGroupStatus` (export interface) L36
-- `HubConnectedServer` (export interface) L45
-- `MessageHubStatusResponse` (export interface) L61
-- `forceServerOffline` (function) L88
-- `buildOfflineServer` (function) L129
-    - `q` (fn) L130
-- `buildAllOfflineFallback` (function) L167
-- `fetchWithTimeout` (function) L202
-- `MessageHubStatusDropdown` (export function) L212
-    - `queryClient` (fn) L216
-    - `handleActiveTest` (fn) L292
-    - `getStatusDot` (fn) L320
-    - `getServerBadge` (fn) L332
-    - `formatLastSeen` (fn) L366
-    - `renderMetric` (fn) L388
+## src/components/AppShell/MessageHubStatusDropdown.tsx (558 lines) - message hub status dropdown (components  app shell)
+- `HubQueueOrStreamItem` (export interface) L28
+- `HubChannelGroupStatus` (export interface) L37
+- `HubConnectedServer` (export interface) L46
+- `MessageHubStatusResponse` (export interface) L62
+- `forceServerOffline` (function) L89
+- `buildOfflineServer` (function) L116
+    - `q` (fn) L117
+- `buildAllOfflineFallback` (function) L154
+- `fetchWithTimeout` (function) L189
+- `MessageHubStatusDropdown` (export function) L199
+    - `queryClient` (fn) L203
+    - `handleActiveTest` (fn) L279
+    - `getStatusDot` (fn) L307
+    - `getServerBadge` (fn) L319
+    - `formatLastSeen` (fn) L353
+    - `renderMetric` (fn) L375
 
 ## src/components/AppShell/Navigation.tsx (165 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface) L17
@@ -70,3 +70,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleTestWindowsNotification` (fn) L162
     - `navigate` (fn) L182
     - `location` (fn) L183
+
+## src/components/AppShell/messageHubDefaults.ts (25 lines) - Development-only Message Hub addresses.
+- `HUB_SERVERS` (export const) L4
+- `peerBackendUrls` (export const) L16
+- `localHubFallback` (export const) L22

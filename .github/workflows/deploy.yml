@@ -13,6 +13,10 @@ permissions:
 
 env:
   ENV_FILE: ${{ secrets.ENV_FILE }}
+  DEPLOY_AWS_REGION: ${{ secrets.AWS_REGION || secrets.REGION }}
+  DEPLOY_AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID || secrets.ACCOUNT_ID }}
+  DEPLOY_S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME || secrets.BUCKET_NAME }}
+  DEPLOY_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID || secrets.DISTRIBUTION_ID || secrets.DISTRIBUTION_NAME }}
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
 
 jobs:
@@ -60,10 +64,10 @@ jobs:
           print("Loaded keys from ENV_FILE:", " ".join(vals.keys()), file=sys.stderr)
 
           mapped = {
-              "AWS_REGION": vals.get("AWS_REGION") or vals.get("REGION") or "",
-              "AWS_ACCOUNT_ID": vals.get("AWS_ACCOUNT_ID") or vals.get("ACCOUNT_ID") or "",
-              "S3_BUCKET_NAME": vals.get("S3_BUCKET_NAME") or vals.get("BUCKET_NAME") or "",
-              "CLOUDFRONT_DISTRIBUTION_ID": vals.get("CLOUDFRONT_DISTRIBUTION_ID") or vals.get("DISTRIBUTION_ID") or vals.get("DISTRIBUTION_NAME") or "",
+              "AWS_REGION": os.environ.get("DEPLOY_AWS_REGION") or vals.get("AWS_REGION") or vals.get("REGION") or "",
+              "AWS_ACCOUNT_ID": os.environ.get("DEPLOY_AWS_ACCOUNT_ID") or vals.get("AWS_ACCOUNT_ID") or vals.get("ACCOUNT_ID") or "",
+              "S3_BUCKET_NAME": os.environ.get("DEPLOY_S3_BUCKET_NAME") or vals.get("S3_BUCKET_NAME") or vals.get("BUCKET_NAME") or "",
+              "CLOUDFRONT_DISTRIBUTION_ID": os.environ.get("DEPLOY_CLOUDFRONT_DISTRIBUTION_ID") or vals.get("CLOUDFRONT_DISTRIBUTION_ID") or vals.get("DISTRIBUTION_ID") or vals.get("DISTRIBUTION_NAME") or "",
               "VITE_API_BASE_URL": vals.get("VITE_API_BASE_URL") or vals.get("API_BASE_URL") or "",
           }
           for k, v in mapped.items():
@@ -121,9 +125,16 @@ jobs:
           fi
 
           if [ -z "${VITE_API_BASE_URL:-}" ]; then
-            echo "::warning title=Missing API Base URL::The VITE_API_BASE_URL or API_BASE_URL secret is not set."
+            echo "::error title=Missing API Base URL::Set VITE_API_BASE_URL or API_BASE_URL to the public backend HTTPS URL. Without it, uploads are sent to the static frontend and return HTML instead of API JSON."
+            missing=1
           else
-            echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+            case "$VITE_API_BASE_URL" in
+              https://*) echo "VITE_API_BASE_URL is configured." ;;
+              *)
+                echo "::error title=Invalid API Base URL::VITE_API_BASE_URL must be a public HTTPS URL."
+                missing=1
+                ;;
+            esac
           fi
 
           if [ "$missing" -ne 0 ]; then

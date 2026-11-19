@@ -117,7 +117,9 @@ function resolveActionMeta(
   };
 }
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+// Keep development requests on the API even when a local .env file was not loaded.
+// A relative /api request can otherwise fall through to Vite's HTML app shell.
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8009" : "");
 export const BASE_URL = rawBaseUrl.endsWith("/") ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
 const getAuthHeaders = (): Record<string, string> => {
