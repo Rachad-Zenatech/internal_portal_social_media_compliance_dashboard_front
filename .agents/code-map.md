@@ -9,8 +9,9 @@ to find the right file.
 
 | Folder map | Files | Size |
 | --- | --- | --- |
+| .agents/code-map/_root.md | 1 | 1 KB |
 | .agents/code-map/src.md | 2 | 1 KB |
-| .agents/code-map/src__components__AppShell.md | 11 | 4 KB |
+| .agents/code-map/src__components__AppShell.md | 12 | 4 KB |
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
 | .agents/code-map/src__components__compliance.md | 4 | 2 KB |
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |

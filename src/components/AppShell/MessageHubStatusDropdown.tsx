@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { HUB_SERVERS, localHubFallback, peerBackendUrls } from "./messageHubDefaults";
 
 const CURRENT_APP_ID = "social_media_compliance";
 
@@ -109,22 +110,8 @@ function forceServerOffline(srv: HubConnectedServer): HubConnectedServer {
   };
 }
 
-const HUB_SERVERS: { id: string; name: string; user: string; port: number }[] = [
-  { id: "ma", name: "M&A", user: "acquisition_service", port: 8003 },
-  { id: "administration", name: "Administration", user: "administration_service", port: 8002 },
-  { id: "ceo", name: "CEO Dashboard", user: "ceo_service", port: 8000 },
-  { id: "social_media_compliance", name: "Social Media Compliance", user: "compliance_service", port: 8009 },
-  { id: "finance", name: "Finance (Enterprise System)", user: "finance_service", port: 8001 },
-  { id: "marketing", name: "Marketing Management", user: "marketing_service", port: 8010 },
-  { id: "sec_filing", name: "SEC Filing (Share Document)", user: "sec_filing_service", port: 8006 },
-  { id: "travel", name: "Travel Management", user: "travel_service", port: 8008 },
-  { id: "real_estate", name: "Real Estate", user: "real_estate_service", port: 8007 },
-];
-
-// Backends that serve /api/message-hub/status; asked when this app's own backend is down
-const PEER_BACKEND_URLS = ["travel", "marketing", "administration", "ceo"]
-  .filter((id) => id !== CURRENT_APP_ID)
-  .map((id) => `http://127.0.0.1:${HUB_SERVERS.find((h) => h.id === id)!.port}`);
+// Backends that serve /api/message-hub/status; asked when this app's own backend is down.
+const PEER_BACKEND_URLS = peerBackendUrls(CURRENT_APP_ID);
 
 function buildOfflineServer(s: { id: string; name: string; user: string; port: number }): HubConnectedServer {
   const q = (name: string, type: string): HubQueueOrStreamItem => ({
@@ -182,8 +169,8 @@ function buildAllOfflineFallback(previous?: MessageHubStatusResponse): MessageHu
       name: "RabbitMQ Message Hub",
       status: "offline",
       connected: false,
-      host: previous?.hub?.host || "127.0.0.1:5672",
-      management_url: previous?.hub?.management_url || "http://127.0.0.1:15672",
+      host: previous?.hub?.host || localHubFallback.host,
+      management_url: previous?.hub?.management_url || localHubFallback.managementUrl,
       management_api_reachable: false,
       vhost: previous?.hub?.vhost || "zenatech-local",
       version: previous?.hub?.version || "4.4.0",
@@ -448,7 +435,7 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
                 )}
               </div>
               <span className="mt-0.5 block truncate font-mono text-[10px] text-muted-foreground">
-                {resolvedData.hub?.host || "127.0.0.1:5672"} • RabbitMQ v{resolvedData.hub?.version || "4.x"}
+                {resolvedData.hub?.host || localHubFallback.host} • RabbitMQ v{resolvedData.hub?.version || "4.x"}
               </span>
             </div>
             <Button

@@ -125,9 +125,16 @@ jobs:
           fi
 
           if [ -z "${VITE_API_BASE_URL:-}" ]; then
-            echo "::warning title=Missing API Base URL::The VITE_API_BASE_URL or API_BASE_URL secret is not set."
+            echo "::error title=Missing API Base URL::Set VITE_API_BASE_URL or API_BASE_URL to the public backend HTTPS URL. Without it, uploads are sent to the static frontend and return HTML instead of API JSON."
+            missing=1
           else
-            echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+            case "$VITE_API_BASE_URL" in
+              https://*) echo "VITE_API_BASE_URL is configured." ;;
+              *)
+                echo "::error title=Invalid API Base URL::VITE_API_BASE_URL must be a public HTTPS URL."
+                missing=1
+                ;;
+            esac
           fi
 
           if [ "$missing" -ne 0 ]; then

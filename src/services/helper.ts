@@ -35,9 +35,11 @@ export async function handleResponse<T>(res: Response): Promise<T> {
     }
   }
 
+  const nonJsonApiMessage = `The API endpoint ${res.url || "for this request"} returned ${contentType || "an unknown content type"}, not JSON. Check VITE_API_BASE_URL and the frontend-to-backend route.`;
+
   if (!res.ok) {
     const detail = (data as { detail?: unknown } | undefined)?.detail
-      ?? (isJson ? res.statusText : "The API returned HTML instead of JSON. Check that the frontend is connected to the backend.");
+      ?? (isJson ? res.statusText : nonJsonApiMessage);
     const message = detailMessage(detail) || "Request failed";
     // 401 means the session ended (403 is only a missing permission). AuthProvider signs out and opens the login page.
     if (res.status === 401 && !res.url.includes("/auth/logout")) {
@@ -47,7 +49,7 @@ export async function handleResponse<T>(res: Response): Promise<T> {
   }
   if (res.status === 204) return null as unknown as T;
   if (!isJson || data === undefined) {
-    throw new ApiError("The API returned HTML instead of JSON. Check that the frontend is connected to the backend.", res.status, body);
+    throw new ApiError(nonJsonApiMessage, res.status, body);
   }
   return data as T;
 }
