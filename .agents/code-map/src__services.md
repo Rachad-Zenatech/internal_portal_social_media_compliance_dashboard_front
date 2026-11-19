@@ -4,16 +4,16 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/services/apiClient.ts (343 lines) - api client (services)
+## src/services/apiClient.ts (345 lines) - api client (services)
 - `ActiveApiAction` (export interface) L3
 - `subscribeToApiActions` (export function) L15
 - `notifyActionListeners` (function) L23
 - `ApiRequestOptions` (export interface) L34
 - `resolveActionMeta` (function) L40
-- `BASE_URL` (export const) L121
-- `getAuthHeaders` (const) L123
-- `monitoredFetch` (function) L137
-- `apiClient` (export const) L246
+- `BASE_URL` (export const) L123
+- `getAuthHeaders` (const) L125
+- `monitoredFetch` (function) L139
+- `apiClient` (export const) L248
 
 ## src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - `approvalPathService` (export const) L4
@@ -69,7 +69,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `reportClientError` (export function) L33
 - `installGlobalErrorReporting` (export function) L67
 
-## src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
+## src/services/helper.ts (54 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - `ApiError` (export class) L1
 - `detailMessage` (function) L13
 - `SESSION_EXPIRED_EVENT` (export const) L23 - Fired on window when the server says the sign-in is no longer valid (e.g.

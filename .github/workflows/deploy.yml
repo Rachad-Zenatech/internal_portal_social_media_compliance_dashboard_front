@@ -13,6 +13,10 @@ permissions:
 
 env:
   ENV_FILE: ${{ secrets.ENV_FILE }}
+  DEPLOY_AWS_REGION: ${{ secrets.AWS_REGION || secrets.REGION }}
+  DEPLOY_AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID || secrets.ACCOUNT_ID }}
+  DEPLOY_S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME || secrets.BUCKET_NAME }}
+  DEPLOY_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID || secrets.DISTRIBUTION_ID || secrets.DISTRIBUTION_NAME }}
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
 
 jobs:
@@ -60,10 +64,10 @@ jobs:
           print("Loaded keys from ENV_FILE:", " ".join(vals.keys()), file=sys.stderr)
 
           mapped = {
-              "AWS_REGION": vals.get("AWS_REGION") or vals.get("REGION") or "",
-              "AWS_ACCOUNT_ID": vals.get("AWS_ACCOUNT_ID") or vals.get("ACCOUNT_ID") or "",
-              "S3_BUCKET_NAME": vals.get("S3_BUCKET_NAME") or vals.get("BUCKET_NAME") or "",
-              "CLOUDFRONT_DISTRIBUTION_ID": vals.get("CLOUDFRONT_DISTRIBUTION_ID") or vals.get("DISTRIBUTION_ID") or vals.get("DISTRIBUTION_NAME") or "",
+              "AWS_REGION": os.environ.get("DEPLOY_AWS_REGION") or vals.get("AWS_REGION") or vals.get("REGION") or "",
+              "AWS_ACCOUNT_ID": os.environ.get("DEPLOY_AWS_ACCOUNT_ID") or vals.get("AWS_ACCOUNT_ID") or vals.get("ACCOUNT_ID") or "",
+              "S3_BUCKET_NAME": os.environ.get("DEPLOY_S3_BUCKET_NAME") or vals.get("S3_BUCKET_NAME") or vals.get("BUCKET_NAME") or "",
+              "CLOUDFRONT_DISTRIBUTION_ID": os.environ.get("DEPLOY_CLOUDFRONT_DISTRIBUTION_ID") or vals.get("CLOUDFRONT_DISTRIBUTION_ID") or vals.get("DISTRIBUTION_ID") or vals.get("DISTRIBUTION_NAME") or "",
               "VITE_API_BASE_URL": vals.get("VITE_API_BASE_URL") or vals.get("API_BASE_URL") or "",
           }
           for k, v in mapped.items():
