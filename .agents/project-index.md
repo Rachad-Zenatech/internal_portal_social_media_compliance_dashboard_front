@@ -73,6 +73,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/script/scriptPreview.ts (10 lines) - Prefer the attached script's extracted text, with the latest reviewed version as fallback.
 - src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
+- src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (135 lines) - The button that opens the details, with how many are still to fill in.
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
@@ -82,7 +83,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
-- src/components/scriptdoc/ScriptDocHub.tsx (378 lines) - script doc hub (components scriptdoc)
+- src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/SharedEditorFrame.tsx (233 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
@@ -266,7 +267,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/utils.ts (7 lines) - utils (lib)
 - src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
-- src/main.tsx (51 lines) - Create a client
+- src/main.tsx (61 lines) - After a new deploy removes old hashed chunks from S3, reload once so an open tab picks up the new manifest.
 - src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
@@ -326,7 +327,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/preparationComplianceService.ts (19 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
-- src/services/scriptDocService.ts (50 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
+- src/services/scriptDocService.ts (57 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - src/services/submissionService.ts (381 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
@@ -343,7 +344,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/reviewScore.ts (6 lines) - Effective score after dismissed flags, and the minimum required for approval.
 - src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
-- src/types/scriptDoc.ts (190 lines) - script doc (types)
+- src/types/scriptDoc.ts (198 lines) - script doc (types)
 - src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - src/types/scriptQueue.ts (4 lines) - script queue (types)
 - src/types/sentiment.ts (225 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).

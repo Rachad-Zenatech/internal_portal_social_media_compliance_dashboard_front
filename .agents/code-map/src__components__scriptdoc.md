@@ -10,6 +10,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L52
 - `CollabEditor` (const) L70 - The script as a shared page: everyone with it open edits the same text, and sees each other's cursor with their name  above it in their o...
 
+## src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
+- `DefaultTemplateDialog` (export function) L14 - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
+
 ## src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - `DeleteScriptMenu` (export function) L16 - The three dots on a script (or a document of scripts) with a Delete script action.
 
@@ -64,17 +67,30 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (378 lines) - script doc hub (components scriptdoc)
-- `Scope` (type) L26
-- `StatusFilter` (type) L27
-- `matchesStatus` (const) L37
-- `matchesSetStatus` (const) L43
-- `DocCard` (function) L51
-- `SetCard` (function) L91 - A creator's document: its scripts (pages) and where each stands.
-- `NewScriptDialog` (function) L136
-- `TemplateGrid` (function) L188 - Start a blank script, or attach a script from a file.
-- `DocLists` (function) L224 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
-- `ScriptDocHub` (export function) L274 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
+- `Scope` (type) L27
+- `StatusFilter` (type) L28
+- `matchesStatus` (const) L38
+- `matchesSetStatus` (const) L44
+- `DocCard` (function) L52
+- `SetCard` (function) L92 - A creator's document: its scripts (pages) and where each stands.
+- `NewScriptDialog` (function) L137
+    - `navigate` (fn) L138
+    - `queryClient` (fn) L139
+    - `create` (fn) L141
+- `TemplateGrid` (function) L189 - Start a blank script, attach a script from a file, or replace the default script template.
+- `DocLists` (function) L255 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
+    - `filteredSets` (fn) L269
+    - `uploads` (fn) L270
+    - `filteredDocs` (fn) L288
+- `ScriptDocHub` (export function) L305 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+    - `navigate` (fn) L320
+    - `queryClient` (fn) L321
+    - `templates` (fn) L323
+    - `defaultTemplate` (fn) L324
+    - `docs` (fn) L329
+    - `sets` (fn) L336
+    - `removeSet` (fn) L345
 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16

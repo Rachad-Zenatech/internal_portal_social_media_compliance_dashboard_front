@@ -1,6 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type {
-  BulkResult, Capacity, DocDetail, DocDetails, DocHistory, DocPage, DocSetSummary, DocSummary, ReviewerOption, ScriptTemplate, Vote,
+  BulkResult, Capacity, DefaultScriptTemplate, DocDetail, DocDetails, DocHistory, DocPage, DocSetSummary, DocSummary, ReviewerOption, ScriptTemplate, Vote,
 } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
 
@@ -10,6 +10,13 @@ const quiet = { skipGlobalLoading: true };
 export const scriptDocService = {
   fromSubmission: (id: string) => apiClient.post<{ document_id: string | null }>(`/api/script-docs/from-submission/${id}`, undefined, quiet),
   templates: () => apiClient.get<ScriptTemplate[]>("/api/script-docs/templates", quiet),
+  defaultTemplate: () => apiClient.get<DefaultScriptTemplate>("/api/script-docs/default-template", quiet),
+  uploadDefaultTemplate: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient.post<DefaultScriptTemplate>("/api/script-docs/default-template", form, quiet);
+  },
+  resetDefaultTemplate: () => apiClient.delete<DefaultScriptTemplate>("/api/script-docs/default-template", quiet),
   /** The creator's documents, each with its scripts as pages. */
   sets: () => apiClient.get<DocSetSummary[]>("/api/script-docs/sets", quiet),
   /** A new page (script) in the same document, with its own table. */

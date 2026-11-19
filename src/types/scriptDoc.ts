@@ -13,6 +13,14 @@ export interface ScriptTemplate {
   rows: { time: string; visual: string; voiceover: string; onscreen: string }[];
 }
 
+export interface DefaultScriptTemplate {
+  is_custom: boolean;
+  filename: string | null;
+  headers: string[];
+  row_count: number;
+  updated_at: string | null;
+}
+
 export interface DocReviewer {
   user_id: string;
   name: string;

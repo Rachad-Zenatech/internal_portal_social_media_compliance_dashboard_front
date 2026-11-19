@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { FilePlus2, FileText, Paperclip, Users } from "lucide-react";
+import { FilePlus2, FileText, Paperclip, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import DefaultTemplateDialog from "@/components/scriptdoc/DefaultTemplateDialog";
 import DeleteScriptMenu from "@/components/scriptdoc/DeleteScriptMenu";
 import { UploadPagesDialog } from "@/components/scriptdoc/PagesRail";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
-import type { DocSetSummary, DocStatus, DocSummary, ScriptTemplate } from "@/types/scriptDoc";
+import type { DefaultScriptTemplate, DocSetSummary, DocStatus, DocSummary, ScriptTemplate } from "@/types/scriptDoc";
 
 const STATUS: Record<DocStatus, { label: string; tone: string }> = {
   DRAFT: { label: "Draft", tone: "bg-muted text-muted-foreground" },
@@ -184,11 +185,23 @@ function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | nul
   );
 }
 
-/** Start a blank script, or attach a script from a file. */
-function TemplateGrid({ templates, onPick, onAttach }: { templates: ScriptTemplate[]; onPick: (t: ScriptTemplate) => void; onAttach: () => void }) {
+/** Start a blank script, attach a script from a file, or replace the default script template. */
+function TemplateGrid({
+  templates,
+  defaultTemplate,
+  onPick,
+  onAttach,
+  onReplaceTemplate,
+}: {
+  templates: ScriptTemplate[];
+  defaultTemplate?: DefaultScriptTemplate;
+  onPick: (t: ScriptTemplate) => void;
+  onAttach: () => void;
+  onReplaceTemplate: () => void;
+}) {
   const blank = templates.find((t) => t.key === "blank") ?? templates[0];
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 sm:grid-cols-3">
       {blank && (
         <button
           type="button"
@@ -198,7 +211,11 @@ function TemplateGrid({ templates, onPick, onAttach }: { templates: ScriptTempla
           <span className="flex items-center gap-1.5 text-sm font-medium">
             <FilePlus2 className="h-3.5 w-3.5" /> {blank.name}
           </span>
-          <span className="line-clamp-2 text-xs text-muted-foreground">{blank.description}</span>
+          <span className="line-clamp-2 text-xs text-muted-foreground">
+            {defaultTemplate?.is_custom && defaultTemplate.filename
+              ? `Using template: ${defaultTemplate.filename}`
+              : blank.description}
+          </span>
         </button>
       )}
       <button
@@ -211,6 +228,20 @@ function TemplateGrid({ templates, onPick, onAttach }: { templates: ScriptTempla
         </span>
         <span className="line-clamp-2 text-xs text-muted-foreground">
           Upload a PDF, Word or text file. It is split into scripts, each on its own page to review.
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={onReplaceTemplate}
+        className="flex flex-col gap-0.5 rounded-lg border border-dashed bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
+      >
+        <span className="flex items-center gap-1.5 text-sm font-medium">
+          <Upload className="h-3.5 w-3.5" /> Replace Template
+        </span>
+        <span className="line-clamp-2 text-xs text-muted-foreground">
+          {defaultTemplate?.is_custom && defaultTemplate.filename
+            ? `Current: ${defaultTemplate.filename} (${defaultTemplate.headers.length} columns)`
+            : "Upload a script template (.docx, .pdf, .txt) to replace the default Share Document script table."}
         </span>
       </button>
     </div>
@@ -285,10 +316,16 @@ export default function ScriptDocHub() {
   const scope = tabs.find((tab) => tab.v === selectedScope)?.v ?? (reviewer ? "review" : "mine");
   const [picked, setPicked] = useState<ScriptTemplate | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const templates = useQuery({ queryKey: ["script-doc-templates"], queryFn: scriptDocService.templates, staleTime: 3_600_000 });
+  const defaultTemplate = useQuery({
+    queryKey: ["script-doc-default-template"],
+    queryFn: scriptDocService.defaultTemplate,
+    enabled: !reviewer,
+  });
   const docs = useQuery({
     queryKey: ["script-docs", scope],
     queryFn: () => scriptDocService.list(scope),
@@ -317,7 +354,15 @@ export default function ScriptDocHub() {
 
   return (
     <section className="space-y-4" aria-label="Scripts">
-      {!reviewer && scope === "mine" && <TemplateGrid templates={templates.data ?? []} onPick={setPicked} onAttach={() => setAttachOpen(true)} />}
+      {!reviewer && scope === "mine" && (
+        <TemplateGrid
+          templates={templates.data ?? []}
+          defaultTemplate={defaultTemplate.data}
+          onPick={setPicked}
+          onAttach={() => setAttachOpen(true)}
+          onReplaceTemplate={() => setTemplateOpen(true)}
+        />
+      )}
       <UploadPagesDialog
         open={attachOpen}
         onOpenChange={setAttachOpen}
@@ -372,6 +417,7 @@ export default function ScriptDocHub() {
         <DocLists scope={scope} statusFilter={statusFilter} sets={sets} docs={docs} onDeleteSet={removeSet} />
       </div>
       <NewScriptDialog key={picked?.key ?? "none"} template={picked} onClose={() => setPicked(null)} />
+      <DefaultTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} current={defaultTemplate.data} />
     </section>
   );
 }
