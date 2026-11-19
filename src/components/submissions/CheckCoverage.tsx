@@ -1,7 +1,7 @@
-import { Eye, Hash, Info, Loader2, UserCheck } from "lucide-react";
+import { Eye, Hash, Info, Loader2 } from "lucide-react";
 
 import ScriptComparisonNotice from "@/components/submissions/ScriptComparisonNotice";
-import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
+import RuleCheckResults from "@/components/submissions/RuleCheckResults";
 import type { StoredCheck } from "@/types/submission";
 
 /**
@@ -9,8 +9,6 @@ import type { StoredCheck } from "@/types/submission";
  * test from text at all, so a clean score isn't mistaken for "every rule passed".
  */
 export default function CheckCoverage({ check, className = "" }: { check: StoredCheck; className?: string }) {
-  const manual = check.manual_review_rules ?? [];
-  const total = check.rules_checked ?? 0;
   const images = check.images_total ?? 0;
   const read = check.images_read ?? 0;
   const pending = check.images_pending ?? 0;
@@ -79,26 +77,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
           The text in {failed} image{failed === 1 ? "" : "s"} couldn't be read, so it wasn't checked. Check it by eye.
         </p>
       )}
-      {total > 0 && manual.length > 0 && (
-        <div>
-          <p className="flex items-start gap-1.5">
-            <UserCheck className="mt-px w-3.5 h-3.5 shrink-0" />
-            <span>
-              {total - manual.length} of {total} rules checked automatically ·{" "}
-              <span className="font-semibold text-foreground">
-                {manual.length} need{manual.length === 1 ? "s" : ""} a reviewer
-              </span>
-            </span>
-          </p>
-          <ul className="mt-1 ml-5 space-y-0.5">
-            {manual.map((m) => (
-              <li key={m.rule_id}>
-                <RuleNumberBadge v={m} /> {m.title}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <RuleCheckResults check={check} />
     </div>
   );
 }

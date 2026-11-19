@@ -1,3 +1,4 @@
+import RuleCheckResults from "@/components/submissions/RuleCheckResults";
 import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
 import { CheckCircle2, Clock } from "lucide-react";
 
@@ -20,6 +21,9 @@ export default function ScriptCompliance({ check }: { check?: StoredCheck | null
   const violations = check?.violations ?? [];
   const grouped = groupFindings(violations, statusOf);
   const flags = activeFlagCount(check);
+  const coveragePending = Boolean(check?.rule_results_version && !check.rule_results_complete && flags === 0);
+  const verdictText = coveragePending ? "Some checks are incomplete" : verdict.text;
+  const verdictTone = coveragePending ? "text-amber-700 dark:text-amber-300" : verdict.tone;
 
   if (!check) {
     return (
@@ -39,17 +43,18 @@ export default function ScriptCompliance({ check }: { check?: StoredCheck | null
             <span className="text-3xl font-semibold leading-none text-foreground">{check.ai_unavailable || check.score == null ? "–" : check.score}</span>
             <span className="text-sm text-muted-foreground">/ 100</span>
           </div>
-          <span className={`text-sm font-semibold ${verdict.tone}`}>{verdict.text}</span>
+          <span className={`text-sm font-semibold ${verdictTone}`}>{verdictText}</span>
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">
           {check.ai_unavailable
             ? "The AI review couldn't run, so there is no score yet. It is checked again automatically."
             : flags === 0
-              ? "Nothing in this script broke a rule."
+              ? coveragePending ? "Review the per-rule results below to see which checks still need attention." : "Nothing in this script broke a rule."
               : `${flags} flag${flags === 1 ? "" : "s"} to look at${verdict.critical ? `, ${verdict.critical} critical` : ""}. Each shows the rule, the wording and how to fix it.`}
         </p>
       </div>
 
+      <RuleCheckResults check={check} />
       <ScriptSourcesChecked check={check} />
       {violations.length === 0 ? (
         !check.ai_unavailable && (

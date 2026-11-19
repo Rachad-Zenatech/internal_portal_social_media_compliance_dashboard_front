@@ -256,6 +256,8 @@ export default function ComplianceStep({
     count("EVIDENCE_REQUIRED") ? `${count("EVIDENCE_REQUIRED")} claim${count("EVIDENCE_REQUIRED") === 1 ? "" : "s"} need${count("EVIDENCE_REQUIRED") === 1 ? "s" : ""} a source` : "",
     count("NEEDS_REVIEW") ? `${count("NEEDS_REVIEW")} thing${count("NEEDS_REVIEW") === 1 ? "" : "s"} to check` : "",
   ].filter(Boolean);
+  const coverageIncomplete = Boolean(check.rule_results_version && !check.rule_results_complete);
+  const headlineText = headline.length ? headline.join(", ") : coverageIncomplete ? "Some rule checks are incomplete" : checkedClaims.length ? "Claims checked by you" : "No issues found";
   const advice = check.blocked
     ? "A critical rule is broken, so this post can't be sent until that's fixed."
     : gap >= 0
@@ -287,7 +289,7 @@ export default function ComplianceStep({
                 </span>
               </span>
               <div className="flex min-w-0 flex-1 basis-64 flex-col gap-2">
-                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
+                <p className="text-base font-bold text-foreground">{headlineText}</p>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{advice}</p>
                 <div className="relative mt-1 h-2.5 rounded-full bg-muted">
                   <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score, minimumScore) }} />

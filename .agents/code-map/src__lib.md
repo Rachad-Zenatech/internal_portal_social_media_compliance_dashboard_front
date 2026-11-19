@@ -162,6 +162,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `REVISION_STEPS` (export const) L5
 - `creatorPreparationSteps` (export function) L13
 
+## src/lib/ruleCoverage.ts (23 lines) - Count saved judgments conservatively; a missing row never counts as evaluated.
+- `CoverageFilter` (export type) L4
+- `coverageOf` (export function) L8 - Count saved judgments conservatively; a missing row never counts as evaluated.
+- `visibleRuleResults` (export function) L18
+
 ## src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - `safeHref` (export function) L14 - A link the editor may keep: http(s) or mailto only.
 - `copyClean` (function) L22

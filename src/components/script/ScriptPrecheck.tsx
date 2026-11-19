@@ -1,3 +1,4 @@
+import RuleCheckResults from "@/components/submissions/RuleCheckResults";
 import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
 import { useState, type ComponentProps } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -93,6 +94,7 @@ function PrecheckBody({
           {button("Check again", stale)}
         </div>
       </div>
+      <div className="px-3.5 pb-3"><RuleCheckResults check={check} /></div>
       {stale && (
         <p className="flex items-start gap-2 border-t border-amber-200 bg-amber-50 px-3.5 py-2 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />

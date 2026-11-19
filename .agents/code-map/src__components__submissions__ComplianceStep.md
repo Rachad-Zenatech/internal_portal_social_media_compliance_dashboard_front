@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ComplianceStep.tsx (497 lines) - compliance step (components submissions)
+## src/components/submissions/ComplianceStep.tsx (499 lines) - compliance step (components submissions)
 - `escapeRe` (const) L28
 - `Finding` (interface) L30
 - `ring` (function) L43

@@ -11,14 +11,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `toLocalInput` (const) L13 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) L26 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
-## src/components/script/BatchItemCard.tsx (333 lines) - batch item card (components script)
-- `Decision` (export interface) L20
-- `CheckChip` (function) L33 - The state of a script's check as a short chip: its score, or why it has none.
-- `DetailsSummary` (function) L60 - The short form of a script's own details (brand and platforms), with what is missing; opens the form when it can.
-- `BatchItemCard` (export function) L87 - One script of a batch.
+## src/components/script/BatchItemCard.tsx (326 lines) - batch item card (components script)
+- `Decision` (export interface) L19
+- `CheckChip` (function) L32 - The state of a script's check as a short chip: its score, or why it has none.
+- `DetailsSummary` (function) L59 - The short form of a script's own details (brand and platforms), with what is missing; opens the form when it can.
+- `BatchItemCard` (export function) L86 - One script of a batch.
 
 ## src/components/script/BatchReviewerFields.tsx (81 lines) - batch reviewer fields (components script)
 - `BatchReviewerFields` (export function) L13 - Who a batch goes to: reviewers who approve, and (optionally) suggesting reviewers.
+
+## src/components/script/BatchScriptChecks.tsx (18 lines) - batch script checks (components script)
+- `Props` (type) L6
+- `BatchScriptChecks` (export function) L8
 
 ## src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
 - `BulkScriptDialog` (export function) L19 - Upload one document that holds several scripts.
@@ -69,9 +73,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ScriptBatchBar.tsx (80 lines) - Reviewers open scripts in the Content screener; the creator on the post's script page.
 - `ScriptBatchBar` (export function) L12 - The strip across the top of a script that came in a batch: which batch and which script this is, and a way to step to  the previous or ne...
 
-## src/components/script/ScriptCompliance.tsx (73 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
-- `activeFlagCount` (export function) L10 - How many of a script's flags still need attention: cleared triggers aren't counted.
-- `ScriptCompliance` (export function) L18 - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
+## src/components/script/ScriptCompliance.tsx (78 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `activeFlagCount` (export function) L11 - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `ScriptCompliance` (export function) L19 - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
 
 ## src/components/script/ScriptDiff.tsx (489 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const) L7
@@ -119,9 +123,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ScriptInReviewDetails.tsx (45 lines) - The exact submitted script and saved check, without draft/video editing controls.
 - `ScriptInReviewDetails` (export function) L13 - The exact submitted script and saved check, without draft/video editing controls.
 
-## src/components/script/ScriptPrecheck.tsx (121 lines) - script precheck (components script)
-- `PrecheckBody` (function) L18 - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
-- `ScriptPrecheck` (export function) L113 - The check, and while it runs a notice that it can take a while and needn't be waited on.
+## src/components/script/ScriptPrecheck.tsx (123 lines) - script precheck (components script)
+- `PrecheckBody` (function) L19 - The compliance check a creator runs on a script before sending it, like a post's compliance step: run it, see the  score and every flag, ...
+- `ScriptPrecheck` (export function) L115 - The check, and while it runs a notice that it can take a while and needn't be waited on.
 
 ## src/components/script/ScriptReviewWorkspace.tsx (931 lines) - script review workspace (components script)
 - `PanelTab` (type) L33

@@ -1,4 +1,4 @@
-import ScriptSourcesChecked from "@/components/script/ScriptSourcesChecked";
+import BatchScriptChecks from "@/components/script/BatchScriptChecks";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Clock, ExternalLink, SlidersHorizontal, Trash2, Undo2 } from "lucide-react";
@@ -6,7 +6,6 @@ import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Clock, ExternalLin
 import BatchDetailsForm from "@/components/script/BatchDetailsForm";
 import ScriptPrecheck from "@/components/script/ScriptPrecheck";
 import ScriptEditor, { type ScriptEditorHandle } from "@/components/script/ScriptEditor";
-import ScriptFindings from "@/components/script/ScriptFindings";
 import { replaceInText } from "@/lib/replaceQuote";
 import { displayText } from "@/lib/scriptDoc";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
@@ -144,6 +143,15 @@ export default function BatchItemCard({
   const status = STATUS[item.status];
   const statusLabel = item.status === "IN_REVIEW" && !creatorView ? "To be reviewed" : status.label;
   const flags = item.check?.violations ?? [];
+  const findScript = (term: string) => editorRef.current?.find(term);
+  const replaceScript = (quote: string, rewrite: string) => {
+    const next = replaceInText(body, quote, rewrite);
+    if (next == null) return false;
+    setBody(next);
+    return true;
+  };
+  const appendScript = (text: string) => setBody((previous) => `${previous.trimEnd()}\n\n${text}`);
+
 
   return (
     <article
@@ -251,22 +259,7 @@ export default function BatchItemCard({
           {dirty && <p className="mt-1 text-[11px] text-muted-foreground">Save your changes, then check the script again.</p>}
         </div>
       )}
-      <ScriptSourcesChecked check={item.check} />
-      {editable && item.check && (
-        <div className="mt-3">
-          <ScriptFindings
-            check={item.check}
-            onFind={(term) => editorRef.current?.find(term)}
-            onReplace={(quote, rewrite) => {
-              const next = replaceInText(body, quote, rewrite);
-              if (next == null) return false;
-              setBody(next);
-              return true;
-            }}
-            onAppend={(text) => setBody((b) => `${b.trimEnd()}\n\n${text}`)}
-          />
-        </div>
-      )}
+      <BatchScriptChecks check={item.check} editable={editable} onFind={findScript} onReplace={replaceScript} onAppend={appendScript} />
 
       {!editable && flags.length > 0 && item.status !== "APPROVED" && (
         <ul className="mt-3 space-y-1.5">

@@ -1,3 +1,4 @@
+import RuleCheckResults from "@/components/submissions/RuleCheckResults";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
@@ -815,11 +816,7 @@ function ReviewPanel({
                 {cleared > 0 && ` · ${cleared} cleared by context`}
               </p>
             )}
-            {check?.rules_checked != null && (
-              <p className="text-xs text-muted-foreground">
-                {check.rules_checked - manual.length} of {check.rules_checked} rules checked automatically
-              </p>
-            )}
+
           </div>
         </div>
         )}
@@ -964,19 +961,7 @@ function ReviewPanel({
               ))}
             </>
           ))}
-        {showingCompliance && manual.length > 0 && (
-          <div className="rounded-xl border border-border/70 p-3.5">
-            <p className="text-sm font-semibold text-foreground">Check by hand</p>
-            <p className="mb-2 text-xs text-muted-foreground">The text check can't test these. You confirm them when you approve.</p>
-            <ul className="flex flex-col gap-1 text-[13px] text-foreground/80">
-              {manual.map((r) => (
-                <li key={r.rule_number}>
-                  <RuleNumberBadge v={r} /> {r.title}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {showingCompliance && check && <RuleCheckResults check={check} />}
 
         {tab === "sentiment" && (s.content_type !== "VIDEO" || hasVideo) && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
 

@@ -30,30 +30,30 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const) L7
 
-## src/services/complianceService.ts (378 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
-- `ComplianceSeverity` (export type) L4
-- `TrafficLight` (export type) L5
-- `ComplianceRule` (export interface) L7
-- `ComplianceRuleCreate` (export interface) L44
-- `EvaluationMode` (export type) L71 - RULE: a match is a finding.
-- `ComplianceRuleUpdate` (export interface) L73
-- `ImageFindingRegion` (export interface) L99
-- `ComplianceViolation` (export interface) L110
-- `FindingStatus` (export type) L150 - VIOLATION breaks a rule (costs points; a critical one blocks).
-- `ContextEvaluation` (export interface) L152
-- `ComplianceCheckResponse` (export interface) L167
-- `SourceVerdict` (export type) L207 - SUPPORTED: the source says it.
-- `SourceClaim` (export interface) L209
-- `SourceCheck` (export interface) L227
-- `CheckSignals` (export interface) L246 - What the check read from the post's symbols, before its wording was matched against the rules.
-- `ManualReviewRule` (export interface) L261 - An applicable rule the automated check can't test from text (e.g.
-- `RuleExampleResult` (export interface) L269 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
-- `RuleSelfTest` (export interface) L279
-- `ComplianceCheckRequest` (export interface) L290 - Who and where the content is for; only rules whose scope matches are run.
-- `ComplianceStats` (export interface) L301
-- `VideoJobStage` (export interface) L313
-- `VideoJob` (export interface) L319
-- `complianceService` (export const) L338
+## src/services/complianceService.ts (385 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- `ComplianceSeverity` (export type) L5
+- `TrafficLight` (export type) L6
+- `ComplianceRule` (export interface) L8
+- `ComplianceRuleCreate` (export interface) L46
+- `EvaluationMode` (export type) L74 - RULE: a match is a finding.
+- `ComplianceRuleUpdate` (export interface) L76
+- `ImageFindingRegion` (export interface) L103
+- `ComplianceViolation` (export interface) L114
+- `FindingStatus` (export type) L154 - VIOLATION breaks a rule (costs points; a critical one blocks).
+- `ContextEvaluation` (export interface) L156
+- `ComplianceCheckResponse` (export interface) L171
+- `SourceVerdict` (export type) L214 - SUPPORTED: the source says it.
+- `SourceClaim` (export interface) L216
+- `SourceCheck` (export interface) L234
+- `CheckSignals` (export interface) L253 - What the check read from the post's symbols, before its wording was matched against the rules.
+- `ManualReviewRule` (export interface) L268 - An applicable rule explicitly configured for human confirmation (e.g.
+- `RuleExampleResult` (export interface) L276 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
+- `RuleSelfTest` (export interface) L286
+- `ComplianceCheckRequest` (export interface) L297 - Who and where the content is for; only rules whose scope matches are run.
+- `ComplianceStats` (export interface) L308
+- `VideoJobStage` (export interface) L320
+- `VideoJob` (export interface) L326
+- `complianceService` (export const) L345
 
 ## src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L12

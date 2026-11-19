@@ -104,6 +104,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/types/reviewScore.ts (6 lines) - Effective score after dismissed flags, and the minimum required for approval.
 - `ReviewScoreFields` (export interface) L2 - Effective score after dismissed flags, and the minimum required for approval.
 
+## src/types/ruleCheck.ts (33 lines) - rule check (types)
+- `CheckingMethod` (export type) L1
+- `RuleOutcome` (export type) L2
+- `MethodCheckResult` (export interface) L4
+- `RuleCheckResult` (export interface) L11
+- `CHECKING_METHOD_LABELS` (export const) L21
+- `RULE_OUTCOME_LABELS` (export const) L29
+
 ## src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - `ScriptStatus` (export type) L5 - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a  note, or approved (the v...
 - `ScriptVersion` (export interface) L7

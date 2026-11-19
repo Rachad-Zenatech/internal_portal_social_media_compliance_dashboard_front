@@ -1,3 +1,5 @@
+import RuleCheckingFields, { RuleMethodBadges } from "@/components/compliance/rules/RuleCheckingFields";
+import type { CheckingMethod } from "@/types/ruleCheck";
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -277,6 +279,7 @@ export default function ComplianceRulesPage() {
   const [formAllowedExamples, setFormAllowedExamples] = useState('');
   const [formProhibitedExamples, setFormProhibitedExamples] = useState('');
   const [formRemediation, setFormRemediation] = useState('');
+  const [formCheckingMethods, setFormCheckingMethods] = useState<CheckingMethod[]>([]);
   const [formEvalMode, setFormEvalMode] = useState<'RULE' | 'CONTEXT'>('RULE');
   const [formEvalGuidance, setFormEvalGuidance] = useState('');
   const [formScope, setFormScope] = useState<RuleScope>(EMPTY_SCOPE);
@@ -425,6 +428,7 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples(rule.allowed_examples || '');
     setFormProhibitedExamples(rule.prohibited_examples || '');
     setFormRemediation(rule.remediation_guidance || '');
+    setFormCheckingMethods(rule.checking_methods ?? []);
     setFormEvalMode(rule.evaluation_mode ?? 'RULE');
     setFormEvalGuidance(rule.evaluation_guidance || '');
     setFormScope({
@@ -451,6 +455,7 @@ export default function ComplianceRulesPage() {
     setFormAllowedExamples('');
     setFormProhibitedExamples('');
     setFormRemediation('');
+    setFormCheckingMethods([]);
     setFormEvalMode('RULE');
     setFormEvalGuidance('');
     setFormScope(EMPTY_SCOPE);
@@ -461,6 +466,11 @@ export default function ComplianceRulesPage() {
     e.preventDefault();
     if (!formRuleNumber.trim() || !formTitle.trim() || !formSummary.trim()) {
       toast.error('Rule Number, Title, and Summary are required.');
+      return;
+    }
+
+    if (formCheckingMethods.length === 0) {
+      toast.error('Choose at least one checking method.');
       return;
     }
 
@@ -500,7 +510,8 @@ export default function ComplianceRulesPage() {
           allowed_examples: formAllowedExamples.trim(),
           prohibited_examples: formProhibitedExamples.trim(),
           remediation_guidance: formRemediation.trim(),
-          evaluation_mode: formEvalMode,
+          checking_methods: formCheckingMethods,
+        evaluation_mode: formEvalMode,
           evaluation_guidance: formEvalGuidance.trim(),
           ...formScope,
           is_active: formActive,
@@ -521,6 +532,7 @@ export default function ComplianceRulesPage() {
         allowed_examples: formAllowedExamples.trim() || undefined,
         prohibited_examples: formProhibitedExamples.trim() || undefined,
         remediation_guidance: formRemediation.trim() || undefined,
+        checking_methods: formCheckingMethods,
         evaluation_mode: formEvalMode,
         evaluation_guidance: formEvalGuidance.trim() || undefined,
         ...formScope,
@@ -879,6 +891,7 @@ export default function ComplianceRulesPage() {
                       </div>
                       <p className={`mt-2 text-xs font-medium ${look.text}`}>
                         If your post breaks this rule: −{look.points} points. {look.effect}
+                        <RuleMethodBadges methods={rule.checking_methods} />
                         {rule.evaluation_mode === 'CONTEXT' && (
                           <span className="font-normal text-muted-foreground">
                             {' '}The AI reads the wording in context first, so a harmless use costs nothing.
@@ -1407,57 +1420,9 @@ export default function ComplianceRulesPage() {
               />
             </div>
 
-            <div className="rounded-lg border border-border/80 p-4 space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-foreground">How a match is judged</p>
-                <p className="text-[11px] text-muted-foreground">
-                  A hard rule flags its words every time: use it for bans and required disclaimers. A context rule treats a
-                  match as a candidate; the AI reads the sentence around it and decides whether it is a violation, needs a
-                  person to check something, needs a source, or isn't a breach (history, opinion, another subject).
-                </p>
-              </div>
-              <div className="flex gap-2" role="radiogroup" aria-label="How a match is judged">
-                {([
-                  ['RULE', 'Hard rule'],
-                  ['CONTEXT', 'Judge in context'],
-                ] as const).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={formEvalMode === value}
-                    onClick={() => setFormEvalMode(value)}
-                    className={`h-8 rounded-md border px-3 text-xs font-medium ${
-                      formEvalMode === value
-                        ? 'border-primary bg-primary/10 text-foreground'
-                        : 'border-border text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {formEvalMode === 'CONTEXT' && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="eval-guidance" className="text-xs font-semibold">
-                    What the judge must decide
-                  </Label>
-                  <Textarea
-                    id="eval-guidance"
-                    rows={4}
-                    placeholder="Say when it is a violation, when it needs review, when it needs evidence and when it is fine. For example: a historical reference or a clearly framed opinion is fine; a present-tense claim about our own product is a violation."
-                    value={formEvalGuidance}
-                    onChange={(e) => setFormEvalGuidance(e.target.value)}
-                    className="text-xs"
-                  />
-                  {!formEvalGuidance.trim() && (
-                    <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                      Without guidance the AI judges from the rule summary and examples alone.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+            <RuleCheckingFields methods={formCheckingMethods} onMethodsChange={setFormCheckingMethods}
+              mode={formEvalMode} onModeChange={setFormEvalMode}
+              guidance={formEvalGuidance} onGuidanceChange={setFormEvalGuidance} />
 
             <div className="rounded-lg border border-border/80 p-4 space-y-4">
               <div>

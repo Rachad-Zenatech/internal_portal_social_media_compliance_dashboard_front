@@ -1,3 +1,4 @@
+import type { CheckingMethod, RuleCheckResult } from "@/types/ruleCheck";
 import { apiClient } from '@/services/apiClient';
 import type { RuleFlagStats } from '@/types/submission';
 
@@ -5,6 +6,7 @@ export type ComplianceSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TrafficLight = 'RED' | 'YELLOW' | 'GREEN';
 
 export interface ComplianceRule {
+  checking_methods: CheckingMethod[];
   id: string;
   rulebook_id?: string | null;
   rule_number: string;
@@ -42,6 +44,7 @@ export interface ComplianceRule {
 }
 
 export interface ComplianceRuleCreate {
+  checking_methods: CheckingMethod[];
   rule_number: string;
   category: string;
   title: string;
@@ -71,6 +74,7 @@ export interface ComplianceRuleCreate {
 export type EvaluationMode = 'RULE' | 'CONTEXT';
 
 export interface ComplianceRuleUpdate {
+  checking_methods?: CheckingMethod[];
   rule_number?: string;
   category?: string;
   title?: string;
@@ -165,6 +169,9 @@ export interface ContextEvaluation {
 }
 
 export interface ComplianceCheckResponse {
+  rule_results?: RuleCheckResult[];
+  rule_results_version?: string | null;
+  rule_results_complete?: boolean;
   is_compliant: boolean;
   traffic_light: TrafficLight;
   score: number;
@@ -186,7 +193,7 @@ export interface ComplianceCheckResponse {
   recommendations: string[];
   /** How many active rules applied to the content's scope (missing on checks saved before scoping). */
   rules_checked?: number;
-  /** Of those, the rules the text check can't test (nothing to look for in text): a reviewer confirms them. */
+  /** Applicable rules explicitly configured to require human confirmation. */
   manual_review_rules?: ManualReviewRule[];
   /** Cashtags, hashtags, @mentions and links read from the post (missing on checks saved before they were read). */
   signals?: CheckSignals | null;
@@ -257,7 +264,7 @@ export interface CheckSignals {
   notes: string[];
 }
 
-/** An applicable rule the automated check can't test from text (e.g. image editing, image rights). */
+/** An applicable rule explicitly configured for human confirmation (e.g. image editing, image rights). */
 export interface ManualReviewRule {
   rule_id: string;
   rule_number: string;
