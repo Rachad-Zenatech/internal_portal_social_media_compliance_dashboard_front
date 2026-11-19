@@ -38,7 +38,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
 
-## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
+## src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
 ## src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.

@@ -208,7 +208,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
-- src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
+- src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
 - src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
 - src/hooks/useNotificationStream.tsx (80 lines) - EventSource can't send headers, so it connects with the link token (stream-only); a new one reopens it.

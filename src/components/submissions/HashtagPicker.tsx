@@ -53,13 +53,13 @@ export default function HashtagPicker({
               {group.tags.map(({ tag }) => {
                 const inCaption = hasTag(caption, tag);
                 const isCashtag = tag.startsWith("$");
-                // Hashtags stop being offered once the platforms' count is reached; the cashtag doesn't count.
+                // Hashtags stop being offered once the caption limit is reached; the cashtag doesn't count.
                 const blocked = !inCaption && !isCashtag && (full || max === 0);
                 return (
                   <button
                     key={tag}
                     type="button"
-                    title={inCaption ? `Remove ${tag}` : blocked ? "The hashtag limit for these platforms is reached" : `Add ${tag}`}
+                    title={inCaption ? `Remove ${tag}` : blocked ? "The caption's hashtag limit is reached" : `Add ${tag}`}
                     disabled={blocked}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => (inCaption ? onRemove(tag) : onAdd(tag))}

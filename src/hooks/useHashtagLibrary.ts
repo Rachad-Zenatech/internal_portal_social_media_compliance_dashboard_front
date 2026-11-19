@@ -7,6 +7,7 @@ export function useHashtagLibrary(p: { brands: string[]; audiences: string[]; re
   return useQuery({
     queryKey: ["hashtag-library", [...p.brands].sort(), [...p.audiences].sort(), p.region, [...p.platforms].sort(), [...p.ruleSets].sort()],
     queryFn: () => submissionService.hashtagLibrary(p),
+    select: (library) => ({ ...library, max_hashtags: 10, max_reason: "Up to 10 hashtags per caption" }),
     staleTime: 5 * 60_000,
   });
 }
