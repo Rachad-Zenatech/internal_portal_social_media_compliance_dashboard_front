@@ -5,4 +5,6 @@ export interface ImageProvenance {
   people_in_images?: boolean;
   people_in_images_confirmed?: boolean;
   people_in_images_detected?: boolean | null;
+  employee_in_images?: boolean;
+  employee_in_images_confirmed?: boolean;
 }

@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ImagePersonField.tsx (25 lines) - image person field (components submissions)
-- `ImagePersonField` (export function) L5
+## src/components/submissions/ImagePersonField.tsx (42 lines) - image person field (components submissions)
+- `ImagePersonField` (export function) L6

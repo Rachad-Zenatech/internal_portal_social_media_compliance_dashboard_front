@@ -76,13 +76,13 @@ export interface SubmissionFile {
   doc_text_status?: "PROCESSING" | "COMPLETED" | "FAILED" | null;
   /** Why it couldn't be read, in words the creator can act on. */
   doc_text_error?: string | null;
+  /** Image-read status, person result, and anonymous [top, left, bottom, right] face boxes. */ image_text_status?: "PROCESSING" | "COMPLETED" | "FAILED" | null; person_detected?: boolean | null; face_boxes?: number[][]; face_detection_version?: number;
   /** CANVA files remember the design and revision they came from, for "reimport latest". */
   source?: "UPLOAD" | "CANVA";
   canva_design_id?: string | null;
   canva_design_title?: string | null;
   canva_revision?: number | null;
 }
-
 /** Which transcript segments contain flagged wording (same matcher as the check). */
 export interface SegmentFlag {
   start_sec: number;
@@ -329,7 +329,7 @@ export interface SubmissionUpdate extends SubmissionSourceFields {
   caption_text?: string;
   /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
   context_picks?: Record<string, string[]>;
-  ai_generated_images?: boolean; people_in_images?: boolean;
+  ai_generated_images?: boolean; people_in_images?: boolean; employee_in_images?: boolean;
   platform_captions?: Record<string, string>;
   rule_sets?: string[];
   reviewer_route?: string[];
