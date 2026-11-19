@@ -69,6 +69,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
+## src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
+- `PostTypeChangeOptions` (interface) L7
+- `usePostTypeChange` (export function) L19 - Remove saved attachments before switching to another post type.
+
 ## src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
