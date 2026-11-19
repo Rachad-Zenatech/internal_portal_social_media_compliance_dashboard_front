@@ -304,7 +304,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/PostMoodGroup.tsx (85 lines) - post mood group (pages  public mood)
 - src/pages/PublicMood/PublicMoodPage.tsx (104 lines) - Shared social-listening nav view: Financial ZenaTech sentiment + Today's Posts public mood.
 - src/pages/PublicMood/SearchDetails.tsx (57 lines) - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
-- src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
+- src/pages/PublicMood/TrendItem.tsx (357 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (385 lines) - The notes document as a list, kept up to date as anyone changes it.
@@ -316,7 +316,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - src/pages/Submissions/SubmissionsListPage.tsx (1591 lines) - submissions list page (pages  submissions)
-- src/services/apiClient.ts (345 lines) - api client (services)
+- src/services/apiClient.ts (343 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (59 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
@@ -324,7 +324,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (27 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
-- src/services/helper.ts (54 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
+- src/services/helper.ts (38 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - src/services/preparationComplianceService.ts (19 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
@@ -354,4 +354,3 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
 - src/types/submission.ts (639 lines) - AD: paid social ad.
 - src/types/submissionSchedule.ts (7 lines) - Calendar timing displayed alongside the server's review status.
-- vite.config.ts (50 lines) - Pin the dev server to 5179 so it matches the backend's Microsoft SSO
