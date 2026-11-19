@@ -12,6 +12,7 @@ import DocHeader, { DocStatusStrip } from "@/components/scriptdoc/DocHeader";
 import DocSidePanel, { type PanelTab } from "@/components/scriptdoc/DocSidePanel";
 import PagesRail from "@/components/scriptdoc/PagesRail";
 import { useAuth } from "@/lib/AuthContext";
+import { scriptReviewDocument } from "@/lib/scriptReviewAccess";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocNote, Vote } from "@/types/scriptDoc";
@@ -40,11 +41,11 @@ function useNotes(provider: LiveProvider | null) {
  */
 export default function ScriptDocPage() {
   const { id = "" } = useParams();
-  const { user: authUser } = useAuth();
+  const { user: authUser, creatorView } = useAuth();
   const qc = useQueryClient();
   const editor = useRef<CollabEditorHandle>(null);
 
-  const { data: doc, isLoading, error } = useQuery({ queryKey: ["script-doc", id], queryFn: () => scriptDocService.get(id), refetchOnWindowFocus: false });
+  const { data: doc, isLoading, error } = useQuery({ queryKey: ["script-doc", id], queryFn: () => scriptDocService.get(id), select: (data) => scriptReviewDocument(data, authUser?.id, creatorView), refetchOnWindowFocus: false });
   const setDoc = useCallback((d: DocDetail) => qc.setQueryData(["script-doc", id], d), [qc, id]);
 
   // The live connection.
@@ -293,11 +294,11 @@ export default function ScriptDocPage() {
       ),
     sendAll,
     checkIn: (vote: Vote, note: string) =>
-      run.mutate(() => scriptDocService.checkIn(id, { vote, note }), { onSuccess: () => { setOpen("checkIn", false); setChangedBy(null); } }),
+      doc.access.can_check_in && run.mutate(() => scriptDocService.checkIn(id, { vote, note }), { onSuccess: () => { setOpen("checkIn", false); setChangedBy(null); } }),
     finalize: (route: "LEVEL2" | "CREATOR", note: string) =>
-      run.mutate(() => scriptDocService.finalize(id, route, note), { onSuccess: () => setOpen("level2", false) }),
+      doc.access.can_finalize && run.mutate(() => scriptDocService.finalize(id, route, note), { onSuccess: () => setOpen("level2", false) }),
     decide: (decision: "APPROVE" | "SEND_BACK", note: string) =>
-      run.mutate(() => scriptDocService.decide(id, decision, note), { onSuccess: () => setOpen("decide", false) }),
+      doc.access.can_decide && run.mutate(() => scriptDocService.decide(id, decision, note), { onSuccess: () => setOpen("decide", false) }),
   };
   const actions = {
     onDetails: () => setDetailsOpen(true),

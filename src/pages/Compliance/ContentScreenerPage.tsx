@@ -60,7 +60,6 @@ import {
 } from "@/components/submissions/FindingStatus";
 import {
   AI_UNAVAILABLE_MESSAGE,
-  ANALYSING_REFETCH_MS,
   AnalysisProgressPanel,
   authedFileUrl,
   countdownText,
@@ -77,15 +76,18 @@ import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
 import type { ComplianceViolation } from "@/services/complianceService";
-import type { FlagReview, QueueTab, ReviewQueueItem } from "@/types/submission";
+import type { FlagReview, ReviewQueueItem } from "@/types/submission";
+import { useScreenerQueue } from "@/hooks/useScreenerQueue";
+import type { ScreenerTab } from "@/lib/screenerApprovalQueue";
 
 // ---------------------------------------------------------------------------
 // Queue: tabs, filters and the few facts each row needs
 // ---------------------------------------------------------------------------
 
-const TABS: { value: QueueTab; label: string }[] = [
+const TABS: { value: ScreenerTab; label: string }[] = [
   { value: "review", label: "To review" },
   { value: "sent_back", label: "Sent back" },
+  { value: "approved", label: "Approved" },
   { value: "done", label: "Scheduled" },
 ];
 
@@ -129,11 +131,12 @@ function matches(s: ReviewQueueItem, f: Filters, q: string) {
 }
 
 /** "Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency. */
-function dueText(s: ReviewQueueItem, tab: QueueTab): { text: string; tone: string } {
+function dueText(s: ReviewQueueItem, tab: ScreenerTab): { text: string; tone: string } {
   const muted = "text-muted-foreground";
-  if (tab === "done") {
-    const when = s.decided_at ? format(new Date(s.decided_at), "MMM d") : "";
-    return { text: `${s.status === "APPROVED" ? "Approved" : "Decided"} ${when}`.trim(), tone: muted };
+  if (tab === "done" || tab === "approved") {
+    const date = tab === "done" ? s.publish_at : s.decided_at;
+    const when = date ? format(new Date(date), "MMM d") : "";
+    return { text: `${tab === "done" ? "Scheduled" : "Approved"} ${when}`.trim(), tone: muted };
   }
   const due = deadlineOf(s);
   if (!due) return { text: "No deadline", tone: muted };
@@ -1251,8 +1254,8 @@ export default function ContentScreenerPage() {
   useEffect(() => {
     if (legacyScript) navigate(`/script-review/scripts/${legacyScript}`, { replace: true });
   }, [legacyScript, navigate]);
-  const [tab, setTab] = useState<QueueTab>("review");
-  const postTab: QueueTab = tab;
+  const [tab, setTab] = useState<ScreenerTab>("review");
+  const postTab: ScreenerTab = tab;
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sort, setSort] = useState<SortOrder>("newest");
@@ -1261,18 +1264,7 @@ export default function ContentScreenerPage() {
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
   );
 
-  const queue = useQuery({
-    queryKey: ["review-queue", postTab, scope],
-    queryFn: () => submissionService.reviewQueue(postTab, undefined, scope),
-    staleTime: 0,
-    // Poll while a post is still being analysed so its score shows up soon after it's ready.
-    refetchInterval: (q) => (q.state.data?.some((s) => isAnalysing(s.latest_check)) ? ANALYSING_REFETCH_MS : false),
-  });
-  const counts = useQuery({
-    queryKey: ["review-queue", "counts", scope],
-    queryFn: () => submissionService.reviewQueueCounts(scope),
-    staleTime: 0,
-  });
+  const { queue, counts } = useScreenerQueue(postTab, scope);
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
   const labels = useMemo(
     () => ({
@@ -1461,7 +1453,7 @@ export default function ContentScreenerPage() {
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
             ? "Loading..."
-            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" ? " · last 30 days" : ""} · sent ${
+            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" || tab === "approved" ? " · last 30 days" : ""} · sent ${
                 sort === "newest" ? "newest" : "oldest"
               } first`}
         </p>

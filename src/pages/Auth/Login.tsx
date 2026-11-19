@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SIGNED_OUT_KEY, useAuth } from "@/lib/AuthContext";
 import { apiClient } from "@/services/apiClient";
+import { TestLoginAccounts, type TestAccount } from "./TestLoginAccounts";
 
 /** Why the last session ended mid-use and where the user was, if it did (see AuthProvider). */
 function readSignedOut(): { reason?: string; returnTo?: string } | null {
@@ -129,6 +130,39 @@ export default function Login() {
     handleSsoCallback();
   }, [searchParams, navigate, refreshPermissions]);
 
+  // Local testing: the backend offers test sign-in only when DEV_TEST_LOGIN is on, outside production, at localhost.
+  const [testLogin, setTestLogin] = useState(false);
+  useEffect(() => {
+    apiClient
+      .get<{ enabled: boolean }>("/api/auth/test-login", { skipGlobalLoading: true })
+      .then((r) => setTestLogin(Boolean(r.enabled)))
+      .catch(() => setTestLogin(false));
+  }, []);
+
+  const handleTestLogin = async (as: TestAccount) => {
+    setIsLoading(true);
+    try {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("ms_id_token");
+      sessionStorage.removeItem(SIGNED_OUT_KEY);
+      const { token } = await apiClient.post<{ token: string }>("/api/auth/test-login", { as }, { skipGlobalLoading: true });
+      sessionStorage.setItem("token", token);
+      // Never signed in to Microsoft: signing out skips Microsoft's sign-out page.
+      sessionStorage.setItem("auth_provider", "test");
+      const perms = await refreshPermissions();
+      if (!perms) {
+        throw new Error("Test sign-in could not be verified. Please try again.");
+      }
+      toast.success(`Signed in as the test ${as.replace(/(\d)$/, " $1")}`);
+      navigate("/");
+    } catch (error) {
+      toast.error(error instanceof Error && error.message ? error.message : "Test sign-in failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogin = () => {
     // Redirect to backend Microsoft SSO endpoint
     const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
@@ -176,6 +210,7 @@ export default function Login() {
                 "Sign in with Microsoft"
               )}
             </Button>
+            {testLogin && <TestLoginAccounts disabled={isLoading} onSignIn={handleTestLogin} />}
           </CardContent>
           <CardFooter className="flex justify-center pb-8 pt-4 border-t border-slate-100 dark:border-zinc-800/50 mt-2 bg-slate-50/50 dark:bg-zinc-950/30">
             <p className="text-sm text-slate-500 dark:text-zinc-400">

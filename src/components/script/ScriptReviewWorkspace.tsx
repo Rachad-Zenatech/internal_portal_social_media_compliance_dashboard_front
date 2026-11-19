@@ -69,7 +69,7 @@ export default function ScriptReviewWorkspace({
   /** Open another script of the batch this one came in (the screener keeps its list, so it picks the script itself). */
   onOpenScript?: (submissionId: string) => void;
 }) {
-  const { creatorView } = useAuth();
+  const { creatorView, hasPermission } = useAuth();
   const stage = useScriptStage(submissionId);
   const data = stage.data;
   const sent = data?.versions.at(-1);
@@ -87,7 +87,7 @@ export default function ScriptReviewWorkspace({
           title={data.title}
           reference={data.reference_code}
           status={data.status}
-          canReview={isReviewer && data.can_review}
+          canReview={isReviewer && !creatorView && hasPermission("CONTENT_REVIEW_APPROVE") && data.can_review && data.status === "IN_REVIEW"}
           suggest={data.can_suggest ? { suggestion: data.suggestion ?? null } : null}
           onUploadScript={onUploadScript}
         />

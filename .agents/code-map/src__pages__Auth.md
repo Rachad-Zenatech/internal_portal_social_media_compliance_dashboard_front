@@ -4,11 +4,15 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Auth/Login.tsx (193 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
-- `readSignedOut` (function) L7 - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
-- `safeReturnTo` (const) L16 - Only same-app paths, so a crafted value can't send the user to another site after signing in.
-- `newNonce` (function) L28
-- `Login` (export function) L34
+## src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+- `readSignedOut` (function) L8 - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
+- `safeReturnTo` (const) L17 - Only same-app paths, so a crafted value can't send the user to another site after signing in.
+- `newNonce` (function) L29
+- `Login` (export function) L35
 
 ## src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - `PendingAccess` (export function) L8
+
+## src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
+- `TestAccount` (export type) L11
+- `TestLoginAccounts` (export function) L13
