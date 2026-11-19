@@ -38,7 +38,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
 
-## src/hooks/useHashtagLibrary.ts (13 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
+## src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
 ## src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
@@ -68,6 +68,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
+
+## src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
+- `PostTypeChangeOptions` (interface) L7
+- `usePostTypeChange` (export function) L19 - Remove saved attachments before switching to another post type.
 
 ## src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.

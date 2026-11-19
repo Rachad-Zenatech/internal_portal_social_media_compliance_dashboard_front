@@ -98,6 +98,8 @@ import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
 import { useReviewComments } from "@/hooks/useReview";
 import { useSubmissionReviewState } from "@/hooks/useSubmissionReviewState";
+import PostTypePicker from "@/components/submissions/PostTypePicker";
+import { usePostTypeChange } from "@/hooks/usePostTypeChange";
 import { STEP_TITLE, STEP_DESCRIPTION, submissionRevisionSteps, type EditorStep } from "@/lib/submissionRevisionSteps";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
 import CanvaReimportBar from "@/components/submissions/CanvaReimportBar";
@@ -435,10 +437,9 @@ export default function NewSubmissionPage() {
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
-  // Video posts start with the script: it's reviewed and approved before the video can be added. Drafts from before
-  // the script stage (required: false) work as they always did.
+  // The selected type controls the upload layout, even if the draft previously skipped script review.
   const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
-  const scriptFirst = contentType === "VIDEO" && (!submissionId || scriptStage.data?.required !== false);
+  const scriptFirst = contentType === "VIDEO";
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
   const scriptOnly = contentType === "VIDEO" && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
   const checkedSub = scriptOnly && videoLocked && storedSub && scriptStage.data?.precheck ? { ...storedSub, latest_check: scriptStage.data.precheck } : storedSub;
@@ -456,6 +457,20 @@ export default function NewSubmissionPage() {
   // A video post with no script yet: the script goes in first, other files after.
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
+  const postTypeBusy = readOnly || uploading.length > 0 || saveState === "saving" || Boolean(removingId) || replacingMain || reimporting || canvaOpen || checking || submitting;
+  const { changingPostType, changePostType } = usePostTypeChange({
+    contentType, files, idRef, saveChain, busy: postTypeBusy, refreshScript,
+    onRemove: (id) => setFiles((prev) => prev.filter((file) => file.id !== id)),
+    onChange: (value) => {
+      setContentType(value);
+      setAiGeneratedImages(null);
+      setIsDraggingMain(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (scriptInputRef.current) scriptInputRef.current.value = "";
+      if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
+      markEdited();
+    },
+  });
 
   const { mood, run: runMood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
   const { analysis: sentimentAnalysis, run: runSentiment } = useSentiment(scriptOnly ? null : submissionId);
@@ -717,7 +732,7 @@ export default function NewSubmissionPage() {
 
   // ----- Files (S05, S07) -----
   const uploadFiles = async (list: File[], opts: { replacingMain?: boolean; asScript?: boolean } = {}) => {
-    if (list.length === 0) return;
+    if (list.length === 0 || changingPostType) return;
 
     let mainTaken = !opts.replacingMain && files.some((f) => f.kind === "MAIN");
     // One script per submission: a new one replaces the old (the server keeps the old with its version).
@@ -742,22 +757,24 @@ export default function NewSubmissionPage() {
       batch.push({ file, kind: result.kind, key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}` });
     }
     if (batch.length === 0) return;
+    setUploading((prev) => [...prev, ...batch.map(({ file, key, kind }) => ({ key, name: file.name, kind }))]);
+    const clearBatch = () => setUploading((prev) => prev.filter((u) => !batch.some((b) => b.key === u.key)));
 
     let id: string | null;
     try {
       id = await save({ force: true });
     } catch (err) {
+      clearBatch();
       toast.error(`Couldn't create the draft: ${(err as Error).message}`);
       return;
     }
-    if (!id) return;
+    if (!id) { clearBatch(); return; }
     const firstMain = batch.find((b) => b.kind === "MAIN");
     if (firstMain && !title.trim()) {
       setTitle(firstMain.file.name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " "));
       markEdited();
     }
 
-    setUploading((prev) => [...prev, ...batch.map(({ file, key, kind }) => ({ key, name: file.name, kind }))]);
     for (const { file, key, kind } of batch) {
       try {
         const uploadPromise = submissionService.uploadFile(id, kind, file);
@@ -1401,7 +1418,7 @@ export default function NewSubmissionPage() {
         <div id="step-details" className="space-y-4 min-w-0 scroll-mt-4">
           {/* Sent for review: the details can be read, not changed. */}
           {/* A real box (not "contents") so its sections get the page's gap; hidden off the details step (empty, it adds a stray gap). */}
-          <fieldset disabled={readOnly} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
+          <fieldset disabled={readOnly || changingPostType} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
             {showDetails && (
               <div className={onDetails ? "space-y-4" : "hidden"}>
                 <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">
@@ -1419,40 +1436,9 @@ export default function NewSubmissionPage() {
                       />
                     </Field>
 
-                    <div className="space-y-2">
-                      <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
-                      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
-                        {VISIBLE_CONTENT_TYPES.map(({ value, label, description, icon: Icon }) => {
-                          const selected = contentType === value;
-                          return (
-                            <button
-                              key={value}
-                              type="button"
-                              role="radio"
-                              aria-checked={selected}
-                              title={description}
-                              onClick={() => {
-                                if (value === contentType) return;
-                                if (mainFiles.length > 0) {
-                                  toast.info("Your uploaded content file stays attached. Replace it if it doesn't match the new type.");
-                                }
-                                setContentType(value);
-                                if (value === "AD") setRuleSets((prev) => (prev.includes(ADS_RULE_SET) ? prev : [...prev, ADS_RULE_SET]));
-                                markEdited();
-                              }}
-                              className={`inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${selected
-                                  ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
-                                  : "border-border bg-card text-muted-foreground hover:border-slate-400 hover:text-foreground"
-                                }`}
-                            >
-                              <Icon className="h-4 w-4" />
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{CONTENT_TYPES.find((c) => c.value === contentType)?.description}</p>
-                    </div>
+                    <PostTypePicker value={contentType} options={VISIBLE_CONTENT_TYPES}
+                      description={CONTENT_TYPES.find((c) => c.value === contentType)?.description}
+                      disabled={postTypeBusy || changingPostType} onChange={changePostType} />
 
                     <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                       <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>

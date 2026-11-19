@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2544,
+      "max_lines": 2511,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -82,7 +82,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/types/submission.ts": {
-      "max_lines": 644,
+      "max_lines": 638,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     }
   },
@@ -160,7 +160,7 @@
       "kind": "jsx_return"
     },
     "src/components/submissions/ComplianceStep.tsx#ComplianceStep": {
-      "max_lines": 232,
+      "max_lines": 231,
       "kind": "jsx_return"
     },
     "src/components/submissions/FlagReviewControl.tsx#FlagReviewControl": {
@@ -173,10 +173,6 @@
     },
     "src/components/submissions/ImageAnnotator.tsx#ImageAnnotator": {
       "max_lines": 131,
-      "kind": "jsx_return"
-    },
-    "src/components/submissions/PostSteps.tsx#PostSteps": {
-      "max_lines": 81,
       "kind": "jsx_return"
     },
     "src/components/submissions/ReviewDecisionPanel.tsx#ReviewDecisionPanel": {
@@ -324,7 +320,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1241,
+      "max_lines": 1196,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {
