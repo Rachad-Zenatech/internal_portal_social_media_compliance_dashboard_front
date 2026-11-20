@@ -37,7 +37,7 @@ export default function ZoomableImageDialog({ open, src, fileId, findings, onOpe
 
   return (
     <Dialog open={open} onOpenChange={(next) => next ? onOpenChange(true) : close()}>
-      <DialogContent aria-label="Full-size post image" showCloseButton={false} className="w-fit max-w-[90vw] sm:max-w-[90vw] gap-0 overflow-hidden p-1">
+      <DialogContent aria-label="Full-size post image" showCloseButton={false} className="w-max max-w-[90vw] sm:max-w-[90vw] gap-0 overflow-hidden p-1">
         <DialogTitle className="sr-only">Full-size post image</DialogTitle>
         <button type="button" onClick={close} onWheel={zoomAtPointer} aria-label="Close full-size image" title="Scroll to zoom; click to close" className="inline-block cursor-zoom-out overflow-hidden">
           <div className="relative inline-block transition-transform duration-100" style={{ transform: `scale(${zoom})`, transformOrigin: origin }}>
