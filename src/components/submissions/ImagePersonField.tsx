@@ -39,16 +39,16 @@ function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[];
   return <canvas ref={canvasRef} width={size} height={size} aria-label="Detected face preview" className="size-full" />;
 }
 
-export default function ImagePersonField({ files, value, employeeValue, faceFlags, detected, disabled, submissionId, onRefresh, onChange, onEmployeeChange, onFaceFlagChange }: {
+export default function ImagePersonField({ files, value: _value, employeeValue, faceFlags, detected, disabled, submissionId, onRefresh, onChange: _onChange, onEmployeeChange, onFaceFlagChange }: {
   files: SubmissionFile[];
-  value: boolean | null;
+  value?: boolean | null;
   employeeValue: boolean | null;
   faceFlags?: Record<string, boolean>;
   detected?: boolean | null;
   disabled: boolean;
   submissionId: string | null;
   onRefresh: (submission: Submission) => void;
-  onChange: (answer: boolean) => void;
+  onChange?: (answer: boolean) => void;
   onEmployeeChange: (answer: boolean) => void;
   onFaceFlagChange?: (faceKey: string, answer: boolean) => void;
 }) {
@@ -73,18 +73,14 @@ export default function ImagePersonField({ files, value, employeeValue, faceFlag
       onRefresh(await submissionService.get(submissionId));
     } finally { setRetrying(false); }
   };
-  const showPeople = value === true || (value == null && detected === true);
-  const detection = failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}. Retry it, then confirm the result.` : detected == null ? "We are reading the uploaded image(s); please confirm the result when ready." : detected ? "We found a person in an uploaded image. Confirm or correct this result." : "We did not find a person in the uploaded image(s). Confirm or correct this result.";
+  const statusText = failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : pending || detected == null ? "Reading uploaded image(s) for faces…" : faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
   return (
     <fieldset disabled={disabled} className="mt-4 space-y-2 rounded-xl border border-border/70 px-4 pb-3 pt-2.5">
-      <legend className="px-1 text-sm font-semibold text-foreground">Does this post show a person?</legend>
-      <p className="text-xs text-muted-foreground">{detection}</p>
+      <legend className="px-1 text-sm font-semibold text-foreground">People in images</legend>
+      {statusText && <p className="text-xs text-muted-foreground">{statusText}</p>}
       {(pending || failedFiles.length > 0) && <button type="button" onClick={() => void retry()} disabled={retrying || disabled} className="w-fit text-xs font-medium text-primary underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60">{retrying ? "Retrying face detection…" : "Retry face detection"}</button>}
-      <div className="flex flex-wrap gap-2">
-        {[true, false].map((answer) => <label key={String(answer)} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={id} checked={value === answer} onChange={() => onChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}
-      </div>
-      {showPeople && faces.length > 0 && (
-        <div className="space-y-2 border-t border-border/70 pt-2">
+      {faces.length > 0 && (
+        <div className="space-y-2">
           <p className="text-xs font-medium text-foreground">Detected people ({faces.length}) — mark whether each person is an employee:</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {faces.map(({ key, file, box }, faceIndex) => (
@@ -100,7 +96,7 @@ export default function ImagePersonField({ files, value, employeeValue, faceFlag
           </div>
         </div>
       )}
-      {showPeople && faces.length === 0 && <div className="border-t border-border/70 pt-2"><p className="text-xs font-medium text-foreground">Is any person shown an employee?</p><div className="mt-1.5 flex flex-wrap gap-2">{[true, false].map((answer) => <label key={`employee-${String(answer)}`} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-employee`} checked={employeeValue === answer} onChange={() => onEmployeeChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div></div>}
+      {detected === true && faces.length === 0 && <div className="pt-1"><p className="text-xs font-medium text-foreground">Is any person shown an employee?</p><div className="mt-1.5 flex flex-wrap gap-2">{[true, false].map((answer) => <label key={`employee-${String(answer)}`} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-employee`} checked={employeeValue === answer} onChange={() => onEmployeeChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div></div>}
       <Dialog open={Boolean(zoomedFace)} onOpenChange={(open) => { if (!open) setZoomedFace(null); }}>
         <DialogContent className="sm:max-w-md">
           {zoomedFace && (
