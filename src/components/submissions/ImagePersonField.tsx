@@ -28,10 +28,9 @@ function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[];
       const sy = Math.max(0, Math.min(img.naturalHeight - side, cy - side / 2));
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
-      const scale = canvas.width / side;
       ctx.strokeStyle = "#22c55e";
       ctx.lineWidth = 4;
-      ctx.strokeRect(Math.max(2, (x - sx) * scale), Math.max(2, (y - sy) * scale), Math.min(canvas.width - 4, w * scale), Math.min(canvas.height - 4, h * scale));
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
     };
     img.src = authedFileUrl(url);
     return () => { cancelled = true; };
@@ -58,7 +57,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
   const imageFiles = files.filter((file) => file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
-  const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 1);
+  const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 2);
   useEffect(() => {
     if (!submissionId || !pending) return;
     const timer = window.setInterval(() => { void submissionService.get(submissionId).then(onRefresh).catch(() => undefined); }, 4000);
