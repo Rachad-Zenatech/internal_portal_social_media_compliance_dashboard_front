@@ -16,15 +16,21 @@ function FaceCropPreview({ url, box }: { url: string; box: number[] }) {
     img.onload = () => {
       if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
       const [top = 0, left = 0, bottom = 1000, right = 1000] = box;
+      const x = (left / 1000) * img.naturalWidth;
+      const y = (top / 1000) * img.naturalHeight;
       const w = ((right - left) / 1000) * img.naturalWidth;
       const h = ((bottom - top) / 1000) * img.naturalHeight;
-      const cx = ((left + right) / 2000) * img.naturalWidth;
-      const cy = ((top + bottom) / 2000) * img.naturalHeight;
-      const side = Math.min(Math.max(w, h, 1) * 1.15, Math.min(img.naturalWidth, img.naturalHeight));
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      const side = Math.min(Math.max(w, h, 1), Math.min(img.naturalWidth, img.naturalHeight));
       const sx = Math.max(0, Math.min(img.naturalWidth - side, cx - side / 2));
       const sy = Math.max(0, Math.min(img.naturalHeight - side, cy - side / 2));
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
+      const scale = canvas.width / side;
+      ctx.strokeStyle = "#22c55e";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(Math.max(2, (x - sx) * scale), Math.max(2, (y - sy) * scale), Math.min(canvas.width - 4, w * scale), Math.min(canvas.height - 4, h * scale));
     };
     img.src = authedFileUrl(url);
     return () => { cancelled = true; };
