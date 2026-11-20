@@ -1,4 +1,5 @@
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
+import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
 import { compressUploadImage } from "@/lib/compressUploadImage";
 import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
@@ -553,7 +554,7 @@ export default function NewSubmissionPage() {
         setPublishDate(s.publish_at ? new Date(s.publish_at) : undefined);
         setApprovalBy(s.approval_needed_by ? new Date(s.approval_needed_by) : undefined);
         setApprovalTime(s.approval_needed_by ? format(new Date(s.approval_needed_by), "HH:mm") : DEFAULT_APPROVAL_TIME);
-        setRuleSets(s.rule_sets.length ? s.rule_sets : ["Public Company Disclosure"]);
+        setRuleSets(resolveRuleSets(brandCodes(s), audienceCodes(s), s.rule_sets));
         setReviewers(s.reviewer_route.length ? s.reviewer_route : ["Marketing Review", "Compliance Review"]);
         setReviewerIds(s.reviewer_ids ?? []);
         setLockedReviewerIds(s.status === "CHANGES_REQUESTED" || s.script_status === "APPROVED" ? s.reviewer_ids ?? [] : []);
@@ -615,7 +616,7 @@ export default function NewSubmissionPage() {
       ...imageProvenancePayload(aiGeneratedImages),
       // The analysis picks its Messaging Context on its own (any choice saved by an earlier version is cleared).
       context_picks: {},
-      rule_sets: ruleSets,
+      rule_sets: resolveRuleSets(brands, audiences, ruleSets),
       reviewer_route: reviewers,
       reviewer_ids: pickedReviewers,
       clear_fields: clear,
@@ -684,22 +685,18 @@ export default function NewSubmissionPage() {
   };
 
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
+  const ruleSetChoices = ruleSetOptions(options?.rule_sets ?? [], brands, audiences);
   const suggestRouting = (next: { brands?: string[]; audiences?: string[]; accounts?: AccountOption[] }) => {
-    const rules = new Set(["Public Company Disclosure"]);
     const route = new Set(["Marketing Review", "Compliance Review"]);
-    // The software brands are ZenaTech businesses, so ZenaTech's general rules apply to them too.
-    if (next.brands?.some((b) => b === "ZENATECH" || b === "SOFTWARE")) rules.add("ZenaTech General");
-    if (next.brands?.includes("ZENADRONE") || next.audiences?.includes("DEFENSE")) {
-      rules.add("ZenaDrone Defense");
+    if (next.brands?.some((b) => b === "ZENADRONE" || b === "DAAS") || next.audiences?.includes("DEFENSE")) {
       route.add("Legal Review");
     }
     if (next.audiences?.includes("INVESTORS")) route.add("Investor Relations Review");
     if (next.brands?.includes("CEO_THOUGHT_LEADERSHIP") || next.accounts?.some((a) => a.is_ceo)) {
-      rules.add("Shaun CEO Thought Leadership");
       route.add("Legal Review");
       route.add("Executive Review");
     }
-    setRuleSets((prev) => Array.from(new Set([...prev, ...rules])));
+    setRuleSets((prev) => resolveRuleSets(next.brands ?? brands, next.audiences ?? audiences, prev));
     setReviewers((prev) => Array.from(new Set([...prev, ...route])));
   };
 
@@ -1480,10 +1477,10 @@ export default function NewSubmissionPage() {
                       <div className="md:col-span-2">
                         <Field label="Compliance Rule Set" required error={errorFor("rule_sets")}>
                           <MultiSelect
-                            options={options?.rule_sets ?? []}
+                            options={ruleSetChoices}
                             value={ruleSets}
                             onChange={(next) => {
-                              setRuleSets(next);
+                              setRuleSets(resolveRuleSets(brands, audiences, next));
                               markEdited();
                             }}
                             placeholder="Select rule sets"
@@ -1495,7 +1492,7 @@ export default function NewSubmissionPage() {
                     </div>
                     <div className="-mt-2">
                       <p className="text-[11px] text-muted-foreground mt-0">
-                        Suggested automatically from the brand, audience and publishing account. You can add or remove any. Once
+                        Required rule sets follow the selected brand and audience. Publishing accounts also suggest reviewers. Once
                         sent, it goes to the review queue and a reviewer checks it before it's scheduled or posted.
                       </p>
                     </div>

@@ -177,6 +177,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `REVISION_STEPS` (export const) L5
 - `creatorPreparationSteps` (export function) L13
 
+## src/lib/ruleSetPolicy.ts (30 lines) - Required rule sets follow the selected brand and target audience.
+- `PUBLIC_DISCLOSURE` (export const) L2 - Required rule sets follow the selected brand and target audience.
+- `requiredRuleSets` (export function) L15
+- `resolveRuleSets` (export function) L22
+- `ruleSetOptions` (export function) L26
+
 ## src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
 - `safeHref` (export function) L14 - A link the editor may keep: http(s) or mailto only.
 - `copyClean` (function) L22
