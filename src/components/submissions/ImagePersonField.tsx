@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
+import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { hasPostImages } from "@/lib/imageProvenance";
 import { submissionService } from "@/services/submissionService";
 import type { Submission, SubmissionFile } from "@/types/submission";
@@ -48,7 +49,7 @@ export default function ImagePersonField({ files, value, employeeValue, detected
       <p className="text-xs text-muted-foreground">{detection}</p>
       {(pending || failedFiles.length > 0) && <button type="button" onClick={() => void retry()} disabled={retrying || disabled} className="w-fit text-xs font-medium text-primary underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60">{retrying ? "Retrying face detection…" : "Retry face detection"}</button>}
       {faces.length > 0 && <label className="block text-xs font-medium text-foreground">Detected faces ({faces.length})<select value={selectedFace} onChange={(event) => setSelectedFace(event.target.value)} className="mt-1 block h-8 w-full rounded-md border border-border bg-background px-2 text-xs"><option value="">Choose a face to review</option>{faces.map(({ file, index }, faceIndex) => <option key={`${file.id}-${index}`} value={`${file.id}-${index}`}>Face {faceIndex + 1} — {file.original_name}</option>)}</select></label>}
-      {selected && <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="size-12 overflow-hidden rounded-md border border-border bg-muted"><img src={selected.file.url} alt="Detected face preview" className="size-full object-cover" style={{ objectPosition: `${(selected.box[1] + selected.box[3]) / 20}% ${(selected.box[0] + selected.box[2]) / 20}%` }} /></div><span>Face {faces.indexOf(selected) + 1} preview</span></div>}
+      {selected && <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="size-12 overflow-hidden rounded-md border border-border bg-muted"><img src={authedFileUrl(selected.file.url)} alt="Detected face preview" className="size-full object-cover" style={{ objectPosition: `${(selected.box[1] + selected.box[3]) / 20}% ${(selected.box[0] + selected.box[2]) / 20}%` }} /></div><span>Face {faces.indexOf(selected) + 1} preview</span></div>}
       <div className="flex flex-wrap gap-2">
         {[true, false].map((answer) => <label key={String(answer)} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={id} checked={value === answer} onChange={() => onChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}
       </div>
