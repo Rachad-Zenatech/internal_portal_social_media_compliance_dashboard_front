@@ -57,7 +57,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
   const imageFiles = files.filter((file) => ["MAIN", "IMAGE"].includes(file.kind) && file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
-  const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 2);
+  const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 1);
   useEffect(() => {
     if (!submissionId || !pending) return;
     const timer = window.setInterval(() => { void submissionService.get(submissionId).then(onRefresh).catch(() => undefined); }, 2000);
@@ -72,7 +72,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
       onRefresh(await submissionService.get(submissionId));
     } finally { setRetrying(false); }
   };
-  const statusText = failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : pending || detected == null ? "Reading uploaded image(s) for faces…" : faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
+  const statusText = failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : pending ? "Reading uploaded image(s) for faces…" : faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
   return (
     <fieldset disabled={disabled} className="mt-4 space-y-2 rounded-xl border border-border/70 px-4 pb-3 pt-2.5">
       <legend className="px-1 text-sm font-semibold text-foreground">People in images</legend>
