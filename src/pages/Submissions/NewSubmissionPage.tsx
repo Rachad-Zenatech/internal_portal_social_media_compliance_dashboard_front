@@ -2279,7 +2279,7 @@ export default function NewSubmissionPage() {
                   )}
                   <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
-                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} score={isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
+                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
                     disabled={submitting || checking || uploading.length > 0}
                     publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
                     onSubmit={() => void submit()}

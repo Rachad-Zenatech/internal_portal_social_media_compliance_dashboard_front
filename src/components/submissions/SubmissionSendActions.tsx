@@ -1,6 +1,8 @@
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RevisionPublishActions from "@/components/submissions/RevisionPublishActions";
+import { useReviewSendScore } from "@/hooks/useReviewSendScore";
+import type { StoredCheck } from "@/types/submission";
 
 interface Props {
   publishAfterChanges: boolean;
@@ -13,6 +15,8 @@ interface Props {
   hasCheck: boolean;
   checkStale: boolean;
   score?: number;
+  check?: StoredCheck | null;
+  currentVersion: number;
   minimumScore: number;
   submitting: boolean;
   disabled: boolean;
@@ -25,11 +29,14 @@ interface Props {
 /** The final action, including timing for reviewer-authorized direct publishing. */
 export default function SubmissionSendActions(props: Props) {
   const { publishAfterChanges, videoLocked, resubmitting, hasCheck, checkStale, submitting } = props;
+  const pendingScore = useReviewSendScore(props.submissionId, props.check, props.currentVersion);
   if (publishAfterChanges) return <RevisionPublishActions {...props} />;
   const label = videoLocked ? "Send Script for Review" : resubmitting
     ? "Resubmit for Review" : "Send for Review";
-  const scoreTooLow = !videoLocked && !checkStale && props.score != null && props.score < props.minimumScore;
+  const pendingReview = props.score != null && props.score < props.minimumScore && pendingScore != null && pendingScore >= props.minimumScore;
+  const scoreTooLow = !videoLocked && !checkStale && props.score != null && props.score < props.minimumScore && !pendingReview;
   const description = scoreTooLow ? `Your compliance score is ${props.score}/100. Sending for review requires at least ${props.minimumScore}.`
+    : pendingReview ? `Your score remains ${props.score}/100. Send for review so a reviewer can decide your dismissal requests; approval still requires ${props.minimumScore}.`
     : videoLocked ? "Sends your script to the reviewers you picked."
     : !hasCheck ? "You haven't run the compliance check yet. It also runs when you send."
     : checkStale ? "Edited since your last check. It runs again when you send."

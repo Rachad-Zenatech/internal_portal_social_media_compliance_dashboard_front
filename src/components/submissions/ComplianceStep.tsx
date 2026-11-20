@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
-
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import PostTextPreview from "@/components/submissions/PostTextPreview";
-import { ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
+import { isVisibleFinding } from "@/lib/complianceFinding";
+import { findingEvidence } from "@/lib/findingEvidence";
+import { ConfidenceBadge, ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
 import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/submissions/ManuallyCheckedClaims";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
@@ -17,6 +18,7 @@ import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submis
 import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
+import { useReviewSendScore } from "@/hooks/useReviewSendScore";
 import { findingSelectionKey, selectFindingImage } from "@/lib/findingImage";
 import { useImageSlideshow } from "@/hooks/useImageSlideshow";
 import { FlaggedMoments, timelineOf } from "@/pages/Compliance/ContentScreenerPage";
@@ -108,6 +110,7 @@ export default function ComplianceStep({
   const slideshow = useImageSlideshow(files ?? sub?.files ?? (mainFile ? [mainFile] : []));
 
   const ownsSubmission = Boolean(user && reviewState?.created_by === user.id);
+  const reviewRoutingScore = useReviewSendScore(ownsSubmission ? sub?.id ?? null : null, check, sub?.current_version ?? 0);
   const isManuallyChecked = useManuallyCheckedClaims(ownsSubmission ? sub?.id : undefined, check);
   const checkedClaims = check?.violations.filter(isManuallyChecked) ?? [];
   const allFindings: Finding[] = useMemo(() => {
@@ -115,7 +118,7 @@ export default function ComplianceStep({
     const cap = caption.toLowerCase();
     const ttl = title.toLowerCase();
     return check.violations
-      .filter((v) => statusOf(v) !== "CLEARED")
+      .filter((v) => isVisibleFinding(v) && statusOf(v) !== "CLEARED")
       .map((v, index) => {
         const videoSegments = (check.segment_flags ?? [])
           .filter((f) => f.rule_numbers.includes(v.rule_number))
@@ -124,7 +127,7 @@ export default function ComplianceStep({
         const frameCount = new Set((v.image_regions ?? [])
           .filter((r) => r.file_id === mainFile?.id && r.start_sec != null && r.end_sec != null)
           .map((r) => `${r.start_sec}-${r.end_sec}`)).size;
-        const terms = v.flagged_terms.map((t) => t.toLowerCase());
+        const terms = findingEvidence(v).map((t) => t.toLowerCase());
         const where: Finding["where"] = terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
           ? "Caption"
           : seg
@@ -165,12 +168,12 @@ export default function ComplianceStep({
     if (next && isVideo && f.at != null) seek(f.at);
   };
 
-  const terms = (list: Finding[]) => list.flatMap((f) => f.v.flagged_terms).filter(Boolean);
+  const terms = (list: Finding[]) => list.flatMap((f) => findingEvidence(f.v));
   const captionParts = (() => {
     const all = terms(findings);
     const preview = caption;
     if (!all.length || !preview) return [{ text: preview, tone: "" }];
-    const chosen = new Set(selected ? selected.v.flagged_terms.map((t) => t.toLowerCase()) : []);
+    const chosen = new Set(selected ? findingEvidence(selected.v).map((t) => t.toLowerCase()) : []);
     return preview
       .split(new RegExp(`(${all.map(escapeRe).join("|")})`, "gi"))
       .map((text, i) => ({ text, tone: i % 2 ? (chosen.has(text.toLowerCase()) ? "chosen" : "flag") : "" }));
@@ -256,7 +259,7 @@ export default function ComplianceStep({
     count("EVIDENCE_REQUIRED") ? `${count("EVIDENCE_REQUIRED")} claim${count("EVIDENCE_REQUIRED") === 1 ? "" : "s"} need${count("EVIDENCE_REQUIRED") === 1 ? "s" : ""} a source` : "",
     count("NEEDS_REVIEW") ? `${count("NEEDS_REVIEW")} thing${count("NEEDS_REVIEW") === 1 ? "" : "s"} to check` : "",
   ].filter(Boolean);
-  const advice = check.blocked
+  const advice = !stale && score < minimumScore && reviewRoutingScore != null && reviewRoutingScore >= minimumScore ? `Your score remains ${score}/100. You can send this post for review so a reviewer can decide your dismissal requests. Approval still requires ${minimumScore} or more and no critical issue.` : check.blocked
     ? "A critical rule is broken, so this post can't be sent until that's fixed."
     : gap >= 0
     ? `A post needs ${minimumScore} or more, and no critical issue, to be sent. You are ${gap} point${gap === 1 ? "" : "s"} above the line${findings.length ? ", and the fixes below will raise it" : ""}.`
@@ -338,7 +341,7 @@ export default function ComplianceStep({
                   <span className="flex min-w-0 flex-1 flex-col gap-2">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${FINDING_META[st].pill}`}>{st === "VIOLATION" ? "Issue" : FINDING_META[st].label}</span>
-                      <RuleNumberBadge v={f.v} />
+                      <RuleNumberBadge v={f.v} /><ConfidenceBadge v={f.v} />
                       <span className="text-xs font-semibold text-muted-foreground">
                         {videoEvidence(f)}
                       </span>
