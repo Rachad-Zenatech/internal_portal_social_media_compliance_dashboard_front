@@ -23,7 +23,7 @@ function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[];
       const h = ((bottom - top) / 1000) * img.naturalHeight;
       const cx = x + w / 2;
       const cy = y + h / 2;
-      const side = Math.min(Math.max(w, h, 1), Math.min(img.naturalWidth, img.naturalHeight));
+      const side = Math.min(Math.max(w, h, 1) * 1.35, Math.min(img.naturalWidth, img.naturalHeight));
       const sx = Math.max(0, Math.min(img.naturalWidth - side, cx - side / 2));
       const sy = Math.max(0, Math.min(img.naturalHeight - side, cy - side / 2));
       ctx.clearRect(0, 0, canvas.width, canvas.height);
