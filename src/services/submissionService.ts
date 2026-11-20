@@ -85,6 +85,10 @@ export const submissionService = {
   /** Autosave and explicit saves both use this; it never shows the global loading overlay. */
   update: (id: string, data: SubmissionUpdate) => apiClient.patch<Submission>(`/api/submissions/${id}`, data, quiet),
 
+  /** Queue an image's OCR and anonymous face detection again. */
+  retryImageRead: (id: string, fileId: string) =>
+    apiClient.post<SubmissionFile>(`/api/submissions/${id}/files/${fileId}/read-image`, undefined, quiet),
+
   /** Quickly fetch a source URL and check whether it supports the post's current material. */
   checkSourceLink: (id: string, url: string) =>
     apiClient.post<SourceLinkCheck>(`/api/submissions/${id}/check-source-link`, { url }, quiet),

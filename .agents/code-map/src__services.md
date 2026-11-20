@@ -104,6 +104,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) L10 - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (381 lines) - submission service (services)
+## src/services/submissionService.ts (385 lines) - submission service (services)
 - `ScrapeStatus` (export interface) L47
 - `submissionService` (export const) L61
