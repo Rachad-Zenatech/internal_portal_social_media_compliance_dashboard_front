@@ -1,5 +1,6 @@
 import { Ban } from "lucide-react";
 
+import { ConfidenceBadge } from "@/components/submissions/FindingStatus";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 
@@ -48,7 +49,7 @@ export default function ScoreBreakdown({
           {scored.map((v, index) => (
             <li key={`${v.rule_id}-${v.kind ?? ""}-${index}`} className="flex items-start justify-between gap-3 px-2.5 py-1.5">
               <span className="min-w-0">
-                <RuleNumberBadge v={v} />
+                <RuleNumberBadge v={v} /><ConfidenceBadge v={v} />
                 <span className="text-muted-foreground"> · {v.kind === "MISSING_DISCLAIMER" ? "Missing disclaimer" : v.title}</span>
                 {why(v) && (
                   <span className="ml-1.5 rounded bg-amber-100 px-1 py-px text-[10px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">

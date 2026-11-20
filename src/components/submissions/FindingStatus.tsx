@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
+import { findingConfidence, isVisibleFinding } from "@/lib/complianceFinding";
 import { LOCATE_SKIP_ATTR, locateOnPage } from "@/lib/locateOnPage";
 import type { ComplianceViolation, FindingStatus } from "@/services/complianceService";
 
@@ -59,6 +60,12 @@ export function groupFindings<T>(items: T[], statusFor: (item: T) => FindingStat
   const out: Record<FindingStatus, T[]> = { VIOLATION: [], NEEDS_REVIEW: [], EVIDENCE_REQUIRED: [], CLEARED: [] };
   for (const item of items) out[statusFor(item)].push(item);
   return out;
+}
+
+export function ConfidenceBadge({ v }: { v: Pick<ComplianceViolation, "evaluation"> }) {
+  const label = findingConfidence(v);
+  if (!label) return null;
+  return <span className="text-[11px] font-medium text-muted-foreground" title="The model's own confidence estimate for its assessment.">{label}</span>;
 }
 
 export function StatusPill({ status, critical = false }: { status: FindingStatus; critical?: boolean }) {
@@ -182,13 +189,13 @@ export function ContextNote({
          * source, and the triggers the context cleared. Nothing here costs points or stops approval.
          */
         export function OtherFindings({violations, className = ""}: {violations: ComplianceViolation[]; className?: string }) {
-  const warnings = violations.filter(isWarning);
+  const warnings = violations.filter(isVisibleFinding).filter(isWarning);
   const cleared = violations.filter((v) => statusOf(v) === "CLEARED");
         if (!warnings.length && !cleared.length) return null;
   const row = (v: ComplianceViolation) => (
         <li key={v.rule_id} className="flex flex-col gap-1.5 text-xs">
           <p className="flex flex-wrap items-center gap-1.5">
-            <StatusPill status={statusOf(v)} />
+            <StatusPill status={statusOf(v)} /><ConfidenceBadge v={v} />
             <span className="font-semibold text-foreground">{v.rule_number}</span>
             <span className="text-muted-foreground">· {v.title}</span>
           </p>

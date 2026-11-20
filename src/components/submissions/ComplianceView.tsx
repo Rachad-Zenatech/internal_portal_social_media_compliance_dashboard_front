@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
+import { isVisibleFinding } from "@/lib/complianceFinding";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import SourceChecks from "@/components/submissions/SourceChecks";
@@ -74,9 +75,9 @@ export default function ComplianceView({
       <ScoreBreakdown check={check} />
       <OtherFindings violations={check.violations} />
       {/* Creators can request a dismissal; a reviewer must approve it before the flag is cleared. */}
-      {(canReview || canRequestDismissal) && check.violations.some((v) => v.rule_id && statusOf(v) !== "CLEARED") && (
+      {(canReview || canRequestDismissal) && check.violations.some((v) => v.rule_id && isVisibleFinding(v) && statusOf(v) !== "CLEARED") && (
         <div className="space-y-2 border-t border-border/60 pt-3">
-          {check.violations.filter((v) => statusOf(v) !== "CLEARED").map((v) => (
+          {check.violations.filter((v) => isVisibleFinding(v) && statusOf(v) !== "CLEARED").map((v) => (
             <div key={v.rule_id} className="space-y-1 text-xs">
               <p className="font-semibold text-foreground">
                 {v.rule_number} · {v.flagged_terms.map((t) => `"${t}"`).join(", ") || "missing disclaimer"}

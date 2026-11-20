@@ -32,6 +32,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
+## src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
+- `isVisibleFinding` (export function) L4 - Unavailable and rule-based checks have no model confidence estimate.
+- `findingConfidence` (export function) L9
+
 ## src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
 - `compressUploadImage` (export function) L5 - Reduce large image uploads before they leave the browser.
 

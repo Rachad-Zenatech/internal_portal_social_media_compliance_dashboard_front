@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Check, ChevronDown, Loader2, Search, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
+import { isVisibleFinding } from "@/lib/complianceFinding";
+import { ConfidenceBadge, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,7 @@ export default function ScriptFindings({
 
   const all = check?.violations ?? [];
   const findings = all
-    .filter((v) => statusOf(v) !== "CLEARED")
+    .filter((v) => isVisibleFinding(v) && statusOf(v) !== "CLEARED")
     .sort((a, b) => Number(b.traffic_light === "RED") - Number(a.traffic_light === "RED") || (b.penalty ?? 0) - (a.penalty ?? 0));
   const cleared = all.filter((v) => statusOf(v) === "CLEARED");
   const keyOf = (v: ComplianceViolation) => `${v.rule_id}-${v.kind ?? ""}`;
@@ -122,7 +123,7 @@ export default function ScriptFindings({
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex flex-wrap items-center gap-2">
                   <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold", FINDING_META[st].pill)}>{st === "VIOLATION" ? "Issue" : FINDING_META[st].label}</span>
-                  <RuleNumberBadge v={v} />
+                  <RuleNumberBadge v={v} /><ConfidenceBadge v={v} />
                   <span className="text-[11px] font-semibold text-muted-foreground">{missing ? "Missing disclaimer" : "In the script"}</span>
                   <span className={cn("ml-auto text-xs font-bold tabular-nums", red ? "text-red-600" : "text-amber-700 dark:text-amber-300")}>
                     {(v.penalty ?? 0) > 0 ? `−${v.penalty} points` : "No points"}
