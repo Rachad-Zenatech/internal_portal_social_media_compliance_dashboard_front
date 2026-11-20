@@ -55,12 +55,12 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
   const [retrying, setRetrying] = useState(false);
   const [zoomedFace, setZoomedFace] = useState<{ file: SubmissionFile; box: number[]; faceIndex: number } | null>(null);
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
-  const imageFiles = files.filter((file) => file.mime_type.startsWith("image/"));
+  const imageFiles = files.filter((file) => ["MAIN", "IMAGE"].includes(file.kind) && file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
   const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 2);
   useEffect(() => {
     if (!submissionId || !pending) return;
-    const timer = window.setInterval(() => { void submissionService.get(submissionId).then(onRefresh).catch(() => undefined); }, 4000);
+    const timer = window.setInterval(() => { void submissionService.get(submissionId).then(onRefresh).catch(() => undefined); }, 2000);
     return () => window.clearInterval(timer);
   }, [onRefresh, pending, submissionId]);
   if (!hasPostImages(files)) return null;
