@@ -86,6 +86,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
 
+## src/lib/findingEvidence.ts (16 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
+- `normalized` (const) L3
+- `clean` (const) L4
+- `findingEvidence` (export function) L7 - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
+
 ## src/lib/findingImage.ts (34 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - `findingSelectionKey` (export const) L6 - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - `selectFindingImage` (export function) L9 - Prefer the clicked finding's evidence; shared rule evidence is used only when it identifies one image.

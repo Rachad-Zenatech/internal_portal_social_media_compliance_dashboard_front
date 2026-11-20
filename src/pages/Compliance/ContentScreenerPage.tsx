@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { findingEvidence } from "@/lib/findingEvidence";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
 import ReviewerCaption from "@/components/compliance/screener/ReviewerCaption";
@@ -216,7 +217,7 @@ function flagsOf(s: ReviewQueueItem): Flag[] {
       const seg = (check.segment_flags ?? [])
         .filter((f) => f.rule_numbers.includes(v.rule_number))
         .sort((a, b) => a.start_sec - b.start_sec)[0];
-      const terms = v.flagged_terms.map((t) => t.toLowerCase());
+      const terms = findingEvidence(v).map((t) => t.toLowerCase());
       const where = terms.some((t) => caption.includes(t))
         ? "Caption"
         : seg
@@ -230,7 +231,6 @@ function flagsOf(s: ReviewQueueItem): Flag[] {
     })
     .sort((a, b) => Number(b.critical) - Number(a.critical) || (a.at ?? 1e9) - (b.at ?? 1e9));
 }
-
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The caption with every flagged phrase highlighted. */
@@ -499,7 +499,7 @@ function PostView({
   };
   const step = (by: number) => seek(Math.min(Math.max(0, now + by), duration || now + by));
   const terms: MarkedTerm[] = flags.flatMap((f) =>
-    f.v.flagged_terms.filter(Boolean).map((term) => ({ term, ruleId: f.v.rule_id, dismissed: dismissed.has(f.v.rule_id) }))
+    findingEvidence(f.v).map((term) => ({ term, ruleId: f.v.rule_id, dismissed: dismissed.has(f.v.rule_id) }))
   );
   // The most serious open flag at this moment, shown over the video.
   const atFlag = timed

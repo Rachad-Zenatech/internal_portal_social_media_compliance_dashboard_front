@@ -245,6 +245,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
+- src/lib/findingEvidence.ts (16 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
 - src/lib/findingImage.ts (34 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/imageProvenance.ts (14 lines) - image provenance (lib)

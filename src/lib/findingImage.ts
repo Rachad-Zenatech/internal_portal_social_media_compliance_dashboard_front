@@ -1,5 +1,6 @@
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { SubmissionFile } from "@/types/submission";
+import { findingEvidence } from "@/lib/findingEvidence";
 
 /** A rule can produce separate caption and image findings, so its ID alone is not a selection key. */
 export const findingSelectionKey = (finding: ComplianceViolation, index: number) => `${finding.rule_id}-${finding.kind ?? ""}-${index}`;
@@ -19,7 +20,7 @@ export function findingImageIndex(images: SubmissionFile[], findings: Compliance
   const linked = images.map((image, index) => fileIds.has(image.id) ? index : -1).filter((index) => index >= 0);
   if (linked.length) return linked.includes(currentIndex) ? currentIndex : linked[0];
   const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, " ").trim();
-  const terms = matches.flatMap((finding) => finding.flagged_terms).map(normalize).filter(Boolean);
+  const terms = matches.flatMap(findingEvidence).map(normalize).filter(Boolean);
   const fromText = images.map((image, index) => image.doc_text && terms.some((term) => normalize(image.doc_text!).includes(term)) ? index : -1).filter((index) => index >= 0);
   if (fromText.length) return fromText.includes(currentIndex) ? currentIndex : fromText[0];
   // The overlay combines all findings. Some claim findings share a rule's measured image evidence.
