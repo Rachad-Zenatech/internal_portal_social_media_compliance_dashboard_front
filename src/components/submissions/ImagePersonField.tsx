@@ -1,8 +1,36 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { hasPostImages } from "@/lib/imageProvenance";
 import { submissionService } from "@/services/submissionService";
 import type { Submission, SubmissionFile } from "@/types/submission";
+
+function FaceCropPreview({ url, box }: { url: string; box: number[] }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
+      const [top = 0, left = 0, bottom = 1000, right = 1000] = box;
+      const w = ((right - left) / 1000) * img.naturalWidth;
+      const h = ((bottom - top) / 1000) * img.naturalHeight;
+      const cx = ((left + right) / 2000) * img.naturalWidth;
+      const cy = ((top + bottom) / 2000) * img.naturalHeight;
+      const side = Math.min(Math.max(w, h, 1) * 1.7, Math.min(img.naturalWidth, img.naturalHeight));
+      const sx = Math.max(0, Math.min(img.naturalWidth - side, cx - side / 2));
+      const sy = Math.max(0, Math.min(img.naturalHeight - side, cy - side / 2));
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = authedFileUrl(url);
+    return () => { cancelled = true; };
+  }, [box, url]);
+  return <canvas ref={canvasRef} width={128} height={128} aria-label="Detected face preview" className="size-full" />;
+}
 
 export default function ImagePersonField({ files, value, employeeValue, detected, disabled, submissionId, onRefresh, onChange, onEmployeeChange }: {
   files: SubmissionFile[];
@@ -49,7 +77,7 @@ export default function ImagePersonField({ files, value, employeeValue, detected
       <p className="text-xs text-muted-foreground">{detection}</p>
       {(pending || failedFiles.length > 0) && <button type="button" onClick={() => void retry()} disabled={retrying || disabled} className="w-fit text-xs font-medium text-primary underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60">{retrying ? "Retrying face detection…" : "Retry face detection"}</button>}
       {faces.length > 0 && <label className="block text-xs font-medium text-foreground">Detected faces ({faces.length})<select value={selectedFace} onChange={(event) => setSelectedFace(event.target.value)} className="mt-1 block h-8 w-full rounded-md border border-border bg-background px-2 text-xs"><option value="">Choose a face to review</option>{faces.map(({ file, index }, faceIndex) => <option key={`${file.id}-${index}`} value={`${file.id}-${index}`}>Face {faceIndex + 1} — {file.original_name}</option>)}</select></label>}
-      {selected && <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="size-12 overflow-hidden rounded-md border border-border bg-muted"><img src={authedFileUrl(selected.file.url)} alt="Detected face preview" className="size-full object-cover" style={{ objectPosition: `${(selected.box[1] + selected.box[3]) / 20}% ${(selected.box[0] + selected.box[2]) / 20}%` }} /></div><span>Face {faces.indexOf(selected) + 1} preview</span></div>}
+      {selected && <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="size-16 overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={selected.file.url} box={selected.box} /></div><span>Face {faces.indexOf(selected) + 1} preview</span></div>}
       <div className="flex flex-wrap gap-2">
         {[true, false].map((answer) => <label key={String(answer)} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={id} checked={value === answer} onChange={() => onChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}
       </div>
