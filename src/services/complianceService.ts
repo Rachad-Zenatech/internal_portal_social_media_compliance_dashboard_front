@@ -125,6 +125,7 @@ export interface ComplianceViolation {
   penalty?: number;
   /** Set when its words were already counted for a stricter rule; it then costs 0. */
   counted_with?: string | null;
+  uncounted_penalty?: number;
   /** Separate claims beyond the first that the penalty also covers. */
   extra_claims?: number;
   /** What it amounts to once read in context (missing on checks saved before statuses: a violation). */

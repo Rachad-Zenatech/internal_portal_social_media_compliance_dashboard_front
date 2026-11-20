@@ -30,19 +30,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleRunScanner` (fn) L532
 
 ## src/pages/Compliance/ContentScreenerPage.tsx (1508 lines) - content screener page (pages  compliance)
-- `scoreOf` (const) L105
-- `isFailing` (const) L106
-- `hasCritical` (const) L110
-- `deadlineOf` (const) L112 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
-- `matches` (function) L114
-- `dueText` (function) L134 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
-- `CheckingBadge` (function) L150 - Checking · ~35 s" while the post is still being read.
-    - `countdown` (fn) L151
-- `ScoreBadge` (function) L162
-- `Thumb` (function) L175
-- `Flag` (interface) L200
-- `flagsOf` (function) L209
-    - `caption` (fn) L212
+- `scoreOf` (const) L106
+- `isFailing` (const) L107
+- `hasCritical` (const) L111
+- `deadlineOf` (const) L113 - The deadline that matters on this tab: the reviewer's (or the creator's, when sent back).
+- `matches` (function) L115
+- `dueText` (function) L135 - Overdue 2 days" / "Due today, 5:00 PM" / "Due Fri, Oct 30", coloured by urgency.
+- `CheckingBadge` (function) L151 - Checking · ~35 s" while the post is still being read.
+    - `countdown` (fn) L152
+- `ScoreBadge` (function) L163
+- `Thumb` (function) L176
+- `Flag` (interface) L201
+- `flagsOf` (function) L210
+    - `caption` (fn) L213
 - `escapeRe` (const) L234
 - `HighlightedCaption` (export function) L237 - The caption with every flagged phrase highlighted.
 - `MarkedCaption` (function) L260 - The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.

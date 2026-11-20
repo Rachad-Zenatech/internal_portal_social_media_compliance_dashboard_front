@@ -82,10 +82,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
 
-## src/lib/findingImage.ts (33 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
-- `findingSelectionKey` (export const) L5 - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
-- `selectFindingImage` (export function) L8 - Prefer the clicked finding's evidence; shared rule evidence is used only when it identifies one image.
-- `findingImageIndex` (export function) L16 - Locate the image linked to a rule; an unknown location leaves the current slide unchanged.
+## src/lib/findingImage.ts (34 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
+- `findingSelectionKey` (export const) L6 - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
+- `selectFindingImage` (export function) L9 - Prefer the clicked finding's evidence; shared rule evidence is used only when it identifies one image.
+- `findingImageIndex` (export function) L17 - Locate the image linked to a rule; an unknown location leaves the current slide unchanged.
 
 ## src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - `Change` (type) L3
@@ -151,6 +151,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `locate` (function) L17 - Where the quote is in text: [start, end), taking in a closing punctuation mark the revision already ends with.
 - `replaceInText` (export function) L28 - The text with the quoted wording replaced, or null when it isn't there.
 - `replaceInEditable` (export function) L37 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
+
+## src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
+- `reviewSendScore` (export function) L5 - A routing threshold only: pending requests never change the actual approval score.
 
 ## src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
 - `REVIEW_ASSESSMENTS` (export const) L3

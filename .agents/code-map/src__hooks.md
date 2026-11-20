@@ -88,6 +88,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useReviewDecision` (export function) L166
 - `useApprovalActions` (export function) L185 - Approved content: a reviewer reschedules it or reopens it for changes.
 
+## src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
+- `useReviewSendScore` (export function) L7 - Share the creator-request cache so sending updates immediately after a request is saved.
+
 ## src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - `useRevisionPublishing` (export function) L6 - Confirm timing before the corrected post is checked and submitted.
 
