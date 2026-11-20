@@ -7,4 +7,5 @@ export interface ImageProvenance {
   people_in_images_detected?: boolean | null;
   employee_in_images?: boolean;
   employee_in_images_confirmed?: boolean;
+  face_employee_flags?: Record<string, boolean>;
 }
