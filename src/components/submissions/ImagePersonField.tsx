@@ -1,10 +1,11 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { hasPostImages } from "@/lib/imageProvenance";
 import { submissionService } from "@/services/submissionService";
 import type { Submission, SubmissionFile } from "@/types/submission";
 
-function FaceCropPreview({ url, box }: { url: string; box: number[] }) {
+function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[]; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,7 +36,7 @@ function FaceCropPreview({ url, box }: { url: string; box: number[] }) {
     img.src = authedFileUrl(url);
     return () => { cancelled = true; };
   }, [box, url]);
-  return <canvas ref={canvasRef} width={128} height={128} aria-label="Detected face preview" className="size-full" />;
+  return <canvas ref={canvasRef} width={size} height={size} aria-label="Detected face preview" className="size-full" />;
 }
 
 export default function ImagePersonField({ files, value, employeeValue, faceFlags, detected, disabled, submissionId, onRefresh, onChange, onEmployeeChange, onFaceFlagChange }: {
@@ -53,6 +54,7 @@ export default function ImagePersonField({ files, value, employeeValue, faceFlag
 }) {
   const id = useId();
   const [retrying, setRetrying] = useState(false);
+  const [zoomedFace, setZoomedFace] = useState<{ file: SubmissionFile; box: number[]; faceIndex: number } | null>(null);
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
   const imageFiles = files.filter((file) => file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
@@ -87,7 +89,7 @@ export default function ImagePersonField({ files, value, employeeValue, faceFlag
           <div className="grid gap-2 sm:grid-cols-2">
             {faces.map(({ key, file, box }, faceIndex) => (
               <div key={key} className="flex items-center gap-3 rounded-lg border border-border/70 bg-background p-2">
-                <div className="size-16 shrink-0 overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></div>
+                <button type="button" onClick={() => setZoomedFace({ file, box, faceIndex })} title="Click to enlarge face" className="size-16 shrink-0 cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></button>
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
                   <p className="text-[11px] text-muted-foreground">Employee?</p>
@@ -99,6 +101,16 @@ export default function ImagePersonField({ files, value, employeeValue, faceFlag
         </div>
       )}
       {showPeople && faces.length === 0 && <div className="border-t border-border/70 pt-2"><p className="text-xs font-medium text-foreground">Is any person shown an employee?</p><div className="mt-1.5 flex flex-wrap gap-2">{[true, false].map((answer) => <label key={`employee-${String(answer)}`} className="flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-employee`} checked={employeeValue === answer} onChange={() => onEmployeeChange(answer)} className="size-3.5 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div></div>}
+      <Dialog open={Boolean(zoomedFace)} onOpenChange={(open) => { if (!open) setZoomedFace(null); }}>
+        <DialogContent className="sm:max-w-md">
+          {zoomedFace && (
+            <>
+              <DialogTitle className="text-sm font-medium">Person {zoomedFace.faceIndex + 1} · {zoomedFace.file.original_name}</DialogTitle>
+              <div className="mx-auto size-72 max-w-full overflow-hidden rounded-xl border border-border bg-muted"><FaceCropPreview url={zoomedFace.file.url} box={zoomedFace.box} size={384} /></div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </fieldset>
   );
 }
