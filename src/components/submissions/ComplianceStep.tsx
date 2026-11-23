@@ -7,6 +7,7 @@ import PostTextPreview from "@/components/submissions/PostTextPreview";
 import { isVisibleFinding } from "@/lib/complianceFinding";
 import { findingEvidence } from "@/lib/findingEvidence";
 import { ConfidenceBadge, ContextNote, FINDING_META, statusOf } from "@/components/submissions/FindingStatus";
+import { FindingExplanation } from "@/components/submissions/FindingExplanation";
 import FlaggedVideo from "@/components/submissions/FlaggedVideo";
 import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/submissions/ManuallyCheckedClaims";
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
@@ -233,7 +234,6 @@ export default function ComplianceStep({
     );
   }
 
-  if (check.ai_unavailable) return <UnavailableCompliance header={header} extra={extra} />;
   const analysing = isAnalysing(check);
   const imagesPending = (check.images_pending ?? 0) > 0;
   const processingLabel = check.transcript_pending && imagesPending ? "Processing video and images"
@@ -276,7 +276,7 @@ export default function ComplianceStep({
               <strong className="font-semibold">The media has changed since this check.</strong> Check again to score the updated media.
             </p>
           )}
-          {analysing ? pendingScore : (
+          {check.ai_unavailable ? <UnavailableCompliance /> : analysing ? pendingScore : (
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
               <span
                 title={`Score ${score} out of 100`}
@@ -311,7 +311,7 @@ export default function ComplianceStep({
             <h2 className="text-lg font-bold text-foreground">What the check found</h2>
             {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
           </div>
-          {!analysing && findings.length === 0 && checkedClaims.length === 0 && (
+          {!check.ai_unavailable && !analysing && findings.length === 0 && checkedClaims.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>
@@ -351,11 +351,11 @@ export default function ComplianceStep({
                     <span className="text-[15px] font-semibold leading-snug text-foreground">{f.v.title}</span>
                   </span>
                 </button>
+                <FindingExplanation v={f.v} />
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
-                    {f.v.flagged_terms.length > 0 && <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">{f.v.flagged_terms.map((t) => `"${t}"`).join(", ")}</p>}
                     <p className="text-[13px] leading-relaxed text-foreground/80">
-                      <strong className="font-semibold">What to do:</strong> {f.v.remediation_guidance || f.v.explanation}
+                      <strong className="font-semibold">{st === "NEEDS_REVIEW" ? "If this concern is confirmed:" : "What to do:"}</strong> {f.v.remediation_guidance || f.v.explanation}
                     </p>
                     <SyntheticMediaFixNote finding={f.v} />
                     {editable && (

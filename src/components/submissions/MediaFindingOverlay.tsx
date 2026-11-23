@@ -13,6 +13,7 @@ export default function MediaFindingOverlay({ findings, fileId, currentTime, sho
   const { data: rules } = useComplianceRules();
   const descriptions = new Map((rules ?? []).map((rule) => [rule.id, rule.summary]));
   const boxes = findings.flatMap((finding, index) => {
+    if (finding.evaluation?.source === "ADJUSTED" && finding.evaluation.model_decision === "NO_VIOLATION") return [];
     const regions = fileId
       ? (finding.image_regions ?? []).filter((region) => region.file_id === fileId)
       : [{ x: finding.region_x, y: finding.region_y, w: finding.region_w, h: finding.region_h, start_sec: undefined, end_sec: undefined }];

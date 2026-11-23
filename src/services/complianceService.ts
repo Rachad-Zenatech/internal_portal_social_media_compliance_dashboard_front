@@ -136,6 +136,7 @@ export interface ComplianceViolation {
   passage?: string | null;
   context?: string | null;
   /** Where the checker found the issue in image/video media, as fractions of its rendered frame. */
+  image_file_ids?: string[];
   image_regions?: ImageFindingRegion[];
   region_x?: number | null;
   region_y?: number | null;
@@ -152,6 +153,8 @@ export type FindingStatus = 'VIOLATION' | 'NEEDS_REVIEW' | 'EVIDENCE_REQUIRED' |
 
 export interface ContextEvaluation {
   decision: FindingStatus;
+  /** Original model verdict, before confidence and other safeguards. */
+  model_decision?: 'VIOLATION' | 'NEEDS_REVIEW' | 'EVIDENCE_REQUIRED' | 'NO_VIOLATION' | null;
   matched_text?: string | null;
   /** Who or what the statement is about. */
   subject?: string | null;

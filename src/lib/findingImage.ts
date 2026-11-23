@@ -8,6 +8,10 @@ export const findingSelectionKey = (finding: ComplianceViolation, index: number)
 /** Prefer the clicked finding's evidence; shared rule evidence is used only when it identifies one image. */
 export function selectFindingImage(finding: ComplianceViolation, slideshow: { slides: SubmissionFile[]; activeIndex: number; select: (id: string) => void }, relatedFindings: ComplianceViolation[] = [finding]): boolean {
   const index = findingImageIndex(slideshow.slides, [finding], finding.rule_id, slideshow.activeIndex, relatedFindings);
+  if (index < 0 && slideshow.slides.length === 1 && !(finding.image_file_ids?.length || finding.image_regions?.length)) {
+    slideshow.select(slideshow.slides[0].id);
+    return true;
+  }
   if (index < 0) return false;
   slideshow.select(slideshow.slides[index].id);
   return true;
@@ -16,7 +20,7 @@ export function selectFindingImage(finding: ComplianceViolation, slideshow: { sl
 /** Locate the image linked to a rule; an unknown location leaves the current slide unchanged. */
 export function findingImageIndex(images: SubmissionFile[], findings: ComplianceViolation[], ruleId: string, currentIndex: number, relatedFindings: ComplianceViolation[] = findings): number {
   const matches = findings.filter((finding) => finding.rule_id === ruleId);
-  const fileIds = new Set(matches.flatMap((finding) => (finding.image_regions ?? []).map((region) => region.file_id)));
+  const fileIds = new Set(matches.flatMap((finding) => [...(finding.image_file_ids ?? []), ...(finding.image_regions ?? []).map((region) => region.file_id)]));
   const linked = images.map((image, index) => fileIds.has(image.id) ? index : -1).filter((index) => index >= 0);
   if (linked.length) return linked.includes(currentIndex) ? currentIndex : linked[0];
   const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, " ").trim();
@@ -27,7 +31,7 @@ export function findingImageIndex(images: SubmissionFile[], findings: Compliance
   const ruleNumber = (value: string) => value.toLowerCase().replace(/^rule\s*/i, "").trim();
   const numbers = new Set(matches.map((finding) => ruleNumber(finding.rule_number ?? "")).filter(Boolean));
   const sharedIds = new Set(relatedFindings.filter((finding) => finding.rule_id === ruleId || numbers.has(ruleNumber(finding.rule_number ?? "")))
-    .flatMap((finding) => (finding.image_regions ?? []).map((region) => region.file_id)));
+    .flatMap((finding) => [...(finding.image_file_ids ?? []), ...(finding.image_regions ?? []).map((region) => region.file_id)]));
   const sharedImages = images.map((image, index) => sharedIds.has(image.id) ? index : -1).filter((index) => index >= 0);
   return sharedImages.length === 1 ? sharedImages[0] : -1;
 }
