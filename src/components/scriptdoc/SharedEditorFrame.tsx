@@ -201,7 +201,7 @@ export default function SharedEditorFrame({
     <div className="flex min-h-[24rem] flex-1 flex-col">
       {readOnly && toolbarExtra && (
         <div className="flex flex-wrap items-center gap-2 border-b bg-background/95 px-3 py-1.5">
-          <span className="text-xs text-muted-foreground">Read-only · select wording in the document to highlight it or leave a comment.</span>
+          <span className="text-xs text-muted-foreground">Read-only · select wording in the document to highlight &amp; comment.</span>
           <span className="ml-auto flex items-center gap-1">{toolbarExtra}</span>
         </div>
       )}

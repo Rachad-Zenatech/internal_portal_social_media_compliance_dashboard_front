@@ -142,7 +142,7 @@ export default function ScriptDocPage() {
   const notes = useNotes(provider);
   const [tab, setTab] = useState<PanelTab>("notes");
   const [activeNote, setActiveNote] = useState<string | null>(null);
-  const [composer, setComposer] = useState<{ quote: string; start: number } | null>(null);
+  const [composer, setComposer] = useState<{ quote: string; start: number; color?: string } | null>(null);
   const [embedSelection, setEmbedSelection] = useState<{ quote: string; start: number } | null>(null);
   const [goToNote, setGoToNote] = useState<{ id: string; seq: number } | null>(null);
 
@@ -178,24 +178,36 @@ export default function ScriptDocPage() {
   const myName = provider?.userName || "Someone";
   const myColor = doc?.my_color ?? "#2563eb";
   const putNote = (n: DocNote) => provider?.notes.getMap<DocNote>("notes").set(n.id, n);
-  const addNote = (kind: "highlight" | "comment", text: string, sel: { quote: string; start: number }, color?: string) => {
+  const addNote = (text: string, sel: { quote: string; start: number }, color?: string) => {
+    const clean = text.trim();
     putNote({
-      id: crypto.randomUUID(), kind, quote: sel.quote, start: sel.start, text, color: color || myColor, author_id: me, author_name: myName,
-      created_at: new Date().toISOString(), resolved: false, replies: [],
+      id: crypto.randomUUID(),
+      kind: clean ? "comment" : "highlight",
+      quote: sel.quote,
+      start: sel.start,
+      text: clean,
+      color: color || myColor,
+      author_id: me,
+      author_name: myName,
+      created_at: new Date().toISOString(),
+      resolved: false,
+      replies: [],
     });
     setTab("notes");
   };
-  const startNote = (kind: "highlight" | "comment", color?: string) => {
+  const startNote = (color?: string) => {
+    if (shared && inEditor) {
+      setWriterView("marks");
+      toast.info("Switched to Highlight & Comment view — select wording in the script, then click Highlight & Comment.");
+      return;
+    }
     const sel = shared ? embedSelection : editor.current?.selection();
     if (!sel) {
       toast.info("Select some wording in the script first.");
       return;
     }
-    if (kind === "highlight") addNote("highlight", "", sel, color);
-    else {
-      setComposer(sel);
-      setTab("notes");
-    }
+    setComposer({ ...sel, color });
+    setTab("notes");
   };
   const mutateNote = (nid: string, fn: (n: DocNote) => DocNote) => {
     const map = provider?.notes.getMap<DocNote>("notes");
@@ -379,7 +391,7 @@ export default function ScriptDocPage() {
           onReply={(nid, text) => mutateNote(nid, (n) => ({ ...n, replies: [...n.replies, { author_name: myName, text, created_at: new Date().toISOString() }] }))}
           onResolve={(nid, resolved) => mutateNote(nid, (n) => ({ ...n, resolved }))}
           onDelete={(nid) => provider?.notes.getMap<DocNote>("notes").delete(nid)}
-          onCompose={(text) => { if (composer) addNote("comment", text, composer); setComposer(null); }}
+          onCompose={(text, color) => { if (composer) addNote(text, composer, color); setComposer(null); }}
           onCancelCompose={() => setComposer(null)}
         />}
       </div>
