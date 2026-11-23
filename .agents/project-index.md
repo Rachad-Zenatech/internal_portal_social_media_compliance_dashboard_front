@@ -78,9 +78,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
-- src/components/scriptdoc/DocEditorColumn.tsx (218 lines) - Highlight color palette (preset swatches + custom color picker).
+- src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
-- src/components/scriptdoc/DocSidePanel.tsx (410 lines) - The box for the comment on the wording that was selected.
+- src/components/scriptdoc/DocSidePanel.tsx (450 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
@@ -315,7 +315,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (391 lines) - The notes document as a list, kept up to date as anyone changes it.
+- src/pages/Scripts/ScriptDocPage.tsx (403 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)

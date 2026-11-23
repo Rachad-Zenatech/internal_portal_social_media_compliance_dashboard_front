@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { LiveProvider } from "@/lib/scriptDocLive";
 import type { DocNote } from "@/types/scriptDoc";
 
-const HIGHLIGHT_COLORS = [
+export const HIGHLIGHT_COLORS = [
   { label: "Yellow", hex: "#eab308" },
   { label: "Green", hex: "#22c55e" },
   { label: "Blue", hex: "#3b82f6" },
@@ -90,28 +90,23 @@ function HighlightColorMenu({
   );
 }
 
-/** Highlight and Comment, in the editor's toolbar. */
-function NoteButtons({ onStart }: { onStart: (kind: "highlight" | "comment", color?: string) => void }) {
+/** Combined Highlight & Comment control in the editor's toolbar. */
+function NoteButtons({ onStart }: { onStart: (color?: string) => void }) {
   const [color, setColor] = useState("#eab308");
   const pick = (hex: string, applyNow: boolean) => {
     setColor(hex);
-    if (applyNow) onStart("highlight", hex);
+    if (applyNow) onStart(hex);
   };
   return (
-    <>
-      <div className="flex items-center">
-        <Button size="sm" variant="ghost" className="h-8 pr-1.5" onMouseDown={(e) => e.preventDefault()} onClick={() => onStart("highlight", color)}>
-          <Highlighter className="mr-1 h-4 w-4" />
-          <span>Highlight</span>
-          <span className="ml-1.5 h-2.5 w-2.5 rounded-full border border-border/80" style={{ backgroundColor: color }} />
-        </Button>
-        <HighlightColorMenu color={color} onPick={pick} />
-      </div>
-      <Button size="sm" variant="ghost" className="h-8" onMouseDown={(e) => e.preventDefault()} onClick={() => onStart("comment")}>
-        <MessageSquarePlus className="mr-1 h-4 w-4" />
-        Comment
+    <div className="flex items-center">
+      <Button size="sm" variant="ghost" className="h-8 pr-1.5" onMouseDown={(e) => e.preventDefault()} onClick={() => onStart(color)}>
+        <Highlighter className="mr-1 h-4 w-4" />
+        <MessageSquarePlus className="mr-1 h-3.5 w-3.5" />
+        <span>Highlight &amp; Comment</span>
+        <span className="ml-1.5 h-2.5 w-2.5 rounded-full border border-border/80" style={{ backgroundColor: color }} />
       </Button>
-    </>
+      <HighlightColorMenu color={color} onPick={pick} />
+    </div>
   );
 }
 
@@ -147,7 +142,7 @@ export default function DocEditorColumn({
   activeNoteId: string | null;
   onChange: () => void;
   onSelectNote: (id: string) => void;
-  onStartNote: (kind: "highlight" | "comment", color?: string) => void;
+  onStartNote: (color?: string) => void;
   /** This script's id when it is edited in the Share Document portal: that editor is shown here instead of this one. */
   sharedDocId?: string | null;
   sharedReadOnly?: boolean;
@@ -170,7 +165,7 @@ export default function DocEditorColumn({
           goToNote={goToNote}
           onSelectionChange={onEmbedSelection}
           onSelectNote={onSelectNote}
-          toolbarExtra={canNote && sharedReadOnly ? <NoteButtons onStart={onStartNote} /> : undefined}
+          toolbarExtra={canNote ? <NoteButtons onStart={onStartNote} /> : undefined}
         />
       </div>
     );
