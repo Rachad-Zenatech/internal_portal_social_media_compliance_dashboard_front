@@ -155,10 +155,11 @@ export const submissionService = {
 
   /** The same check, streamed: onAttempt hears each AI model call as it starts and ends (fallbacks included);
    * resolves with the post and its new check once every step is done. */
-  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void, confirmRepost = false): Promise<Submission> {
+  async runCheckStream(id: string, onAttempt: (attempt: CheckAttempt) => void, confirmRepost = false, signal?: AbortSignal): Promise<Submission> {
     const token = sessionStorage.getItem("token");
     const res = await fetch(`${BASE_URL}/api/submissions/${id}/check/stream`, {
       method: "POST",
+      signal,
       credentials: "include",
       headers: {
         Accept: "application/x-ndjson",
@@ -327,6 +328,9 @@ export const submissionService = {
 
   /** Start (or reuse) a sentiment analysis of the current content. */
   requestSentiment: (id: string) => apiClient.post<SentimentAnalysis>(`/api/submissions/${id}/sentiment`, undefined, quiet),
+
+  stopSentiment: (id: string, analysisId: string) =>
+    apiClient.post<SentimentAnalysis>(`/api/submissions/${id}/sentiment/${analysisId}/stop`, undefined, quiet),
 
   /** Run an analysis stopped by Gemini's daily limit again once the limit resets. */
   scheduleSentiment: (id: string, analysisId: string) =>

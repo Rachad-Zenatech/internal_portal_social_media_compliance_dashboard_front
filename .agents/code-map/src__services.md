@@ -18,14 +18,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - `approvalPathService` (export const) L4
 
-## src/services/backgroundScriptChecks.ts (59 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
+## src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - `CheckTask` (type) L6
 - `notify` (const) L10
 - `subscribeScriptChecks` (export function) L12
 - `pendingScriptChecks` (export function) L17
 - `track` (function) L22 - Own the promise outside React: unmounting a page only unsubscribes its display.
 - `runScriptCompliance` (export function) L35
-- `runBatchScriptCompliance` (export function) L44 - Keep the entire queue alive after navigation; one failed script does not stop the rest.
+- `runBatchScriptCompliance` (export function) L46 - Keep the entire queue alive after navigation; one failed script does not stop the rest.
 
 ## src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - `canvaService` (export const) L7
@@ -92,7 +92,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - `performanceService` (export const) L4
 
-## src/services/preparationComplianceService.ts (19 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
+## src/services/preparationComplianceService.ts (22 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
 - `runPreparationCompliance` (export function) L7 - Script drafts use the saved script check; finished posts use the streamed post check.
 
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
@@ -104,6 +104,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) L10 - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (385 lines) - submission service (services)
+## src/services/submissionService.ts (389 lines) - submission service (services)
 - `ScrapeStatus` (export interface) L47
 - `submissionService` (export const) L61

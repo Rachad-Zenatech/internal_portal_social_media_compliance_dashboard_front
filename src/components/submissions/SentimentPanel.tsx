@@ -33,6 +33,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AnalysisRunControls } from "@/components/submissions/AnalysisRunControls";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -866,7 +867,7 @@ export default function SentimentPanel({
   post?: ReactNode;
   className?: string;
 }) {
-  const { analysis, isLoading, run, rate, saveTestCase, usage } = useSentiment(submissionId, version);
+  const { analysis, isLoading, run, stop, rate, saveTestCase, usage } = useSentiment(submissionId, version);
   const { hasPermission } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_APPROVE");
   const [testCaseOpen, setTestCaseOpen] = useState(false);
@@ -877,6 +878,7 @@ export default function SentimentPanel({
   // The topics' current mood only means something for the current content, not an earlier version.
   const topics = usePublicMood(submissionId, trends && version == null);
   const running = isSentimentRunning(analysis) || run.isPending || preparing;
+  const stopAnalysis = isSentimentRunning(analysis) && !run.isPending ? () => stop.mutate(analysis!.id) : undefined;
   /** Save the current post and run only the requested sentiment analysis. */
   const analyseAll = async () => {
     if (beforeAnalyse) {
@@ -927,6 +929,8 @@ export default function SentimentPanel({
               : "Analysing tone, brand fit and controversy with Gemini..."}
           </p>
         </div>
+      ) : analysis.error === "Stopped by user." ? (
+        <p className="text-xs text-muted-foreground">Sentiment analysis stopped. Run it again when you are ready.</p>
       ) : analysis.status === "SCHEDULED" ? (
         <p className="text-xs text-muted-foreground flex items-start gap-2 rounded-lg border border-dashed border-border p-3">
           <CalendarClock className="w-3.5 h-3.5 shrink-0 mt-px text-violet-500" />
@@ -1062,16 +1066,8 @@ export default function SentimentPanel({
               </div>
               {canRun && submissionId && (
                 <div className="flex flex-col items-end gap-1">
-                  <Button
-                    type="button"
-                    variant="default"
-                    className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-                    disabled={running || outOfRuns}
-                    onClick={analyseAll}
-                  >
-                    {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                    {analysis ? "Run sentiment check again" : "Run sentiment check"}
-                  </Button>
+                  <AnalysisRunControls running={running} disabled={outOfRuns} stopping={stop.isPending}
+                    onRun={analyseAll} onStop={stopAnalysis} label={analysis ? "Run sentiment check again" : "Run sentiment check"} />
                   {usage?.remaining != null && (
                     <span className={`text-xs tabular-nums ${outOfRuns ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
                       {outOfRuns ? "Daily limit reached" : `${usage.remaining} runs left today`}
@@ -1112,23 +1108,8 @@ export default function SentimentPanel({
         </div>
         {canRun && submissionId && (
           <div className="flex flex-col items-end gap-0.5 shrink-0">
-            <Button
-              size="sm"
-              variant="default"
-              className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-              disabled={running || outOfRuns}
-              onClick={analyseAll}
-              title={
-                outOfRuns
-                  ? "Daily AI limit reached"
-                  : beforeAnalyse
-                    ? "Saves the draft and runs the sentiment check"
-                    : undefined
-              }
-            >
-              {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              {analysis ? "Run sentiment check again" : "Run sentiment check"}
-            </Button>
+            <AnalysisRunControls running={running} disabled={outOfRuns} stopping={stop.isPending}
+              onRun={analyseAll} onStop={stopAnalysis} label={analysis ? "Run sentiment check again" : "Run sentiment check"} />
             {usage?.remaining != null && (
               <span className={`text-[10px] tabular-nums ${outOfRuns ? "text-amber-700 dark:text-amber-300 font-semibold" : "text-muted-foreground"}`}>
                 {outOfRuns ? "Daily limit reached" : `${usage.remaining} left today`}

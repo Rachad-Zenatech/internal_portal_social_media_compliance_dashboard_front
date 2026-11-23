@@ -122,7 +122,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - `useScriptReviewerLabel` (export function) L5 - Older script responses omit names; resolve the post's actual review assignment.
 
-## src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+## src/hooks/useSentiment.ts (138 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - `isSentimentRunning` (export function) L11
 - `useSentiment` (export function) L16 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 
