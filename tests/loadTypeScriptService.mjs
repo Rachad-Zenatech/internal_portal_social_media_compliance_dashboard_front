@@ -20,4 +20,3 @@ export function loadService(file, dependencies, folder = "services", globals = {
   });
   return module.exports;
 }
-

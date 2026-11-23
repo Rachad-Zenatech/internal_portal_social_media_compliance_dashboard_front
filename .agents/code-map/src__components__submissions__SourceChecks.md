@@ -4,11 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SourceChecks.tsx (292 lines) - source checks (components submissions)
-- `mergeSourceChecks` (function) L35 - Keep quick checks made from Post details visible when the rulebook response omitted that URL.
-- `counts` (function) L62
-- `ClaimRow` (function) L68 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
-- `Row` (function) L94
-- `SourceCheckingNotice` (export function) L184 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
-- `SourcesCheckedSection` (export function) L204 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
-- `SourceChecks` (export function) L233 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+## src/components/submissions/SourceChecks.tsx (294 lines) - source checks (components submissions)
+- `mergeSourceChecks` (function) L36 - Keep quick checks made from Post details visible when the rulebook response omitted that URL.
+- `counts` (function) L63
+- `ClaimRow` (function) L69 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
+- `Row` (function) L96
+- `SourceCheckingNotice` (export function) L186 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
+- `SourcesCheckedSection` (export function) L206 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
+- `SourceChecks` (export function) L235 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...

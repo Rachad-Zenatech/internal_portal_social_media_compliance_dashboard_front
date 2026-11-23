@@ -1,3 +1,4 @@
+import StaleComplianceNotice from "@/components/submissions/StaleComplianceNotice";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 import CheckCoverage from "@/components/submissions/CheckCoverage";
@@ -35,7 +36,6 @@ export default function ComplianceView({
   }
   return (
     <div className="rounded-xl border border-border/70 p-4 space-y-3">
-      {check.ai_unavailable && <UnavailableCompliance />}
       <div className="flex items-center justify-between gap-2 text-sm font-semibold">
         <span className="flex items-center gap-1.5">
           {check.traffic_light === "RED" ? (
@@ -45,7 +45,7 @@ export default function ComplianceView({
           ) : (
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           )}
-          {check.ai_unavailable ? "Findings from completed checks" : check.is_compliant
+          {sub.check_outdated ? "Previous check: sources, media or rules changed" : check.ai_unavailable ? "Findings from completed checks" : check.is_compliant
             ? "No issues found in the text"
             : check.violations_count > 0
             ? `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`
@@ -54,9 +54,10 @@ export default function ComplianceView({
         {isAnalysing(check) ? (
           <UnderReviewBadge progress={sub.analysis_progress} />
         ) : (
-          !check.ai_unavailable && <span className="tabular-nums">{check.score}/100</span>
+          <span className="tabular-nums">{check.score}/100{sub.check_outdated || check.ai_unavailable ? " (provisional)" : ""}</span>
         )}
       </div>
+      {sub.check_outdated ? <StaleComplianceNotice /> : check.ai_unavailable && <UnavailableCompliance />}
       {isAnalysing(check) && <AnalysisProgressPanel progress={sub.analysis_progress} />}
       <CheckCoverage check={check} />
       <SourceChecks checks={check.source_checks} savedChecks={sub.source_link_checks} submissionId={sub.id} />
@@ -67,7 +68,7 @@ export default function ComplianceView({
             : outdatedText}
         </p>
       )}
-      <ScoreBreakdown check={check} />
+      <ScoreBreakdown check={check} provisional={sub.check_outdated} />
       <OtherFindings violations={check.violations} />
       {/* Creators can request a dismissal; a reviewer must approve it before the flag is cleared. */}
       {(canReview || canRequestDismissal) && check.violations.some((v) => v.rule_id && isVisibleFinding(v) && statusOf(v) !== "CLEARED") && (

@@ -36,6 +36,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `isVisibleFinding` (export function) L4 - Unavailable and rule-based checks have no model confidence estimate.
 - `findingConfidence` (export function) L9
 
+## src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
+- `sourceLinksKey` (export function) L3
+- `complianceSourcesChanged` (export function) L8 - Compare inputs, including checks saved before explicit source snapshots existed.
+
 ## src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
 - `compressUploadImage` (export function) L5 - Reduce large image uploads before they leave the browser.
 
@@ -235,6 +239,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
 - `visibleSourceChecks` (export function) L4 - Automatic newsroom summaries only surface corroboration or an explicit conflict.
+
+## src/lib/sourceCoverage.ts (20 lines) - Keep each source's verdict truthful while showing when another attachment covers the claim.
+- `CoveredSourceClaim` (export type) L3
+- `key` (const) L4
+- `withSourceCoverage` (export function) L7 - Keep each source's verdict truthful while showing when another attachment covers the claim.
 
 ## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - `isScriptPreparation` (export function) L5

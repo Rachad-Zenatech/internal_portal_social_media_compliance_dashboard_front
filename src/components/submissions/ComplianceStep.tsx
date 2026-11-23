@@ -1,3 +1,4 @@
+import StaleComplianceNotice from "@/components/submissions/StaleComplianceNotice";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Check, ChevronDown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
@@ -271,12 +272,7 @@ export default function ComplianceStep({
       <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
         <section className={`${card} flex flex-col gap-4`}>
           {header}
-          {stale && (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-              <strong className="font-semibold">The media has changed since this check.</strong> Check again to score the updated media.
-            </p>
-          )}
-          {check.ai_unavailable ? <UnavailableCompliance /> : analysing ? pendingScore : (
+          {analysing ? pendingScore : (
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
               <span
                 title={`Score ${score} out of 100`}
@@ -289,8 +285,8 @@ export default function ComplianceStep({
                 </span>
               </span>
               <div className="flex min-w-0 flex-1 basis-64 flex-col gap-2">
-                <p className="text-base font-bold text-foreground">{headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
-                <p className="text-[13px] leading-relaxed text-muted-foreground">{advice}</p>
+                <p className="text-base font-bold text-foreground">{stale || check.ai_unavailable ? "Provisional score" : headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found"}</p>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{stale || check.ai_unavailable ? "Based on the findings available from this check." : advice}</p>
                 <div className="relative mt-1 h-2.5 rounded-full bg-muted">
                   <span className="absolute left-0 top-0 h-2.5 rounded-full" style={{ width: `${score}%`, background: ring(score, minimumScore) }} />
                   <span className="absolute -top-1 h-4.5 w-0.5 bg-foreground" style={{ left: `${minimumScore}%`, height: 18 }} />
@@ -301,17 +297,18 @@ export default function ComplianceStep({
               </div>
             </div>
           )}
+          {stale ? <StaleComplianceNotice /> : check.ai_unavailable && <UnavailableCompliance />}
           {extra}
           <CheckCoverage check={check} />
-          {!analysing && <ScoreBreakdown check={check} />}
+          {!analysing && <ScoreBreakdown check={check} provisional={stale} />}
         </section>
 
         <section className={`${card} flex flex-col gap-3`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-bold text-foreground">What the check found</h2>
+            <h2 className="text-lg font-bold text-foreground">{stale ? "Previous findings" : "What the check found"}</h2>
             {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
           </div>
-          {!check.ai_unavailable && !analysing && findings.length === 0 && checkedClaims.length === 0 && (
+          {!stale && !check.ai_unavailable && !analysing && findings.length === 0 && checkedClaims.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>

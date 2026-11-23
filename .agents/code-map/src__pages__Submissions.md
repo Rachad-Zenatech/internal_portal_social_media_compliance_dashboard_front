@@ -4,43 +4,43 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2497 lines) - new submission page (pages  submissions)
-- `classifyFile` (function) L175 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- `SaveState` (type) L214
-- `timeOptions` (const) L221
-- `timeLabel` (function) L224 - 17:00" -> "5:00 PM".
-- `withTime` (function) L230 - A copy of the date at the given "HH:mm" time.
-- `SentBackHeader` (function) L245 - Who sent the post back, their note, and when it is due back.
-- `Section` (function) L265
-- `SummaryRow` (function) L277
-- `NewSubmissionPage` (export function) L291
-    - `navigate` (fn) L292
-    - `queryClient` (fn) L297
-    - `optionsQuery` (fn) L299
-    - `reviewState` (fn) L367
-    - `checking` (fn) L379
-    - `markEdited` (fn) L400
-    - `accounts` (fn) L406
-    - `reviewersQuery` (fn) L408
-    - `reviewerOptions` (fn) L413
-    - `approverOptions` (fn) L419 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-    - `suggesterOptions` (fn) L420
-    - `selectedAccounts` (fn) L423
-    - `brandAccounts` (fn) L427
-    - `scriptStage` (fn) L441 - The selected type controls the upload layout, even if the draft previously skipped script review.
-    - `duplicatesQuery` (fn) L449
-    - `refreshScript` (fn) L459
-    - `sentBack` (fn) L485
-    - `applyServer` (fn) L519
-    - `buildPayload` (fn) L593 - ----- Saving (S01, S02-S04, S06, S08) -----
-    - `save` (fn) L626 - Create the draft if needed, then save the current fields.
-    - `handler` (fn) L669
-    - `saveNow` (fn) L676
-    - `suggestRouting` (fn) L687
-    - `onBrandsChange` (fn) L701
-    - `onAccountsChange` (fn) L710
-    - `onAudiencesChange` (fn) L722
-    - `uploadFiles` (fn) L729 - ----- Files (S05, S07) -----
+## src/pages/Submissions/NewSubmissionPage.tsx (2496 lines) - new submission page (pages  submissions)
+- `classifyFile` (function) L177 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `SaveState` (type) L216
+- `timeOptions` (const) L223
+- `timeLabel` (function) L226 - 17:00" -> "5:00 PM".
+- `withTime` (function) L232 - A copy of the date at the given "HH:mm" time.
+- `SentBackHeader` (function) L247 - Who sent the post back, their note, and when it is due back.
+- `Section` (function) L267
+- `SummaryRow` (function) L279
+- `NewSubmissionPage` (export function) L293
+    - `navigate` (fn) L294
+    - `queryClient` (fn) L299
+    - `optionsQuery` (fn) L301
+    - `reviewState` (fn) L369
+    - `checking` (fn) L381
+    - `markEdited` (fn) L402
+    - `accounts` (fn) L408
+    - `reviewersQuery` (fn) L410
+    - `reviewerOptions` (fn) L415
+    - `approverOptions` (fn) L421 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn) L422
+    - `selectedAccounts` (fn) L425
+    - `brandAccounts` (fn) L429
+    - `scriptStage` (fn) L443 - The selected type controls the upload layout, even if the draft previously skipped script review.
+    - `duplicatesQuery` (fn) L451
+    - `refreshScript` (fn) L461
+    - `sentBack` (fn) L487
+    - `applyServer` (fn) L521
+    - `buildPayload` (fn) L594
+    - `save` (fn) L627 - Create the draft if needed, then save the current fields.
+    - `handler` (fn) L670
+    - `saveNow` (fn) L677
+    - `suggestRouting` (fn) L688
+    - `onBrandsChange` (fn) L702
+    - `onAccountsChange` (fn) L711
+    - `onAudiencesChange` (fn) L723
+    - `uploadFiles` (fn) L729
     - `clearBatch` (fn) L756
     - `removeFile` (fn) L794
     - `replaceMain` (fn) L810 - Swap the main file for a new one (the revision workspace's "Replace video").
@@ -58,10 +58,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `leaveDetails` (fn) L930
     - `backToCaption` (fn) L965
     - `openStep` (fn) L969
-    - `runComplianceCheck` (fn) L973 - Save and screen the post against the rulebook; settle duplicate/repost decisions first.
-    - `sourceChecking` (fn) L1045
-    - `submit` (fn) L1060
-    - `exec` (fn) L1206 - ----- Caption editor -----
+    - `runComplianceCheck` (fn) L972
+    - `sourceChecking` (fn) L1044
+    - `submit` (fn) L1061
+    - `exec` (fn) L1206
     - `insertHashtag` (fn) L1214 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
     - `text` (fn) L1226
     - `typedTail` (fn) L1231 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.

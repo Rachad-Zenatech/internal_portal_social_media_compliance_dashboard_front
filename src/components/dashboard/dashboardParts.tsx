@@ -221,9 +221,9 @@ export function Score({
       </span>
     );
   if (pending) return <UnderReviewBadge progress={progress} />;
-  if (unavailable) return <AiUnavailableBadge />;
+  if (unavailable && score == null) return <AiUnavailableBadge />;
   if (score == null) return <span className="text-xs text-muted-foreground">Not checked</span>;
-  const [tone, Icon] =
+  const [tone, Icon] = unavailable ? ["text-amber-600 dark:text-amber-400", AlertTriangle] :
     score >= 80
       ? ["text-emerald-600 dark:text-emerald-400", CheckCircle2]
       : score >= 60

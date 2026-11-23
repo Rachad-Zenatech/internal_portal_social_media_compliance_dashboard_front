@@ -39,12 +39,12 @@ import type { AnalysisProgress, StoredCheck, SubmissionFile, SubmissionStatus } 
 export const isAnalysing = (check?: StoredCheck | null) =>
   Boolean(check && (check.analysis_pending ?? (check.transcript_pending || (check.images_pending ?? 0) > 0)));
 
-/** The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post. */
+/** Some AI steps did not finish; keep the calculated score visible as provisional. */
 export const isAiUnavailable = (check?: StoredCheck | null) => Boolean(check?.ai_unavailable);
 
 export const AI_UNAVAILABLE_MESSAGE =
-  "The AI review did not finish. Findings from completed checks are shown below, but there is no final compliance score or approval yet. Run the check again to complete the review.";
-export const AI_UNAVAILABLE_SHORT = "No final score: the AI review did not finish.";
+  "This score reflects completed checks. Some checks did not finish; use Check again to complete the review, or after changing the post.";
+export const AI_UNAVAILABLE_SHORT = "Provisional score: some checks did not finish.";
 
 export function AiUnavailableBadge({ className = "" }: { className?: string }) {
   return (

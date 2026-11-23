@@ -6,7 +6,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) L39 - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
-- `isAiUnavailable` (export const) L43 - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
+- `isAiUnavailable` (export const) L43 - Some AI steps did not finish; keep the calculated score visible as provisional.
 - `AI_UNAVAILABLE_MESSAGE` (export const) L45
 - `AI_UNAVAILABLE_SHORT` (export const) L47
 - `AiUnavailableBadge` (export function) L49

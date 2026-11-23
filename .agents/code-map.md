@@ -17,7 +17,7 @@ to find the right file.
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
 | .agents/code-map/src__components__compliance__screener.md | 4 | 2 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
-| .agents/code-map/src__components__script.md | 25 | 12 KB |
+| .agents/code-map/src__components__script.md | 26 | 12 KB |
 | .agents/code-map/src__components__scriptdoc.md | 15 | 9 KB |
 | .agents/code-map/src__components__submissions__AnalysisRunControls.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovalActions.md | 1 | 1 KB |
@@ -95,6 +95,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceLinksField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__StaleComplianceNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionStartAnotherButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
@@ -109,8 +110,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 36 | 12 KB |
-| .agents/code-map/src__lib.md | 41 | 18 KB |
+| .agents/code-map/src__hooks.md | 37 | 12 KB |
+| .agents/code-map/src__lib.md | 43 | 19 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 16 | 7 KB |
