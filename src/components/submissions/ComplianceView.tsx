@@ -5,10 +5,9 @@ import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import { isVisibleFinding } from "@/lib/complianceFinding";
 import { OtherFindings, statusOf } from "@/components/submissions/FindingStatus";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import UnavailableCompliance from "@/components/submissions/UnavailableCompliance";
 import SourceChecks from "@/components/submissions/SourceChecks";
 import {
-  AI_UNAVAILABLE_MESSAGE,
-  AiUnavailableBadge,
   AnalysisProgressPanel,
   UnderReviewBadge,
   isAnalysing,
@@ -34,6 +33,7 @@ export default function ComplianceView({
   if (!check) {
     return <p className="text-xs text-muted-foreground">{emptyText}</p>;
   }
+  if (check.ai_unavailable) return <UnavailableCompliance />;
   return (
     <div className="rounded-xl border border-border/70 p-4 space-y-3">
       <div className="flex items-center justify-between gap-2 text-sm font-semibold">
@@ -53,16 +53,11 @@ export default function ComplianceView({
         </span>
         {isAnalysing(check) ? (
           <UnderReviewBadge progress={sub.analysis_progress} />
-        ) : check.ai_unavailable ? (
-          <AiUnavailableBadge />
         ) : (
           <span className="tabular-nums">{check.score}/100</span>
         )}
       </div>
       {isAnalysing(check) && <AnalysisProgressPanel progress={sub.analysis_progress} />}
-      {!isAnalysing(check) && check.ai_unavailable && (
-        <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">{AI_UNAVAILABLE_MESSAGE}</p>
-      )}
       <CheckCoverage check={check} />
       <SourceChecks checks={check.source_checks} savedChecks={sub.source_link_checks} submissionId={sub.id} />
       {sub.check_outdated && (

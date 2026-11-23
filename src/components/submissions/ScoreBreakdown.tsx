@@ -17,6 +17,7 @@ export default function ScoreBreakdown({
   className?: string;
 }) {
   // Violations always list here; a warning only when it cost points. Cleared triggers never do.
+  if (check.ai_unavailable) return null;
   const scored = check.violations.filter((v) => {
     const status = v.status ?? "VIOLATION";
     if (v.penalty == null || status === "CLEARED") return false;
