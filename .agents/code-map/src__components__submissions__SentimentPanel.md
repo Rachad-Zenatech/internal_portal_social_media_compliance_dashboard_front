@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SentimentPanel.tsx (1286 lines) - sentiment panel (components submissions)
+## src/components/submissions/SentimentPanel.tsx (1285 lines) - sentiment panel (components submissions)
 - `titleCase` (const) L116
 - `timestamp` (const) L117
 - `Metric` (function) L119
@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DesignRest` (function) L718 - Audiences, the controversy dial and what was flagged, each in its own card, as in the design.
 - `DesignAside` (function) L807 - The side column: what the analysis read, and how to use it.
 - `SentimentPanel` (export function) L843 - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
-    - `topics` (fn) L885 - The topics' current mood only means something for the current content, not an earlier version.
-    - `analyseAll` (fn) L888 - Save the current post and run only the requested sentiment analysis.
-    - `statusChain` (fn) L915
-- `SaveTestCaseDialog` (function) L1190 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
+    - `topics` (fn) L884 - The topics' current mood only means something for the current content, not an earlier version.
+    - `analyseAll` (fn) L887 - Save the current post and run only the requested sentiment analysis.
+    - `statusChain` (fn) L914
+- `SaveTestCaseDialog` (function) L1189 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.

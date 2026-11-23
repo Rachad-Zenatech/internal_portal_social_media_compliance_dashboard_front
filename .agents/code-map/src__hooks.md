@@ -7,10 +7,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
 
-## src/hooks/useAutomaticAnalyses.ts (26 lines) - use automatic analyses (hooks)
-- `AutomaticAnalysesOptions` (type) L3
-- `useAutomaticAnalyses` (export function) L11
-
 ## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - `useBackgroundSourceChecks` (export function) L6 - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 

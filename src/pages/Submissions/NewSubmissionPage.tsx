@@ -110,7 +110,6 @@ import { REC_BADGE, overallPostDecision } from "@/components/submissions/TopicTr
 import { usePublicMood } from "@/hooks/usePublicMood";
 import { useSentiment } from "@/hooks/useSentiment";
 import { useScriptCheckStatus } from "@/hooks/useScriptCheckStatus";
-import { useAutomaticAnalyses } from "@/hooks/useAutomaticAnalyses";
 import { useScriptStage } from "@/hooks/useScript";
 import { scriptService } from "@/services/scriptService";
 import { runPreparationCompliance } from "@/services/preparationComplianceService";
@@ -168,7 +167,6 @@ const DOC_RE = /\.(pdf|docx?|md|txt|xlsx?|csv|zip|pptx?)$/i;
 /** Files the check can read as a script. */
 const SCRIPT_RE = /\.(pdf|docx?|md|txt)$/i;
 const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
-const AUTO_RUN_WORKFLOW = import.meta.env.PROD;
 
 /**
  * Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
@@ -473,8 +471,8 @@ export default function NewSubmissionPage() {
     },
   });
 
-  const { mood, run: runMood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  const { analysis: sentimentAnalysis, run: runSentiment } = useSentiment(scriptOnly ? null : submissionId);
+  const { mood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
+  const { analysis: sentimentAnalysis } = useSentiment(scriptOnly ? null : submissionId);
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
   const { data: revisionHistory } = useQuery({
@@ -654,7 +652,6 @@ export default function NewSubmissionPage() {
       });
     return saveChain.current;
   };
-  const { startAutomaticAnalyses } = useAutomaticAnalyses({ submissionId, save, runMood, runSentiment: () => runSentiment.mutate(), onMoodError: (error) => toast.error(`Couldn't run public mood: ${(error as Error).message}`) });
 
   // Autosave 1.5 s after the last edit.
   useEffect(() => {
@@ -929,7 +926,6 @@ export default function NewSubmissionPage() {
   const [repostTarget, setRepostTarget] = useState<PostStepKey | null>(null);
   const [repostForCheck, setRepostForCheck] = useState(false);
   const repostKey = (m: DuplicateMatch) => `${m.reference_code}|${publishDate ? publishDate.toISOString() : ""}`;
-  const needsAutomaticComplianceCheck = editCounter > 0 || !checkedSub?.latest_check || mediaChanged(files, checkedSub);
   const leaveDetails = async (target: PostStepKey) => {
     setShowErrors(true);
     if (!detailsComplete) {
@@ -949,7 +945,7 @@ export default function NewSubmissionPage() {
         }
         if (report.repost) {
           if (repostOk === repostKey(report.repost)) {
-            if (AUTO_RUN_WORKFLOW && needsAutomaticComplianceCheck) void runComplianceCheck(); goToStep(target);
+            goToStep(target);
             return;
           }
           setRepostTarget(target);
@@ -957,7 +953,7 @@ export default function NewSubmissionPage() {
           return;
         }
       }
-      if (AUTO_RUN_WORKFLOW && needsAutomaticComplianceCheck) void runComplianceCheck(); goToStep(target);
+      goToStep(target);
     } catch (err) {
       toast.error(`Couldn't check the post: ${(err as Error).message}`);
     } finally {
@@ -1005,7 +1001,7 @@ export default function NewSubmissionPage() {
       const updated = await running;
       setCheckedSub(updated);
       setEditCounter((current) => (current === editCounter ? 0 : current));
-      setLastCheckMs(Date.now() - started); if (AUTO_RUN_WORKFLOW) startAutomaticAnalyses(id!);
+      setLastCheckMs(Date.now() - started);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
@@ -1297,7 +1293,7 @@ export default function NewSubmissionPage() {
     if (repostAsk) setRepostOk(repostKey(repostAsk));
     setRepostAsk(null);
     if (repostForCheck) { setRepostForCheck(false); void runComplianceCheck(true); }
-    else if (repostTarget) { const target = repostTarget; setRepostTarget(null); if (AUTO_RUN_WORKFLOW) void runComplianceCheck(true); goToStep(target); }
+    else if (repostTarget) { const target = repostTarget; setRepostTarget(null); goToStep(target); }
     else { submit(true); }
   };
 

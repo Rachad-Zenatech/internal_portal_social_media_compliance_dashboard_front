@@ -861,8 +861,7 @@ export default function SentimentPanel({
   onSeek?: (sec: number) => void;
   /** In the editor: put a finding's suggested revision in place of its wording; false if the wording isn't there. */
   onApplyRevision?: (f: SentimentFinding) => boolean;
-  /** In the editor: saves the draft and runs the rulebook check, so one click runs every check. Resolves false if it
-   * couldn't run, and then nothing else does. */
+  /** Saves and validates the draft before running sentiment. Resolves false to cancel the analysis. */
   beforeAnalyse?: () => Promise<boolean>;
   /** Show how the post's topics are doing online. Off where the page shows public mood in its own section. */
   showTopicTrends?: boolean;
