@@ -78,16 +78,17 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
-- src/components/scriptdoc/DocEditorColumn.tsx (218 lines) - Highlight color palette (preset swatches + custom color picker).
+- src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
-- src/components/scriptdoc/DocSidePanel.tsx (410 lines) - The box for the comment on the wording that was selected.
+- src/components/scriptdoc/DocSidePanel.tsx (450 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
-- src/components/scriptdoc/SharedEditorFrame.tsx (233 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+- src/components/scriptdoc/SharedEditorFrame.tsx (229 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- src/components/submissions/AnalysisRunControls.tsx (29 lines) - Consistent run and stop actions for the post's analysis panels.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
 - src/components/submissions/ApprovedPostChecks.tsx (16 lines) - approved post checks (components submissions)
 - src/components/submissions/ApprovedPostPublishing.tsx (21 lines) - approved post publishing (components submissions)
@@ -157,7 +158,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (94 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
-- src/components/submissions/SentimentPanel.tsx (1279 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1260 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - src/components/submissions/SourceChecks.tsx (292 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
@@ -232,7 +233,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
-- src/hooks/useSentiment.ts (121 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
+- src/hooks/useSentiment.ts (138 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 - src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
@@ -316,18 +317,18 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (391 lines) - The notes document as a list, kept up to date as anyone changes it.
+- src/pages/Scripts/ScriptDocPage.tsx (403 lines) - The notes document as a list, kept up to date as anyone changes it.
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2505 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2497 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - src/pages/Submissions/SubmissionsListPage.tsx (1591 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (345 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
-- src/services/backgroundScriptChecks.ts (59 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
+- src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/complianceService.ts (382 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
@@ -336,11 +337,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
-- src/services/preparationComplianceService.ts (19 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
+- src/services/preparationComplianceService.ts (22 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
 - src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - src/services/scriptDocService.ts (57 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
-- src/services/submissionService.ts (385 lines) - submission service (services)
+- src/services/submissionService.ts (389 lines) - submission service (services)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.

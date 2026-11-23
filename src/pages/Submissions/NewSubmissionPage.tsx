@@ -20,7 +20,6 @@ import {
   Check,
   ChevronDown,
   ClipboardList,
-  RefreshCw,
   ShieldCheck,
   Clock,
   CloudUpload,
@@ -88,6 +87,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CheckModelsUsed, CheckProgress, SavedCheckModels } from "@/components/submissions/CheckProgress";
+import { AnalysisRunControls } from "@/components/submissions/AnalysisRunControls";
 import SentimentPanel from "@/components/submissions/SentimentPanel";
 import PostPreview from "@/components/submissions/PostPreview";
 import CaptionSuggester from "@/components/submissions/CaptionSuggester";
@@ -375,6 +375,7 @@ export default function NewSubmissionPage() {
   }, [reviewState]);
   const [sentAt, setSentAt] = useState<string | null>(null);
   const [requestChecking, setChecking] = useState(false);
+  const checkController = useRef<AbortController | null>(null);
   const checking = useScriptCheckStatus("script", submissionId).length > 0 || requestChecking;
   // The models each AI step tried during the latest check (as they happen), when it started, and how long it took.
   const [checkAttempts, setCheckAttempts] = useState<CheckAttempt[]>([]);
@@ -970,6 +971,7 @@ export default function NewSubmissionPage() {
 
   /** Save and screen the post against the rulebook; settle duplicate/repost decisions first. */
   const runComplianceCheck = async (confirmRepost = false) => {
+    if (checkController.current) return;
     if (!detailsComplete && !videoLocked) {
       toast.error(`Fill in the required fields before running the check: ${detailsMissing.join(", ")}.`);
       setShowErrors(true);
@@ -981,16 +983,18 @@ export default function NewSubmissionPage() {
       return;
     }
     const started = Date.now();
+    const controller = new AbortController(); checkController.current = controller;
     setChecking(true);
     setCheckAttempts([]);
     setCheckStartedAt(started);
     try {
       const id = await save({ force: true });
+      controller.signal.throwIfAborted();
       const repostConfirmed = confirmRepost || (duplicates?.repost ? repostOk === repostKey(duplicates.repost) : false);
       const running = runPreparationCompliance(
         id!, scriptOnly && videoLocked,
         (a) => setCheckAttempts((prev) => (prev.some((p) => p.id === a.id) ? prev.map((p) => (p.id === a.id ? a : p)) : [...prev, a])),
-        (stage) => queryClient.setQueryData(["script", id], stage), repostConfirmed
+        (stage) => queryClient.setQueryData(["script", id], stage), repostConfirmed, controller.signal
       );
       addJob("Checking for compliance", running, {
         type: "check",
@@ -999,10 +1003,12 @@ export default function NewSubmissionPage() {
         doneMessage: "The compliance check is done",
       });
       const updated = await running;
+      controller.signal.throwIfAborted();
       setCheckedSub(updated);
       setEditCounter((current) => (current === editCounter ? 0 : current));
       setLastCheckMs(Date.now() - started);
     } catch (err) {
+      if (controller.signal.aborted) { toast.info("Compliance check stopped."); return; }
       if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // A duplicate stops the check before it runs; a repost for another date is confirmed, then the check runs.
         const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
@@ -1018,6 +1024,7 @@ export default function NewSubmissionPage() {
         toast.error(`Couldn't run the compliance check: ${(err as Error).message}`);
       }
     } finally {
+      checkController.current = null;
       setChecking(false);
     }
   };
@@ -2148,24 +2155,9 @@ export default function NewSubmissionPage() {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="default"
-                          className="h-12 gap-2 rounded-xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
-                          onClick={() => void runComplianceCheck()}
-                          disabled={checking || uploading.length > 0 || readOnly}
-                          hidden={readOnly}
-                        >
-                          {checking ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : hasCheck ? (
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          ) : (
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                          )}
-                          {hasCheck ? "Check again" : "Run compliance check"}
-                        </Button>
+                        {!readOnly && <AnalysisRunControls running={checking} disabled={uploading.length > 0}
+                          label={hasCheck ? "Check again" : "Run compliance check"} onRun={() => void runComplianceCheck()}
+                          onStop={requestChecking ? () => checkController.current?.abort() : undefined} />}
                       </div>
                       {checking ? (
                         <CheckProgress attempts={checkAttempts} startedAt={checkStartedAt} />

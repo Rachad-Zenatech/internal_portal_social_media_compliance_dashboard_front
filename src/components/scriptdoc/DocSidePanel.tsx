@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { CheckInList, Dot } from "@/components/scriptdoc/ReviewDialogs";
 import type { CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
+import { HIGHLIGHT_COLORS } from "@/components/scriptdoc/DocEditorColumn";
+import { CheckInList, Dot } from "@/components/scriptdoc/ReviewDialogs";
 import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
 import ScriptFindings from "@/components/script/ScriptFindings";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
@@ -20,19 +21,62 @@ import type { StoredCheck } from "@/types/submission";
 
 export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers";
 
-/** The box for the comment on the wording that was selected. */
-function NoteComposer({ quote, onCompose, onCancel }: { quote: string; onCompose: (text: string) => void; onCancel: () => void }) {
+/** Unified Highlight & Comment composer on the selected wording (comment text is optional). */
+function NoteComposer({
+  quote,
+  initialColor = "#eab308",
+  onCompose,
+  onCancel,
+}: {
+  quote: string;
+  initialColor?: string;
+  onCompose: (text: string, color: string) => void;
+  onCancel: () => void;
+}) {
   const [text, setText] = useState("");
+  const [color, setColor] = useState(initialColor);
+  useEffect(() => {
+    setColor(initialColor);
+  }, [initialColor, quote]);
+
   return (
-    <div className="rounded-md border border-blue-300 bg-blue-50 p-2 dark:border-blue-500/40 dark:bg-blue-500/10">
-      <p className="mb-1 line-clamp-2 text-xs italic text-muted-foreground">“{quote}”</p>
-      <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Write your comment" autoFocus />
+    <div className="rounded-md border bg-card p-2.5 shadow-xs" style={{ borderLeftWidth: 4, borderLeftColor: color }}>
+      <p className="mb-2 line-clamp-2 text-xs italic text-muted-foreground">“{quote}”</p>
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {HIGHLIGHT_COLORS.map((c) => (
+          <button
+            key={c.hex}
+            type="button"
+            title={c.label}
+            onClick={() => setColor(c.hex)}
+            className={cn(
+              "h-4 w-4 rounded-full border transition-transform hover:scale-110",
+              color.toLowerCase() === c.hex ? "ring-2 ring-foreground ring-offset-1" : "border-border",
+            )}
+            style={{ backgroundColor: c.hex }}
+          />
+        ))}
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          title="Custom colour"
+          className="ml-auto h-5 w-5 cursor-pointer rounded border border-border bg-transparent p-0"
+        />
+      </div>
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={2}
+        placeholder="Add a comment (optional) — or save just the highlight"
+        autoFocus
+      />
       <div className="mt-2 flex justify-end gap-2">
         <Button size="sm" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
-        <Button size="sm" disabled={!text.trim()} onClick={() => onCompose(text.trim())}>
-          Comment
+        <Button size="sm" onClick={() => onCompose(text.trim(), color)}>
+          {text.trim() ? "Save Highlight & Comment" : "Save Highlight"}
         </Button>
       </div>
     </div>
@@ -44,7 +88,6 @@ function NotesTab({
   notes,
   activeId,
   canNote,
-  shared,
   me,
   onPick,
   onReply,
@@ -57,15 +100,13 @@ function NotesTab({
   notes: DocNote[];
   activeId: string | null;
   canNote: boolean;
-  /** The script is edited in the Share Document portal's editor, where its comments are made. */
-  shared?: boolean;
   me: string;
   onPick: (n: DocNote) => void;
   onReply: (id: string, text: string) => void;
   onResolve: (id: string, resolved: boolean) => void;
   onDelete: (id: string) => void;
-  composer: { quote: string } | null;
-  onCompose: (text: string) => void;
+  composer: { quote: string; color?: string } | null;
+  onCompose: (text: string, color: string) => void;
   onCancelCompose: () => void;
 }) {
   const [reply, setReply] = useState<Record<string, string>>({});
@@ -76,10 +117,10 @@ function NotesTab({
 
   return (
     <div className="flex flex-col gap-3 p-3">
-      {composer && <NoteComposer quote={composer.quote} onCompose={onCompose} onCancel={onCancelCompose} />}
+      {composer && <NoteComposer quote={composer.quote} initialColor={composer.color} onCompose={onCompose} onCancel={onCancelCompose} />}
       {shown.length === 0 && !composer && (
         <p className="text-sm text-muted-foreground">
-          {shared ? "This script is edited in the shared editor; its comments are made there." : canNote ? "Select wording in the script, then use Highlight or Comment above it." : "No notes yet."}
+          {canNote ? "Select wording in the script, then click Highlight & Comment above it." : "No notes yet."}
         </p>
       )}
       {shown.map((n) => (
@@ -92,7 +133,7 @@ function NotesTab({
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Dot color={n.color} />
               <span className="font-medium text-foreground">{n.author_name}</span>
-              <span>· {n.kind === "highlight" ? "highlight" : "comment"}</span>
+              <span>· {n.text ? "highlight & comment" : "highlight"}</span>
               <span className="ml-auto">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</span>
             </div>
             <p className="mt-1 line-clamp-2 text-xs italic text-muted-foreground">“{n.quote}”</p>
@@ -278,12 +319,12 @@ export default function DocSidePanel(props: {
   editor: React.RefObject<CollabEditorHandle | null>;
   me: string;
   activeId: string | null;
-  composer: { quote: string } | null;
+  composer: { quote: string; color?: string } | null;
   onPick: (n: DocNote) => void;
   onReply: (id: string, text: string) => void;
   onResolve: (id: string, resolved: boolean) => void;
   onDelete: (id: string) => void;
-  onCompose: (text: string) => void;
+  onCompose: (text: string, color: string) => void;
   onCancelCompose: () => void;
 }) {
   const { doc, tab, onTab } = props;
@@ -372,7 +413,6 @@ export default function DocSidePanel(props: {
             notes={props.notes}
             activeId={props.activeId}
             canNote={doc.access.can_note}
-            shared={Boolean(doc.share_document_id)}
             me={props.me}
             onPick={props.onPick}
             onReply={props.onReply}

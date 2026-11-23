@@ -125,9 +125,7 @@ export default function SharedEditorFrame({
       }
       if (type === "script-embed:ready" && frame.current?.contentWindow) {
         frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
-        if (readOnly) {
-          frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
-        }
+        frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
         return;
       }
       if (type === "script-embed:selection" && typeof data?.quote === "string") {
@@ -150,17 +148,15 @@ export default function SharedEditorFrame({
   useEffect(() => {
     if (session && loaded.current && frame.current?.contentWindow) {
       frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
-      if (readOnly) {
-        frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
-      }
+      frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
     }
   }, [readOnly, session, notes, activeNoteId]);
 
   useEffect(() => {
-    if (readOnly && goToNote && session && loaded.current && frame.current?.contentWindow) {
+    if (goToNote && session && loaded.current && frame.current?.contentWindow) {
       frame.current.contentWindow.postMessage({ type: "script-embed:go-to-note", id: goToNote.id }, session.origin);
     }
-  }, [readOnly, goToNote, session]);
+  }, [goToNote, session]);
 
   const reconnect = () => {
     needsReload.current = true;
@@ -173,7 +169,7 @@ export default function SharedEditorFrame({
     if (session && frame.current?.contentWindow && session.token !== bootToken) {
       frame.current.contentWindow.postMessage({ type: "script-embed:token", token: session.token }, session.origin);
     }
-    if (readOnly && session && frame.current?.contentWindow) {
+    if (session && frame.current?.contentWindow) {
       frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
     }
   };
@@ -201,7 +197,7 @@ export default function SharedEditorFrame({
     <div className="flex min-h-[24rem] flex-1 flex-col">
       {readOnly && toolbarExtra && (
         <div className="flex flex-wrap items-center gap-2 border-b bg-background/95 px-3 py-1.5">
-          <span className="text-xs text-muted-foreground">Read-only · select wording in the document to highlight it or leave a comment.</span>
+          <span className="text-xs text-muted-foreground">Read-only · select wording in the document to highlight &amp; comment.</span>
           <span className="ml-auto flex items-center gap-1">{toolbarExtra}</span>
         </div>
       )}

@@ -28,6 +28,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Purge Agent and AI Tooling
+        run: |
+          # Agent/AI tooling lives in GitHub only: never keep it on the server.
+          rm -rf .agents .cursor .claude .cursorrules AGENTS.md CLAUDE.md GEMINI.md .antigravityignore
+
       - name: Validate deployment configuration
         shell: bash
         run: |

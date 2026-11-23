@@ -18,7 +18,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/submissions/SentimentPanel.tsx": {
-      "max_lines": 1284,
+      "max_lines": 1259,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/video/VideoUploadQueueDrawer.tsx": {
@@ -38,7 +38,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
-      "max_lines": 2895,
+      "max_lines": 2868,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Configurations/OAuthIntegrations.tsx": {
@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2504,
+      "max_lines": 2496,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -160,7 +160,7 @@
       "kind": "jsx_return"
     },
     "src/components/submissions/ComplianceStep.tsx#ComplianceStep": {
-      "max_lines": 231,
+      "max_lines": 229,
       "kind": "jsx_return"
     },
     "src/components/submissions/FlagReviewControl.tsx#FlagReviewControl": {
@@ -188,11 +188,11 @@
       "kind": "jsx_return"
     },
     "src/components/submissions/SentimentPanel.tsx#DesignRest": {
-      "max_lines": 82,
+      "max_lines": 81,
       "kind": "jsx_return"
     },
     "src/components/submissions/SentimentPanel.tsx#FindingCard": {
-      "max_lines": 101,
+      "max_lines": 100,
       "kind": "jsx_return"
     },
     "src/components/submissions/SentimentPanel.tsx#ResultView": {
@@ -244,11 +244,11 @@
       "kind": "jsx_return"
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx#TabIcon": {
-      "max_lines": 111,
+      "max_lines": 109,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx#VideoComplianceScannerPage": {
-      "max_lines": 1557,
+      "max_lines": 1533,
       "kind": "jsx_return"
     },
     "src/pages/Configurations/ApprovalPaths.tsx#ApprovalPaths": {
@@ -320,7 +320,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1196,
+      "max_lines": 1181,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {

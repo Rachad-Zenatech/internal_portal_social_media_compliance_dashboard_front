@@ -29,8 +29,8 @@ function setup({ failure, precheck = { score: 95 } } = {}) {
      "@/services/backgroundScriptChecks": background,
      "@/services/submissionService": { submissionService },
   });
-  const run = (script, confirmed = false) => runPreparationCompliance(
-    draft.id, script, (attempt) => attempts.push(attempt), (value) => stages.push(value), confirmed,
+  const run = (script, confirmed = false, signal) => runPreparationCompliance(
+    draft.id, script, (attempt) => attempts.push(attempt), (value) => stages.push(value), confirmed, signal,
   );
   return { run, calls, stages, stage, draft, attempts };
 }
@@ -72,4 +72,14 @@ test("a script error is preserved without falling back to finished-post validati
 test("an absent script result never displays an old finished-post score", async () => {
   const app = setup({ precheck: null });
   assert.equal((await app.run(true)).latest_check, null);
+});
+
+test("stopping before a check starts prevents both script and finished-post requests", async () => {
+  for (const script of [true, false]) {
+    const app = setup();
+    const controller = new AbortController();
+    controller.abort();
+    await assert.rejects(app.run(script, false, controller.signal), { name: "AbortError" });
+    assert.equal(app.calls.length, 0);
+  }
 });

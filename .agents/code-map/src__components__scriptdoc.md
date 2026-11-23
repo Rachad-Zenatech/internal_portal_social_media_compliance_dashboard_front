@@ -29,10 +29,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (218 lines) - Highlight color palette (preset swatches + custom color picker).
+## src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
+- `HIGHLIGHT_COLORS` (export const) L12
 - `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
-- `NoteButtons` (function) L94 - Highlight and Comment, in the editor's toolbar.
-- `DocEditorColumn` (export function) L119 - The script page itself, once the live connection is up (until then, a short wait).
+- `NoteButtons` (function) L94 - Combined Highlight & Comment control in the editor's toolbar.
+- `DocEditorColumn` (export function) L114 - The script page itself, once the live connection is up (until then, a short wait).
 
 ## src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
 - `DOC_STATUS` (export const) L10
@@ -42,18 +43,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (410 lines) - The box for the comment on the wording that was selected.
-- `PanelTab` (export type) L21
-- `NoteComposer` (function) L24 - The box for the comment on the wording that was selected.
-- `NotesTab` (function) L43 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L148 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L194
-- `ReviewersTab` (function) L230
-- `DocSidePanel` (export function) L272 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L291
-    - `runCheck` (fn) L297
-    - `historyQuery` (fn) L302
-    - `openNotes` (fn) L309
+## src/components/scriptdoc/DocSidePanel.tsx (450 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `PanelTab` (export type) L22
+- `NoteComposer` (function) L25 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `NotesTab` (function) L87 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L189 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L235
+- `ReviewersTab` (function) L271
+- `DocSidePanel` (export function) L313 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L332
+    - `runCheck` (fn) L338
+    - `historyQuery` (fn) L343
+    - `openNotes` (fn) L350
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
@@ -100,7 +101,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (233 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+## src/components/scriptdoc/SharedEditorFrame.tsx (229 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
 ## src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.

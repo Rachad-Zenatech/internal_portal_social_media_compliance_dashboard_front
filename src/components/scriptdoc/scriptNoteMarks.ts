@@ -122,9 +122,9 @@ export const NoteMarks = Extension.create<NoteOptions>({
         const strong = n.id === active;
         const attrs = {
           class: `script-note script-note-${n.kind}${strong ? " script-note-active" : ""}`,
-          style: n.kind === "highlight"
-            ? `background:${n.color}${strong ? "55" : "33"}`
-            : `border-bottom:2px solid ${n.color};background:${n.color}${strong ? "33" : "14"}`,
+          style: n.text
+            ? `border-bottom:2px solid ${n.color};background:${n.color}${strong ? "55" : "33"}`
+            : `background:${n.color}${strong ? "55" : "33"}`,
           "data-note": n.id,
         };
         doc.nodesBetween(at.from, at.to, (node, pos) => {

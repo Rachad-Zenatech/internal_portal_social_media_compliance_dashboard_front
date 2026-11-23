@@ -43,9 +43,15 @@ export function useSentiment(submissionId?: string | null, version?: number) {
       const until = Date.now() + 15 * 60_000;
       while (Date.now() < until) {
         await new Promise((r) => setTimeout(r, 3000));
+        const cached = queryClient.getQueryData<SentimentAnalysis | null>(key);
+        if (cached?.error === "Stopped by user.") throw new DOMException("Stopped", "AbortError");
         // A failed look (a blip in the network) doesn't end the wait: the analysis is still running on the server.
         const latest = await submissionService.getSentiment(submissionId!, version).catch(() => undefined);
         if (latest === undefined) continue;
+        const current = queryClient.getQueryData<SentimentAnalysis | null>(key);
+        if (latest?.error === "Stopped by user." || (current?.id === latest?.id && current?.error === "Stopped by user.")) {
+          throw new DOMException("Stopped", "AbortError");
+        }
         queryClient.setQueryData(key, latest);
         if (!isSentimentRunning(latest)) return latest;
       }
@@ -75,6 +81,16 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     },
     onError: (err) => toast.error(`Couldn't start sentiment analysis: ${(err as Error).message}`),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["ai-usage"] }),
+  });
+
+  const stop = useMutation({
+    mutationFn: (analysisId: string) => submissionService.stopSentiment(submissionId!, analysisId),
+    onSuccess: async (analysis) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      queryClient.setQueryData(key, analysis);
+      toast.info(analysis.error === "Stopped by user." ? "Sentiment analysis stopped." : "The analysis has already finished.");
+    },
+    onError: (err) => toast.error(`Couldn't stop sentiment analysis: ${(err as Error).message}`),
   });
 
   /** After Gemini's daily limit: run it again automatically once the limit resets. */
@@ -112,6 +128,7 @@ export function useSentiment(submissionId?: string | null, version?: number) {
     analysis: query.data ?? null,
     isLoading: query.isLoading,
     run,
+    stop,
     scheduleAfterReset,
     rate,
     saveTestCase,

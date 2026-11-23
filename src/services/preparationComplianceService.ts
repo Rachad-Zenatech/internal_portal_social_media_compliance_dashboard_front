@@ -10,9 +10,12 @@ export async function runPreparationCompliance(
   onAttempt: (attempt: CheckAttempt) => void,
   onScriptChecked: (stage: ScriptStage) => void,
   confirmRepost = false,
+  signal?: AbortSignal,
 ): Promise<Submission> {
-  if (!scriptDraft) return submissionService.runCheckStream(id, onAttempt, confirmRepost);
-  const stage = await runScriptCompliance(id, confirmRepost, onScriptChecked);
+  signal?.throwIfAborted();
+  if (!scriptDraft) return submissionService.runCheckStream(id, onAttempt, confirmRepost, signal);
+  const stage = await runScriptCompliance(id, confirmRepost, onScriptChecked, signal);
   const submission = await submissionService.get(id);
+  signal?.throwIfAborted();
   return { ...submission, latest_check: stage.precheck ?? null };
 }

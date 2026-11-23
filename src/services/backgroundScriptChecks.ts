@@ -32,9 +32,11 @@ function track<T>(key: string, ids: string[], run: (complete: (id: string) => vo
   return promise;
 }
 
-export function runScriptCompliance(id: string, confirmRepost: boolean, onSaved: (stage: ScriptStage) => void): Promise<ScriptStage> {
+export function runScriptCompliance(id: string, confirmRepost: boolean, onSaved: (stage: ScriptStage) => void, signal?: AbortSignal): Promise<ScriptStage> {
   return track(`script:${id}`, [id], async () => {
-    const stage = await scriptService.precheck(id, confirmRepost);
+    signal?.throwIfAborted();
+    const stage = await scriptService.precheck(id, confirmRepost, signal);
+    signal?.throwIfAborted();
     onSaved(stage);
     return stage;
   });
