@@ -12,10 +12,11 @@ import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/su
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
+import UnavailableCompliance from "@/components/submissions/UnavailableCompliance";
 import SyntheticMediaFixNote from "@/components/submissions/SyntheticMediaFixNote";
 import VideoTranscript from "@/components/submissions/VideoTranscript";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
-import { AI_UNAVAILABLE_MESSAGE, authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
+import { authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
 import { useReviewSendScore } from "@/hooks/useReviewSendScore";
@@ -232,6 +233,7 @@ export default function ComplianceStep({
     );
   }
 
+  if (check.ai_unavailable) return <UnavailableCompliance header={header} extra={extra} />;
   const analysing = isAnalysing(check);
   const imagesPending = (check.images_pending ?? 0) > 0;
   const processingLabel = check.transcript_pending && imagesPending ? "Processing video and images"
@@ -249,7 +251,6 @@ export default function ComplianceStep({
       </div>
     </div>
   );
-  const unavailable = check.ai_unavailable;
   const score = check.score;
   const minimumScore = Math.max(DEFAULT_MIN_SCORE, reviewState?.min_approval_score ?? 0);
   const gap = score - minimumScore;
@@ -275,9 +276,7 @@ export default function ComplianceStep({
               <strong className="font-semibold">The media has changed since this check.</strong> Check again to score the updated media.
             </p>
           )}
-          {analysing ? pendingScore : unavailable ? (
-            <p className="rounded-xl bg-amber-50 px-3.5 py-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">{AI_UNAVAILABLE_MESSAGE}</p>
-          ) : (
+          {analysing ? pendingScore : (
             <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
               <span
                 title={`Score ${score} out of 100`}
