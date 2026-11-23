@@ -202,7 +202,7 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
   const [streamOpen, setStreamOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data, refetch } = useQuery<MessageHubStatusResponse>({
+  const { data, dataUpdatedAt, refetch } = useQuery<MessageHubStatusResponse>({
     queryKey: ["message-hub-live-status"],
     queryFn: async () => {
       const previous = queryClient.getQueryData<MessageHubStatusResponse>(["message-hub-live-status"]);
@@ -353,7 +353,7 @@ export function MessageHubStatusDropdown({ className = "" }: { className?: strin
   const formatLastSeen = (iso?: string | null) => {
     if (!iso) return "No heartbeat";
     try {
-      const diffSec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+      const diffSec = Math.max(0, Math.round((dataUpdatedAt - new Date(iso).getTime()) / 1000));
       if (diffSec < 5) return "Just now";
       if (diffSec < 60) return `${diffSec}s ago`;
       return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });

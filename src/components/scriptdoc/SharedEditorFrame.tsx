@@ -91,12 +91,12 @@ export default function SharedEditorFrame({
     };
   }, [session, refetch]);
 
-  const initialReadOnly = useRef(readOnly);
+  const [initialReadOnly] = useState(readOnly);
   // The frame is loaded once per script (or after an expired session): readOnly switches via postMessage without reloading the iframe.
   const src = useMemo(() => {
     if (!session) return null;
     const parent = encodeURIComponent(window.location.origin);
-    return `${session.url}?mode=editor${initialReadOnly.current ? "&readonly=1" : ""}&parent=${parent}#token=${session.token}`;
+    return `${session.url}?mode=editor${initialReadOnly ? "&readonly=1" : ""}&parent=${parent}#token=${session.token}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.share_document_id, frameKey]);
 
