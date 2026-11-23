@@ -156,7 +156,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (94 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
-- src/components/submissions/SentimentPanel.tsx (1285 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1279 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - src/components/submissions/SourceChecks.tsx (292 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
@@ -171,7 +171,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
-- src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
+- src/components/submissions/submissionUi.tsx (437 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
 - src/components/ui/MultiSelectFilter.tsx (108 lines) - multi select filter (components ui)
@@ -284,7 +284,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - src/pages/Compliance/ContentScreenerPage.tsx (1508 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
-- src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
+- src/pages/Compliance/VideoComplianceScannerPage.tsx (2869 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - src/pages/Configurations/InteractiveRuleMetrics.tsx (207 lines) - interactive rule metrics (pages  configurations)
 - src/pages/Configurations/ModelStatusCard.tsx (196 lines) - model status card (pages  configurations)

@@ -4,32 +4,32 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SentimentPanel.tsx (1285 lines) - sentiment panel (components submissions)
+## src/components/submissions/SentimentPanel.tsx (1279 lines) - sentiment panel (components submissions)
 - `titleCase` (const) L116
 - `timestamp` (const) L117
 - `Metric` (function) L119
 - `ControversyDial` (function) L136 - The rulebook's 1-6 dial, with the 3-4 thought-leadership range marked.
-- `FindingContext` (interface) L172 - What a finding needs to show its video frame and take a reviewer's vote.
-- `canApplyRevision` (export const) L183 - Whether a finding's suggested revision can replace its wording directly (the quote is one exact passage).
-- `FindingFrame` (function) L187 - The analysed video's frame at the finding's moment, so a reviewer can confirm it at a glance.
-- `FindingImage` (function) L211 - The image a finding is about, so a reviewer can see exactly what was flagged.
-    - `label` (fn) L214
-- `FeedbackButtons` (function) L231
-    - `button` (fn) L235
-- `FindingCard` (function) L266
-    - `apply` (fn) L272
-- `AudioCard` (function) L385 - How the video sounds: voiceover, music and effects, and whether that fits the message.
-    - `parts` (fn) L386
-- `ComparisonView` (function) L430 - What changed since the previous analysis: the verdict, and which findings were fixed, are new or remain.
-- `PrecedentsView` (function) L487 - The past reviews of similar content the analysis was given, so a reviewer can see what precedent it followed.
-- `bySeverity` (const) L539 - Most serious first; the first TOP_FINDINGS go in the summary, the rest under "More detail".
-- `PerceptionSummary` (function) L545 - The short answer: will it be perceived well? The verdict, what the topic numbers say, and the most serious  wording to fix (with the sugg...
-- `ResultView` (function) L584
-- `DesignHead` (function) L695 - The creator's short verdict; detailed context feedback sits beside the post.
-- `DesignRest` (function) L718 - Audiences, the controversy dial and what was flagged, each in its own card, as in the design.
-- `DesignAside` (function) L807 - The side column: what the analysis read, and how to use it.
-- `SentimentPanel` (export function) L843 - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
-    - `topics` (fn) L884 - The topics' current mood only means something for the current content, not an earlier version.
-    - `analyseAll` (fn) L887 - Save the current post and run only the requested sentiment analysis.
-    - `statusChain` (fn) L914
-- `SaveTestCaseDialog` (function) L1189 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.
+- `FindingContext` (interface) L171 - What a finding needs to show its video frame and take a reviewer's vote.
+- `canApplyRevision` (export const) L182 - Whether a finding's suggested revision can replace its wording directly (the quote is one exact passage).
+- `FindingFrame` (function) L186 - The analysed video's frame at the finding's moment, so a reviewer can confirm it at a glance.
+- `FindingImage` (function) L210 - The image a finding is about, so a reviewer can see exactly what was flagged.
+    - `label` (fn) L213
+- `FeedbackButtons` (function) L230
+    - `button` (fn) L234
+- `FindingCard` (function) L264
+    - `apply` (fn) L270
+- `AudioCard` (function) L382 - How the video sounds: voiceover, music and effects, and whether that fits the message.
+    - `parts` (fn) L383
+- `ComparisonView` (function) L426 - What changed since the previous analysis: the verdict, and which findings were fixed, are new or remain.
+- `PrecedentsView` (function) L483 - The past reviews of similar content the analysis was given, so a reviewer can see what precedent it followed.
+- `bySeverity` (const) L534 - Most serious first; the first TOP_FINDINGS go in the summary, the rest under "More detail".
+- `PerceptionSummary` (function) L540 - The short answer: will it be perceived well? The verdict, what the topic numbers say, and the most serious  wording to fix (with the sugg...
+- `ResultView` (function) L579
+- `DesignHead` (function) L690 - The creator's short verdict; detailed context feedback sits beside the post.
+- `DesignRest` (function) L713 - Audiences, the controversy dial and what was flagged, each in its own card, as in the design.
+- `DesignAside` (function) L801 - The side column: what the analysis read, and how to use it.
+- `SentimentPanel` (export function) L837 - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
+    - `topics` (fn) L878 - The topics' current mood only means something for the current content, not an earlier version.
+    - `analyseAll` (fn) L881 - Save the current post and run only the requested sentiment analysis.
+    - `statusChain` (fn) L908
+- `SaveTestCaseDialog` (function) L1183 - Freeze this analysed post as a test case with the verdict the reviewer agrees is right.

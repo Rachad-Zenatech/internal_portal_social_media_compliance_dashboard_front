@@ -4,37 +4,37 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
+## src/components/submissions/submissionUi.tsx (437 lines) - submission ui (components submissions)
 - `isAnalysing` (export const) L39 - Whether the post is still being read (video transcript, text in images): no score is shown until it has.
 - `isAiUnavailable` (export const) L43 - The AI review couldn't run (key out of credits, quota used up, service down): no score is shown for the post.
 - `AI_UNAVAILABLE_MESSAGE` (export const) L45
-- `AI_UNAVAILABLE_SHORT` (export const) L47
-- `AiUnavailableBadge` (export function) L49
-- `ANALYSING_REFETCH_MS` (export const) L61 - Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready.
-- `refetchWhileAnalysing` (export const) L64 - refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all.
-- `AnalysisCountdown` (export interface) L67
-- `subscribeClock` (function) L79
-- `noSubscription` (const) L96
-- `readClock` (const) L97
-- `useAnalysisCountdown` (export function) L101 - A live countdown to when the post's score is expected.
-    - `now` (fn) L102
-- `countdownText` (export function) L115 - about 35 s left", "about 2 min left", "almost done", "taking longer than usual".
-- `progressSteps` (export const) L125 - What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images".
-- `UnderReviewBadge` (export function) L129 - Shown in place of a score while the post is still being analysed, with time left when it's known.
-    - `countdown` (fn) L130
-- `AnalysisProgressPanel` (export function) L147 - The fuller version for a review screen: each step still running, a progress bar and the time left.
-    - `countdown` (fn) L148
-- `FILE_KIND_LABELS` (export const) L167
-- `MISSING_LABELS` (export const) L175 - How the submit endpoint's `missing` field names read in messages.
-- `formatBytes` (export function) L195
-- `formatDuration` (function) L202
-- `authedFileUrl` (export function) L212 - URL a <video>/<img> can load directly.
-- `SubmissionStatusBadge` (export function) L224
-- `hoursUntil` (const) L233
-- `dueInfo` (export function) L236 - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
-- `DueBadge` (export function) L251 - Deadline for the next step: red when overdue, amber when it's close.
-- `isReadDocument` (function) L271 - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
-- `SubmissionFileRow` (export function) L275
-- `audienceCodes` (export function) L423 - Every audience a post targets, primary first (older records only have the one).
-- `audienceNames` (export function) L428 - Audience codes as names, comma separated; null when there are none.
-- `brandCodes` (export function) L433 - Every brand a post is for, primary first (older records only have the one).
+- `AI_UNAVAILABLE_SHORT` (export const) L48
+- `AiUnavailableBadge` (export function) L50
+- `ANALYSING_REFETCH_MS` (export const) L62 - Poll a list this often while any of its posts is still being read, so the score shows up soon after it's ready.
+- `refetchWhileAnalysing` (export const) L65 - refetchInterval for a submissions list: quick while a post is still being read, otherwise not at all.
+- `AnalysisCountdown` (export interface) L68
+- `subscribeClock` (function) L80
+- `noSubscription` (const) L97
+- `readClock` (const) L98
+- `useAnalysisCountdown` (export function) L102 - A live countdown to when the post's score is expected.
+    - `now` (fn) L103
+- `countdownText` (export function) L116 - about 35 s left", "about 2 min left", "almost done", "taking longer than usual".
+- `progressSteps` (export const) L126 - What's still being read, for a tooltip: "Reading the video (queued) · Reading the text in 2 images".
+- `UnderReviewBadge` (export function) L130 - Shown in place of a score while the post is still being analysed, with time left when it's known.
+    - `countdown` (fn) L131
+- `AnalysisProgressPanel` (export function) L148 - The fuller version for a review screen: each step still running, a progress bar and the time left.
+    - `countdown` (fn) L149
+- `FILE_KIND_LABELS` (export const) L168
+- `MISSING_LABELS` (export const) L176 - How the submit endpoint's `missing` field names read in messages.
+- `formatBytes` (export function) L196
+- `formatDuration` (function) L203
+- `authedFileUrl` (export function) L213 - URL a <video>/<img> can load directly.
+- `SubmissionStatusBadge` (export function) L225
+- `hoursUntil` (const) L234
+- `dueInfo` (export function) L237 - Review due in 5 hours" / "Changes overdue by 2 hours", with how urgent it is.
+- `DueBadge` (export function) L252 - Deadline for the next step: red when overdue, amber when it's close.
+- `isReadDocument` (function) L272 - Files whose text the backend reads into the check: the script, and a blog's article file (see document_text_service).
+- `SubmissionFileRow` (export function) L276
+- `audienceCodes` (export function) L424 - Every audience a post targets, primary first (older records only have the one).
+- `audienceNames` (export function) L429 - Audience codes as names, comma separated; null when there are none.
+- `brandCodes` (export function) L434 - Every brand a post is for, primary first (older records only have the one).

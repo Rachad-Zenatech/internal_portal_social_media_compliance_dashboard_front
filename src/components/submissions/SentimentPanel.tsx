@@ -140,15 +140,14 @@ function ControversyDial({ level }: { level: number }) {
         {[1, 2, 3, 4, 5, 6].map((n) => (
           <span
             key={n}
-            className={`h-2 flex-1 rounded-full ${
-              n > level
-                ? "bg-muted"
-                : n <= 2
+            className={`h-2 flex-1 rounded-full ${n > level
+              ? "bg-muted"
+              : n <= 2
                 ? "bg-slate-400"
                 : n <= 4
-                ? "bg-blue-500"
-                : "bg-red-500"
-            } ${n === 3 || n === 4 ? "ring-1 ring-blue-500/30 ring-offset-1 ring-offset-background" : ""}`}
+                  ? "bg-blue-500"
+                  : "bg-red-500"
+              } ${n === 3 || n === 4 ? "ring-1 ring-blue-500/30 ring-offset-1 ring-offset-background" : ""}`}
           />
         ))}
       </div>
@@ -241,13 +240,12 @@ function FeedbackButtons({ f, ctx }: { f: SentimentFinding; ctx: FindingContext 
         aria-pressed={mine}
         onClick={() => ctx.onRate(f.id!, mine ? undefined : verdict)}
         title={ctx.canRate ? (mine ? "Take back your rating" : `Rate this finding: ${label.toLowerCase()}`) : undefined}
-        className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold transition-colors disabled:cursor-default ${
-          mine
-            ? verdict === "USEFUL"
-              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-              : "border-slate-400/60 bg-muted text-foreground"
-            : "border-border text-muted-foreground enabled:hover:text-foreground"
-        }`}
+        className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold transition-colors disabled:cursor-default ${mine
+          ? verdict === "USEFUL"
+            ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+            : "border-slate-400/60 bg-muted text-foreground"
+          : "border-border text-muted-foreground enabled:hover:text-foreground"
+          }`}
       >
         <Icon className="w-3 h-3" /> {label}
         {count > 0 && <span className="tabular-nums">{count}</span>}
@@ -285,9 +283,8 @@ function FindingCard({ f, onSeek, ctx }: { f: SentimentFinding; onSeek?: (sec: n
         <span className="flex shrink-0 items-center gap-1">
           {change && (
             <span
-              className={`rounded px-1.5 py-px text-[9px] font-bold uppercase ${
-                change === "New" ? "bg-violet-500/10 text-violet-700 dark:text-violet-300" : "bg-muted text-muted-foreground"
-              }`}
+              className={`rounded px-1.5 py-px text-[9px] font-bold uppercase ${change === "New" ? "bg-violet-500/10 text-violet-700 dark:text-violet-300" : "bg-muted text-muted-foreground"
+                }`}
               title={change === "New" ? "Not flagged last time" : "Also flagged last time"}
             >
               {change}
@@ -399,9 +396,8 @@ function AudioCard({ audio }: { audio: NonNullable<SentimentResult["audio"]> }) 
         </p>
         {audio.fits_message != null && (
           <span
-            className={`rounded px-1.5 py-px text-[10px] font-semibold ${
-              audio.fits_message ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-            }`}
+            className={`rounded px-1.5 py-px text-[10px] font-semibold ${audio.fits_message ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+              }`}
           >
             {audio.fits_message ? "Fits the message" : "Doesn't fit the message"}
           </span>
@@ -512,9 +508,8 @@ function PrecedentsView({ precedents }: { precedents: SentimentPrecedent[] }) {
                   )}
                 </p>
                 <span
-                  className={`shrink-0 rounded px-1.5 py-px text-[9px] font-bold uppercase ${
-                    approved ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                  }`}
+                  className={`shrink-0 rounded px-1.5 py-px text-[9px] font-bold uppercase ${approved ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    }`}
                 >
                   {approved ? "Approved" : "Changes requested"}
                 </span>
@@ -653,30 +648,30 @@ function ResultView({ r, onSeek, ctx }: { r: SentimentResult; onSeek?: (sec: num
 
       {/* Audiences and gaps sit side by side when there's room. */}
       <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-3 items-start">
-      {r.audience_interpretations.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <Users className="w-3.5 h-3.5" /> How audiences may read it
-          </p>
-          {r.audience_interpretations.map((ai, i) => (
-            <div key={i} className="text-xs border-l-2 border-border pl-2">
-              <p className="font-medium text-foreground">
-                {ai.audience} <span className={`text-[10px] font-semibold ${LEVEL_TONE[ai.concern_level as SentimentLevel]}`}>· {titleCase(ai.concern_level)} concern</span>
-              </p>
-              <p className="text-muted-foreground">{ai.likely_reading}</p>
-            </div>
-          ))}
-        </div>
-      )}
+        {r.audience_interpretations.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <Users className="w-3.5 h-3.5" /> How audiences may read it
+            </p>
+            {r.audience_interpretations.map((ai, i) => (
+              <div key={i} className="text-xs border-l-2 border-border pl-2">
+                <p className="font-medium text-foreground">
+                  {ai.audience} <span className={`text-[10px] font-semibold ${LEVEL_TONE[ai.concern_level as SentimentLevel]}`}>· {titleCase(ai.concern_level)} concern</span>
+                </p>
+                <p className="text-muted-foreground">{ai.likely_reading}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {r.information_gaps.length > 0 && (
-        <div className="rounded-lg bg-muted/40 p-2 text-[11px] text-muted-foreground space-y-0.5">
-          <p className="font-semibold text-foreground">Couldn't fully assess</p>
-          {r.information_gaps.map((g, i) => (
-            <p key={i}>· {g}</p>
-          ))}
-        </div>
-      )}
+        {r.information_gaps.length > 0 && (
+          <div className="rounded-lg bg-muted/40 p-2 text-[11px] text-muted-foreground space-y-0.5">
+            <p className="font-semibold text-foreground">Couldn't fully assess</p>
+            {r.information_gaps.map((g, i) => (
+              <p key={i}>· {g}</p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -755,13 +750,12 @@ function DesignRest({ r }: { r: SentimentResult }) {
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <span
                   key={n}
-                  className={`grid h-8 place-items-center rounded-lg border text-xs font-bold ${
-                    n === c.level
-                      ? "border-blue-700 bg-blue-700 text-white"
-                      : n <= 4
+                  className={`grid h-8 place-items-center rounded-lg border text-xs font-bold ${n === c.level
+                    ? "border-blue-700 bg-blue-700 text-white"
+                    : n <= 4
                       ? "border-blue-100 bg-blue-50 text-blue-900 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200"
                       : "border-red-100 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200"
-                  }`}
+                    }`}
                 >
                   {n}
                 </span>
@@ -898,12 +892,12 @@ export default function SentimentPanel({
   const ctx: FindingContext | undefined =
     analysis && submissionId
       ? {
-          submissionId,
-          analysis,
-          canRate: isReviewer,
-          onRate: (findingId, verdict) => rate.mutate({ analysisId: analysis.id, findingId, verdict }),
-          onApplyRevision: version == null ? onApplyRevision : undefined,
-        }
+        submissionId,
+        analysis,
+        canRate: isReviewer,
+        onRate: (findingId, verdict) => rate.mutate({ analysisId: analysis.id, findingId, verdict }),
+        onApplyRevision: version == null ? onApplyRevision : undefined,
+      }
       : undefined;
   const outOfRuns = usage?.remaining === 0;
   const companyCapped = Boolean(usage?.company_limit && usage.company_used >= usage.company_limit);
@@ -1128,8 +1122,8 @@ export default function SentimentPanel({
                 outOfRuns
                   ? "Daily AI limit reached"
                   : beforeAnalyse
-                  ? "Saves the draft and runs the sentiment check"
-                  : undefined
+                    ? "Saves the draft and runs the sentiment check"
+                    : undefined
               }
             >
               {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}

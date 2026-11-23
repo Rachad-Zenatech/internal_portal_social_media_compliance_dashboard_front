@@ -82,54 +82,54 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - `MessagingContextPage` (export function) L22 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...
 
-## src/pages/Compliance/VideoComplianceScannerPage.tsx (2896 lines) - video compliance scanner page (pages  compliance)
+## src/pages/Compliance/VideoComplianceScannerPage.tsx (2869 lines) - video compliance scanner page (pages  compliance)
 - `CommentCategory` (export type) L101
 - `ReviewerComment` (export interface) L103
 - `formatTime` (function) L190 - Card thumbnail: the most representative frame of an uploaded video, or the demo illustration.
 - `QueueThumbnail` (function) L222
 - `PostStillPreview` (function) L265 - An image, carousel or text post in the review area, in place of the video player.
-- `VideoComplianceScannerPage` (export function) L332
-    - `navigate` (fn) L337
-    - `versionQuery` (fn) L361
-    - `versionItem` (fn) L368
-    - `pickTab` (fn) L401
-    - `measure` (fn) L424
-    - `submittedPlatforms` (fn) L473 - A submitted post is screened for the platforms it was submitted for; demo videos offer the video platforms.
-    - `queryClient` (fn) L481
-    - `savedComments` (fn) L525
-    - `setComments` (fn) L539
-    - `retryTranscript` (fn) L611
-    - `scanSeq` (fn) L634 - Only the newest scan may update the screen; an older, slower response is ignored.
-    - `effectiveUploadPercent` (fn) L638 - Effective buffered progress percentage & maximum reviewable timestamp
-    - `maxBufferedSec` (fn) L646
-    - `handlePlatformChange` (fn) L651 - Update default aspect ratio when platform changes
-    - `startBackgroundJob` (fn) L662 - Launch Background Job Pipeline
-    - `simulateLocalPipelineProgression` (fn) L707 - Local fallback simulation if backend offline
-    - `onFrame` (fn) L804
-    - `handleTimeUpdate` (fn) L890 - Video time tracking fallback
-    - `handleLoadedMetadata` (fn) L896
-    - `togglePlay` (fn) L905
-    - `seekTo` (fn) L929 - Seek handler with partial upload guard & user feedback
-    - `playRange` (fn) L945 - Play just the part of the video a reviewer note covers, then pause.
-    - `stepTime` (fn) L958 - Sub-frame stepper for precision compliance review
-    - `handlePlaybackRateChange` (fn) L963 - Change playback speed
-    - `seekAndPause` (fn) L972 - Jump to specific timestamp and immediately pause playback at that exact frame
-    - `handleAddComment` (fn) L1001 - Add a new comment
-    - `handleDeleteComment` (fn) L1058 - Delete a comment
-    - `handleRunScan` (fn) L1068 - Run AI Compliance Scan.
-    - `parseTimeToSeconds` (fn) L1140
-    - `activeSegment` (fn) L1171 - Active segment
-    - `activeComment` (fn) L1181 - Active reviewer comment
-    - `missingDisclaimers` (fn) L1187 - something that needs it (e.g.
-    - `handleFullscreenChange` (fn) L1199
-    - `playerThumbnail` (fn) L1207
-    - `timelineSegments` (fn) L1210 - Script sections clipped to the real video length, so a short upload doesn't overflow the timeline.
-    - `queueItemDuration` (fn) L1218
-    - `riskCounts` (fn) L1221
-    - `segmentForViolation` (fn) L1230
-    - `scoreTone` (fn) L1233
-    - `renderScore` (fn) L1240
-    - `resetDemo` (fn) L1257
-    - `copyClearanceReport` (fn) L1269
-    - `toggleFullscreen` (fn) L1299
-    - `queuePill` (fn) L1317 - Status pill for a queue card, in the Content Portal's colours.
+- `VideoComplianceScannerPage` (export function) L331
+    - `navigate` (fn) L336
+    - `versionQuery` (fn) L360
+    - `versionItem` (fn) L367
+    - `pickTab` (fn) L400
+    - `measure` (fn) L423
+    - `submittedPlatforms` (fn) L472 - A submitted post is screened for the platforms it was submitted for; demo videos offer the video platforms.
+    - `queryClient` (fn) L480
+    - `savedComments` (fn) L524
+    - `setComments` (fn) L538
+    - `retryTranscript` (fn) L610
+    - `scanSeq` (fn) L633 - Only the newest scan may update the screen; an older, slower response is ignored.
+    - `effectiveUploadPercent` (fn) L637 - Effective buffered progress percentage & maximum reviewable timestamp
+    - `maxBufferedSec` (fn) L645
+    - `handlePlatformChange` (fn) L650 - Update default aspect ratio when platform changes
+    - `startBackgroundJob` (fn) L661 - Launch Background Job Pipeline
+    - `simulateLocalPipelineProgression` (fn) L706 - Local fallback simulation if backend offline
+    - `onFrame` (fn) L803
+    - `handleTimeUpdate` (fn) L889 - Video time tracking fallback
+    - `handleLoadedMetadata` (fn) L895
+    - `togglePlay` (fn) L904
+    - `seekTo` (fn) L928 - Seek handler with partial upload guard & user feedback
+    - `playRange` (fn) L944 - Play just the part of the video a reviewer note covers, then pause.
+    - `stepTime` (fn) L957 - Sub-frame stepper for precision compliance review
+    - `handlePlaybackRateChange` (fn) L962 - Change playback speed
+    - `seekAndPause` (fn) L971 - Jump to specific timestamp and immediately pause playback at that exact frame
+    - `handleAddComment` (fn) L1000 - Add a new comment
+    - `handleDeleteComment` (fn) L1057 - Delete a comment
+    - `handleRunScan` (fn) L1067 - Run AI Compliance Scan.
+    - `parseTimeToSeconds` (fn) L1139
+    - `activeSegment` (fn) L1170 - Active segment
+    - `activeComment` (fn) L1180 - Active reviewer comment
+    - `missingDisclaimers` (fn) L1186 - something that needs it (e.g.
+    - `handleFullscreenChange` (fn) L1198
+    - `playerThumbnail` (fn) L1206
+    - `timelineSegments` (fn) L1209 - Script sections clipped to the real video length, so a short upload doesn't overflow the timeline.
+    - `queueItemDuration` (fn) L1217
+    - `riskCounts` (fn) L1220
+    - `segmentForViolation` (fn) L1229
+    - `scoreTone` (fn) L1232
+    - `renderScore` (fn) L1239
+    - `resetDemo` (fn) L1256
+    - `copyClearanceReport` (fn) L1268
+    - `toggleFullscreen` (fn) L1296
+    - `queuePill` (fn) L1314 - Status pill for a queue card, in the Content Portal's colours.

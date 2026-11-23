@@ -43,7 +43,8 @@ export const isAnalysing = (check?: StoredCheck | null) =>
 export const isAiUnavailable = (check?: StoredCheck | null) => Boolean(check?.ai_unavailable);
 
 export const AI_UNAVAILABLE_MESSAGE =
-  "The AI review couldn't run (the Gemini key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
+  // "The AI review couldn't run (the Gemini key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
+  "The AI review couldn't run (the AI key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
 export const AI_UNAVAILABLE_SHORT = "No score: the AI review couldn't run (out of credits or the service is down).";
 
 export function AiUnavailableBadge({ className = "" }: { className?: string }) {
@@ -93,7 +94,7 @@ function subscribeClock(onTick: () => void) {
     }
   };
 }
-const noSubscription = () => () => {};
+const noSubscription = () => () => { };
 const readClock = () => clockNow;
 
 /** A live countdown to when the post's score is expected. Counts on the server's clock, so a viewer whose clock is
@@ -254,8 +255,8 @@ export function DueBadge({ dueAt, kind, className = "" }: { dueAt?: string | nul
   const tone = info.overdue
     ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300"
     : info.soon
-    ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200"
-    : "border-border bg-muted/50 text-muted-foreground";
+      ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+      : "border-border bg-muted/50 text-muted-foreground";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${tone} ${className}`}
@@ -292,8 +293,8 @@ export function SubmissionFileRow({
   const DocIcon = /\.(zip|rar|7z)$/i.test(file.original_name)
     ? FileArchive
     : /\.(xlsx?|csv)$/i.test(file.original_name)
-    ? FileSpreadsheet
-    : FileText;
+      ? FileSpreadsheet
+      : FileText;
 
   return (
     <>

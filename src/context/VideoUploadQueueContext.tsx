@@ -296,8 +296,8 @@ export function applySegmentRisk(segments: TimestampedSegment[], violations: Com
     const risk: TimestampedSegment['risk'] = segViolations.some((v) => v.traffic_light === 'RED')
       ? 'RED'
       : segViolations.some((v) => v.traffic_light === 'YELLOW')
-      ? 'YELLOW'
-      : 'GREEN';
+        ? 'YELLOW'
+        : 'GREEN';
     return { ...seg, violations: segViolations, risk };
   });
 }
@@ -364,10 +364,10 @@ function toQueueItem(s: ReviewQueueItem): VideoQueueItem {
   const segments =
     flags && flags.length === raw.length
       ? raw.map((seg, i) => {
-          const f = flags[i];
-          const violations = (check?.violations ?? []).filter((v) => f.rule_numbers.includes(v.rule_number));
-          return { ...seg, risk: f.traffic_light, violations };
-        })
+        const f = flags[i];
+        const violations = (check?.violations ?? []).filter((v) => f.rule_numbers.includes(v.rule_number));
+        return { ...seg, risk: f.traffic_light, violations };
+      })
       : applySegmentRisk(raw, check?.violations ?? []);
   return {
     id: `sub-${s.id}`,
@@ -529,12 +529,12 @@ export function VideoUploadQueueProvider({ children }: { children: React.ReactNo
               prev.map((q) =>
                 q.id === item.id
                   ? {
-                      ...q,
-                      complianceScore: res.score,
-                      violationCount: res.violations_count,
-                      segments: applySegmentRisk(q.segments, res.violations),
-                      scoreStatus: 'checked',
-                    }
+                    ...q,
+                    complianceScore: res.score,
+                    violationCount: res.violations_count,
+                    segments: applySegmentRisk(q.segments, res.violations),
+                    scoreStatus: 'checked',
+                  }
                   : q
               )
             );

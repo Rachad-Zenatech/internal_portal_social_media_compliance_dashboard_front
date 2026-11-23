@@ -115,33 +115,33 @@ export interface ReviewerComment {
 
 // Example reviewer notes shown on the built-in demo videos.
 const SAMPLE_COMMENTS: ReviewerComment[] = [
-    {
-      id: "comm-1",
-      author: "Legal Counsel",
-      timestampSec: 9,
-      endTimestampSec: 19,
-      category: "LEGAL",
-      text: "Replace 'partnered with the U.S. Army' with 'field-tested under active evaluation agreements' to satisfy non-endorsement standards.",
-      createdAt: "Today at 2:15 PM",
-    },
-    {
-      id: "comm-2",
-      author: "PR & Comms Lead",
-      timestampSec: 20,
-      endTimestampSec: 32,
-      category: "EDITORIAL",
-      text: "Soften commentary on Pentagon procurement—align with positive defense innovation framing.",
-      createdAt: "Today at 2:20 PM",
-    },
-    {
-      id: "comm-3",
-      author: "Social Media Producer",
-      timestampSec: 47,
-      endTimestampSec: 60,
-      category: "NOTE",
-      text: "Ensure URL text overlay stays within TikTok 9:16 safe area (avoid bottom caption zone).",
-      createdAt: "Today at 2:25 PM",
-    },
+  {
+    id: "comm-1",
+    author: "Legal Counsel",
+    timestampSec: 9,
+    endTimestampSec: 19,
+    category: "LEGAL",
+    text: "Replace 'partnered with the U.S. Army' with 'field-tested under active evaluation agreements' to satisfy non-endorsement standards.",
+    createdAt: "Today at 2:15 PM",
+  },
+  {
+    id: "comm-2",
+    author: "PR & Comms Lead",
+    timestampSec: 20,
+    endTimestampSec: 32,
+    category: "EDITORIAL",
+    text: "Soften commentary on Pentagon procurement—align with positive defense innovation framing.",
+    createdAt: "Today at 2:20 PM",
+  },
+  {
+    id: "comm-3",
+    author: "Social Media Producer",
+    timestampSec: 47,
+    endTimestampSec: 60,
+    category: "NOTE",
+    text: "Ensure URL text overlay stays within TikTok 9:16 safe area (avoid bottom caption zone).",
+    createdAt: "Today at 2:25 PM",
+  },
 ];
 const NO_COMMENTS: ReviewerComment[] = [];
 
@@ -306,9 +306,8 @@ function PostStillPreview({ item }: { item: VideoQueueItem }) {
                   onClick={() => setIndex(i)}
                   aria-label={`Image ${i + 1}: ${img.name}`}
                   aria-current={i === at}
-                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 ${
-                    i === at ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
+                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md border-2 ${i === at ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
                 >
                   <img src={img.url} alt="" className="h-full w-full object-cover" />
                 </button>
@@ -501,7 +500,7 @@ export default function VideoComplianceScannerPage() {
   // Platform specific metadata
   const [youtubeDescription, setYoutubeDescription] = useState(
     "Experience autonomous drone fleet operations with ZenaDrone 1000.\n\nLearn more at https://zenatech.com\n\nDisclaimer: " +
-      MANDATORY_DOD_DISCLAIMER
+    MANDATORY_DOD_DISCLAIMER
   );
   const [tiktokCaption, setTiktokCaption] = useState(
     "Next-gen autonomous logistics in action! High-durability payload trials with #ZenaDrone. #DefenseTech #Drones #TechInnovation"
@@ -525,16 +524,16 @@ export default function VideoComplianceScannerPage() {
   const savedComments = useReviewComments(submissionId);
   const comments: ReviewerComment[] = submissionId
     ? savedComments.comments.filter((c) => !viewVersion || c.version_number === viewVersion).map((c) => ({
-        id: c.id,
-        author: c.author_name ?? "Someone",
-        timestampSec: c.start_sec ?? null,
-        endTimestampSec: c.end_sec ?? null,
-        category: (c.category === "BRAND" ? "NOTE" : c.category) as CommentCategory,
-        text: c.body,
-        createdAt: `${c.from_reviewer ? "Reviewer" : "Uploader"} · ${c.version_number > 0 ? `v${c.version_number}` : "draft"} · ${formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}${c.resolved_at ? " · resolved" : ""}`,
-        canDelete: c.can_delete && activeVideo?.queueTab !== "done" && !viewingOld,
-        resolved: Boolean(c.resolved_at),
-      }))
+      id: c.id,
+      author: c.author_name ?? "Someone",
+      timestampSec: c.start_sec ?? null,
+      endTimestampSec: c.end_sec ?? null,
+      category: (c.category === "BRAND" ? "NOTE" : c.category) as CommentCategory,
+      text: c.body,
+      createdAt: `${c.from_reviewer ? "Reviewer" : "Uploader"} · ${c.version_number > 0 ? `v${c.version_number}` : "draft"} · ${formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}${c.resolved_at ? " · resolved" : ""}`,
+      canDelete: c.can_delete && activeVideo?.queueTab !== "done" && !viewingOld,
+      resolved: Boolean(c.resolved_at),
+    }))
     : commentsByVideo[commentsKey] ?? startingNotes;
   const setComments = (update: (prev: ReviewerComment[]) => ReviewerComment[]) =>
     setCommentsByVideo((all) => ({ ...all, [commentsKey]: update(all[commentsKey] ?? startingNotes) }));
@@ -916,7 +915,7 @@ export default function VideoComplianceScannerPage() {
       }
       if (videoRef.current && videoUrl) {
         videoRef.current.playbackRate = playbackRate;
-        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
       } else {
         // The playback loop starts its clock on the next frame.
         lastTimeRef.current = null;
@@ -947,7 +946,7 @@ export default function VideoComplianceScannerPage() {
     rangeEndRef.current = Math.min(endSec, duration);
     if (videoRef.current && videoUrl) {
       videoRef.current.playbackRate = playbackRate;
-      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => { });
     } else {
       lastTimeRef.current = null;
       setIsPlaying(true);
@@ -1234,8 +1233,8 @@ export default function VideoComplianceScannerPage() {
     score >= 80
       ? "text-emerald-600 dark:text-emerald-400"
       : score >= 60
-      ? "text-amber-600 dark:text-amber-400"
-      : "text-red-600 dark:text-red-400";
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-red-600 dark:text-red-400";
 
   const renderScore = (item: { complianceScore: number; violationCount: number; scoreStatus: string }) =>
     item.scoreStatus === "pending" ? (
@@ -1271,26 +1270,24 @@ export default function VideoComplianceScannerPage() {
     const commentsSection =
       comments.length > 0
         ? `\n\nReviewer Comments & Sign-off Notes:\n` +
-          comments
-            .map((c) => {
-              const timeStr =
-                c.timestampSec !== null
-                  ? c.endTimestampSec && c.endTimestampSec > c.timestampSec
-                    ? ` @ ${formatTime(c.timestampSec)} - ${formatTime(c.endTimestampSec)}`
-                    : ` @ ${formatTime(c.timestampSec)}`
-                  : "";
-              return `- [${c.category}${timeStr}] ${c.author}: ${c.text}`;
-            })
-            .join("\n")
+        comments
+          .map((c) => {
+            const timeStr =
+              c.timestampSec !== null
+                ? c.endTimestampSec && c.endTimestampSec > c.timestampSec
+                  ? ` @ ${formatTime(c.timestampSec)} - ${formatTime(c.endTimestampSec)}`
+                  : ` @ ${formatTime(c.timestampSec)}`
+                : "";
+            return `- [${c.category}${timeStr}] ${c.author}: ${c.text}`;
+          })
+          .join("\n")
         : "";
 
-    const report = `ZenaTech Video Clearance Report\nPlatform: ${platform}\nAsset: ${videoTitle}\nScore: ${
-      scanResult.score
-    }/100\nStatus: ${scanResult.traffic_light}\nViolations: ${scanResult.violations_count}\nRequired disclaimers: ${
-      hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`
-    }\nBuffered Review: ${effectiveUploadPercent}% so far\n\nViolations Flagged:\n${scanResult.violations
-      .map((v) => `- [${v.severity}] ${v.rule_number} ${v.title}: ${v.explanation}`)
-      .join("\n")}${commentsSection}`;
+    const report = `ZenaTech Video Clearance Report\nPlatform: ${platform}\nAsset: ${videoTitle}\nScore: ${scanResult.score
+      }/100\nStatus: ${scanResult.traffic_light}\nViolations: ${scanResult.violations_count}\nRequired disclaimers: ${hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`
+      }\nBuffered Review: ${effectiveUploadPercent}% so far\n\nViolations Flagged:\n${scanResult.violations
+        .map((v) => `- [${v.severity}] ${v.rule_number} ${v.title}: ${v.explanation}`)
+        .join("\n")}${commentsSection}`;
 
     navigator.clipboard.writeText(report);
     toast.success("Complete clearance report with reviewer notes copied!");
@@ -1300,7 +1297,7 @@ export default function VideoComplianceScannerPage() {
     const el = playerFrameRef.current;
     if (!el) return;
     if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     } else {
       el.requestFullscreen?.().catch(() => toast.error("Fullscreen is not available in this browser."));
     }
@@ -1397,9 +1394,8 @@ export default function VideoComplianceScannerPage() {
               aria-selected={active}
               title={QUEUE_TAB_HINTS[tab]}
               onClick={() => pickTab(tab)}
-              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
-              }`}
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "bg-card text-muted-foreground hover:bg-muted/40"
+                }`}
             >
               <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${QUEUE_TAB_STYLE[tab].tone}`}>
                 <TabIcon className="w-[18px] h-[18px]" />
@@ -1479,1415 +1475,1392 @@ export default function VideoComplianceScannerPage() {
             <div className="rounded-xl border border-dashed border-border py-10 text-center text-xs text-muted-foreground">{QUEUE_EMPTY[queueTab]}</div>
           ) : (
             <>
-            <div ref={queueListRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
-              {pagedQueue.map((item) => {
-                const isSelected = item.id === (activeVideoId || activeVideo?.id);
-                const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
-                const pill = queuePill(item);
-                return (
-                  <div
-                    key={item.id}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={isSelected}
-                    onClick={() => setActiveVideoId(item.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setActiveVideoId(item.id);
-                      }
-                    }}
-                    className={`group rounded-xl border bg-card p-3.5 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                      isSelected
+              <div ref={queueListRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
+                {pagedQueue.map((item) => {
+                  const isSelected = item.id === (activeVideoId || activeVideo?.id);
+                  const isUploading = item.status === "UPLOADING" || item.status === "PROCESSING";
+                  const pill = queuePill(item);
+                  return (
+                    <div
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={() => setActiveVideoId(item.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setActiveVideoId(item.id);
+                        }
+                      }}
+                      className={`group rounded-xl border bg-card p-3.5 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isSelected
                         ? "border-blue-500 bg-blue-50/40 ring-1 ring-blue-500/30 dark:border-blue-500/70 dark:bg-blue-500/10"
                         : "border-border/70 hover:border-blue-300 hover:shadow-sm dark:hover:border-blue-500/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${pill.tone}`}>{pill.label}</span>
-                      {isSelected ? (
-                        <span className="text-[10px] font-semibold tracking-wider text-blue-700 dark:text-blue-300">IN PLAYER</span>
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
-                      )}
-                    </div>
-
-                    <div className="mt-3 flex gap-3">
-                      <div className="w-20 shrink-0">
-                        <div className="relative aspect-square overflow-hidden rounded-md bg-zinc-900">
-                          <QueueThumbnail item={item} fallbackDuration={queueItemDuration(item)} />
-                          {isUploading && (
-                            <div className="absolute bottom-0 inset-x-0 h-1 bg-black/40">
-                              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${item.progressPercent}%` }} />
-                            </div>
-                          )}
-                        </div>
-                        <p className="mt-1 text-[10px] text-muted-foreground">
-                          {item.submissionId && !item.videoUrl
-                            ? `${CONTENT_TYPE_LABELS[item.contentType ?? ""] ?? "Post"}${
-                                (item.images?.length ?? 0) > 1 ? ` · ${item.images!.length} images` : ""
-                              }`
-                            : `Video · ${item.aspectRatio}`}
-                        </p>
-                      </div>
-                      <div className="min-w-0 flex-1 text-[11px] text-muted-foreground">
-                        <p className="text-sm font-semibold leading-snug text-foreground line-clamp-2" title={item.title}>
-                          {item.title}
-                        </p>
-                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
-                          <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
-                          {PLATFORM_LABELS[item.platform]}
-                          {(item.platforms?.length ?? 0) > 1 && ` +${(item.platforms?.length ?? 1) - 1}`}
-                        </p>
-                        <p className="mt-0.5 truncate font-mono" title={item.filename}>
-                          {item.referenceCode || item.filename}
-                        </p>
-                        {item.creatorName && <p className="truncate">By {item.creatorName}</p>}
-                      </div>
-                    </div>
-
-                    {(item.dueAt || (item.queueTab === "review" && (item.currentVersion ?? 0) > 1)) && (
-                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                        {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
-                          <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                            v{item.currentVersion} · resubmitted
-                          </span>
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap ${pill.tone}`}>{pill.label}</span>
+                        {isSelected ? (
+                          <span className="text-[10px] font-semibold tracking-wider text-blue-700 dark:text-blue-300">IN PLAYER</span>
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
                         )}
-                        <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
                       </div>
-                    )}
 
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
-                      {isUploading ? (
-                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                          <Radio className="w-3 h-3 animate-pulse" /> Early review active
-                        </span>
-                      ) : (
-                        renderScore(item)
-                      )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-6 w-6 shrink-0 text-muted-foreground"
-                            title="Video options"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={() => setActiveVideoId(item.id)} className="text-xs gap-2">
-                            <Play className="w-3.5 h-3.5" /> Open in player
-                          </DropdownMenuItem>
-                          {item.submissionId ? (
-                            <DropdownMenuItem onClick={() => navigate(`/submissions/${item.submissionId}`)} className="text-xs gap-2">
-                              <ExternalLink className="w-3.5 h-3.5" /> Open submission {item.referenceCode}
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem variant="destructive" onClick={() => removeFromQueue(item.id)} className="text-xs gap-2">
-                              <Trash2 className="w-3.5 h-3.5" /> Remove from queue
-                            </DropdownMenuItem>
+                      <div className="mt-3 flex gap-3">
+                        <div className="w-20 shrink-0">
+                          <div className="relative aspect-square overflow-hidden rounded-md bg-zinc-900">
+                            <QueueThumbnail item={item} fallbackDuration={queueItemDuration(item)} />
+                            {isUploading && (
+                              <div className="absolute bottom-0 inset-x-0 h-1 bg-black/40">
+                                <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${item.progressPercent}%` }} />
+                              </div>
+                            )}
+                          </div>
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            {item.submissionId && !item.videoUrl
+                              ? `${CONTENT_TYPE_LABELS[item.contentType ?? ""] ?? "Post"}${(item.images?.length ?? 0) > 1 ? ` · ${item.images!.length} images` : ""
+                              }`
+                              : `Video · ${item.aspectRatio}`}
+                          </p>
+                        </div>
+                        <div className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+                          <p className="text-sm font-semibold leading-snug text-foreground line-clamp-2" title={item.title}>
+                            {item.title}
+                          </p>
+                          <p className="mt-1 inline-flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
+                            <PlatformIcon platform={item.platform} className="w-3.5 h-3.5" />
+                            {PLATFORM_LABELS[item.platform]}
+                            {(item.platforms?.length ?? 0) > 1 && ` +${(item.platforms?.length ?? 1) - 1}`}
+                          </p>
+                          <p className="mt-0.5 truncate font-mono" title={item.filename}>
+                            {item.referenceCode || item.filename}
+                          </p>
+                          {item.creatorName && <p className="truncate">By {item.creatorName}</p>}
+                        </div>
+                      </div>
+
+                      {(item.dueAt || (item.queueTab === "review" && (item.currentVersion ?? 0) > 1)) && (
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                          {item.queueTab === "review" && (item.currentVersion ?? 0) > 1 && (
+                            <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                              v{item.currentVersion} · resubmitted
+                            </span>
                           )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <DueBadge dueAt={item.dueAt} kind={item.dueKind} />
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
+                        {isUploading ? (
+                          <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                            <Radio className="w-3 h-3 animate-pulse" /> Early review active
+                          </span>
+                        ) : (
+                          renderScore(item)
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 shrink-0 text-muted-foreground"
+                              title="Video options"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => setActiveVideoId(item.id)} className="text-xs gap-2">
+                              <Play className="w-3.5 h-3.5" /> Open in player
+                            </DropdownMenuItem>
+                            {item.submissionId ? (
+                              <DropdownMenuItem onClick={() => navigate(`/submissions/${item.submissionId}`)} className="text-xs gap-2">
+                                <ExternalLink className="w-3.5 h-3.5" /> Open submission {item.referenceCode}
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem variant="destructive" onClick={() => removeFromQueue(item.id)} className="text-xs gap-2">
+                                <Trash2 className="w-3.5 h-3.5" /> Remove from queue
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-            {queuePages > 1 && (
-              <nav className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-label="Queue pages">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 gap-1 text-xs"
-                  disabled={shownPage === 0}
-                  onClick={() => setQueuePage(shownPage - 1)}
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" /> Previous
-                </Button>
-                <span className="tabular-nums">
-                  {shownPage * queuePageSize + 1}–{Math.min(tabQueue.length, (shownPage + 1) * queuePageSize)} of {tabQueue.length}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 gap-1 text-xs"
-                  disabled={shownPage >= queuePages - 1}
-                  onClick={() => setQueuePage(shownPage + 1)}
-                >
-                  Next <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </nav>
-            )}
+                  );
+                })}
+              </div>
+              {queuePages > 1 && (
+                <nav className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-label="Queue pages">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    disabled={shownPage === 0}
+                    onClick={() => setQueuePage(shownPage - 1)}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Previous
+                  </Button>
+                  <span className="tabular-nums">
+                    {shownPage * queuePageSize + 1}–{Math.min(tabQueue.length, (shownPage + 1) * queuePageSize)} of {tabQueue.length}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-xs"
+                    disabled={shownPage >= queuePages - 1}
+                    onClick={() => setQueuePage(shownPage + 1)}
+                  >
+                    Next <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </nav>
+              )}
             </>
           )}
         </div>
 
         {/* Player and review: stacked on laptops, side by side when there's room */}
         <div className="@container/screen w-full min-w-0 flex-1 space-y-4 sm:space-y-5">
-      {!selectedInTab ? (
-        <Card className="py-10 px-6 border-dashed border-border/80 shadow-none items-center text-center gap-2">
-          <p className="text-sm font-semibold text-foreground">{QUEUE_EMPTY[queueTab]}</p>
-          <p className="text-xs text-muted-foreground max-w-md">
-            {queueTab === "review"
-              ? `New and resubmitted content shows up here. ${QUEUE_TAB_LABELS.sent_back} and ${QUEUE_TAB_LABELS.done} hold everything else.`
-              : "Pick another tab to open something in the player."}
-          </p>
-        </Card>
-      ) : (
-      <>
-      {/* Target Platform & Viewport */}
-      <Card className="py-0 border-border/70 shadow-xs">
-        <div className="px-4 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-foreground mr-1">Target Platform{platformOptions.length > 1 ? "s" : ""}:</span>
-            {platformOptions.map((p) => {
-              const isActive = platform === p;
-              // Video framing hints only mean something for a video.
-              const ratio = isStillPost
-                ? ""
-                : p === "TIKTOK" || p === "YOUTUBE_SHORTS" ? " (9:16)" : p === "YOUTUBE" ? " (16:9)" : p === "LINKEDIN" ? " Video" : "";
-              return (
-                <Button
-                  key={p}
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePlatformChange(p)}
-                  className={`text-xs gap-1.5 font-semibold ${
-                    isActive ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground" : ""
-                  }`}
-                >
-                  <PlatformIcon platform={p} className="w-3.5 h-3.5" />
-                  {PLATFORM_LABELS[p]}
-                  {ratio}
-                </Button>
-              );
-            })}
-          </div>
-
-          {!isStillPost && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground font-medium">Viewport:</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setUseOriginal(true)}
-              className={`text-xs font-semibold ${
-                useOriginal ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15" : ""
-              }`}
-              title="The video's own proportions"
-            >
-              Original
-            </Button>
-            {(["9:16", "16:9"] as const).map((r) => (
-              <Button
-                key={r}
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setAspectRatio(r);
-                  setUseOriginal(false);
-                }}
-                className={`text-xs font-semibold ${
-                  !useOriginal && aspectRatio === r
-                    ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15"
-                    : ""
-                }`}
-              >
-                {r === "9:16" ? "9:16 Vertical" : "16:9 Landscape"}
-              </Button>
-            ))}
-          </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Partial upload notice */}
-      {effectiveUploadPercent < 100 && (
-        <div className="px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in duration-300">
-          <div className="flex items-center gap-3">
-            <Radio className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse shrink-0" />
-            <p>
-              <strong className="font-semibold">Upload in progress ({effectiveUploadPercent}% buffered).</strong>{" "}
-              You can review 0:00 to {formatTime(maxBufferedSec)} now; the rest is still transferring.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setPartialUploadMode(false);
-              setPartialUploadPercent(100);
-              toast.success("Switched to full asset view (100% available).");
-            }}
-            className="text-xs shrink-0 bg-background/80"
-          >
-            Clear Incomplete State
-          </Button>
-        </div>
-      )}
-
-      {/* Background job progress */}
-      {activeJob && activeJob.status === "PROCESSING" && (
-        <Card className="py-0 border-blue-500/40 bg-blue-500/5 dark:bg-blue-950/20 shadow-xs">
-          <div className="px-4 py-3 space-y-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="flex items-center gap-2 font-semibold text-foreground min-w-0">
-                <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
-                <span className="truncate">Processing {activeVideo?.title || activeJob.filename}</span>
-              </span>
-              <span className="flex items-center gap-2 text-muted-foreground">
-                {activeJob.current_stage_label} · {activeJob.progress_percent}%
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsJobExpanded(!isJobExpanded)}
-                  className="h-6 px-2 text-[11px] gap-1"
-                >
-                  {isJobExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  {isJobExpanded ? "Hide steps" : "Show steps"}
-                </Button>
-              </span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
-                style={{ width: `${activeJob.progress_percent}%` }}
-              />
-            </div>
-            {isJobExpanded && (
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                {activeJob.stages.map((stg, idx) => (
-                  <div
-                    key={stg.id}
-                    className={`p-2 rounded-lg border text-[11px] flex items-start gap-2 ${
-                      stg.status === "COMPLETED"
-                        ? "bg-emerald-500/10 border-emerald-500/30"
-                        : stg.status === "IN_PROGRESS"
-                        ? "bg-blue-500/10 border-blue-500/40"
-                        : "bg-card border-border/60 opacity-60"
-                    }`}
-                  >
-                    {stg.status === "COMPLETED" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                    ) : stg.status === "IN_PROGRESS" ? (
-                      <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin shrink-0 mt-0.5" />
-                    ) : (
-                      <span className="font-mono text-[10px] text-muted-foreground shrink-0">0{idx + 1}</span>
-                    )}
-                    <span className="font-medium leading-tight">{stg.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* Scan result banner */}
-      {scanResult && (
-        <div
-          className="px-4 py-3 rounded-xl border border-border/70 bg-card shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                scanResult.traffic_light === "RED"
-                  ? "bg-red-50 text-red-600 dark:bg-red-500/10"
-                  : scanResult.traffic_light === "YELLOW"
-                  ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10"
-                  : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"
-              }`}
-            >
-              {scanResult.traffic_light === "RED" ? (
-                <XCircle className="w-5 h-5" />
-              ) : scanResult.traffic_light === "YELLOW" ? (
-                <AlertTriangle className="w-5 h-5" />
-              ) : (
-                <CheckCircle2 className="w-5 h-5" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`text-base font-bold ${
-                    scanResult.traffic_light === "RED"
-                      ? "text-red-700 dark:text-red-300"
-                      : scanResult.traffic_light === "YELLOW"
-                      ? "text-amber-700 dark:text-amber-300"
-                      : "text-emerald-700 dark:text-emerald-300"
-                  }`}
-                >
-                  {analysing
-                    ? `Still reading this post for ${platformName}`
-                    : scanResult.is_compliant
-                    ? `No issues found in the text for ${platformName}`
-                    : `${scanResult.violations_count} Rule ${scanResult.violations_count === 1 ? "Violation" : "Violations"} Flagged for ${platformName}`}
-                </span>
-                <Badge
-                  className={`rounded-full text-[11px] font-semibold ${
-                    scanResult.traffic_light === "RED"
-                      ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-                      : scanResult.traffic_light === "YELLOW"
-                      ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                  }`}
-                >
-                  {analysing ? "Under review" : scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Text clear"}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <span>
-                  Compliance Health Score:{" "}
-                  {analysing ? (
-                    <strong className="text-blue-700 dark:text-blue-300">under review until the video and images are read</strong>
-                  ) : (
-                    <strong className="text-foreground">{scanResult.score} / 100</strong>
-                  )}
-                  {scanResult.blocked && <strong className="ml-1.5 text-red-600 dark:text-red-400">· Blocked (critical rule)</strong>}
-                </span>
-                <span className="text-border">|</span>
-                <span>
-                  Required disclaimers:{" "}
-                  <strong className={hasDoDDisclaimer ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
-                    {hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`}
-                  </strong>
-                </span>
-                <span className="text-border">|</span>
-                <span>{comments.length} Reviewer Note(s)</span>
+          {!selectedInTab ? (
+            <Card className="py-10 px-6 border-dashed border-border/80 shadow-none items-center text-center gap-2">
+              <p className="text-sm font-semibold text-foreground">{QUEUE_EMPTY[queueTab]}</p>
+              <p className="text-xs text-muted-foreground max-w-md">
+                {queueTab === "review"
+                  ? `New and resubmitted content shows up here. ${QUEUE_TAB_LABELS.sent_back} and ${QUEUE_TAB_LABELS.done} hold everything else.`
+                  : "Pick another tab to open something in the player."}
               </p>
-              {activeVideo?.serverCheck && <CheckCoverage check={activeVideo.serverCheck} className="mt-1.5" />}
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={copyClearanceReport} className="text-xs gap-1.5 font-semibold bg-background self-end md:self-auto shrink-0">
-            <Download className="w-3.5 h-3.5" />
-            Copy Clearance Report
-          </Button>
-        </div>
-      )}
-
-      {/* Player + review panel */}
-      <div className="grid grid-cols-1 @5xl/screen:grid-cols-12 gap-4 sm:gap-5 items-start @5xl/screen:items-stretch">
-        {/* Video Review Player (the queue pages to fit beside it) */}
-        <Card
-          ref={playerCardRef}
-          className={`${isPortrait ? "@5xl/screen:col-span-5" : "@5xl/screen:col-span-7"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 flex items-center justify-center shrink-0">
-                <PlatformIcon platform={platform} className="w-4.5 h-4.5" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-sm font-bold text-foreground">{isStillPost ? "Post Preview" : "Video Review Player"}</h2>
-                <p className="text-xs text-muted-foreground truncate">
-                  {isStillPost
-                    ? `${CONTENT_TYPE_LABELS[activeVideo?.contentType ?? ""] ?? "Post"} · review its images and caption.`
-                    : "Preview and review flagged content in context."}
-                </p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                if (videoUrl) {
-                  window.open(videoUrl, "_blank", "noopener");
-                } else if (activeVideo?.images?.length) {
-                  window.open(activeVideo.images[0].url, "_blank", "noopener");
-                } else if (isStillPost) {
-                  toast.info("This post has no image or video to open.");
-                } else {
-                  toast.info("Upload or select a video file to open it in a new window.");
-                }
-              }}
-              className="text-xs gap-1.5 font-semibold"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Open in New Window
-            </Button>
-          </div>
-
-          {isStillPost && activeVideo ? (
-            <PostStillPreview key={activeVideo.id} item={activeVideo} />
+            </Card>
           ) : (
-          <div
-            className={`mx-4 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center ${isPortrait ? "px-3 py-4" : "p-3"}`}
-          >
-            <div
-              ref={playerFrameRef}
-              // Original: the video's own proportions, as wide as fits but no taller than about two-thirds of the screen.
-              style={
-                showOriginal && !isFullscreen
-                  ? { aspectRatio: String(nativeAspect), width: `min(100%, calc(64vh * ${nativeAspect!.toFixed(4)}))` }
-                  : undefined
-              }
-              className={`relative bg-zinc-950 text-white overflow-hidden group transition-all duration-300 ${
-                isFullscreen
-                  ? "w-screen h-screen bg-black"
-                  : showOriginal
-                  ? `max-w-full shadow-xl ${isPortrait ? "rounded-[22px] border-[5px] border-zinc-900" : "rounded-xl"}`
-                  : isPortrait
-                  ? // Sized by height so a tall video fills the stage without pushing the page down.
-                    "h-[min(64vh,600px)] max-w-full aspect-[9/16] rounded-[22px] border-[5px] border-zinc-900 shadow-xl"
-                  : "w-full aspect-video rounded-xl shadow-xl"
-              }`}
-            >
-              {videoUrl ? (
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  poster={playerThumbnail.dataUrl ?? undefined}
-                  className={`w-full h-full ${isFullscreen ? "object-contain" : "object-cover"}`}
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={handleLoadedMetadata}
-                  onEnded={() => setIsPlaying(false)}
-                />
-              ) : (
-                <div className="relative w-full h-full">
-                  <DemoPoster variant={activeVideo?.posterVariant} className="absolute inset-0 w-full h-full" />
-                  <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/60 to-transparent" />
-                  <div className="absolute inset-x-0 top-8 px-4 text-center">
-                    <p className="text-sm font-bold text-white leading-tight drop-shadow">{videoTitle}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-white/75 mt-1">
-                      {platformName} · {aspectRatio} demo preview
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {isPortrait && (
-                <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-zinc-300 font-mono pointer-events-none">
-                  {platformName} safe zone
-                </div>
-              )}
-
-              {activeSegment && (
-                <div className="absolute bottom-14 inset-x-2.5 flex justify-center pointer-events-none">
-                  <div
-                    className={`px-2.5 py-1.5 rounded-lg backdrop-blur-md text-[11px] font-medium text-center shadow-lg max-w-full ${
-                      activeSegment.risk === "RED"
-                        ? "bg-red-950/90 text-red-100 border border-red-500/60"
-                        : activeSegment.risk === "YELLOW"
-                        ? "bg-amber-950/90 text-amber-100 border border-amber-500/60"
-                        : "bg-black/75 text-zinc-100 border border-white/10"
-                    }`}
-                  >
-                    "{activeSegment.text}"
-                  </div>
-                </div>
-              )}
-
-              {/* Compact controls */}
-              <div className="absolute bottom-2 inset-x-2 rounded-xl bg-zinc-900/90 backdrop-blur-md border border-white/10 flex items-center gap-0.5 px-1.5 py-1 text-white">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={togglePlay}
-                  className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
-                  title={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                </Button>
-                <span className="font-mono text-[11px] text-zinc-200 px-1 whitespace-nowrap">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                <span className="flex-1" />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    if (videoRef.current) videoRef.current.muted = !isMuted;
-                    setIsMuted(!isMuted);
-                  }}
-                  className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white" title="Playback settings">
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" side="top" className="w-44">
-                    <DropdownMenuLabel className="text-[11px]">Playback speed</DropdownMenuLabel>
-                    {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                      <DropdownMenuItem key={rate} onClick={() => handlePlaybackRateChange(rate)} className="text-xs">
-                        {rate}x {playbackRate === rate && <Check className="w-3.5 h-3.5 ml-auto" />}
-                      </DropdownMenuItem>
-                    ))}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => stepTime(-1)} className="text-xs gap-2">
-                      <SkipBack className="w-3.5 h-3.5" /> Back 1 second
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => stepTime(1)} className="text-xs gap-2">
-                      <SkipForward className="w-3.5 h-3.5" /> Forward 1 second
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => seekTo(0)} className="text-xs gap-2">
-                      <RotateCcw className="w-3.5 h-3.5" /> Restart
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={toggleFullscreen}
-                  className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
-                  title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                >
-                  {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-          )}
-
-          {/* Flagged Moments timeline (videos only: it follows the video's time) */}
-          {isStillPost ? (
-            <div className="pb-4" />
-          ) : (
-          <div className="px-4 pt-4 pb-5 space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                Flagged Moments
-                <span className="font-normal text-muted-foreground hidden sm:inline">
-                  {activeVideo?.transcriptStatus === "COMPLETED" && segments.length === 0
-                    ? "(no speech or on-screen text found, so only the title and caption were checked)"
-                    : "(click the bar or press play to preview)"}
-                </span>
-                {effectiveUploadPercent < 100 && (
-                  <Badge variant="outline" className="text-[10px] text-amber-600 dark:text-amber-400 border-amber-500/40">
-                    Buffered to {formatTime(maxBufferedSec)}
-                  </Badge>
-                )}
-              </span>
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-sm bg-red-600" /> Critical ({riskCounts.red})
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-sm bg-amber-500" /> Needs Review ({riskCounts.yellow})
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-sm bg-emerald-500" /> Clear ({riskCounts.green})
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-1.5 sm:gap-2.5">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => stepTime(-1)}
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hidden sm:inline-flex"
-                title="Back 1 second"
-              >
-                <SkipBack className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                onClick={togglePlay}
-                className="h-9 w-9 mt-[-2px] rounded-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
-                title={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => stepTime(1)}
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hidden sm:inline-flex"
-                title="Forward 1 second"
-              >
-                <SkipForward className="w-4 h-4" />
-              </Button>
-              <span className="font-mono text-xs font-bold text-foreground min-w-[34px] text-right shrink-0 leading-8">
-                {formatTime(currentTime)}
-              </span>
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="relative h-8 select-none">
-                  {/* Base track so any time without a script section still reads as part of the video */}
-                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-3 rounded-full bg-muted" />
-
-                  {/* Full-length coloured sections, one per script segment */}
-                  {timelineSegments.map((seg) => {
-                    const isBuffered = seg.startSec <= maxBufferedSec;
-                    const color = !isBuffered
-                      ? "bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,rgba(120,120,120,0.35)_3px,rgba(120,120,120,0.35)_6px)] bg-muted"
-                      : seg.risk === "RED"
-                      ? "bg-red-600"
-                      : seg.risk === "YELLOW"
-                      ? "bg-amber-500"
-                      : "bg-emerald-500/80";
-                    return (
-                      <div
-                        key={seg.id}
-                        style={{
-                          left: `${(seg.startSec / duration) * 100}%`,
-                          width: `calc(${((seg.endSec - seg.startSec) / duration) * 100}% - 3px)`,
-                        }}
-                        className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-full ${color}`}
-                      />
-                    );
-                  })}
-
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration}
-                    step={0.01}
-                    value={currentTime}
-                    onMouseDown={() => setIsDragging(true)}
-                    onTouchStart={() => setIsDragging(true)}
-                    onMouseUp={() => setIsDragging(false)}
-                    onTouchEnd={() => setIsDragging(false)}
-                    onChange={(e) => seekTo(parseFloat(e.target.value))}
-                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
-                    aria-label="Seek video"
-                    title={activeSegment ? `${formatTime(activeSegment.startSec)} - ${formatTime(activeSegment.endSec)}: ${activeSegment.text}` : undefined}
-                  />
-
-                  {/* Playhead */}
-                  <div
-                    style={{ left: `${(Math.min(currentTime, duration) / duration) * 100}%`, willChange: "left" }}
-                    className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none z-20 ${isDragging ? "scale-110" : ""}`}
-                  >
-                    <div className="w-2.5 h-6 rounded-full bg-zinc-950 dark:bg-zinc-100 ring-2 ring-background shadow-md flex items-center justify-center">
-                      <div className="w-0.5 h-3 rounded-full bg-zinc-500" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Selected note's range: click to play just that part */}
-                {activeComment &&
-                  activeComment.timestampSec !== null &&
-                  activeComment.endTimestampSec &&
-                  activeComment.endTimestampSec > activeComment.timestampSec &&
-                  activeComment.timestampSec < duration && (() => {
-                    const start = activeComment.timestampSec;
-                    const end = Math.min(activeComment.endTimestampSec, duration);
-                    const left = (start / duration) * 100;
-                    const label = `${activeComment.author} note · ${formatTime(start)}–${formatTime(activeComment.endTimestampSec)}`;
-                    return (
-                      <div className="relative h-5">
-                        <button
-                          type="button"
-                          onClick={() => playRange(start, end)}
-                          style={{ left: `${left}%`, width: `${((end - start) / duration) * 100}%` }}
-                          className="group absolute top-0 h-2 border-x-2 border-b-2 border-blue-500 rounded-b-sm hover:border-blue-600 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          title={`Play ${label}`}
-                          aria-label={`Play ${label}`}
-                        >
-                          <span
-                            className={`absolute top-2.5 inline-flex max-w-[min(260px,60vw)] items-center gap-1 whitespace-nowrap rounded bg-blue-500/10 px-1.5 py-px text-[10px] font-semibold text-blue-700 group-hover:bg-blue-500/20 dark:text-blue-300 ${
-                              left > 60 ? "right-0" : "left-0"
+            <>
+              {/* Target Platform & Viewport */}
+              <Card className="py-0 border-border/70 shadow-xs">
+                <div className="px-4 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground mr-1">Target Platform{platformOptions.length > 1 ? "s" : ""}:</span>
+                    {platformOptions.map((p) => {
+                      const isActive = platform === p;
+                      // Video framing hints only mean something for a video.
+                      const ratio = isStillPost
+                        ? ""
+                        : p === "TIKTOK" || p === "YOUTUBE_SHORTS" ? " (9:16)" : p === "YOUTUBE" ? " (16:9)" : p === "LINKEDIN" ? " Video" : "";
+                      return (
+                        <Button
+                          key={p}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handlePlatformChange(p)}
+                          className={`text-xs gap-1.5 font-semibold ${isActive ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground" : ""
                             }`}
-                          >
-                            <Play className="w-2.5 h-2.5 shrink-0 fill-current" /> <span className="truncate">{label}</span>
-                          </span>
-                        </button>
-                      </div>
-                    );
-                  })()}
-                <div className="relative h-4 text-[10px] font-mono text-muted-foreground">
-                  {timelineSegments
-                    .filter((seg) => seg.startSec > 0 && seg.startSec / duration < 0.92)
-                    .map((seg) => (
-                      <span
-                        key={seg.id}
-                        style={{ left: `${(seg.startSec / duration) * 100}%` }}
-                        className={`absolute -translate-x-1/2 hidden sm:block ${
-                          seg.risk === "RED" ? "text-red-600 dark:text-red-400 font-semibold" : ""
-                        }`}
+                        >
+                          <PlatformIcon platform={p} className="w-3.5 h-3.5" />
+                          {PLATFORM_LABELS[p]}
+                          {ratio}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {!isStillPost && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground font-medium">Viewport:</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setUseOriginal(true)}
+                        className={`text-xs font-semibold ${useOriginal ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15" : ""
+                          }`}
+                        title="The video's own proportions"
                       >
-                        {formatTime(seg.startSec)}
-                      </span>
-                    ))}
-                </div>
-              </div>
-              <span className="font-mono text-xs text-muted-foreground min-w-[34px] shrink-0 leading-8">{formatTime(duration)}</span>
-            </div>
-          </div>
-          )}
-
-          {/* Timestamped reviewer comment bar */}
-          {isDecided ? (
-            <p className="border-t border-border/60 px-4 py-3.5 text-xs text-muted-foreground">
-              This was decided, so its notes are read-only. To raise something new, reopen it for changes.
-            </p>
-          ) : (
-          <form onSubmit={handleAddComment} className="border-t border-border/60 px-4 py-3.5 space-y-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={commentCategory} onValueChange={(val) => setCommentCategory(val as CommentCategory)}>
-                <SelectTrigger className="h-8 w-[150px] text-xs font-semibold">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(CATEGORY_LABELS) as CommentCategory[]).map((cat) => (
-                    <SelectItem key={cat} value={cat} className="text-xs">
-                      {CATEGORY_LABELS[cat]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {!isStillPost && (
-              <div className="flex flex-wrap items-center rounded-lg border border-border/70 p-0.5 bg-muted/40 text-[11px] font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setCommentTimeMode("POINT")}
-                  className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
-                    commentTimeMode === "POINT" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Clock className="w-3 h-3" /> Point ({formatTime(currentTime)})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCommentTimeMode("RANGE");
-                    const cur = Math.round(currentTime);
-                    setRangeStartSec(cur);
-                    setRangeEndSec(Math.min(duration, cur + 5));
-                  }}
-                  className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
-                    commentTimeMode === "RANGE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Layers className="w-3 h-3" /> Range ({formatTime(rangeStartSec)} - {formatTime(rangeEndSec)})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCommentTimeMode("NONE")}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${
-                    commentTimeMode === "NONE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  No Time
-                </button>
-              </div>
-              )}
-            </div>
-
-            {!isStillPost && commentTimeMode === "RANGE" && (
-              <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                <span className="text-muted-foreground font-semibold">From</span>
-                <input
-                  type="text"
-                  value={rangeStartInput}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setRangeStartInput(val);
-                    const parsed = parseTimeToSeconds(val);
-                    if (!isNaN(parsed)) {
-                      const clamped = Math.min(duration, Math.max(0, Math.round(parsed)));
-                      setRangeStartSec(clamped);
-                      if (rangeEndSec <= clamped) setRangeEndSec(Math.min(duration, clamped + 3));
-                    }
-                  }}
-                  onBlur={() => setRangeStartInput(`(${formatTime(rangeStartSec)})`)}
-                  className="w-16 h-7 px-1.5 rounded border border-border bg-background font-mono text-center font-semibold outline-none focus:border-foreground"
-                  title="Start time (e.g. 0:06)"
-                />
-                <span className="text-muted-foreground font-semibold">to</span>
-                <input
-                  type="text"
-                  value={rangeEndInput}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setRangeEndInput(val);
-                    const parsed = parseTimeToSeconds(val);
-                    if (!isNaN(parsed)) setRangeEndSec(Math.min(duration, Math.max(0, Math.round(parsed))));
-                  }}
-                  onBlur={() => {
-                    if (rangeEndSec <= rangeStartSec) {
-                      const adjusted = Math.min(duration, rangeStartSec + 3);
-                      setRangeEndSec(adjusted);
-                      setRangeEndInput(`(${formatTime(adjusted)})`);
-                    } else {
-                      setRangeEndInput(`(${formatTime(rangeEndSec)})`);
-                    }
-                  }}
-                  className="w-16 h-7 px-1.5 rounded border border-border bg-background font-mono text-center font-semibold outline-none focus:border-foreground"
-                  title="End time (e.g. 0:15)"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const cur = Math.round(currentTime);
-                    setRangeStartSec(cur);
-                    if (rangeEndSec <= cur) setRangeEndSec(Math.min(duration, cur + 3));
-                  }}
-                  className="h-7 px-2 text-[11px]"
-                >
-                  Set start ({formatTime(currentTime)})
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const cur = Math.round(currentTime);
-                    if (cur <= rangeStartSec) {
-                      setRangeStartSec(Math.max(0, cur - 3));
-                      setRangeEndSec(cur);
-                    } else {
-                      setRangeEndSec(cur);
-                    }
-                  }}
-                  className="h-7 px-2 text-[11px]"
-                >
-                  Set end ({formatTime(currentTime)})
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => seekAndPause(rangeStartSec, "Range preview")}
-                  className="h-7 px-2 text-[11px]"
-                >
-                  Preview range
-                </Button>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <Input
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                placeholder={
-                  commentTimeMode === "RANGE"
-                    ? `Add reviewer note for ${formatTime(rangeStartSec)} - ${formatTime(rangeEndSec)}... (e.g. cut this section)`
-                    : commentTimeMode === "POINT"
-                    ? `Add reviewer note at ${formatTime(currentTime)}... (e.g. adjust disclaimer or cut)`
-                    : "Add general reviewer note..."
-                }
-                className="h-9 text-sm flex-1 min-w-0"
-              />
-              <Button
-                type="submit"
-                className="h-9 text-xs font-semibold px-4 gap-1.5 shrink-0 self-end sm:self-auto bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Post Comment
-              </Button>
-            </div>
-          </form>
-          )}
-        </Card>
-
-        {/* Review panel */}
-        <Card className={`${isPortrait ? "@5xl/screen:col-span-7" : "@5xl/screen:col-span-5"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden @5xl/screen:h-0 @5xl/screen:min-h-full`}>
-          {activeVideo?.submissionId && (
-            <div className="px-4 pt-4">
-              {latestVersion > 1 && (
-                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <label htmlFor="version-picker">Viewing</label>
-                  <select
-                    id="version-picker"
-                    value={viewVersion ?? latestVersion}
-                    onChange={(e) => {
-                      const n = Number(e.target.value);
-                      setVersionPick(n >= latestVersion || !latestVideo ? null : { videoId: latestVideo.id, version: n });
-                    }}
-                    className="h-7 rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground"
-                  >
-                    {Array.from({ length: latestVersion }, (_, i) => latestVersion - i).map((n) => (
-                      <option key={n} value={n}>
-                        v{n}
-                        {n === latestVersion ? " (latest)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <span>of {latestVersion}</span>
-                  {viewVersion && versionQuery.isFetching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {viewVersion && versionQuery.data && !versionQuery.data.video && (
-                    <span className="text-amber-700 dark:text-amber-300">That version had no video.</span>
+                        Original
+                      </Button>
+                      {(["9:16", "16:9"] as const).map((r) => (
+                        <Button
+                          key={r}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setAspectRatio(r);
+                            setUseOriginal(false);
+                          }}
+                          className={`text-xs font-semibold ${!useOriginal && aspectRatio === r
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/15"
+                            : ""
+                            }`}
+                        >
+                          {r === "9:16" ? "9:16 Vertical" : "16:9 Landscape"}
+                        </Button>
+                      ))}
+                    </div>
                   )}
                 </div>
-              )}
-              {viewingOld && versionView ? (
-                <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 px-3 py-2 text-xs text-violet-950 dark:text-violet-100 space-y-1">
-                  <p className="font-semibold">
-                    Version {versionView.version_number}, as submitted {format(new Date(versionView.created_at), "MMM d, h:mm a")}
-                    {versionView.created_by_name ? ` by ${versionView.created_by_name}` : ""}.
-                  </p>
-                  {versionView.review_job?.decision && (
+              </Card>
+
+              {/* Partial upload notice */}
+              {effectiveUploadPercent < 100 && (
+                <div className="px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3">
+                    <Radio className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse shrink-0" />
                     <p>
-                      {versionView.review_job.decision === "APPROVE" ? "Approved" : "Sent back for changes"}
-                      {versionView.review_job.decided_by_name ? ` by ${versionView.review_job.decided_by_name}` : ""}
-                      {versionView.review_job.decided_at ? ` on ${format(new Date(versionView.review_job.decided_at), "MMM d, h:mm a")}` : ""}
-                      {versionView.review_job.decision_notes ? `: "${versionView.review_job.decision_notes}"` : "."}
+                      <strong className="font-semibold">Upload in progress ({effectiveUploadPercent}% buffered).</strong>{" "}
+                      You can review 0:00 to {formatTime(maxBufferedSec)} now; the rest is still transferring.
                     </p>
-                  )}
-                  <p className="text-violet-950/80 dark:text-violet-100/80">
-                    Its video, caption, compliance result, sentiment and notes are shown as they were. Nothing can be changed here.
-                  </p>
-                  <button type="button" onClick={() => setVersionPick(null)} className="font-semibold underline underline-offset-2">
-                    Back to the latest version
-                  </button>
-                </div>
-              ) : activeVideo.canReview ? (
-                <ReviewDecisionPanel
-                  compact
-                  target={{
-                    id: activeVideo.submissionId,
-                    reference_code: activeVideo.referenceCode ?? "",
-                    title: activeVideo.title,
-                    status: activeVideo.submissionStatus ?? "IN_REVIEW",
-                    current_version: activeVideo.currentVersion ?? 1,
-                    platforms: activeVideo.platforms ?? [],
-                    publish_at: activeVideo.publishAt,
-                    due_at: activeVideo.dueAt,
-                    due_kind: activeVideo.dueKind,
-                    ai_unavailable: activeVideo.serverCheck?.ai_unavailable,
-                    analysis_pending: isAnalysing(activeVideo.serverCheck),
-                    can_review: true,
-                    can_approve: activeVideo.canApprove,
-                    approver_names: activeVideo.approverNames,
-                    open_critical_flags: activeVideo.openCriticalFlags,
-                    approval_score: activeVideo.approvalScore,
-                    min_approval_score: activeVideo.minApprovalScore,
-                    manual_rules: activeVideo.serverCheck?.manual_review_rules,
-                    score: isAnalysing(activeVideo.serverCheck) ? null : activeVideo.serverCheck?.score ?? null,
-                  }}
-                />
-              ) : (
-                <p
-                  className={`rounded-lg border px-3 py-2 text-xs ${
-                    activeVideo.submissionStatus === "APPROVED"
-                      ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-900 dark:text-emerald-100"
-                      : activeVideo.submissionStatus === "CHANGES_REQUESTED"
-                      ? "border-amber-500/40 bg-amber-500/5 text-amber-900 dark:text-amber-100"
-                      : "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100"
-                  }`}
-                >
-                  {activeVideo.submissionStatus === "APPROVED"
-                    ? "Approved. It's on the content calendar."
-                    : activeVideo.submissionStatus === "CHANGES_REQUESTED"
-                    ? "Changes requested. Waiting for the uploader to resubmit."
-                    : "In review. Waiting for a reviewer (reviewers can't approve their own uploads)."}
-                </p>
-              )}
-              {activeVideo.submissionStatus === "APPROVED" && !viewingOld && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <ApprovalActions
-                    target={{
-                      id: activeVideo.submissionId,
-                      reference_code: activeVideo.referenceCode ?? "",
-                      title: activeVideo.title,
-                      status: "APPROVED",
-                      current_version: activeVideo.currentVersion ?? 1,
-                      publish_at: activeVideo.publishAt,
-                      can_manage_approval: activeVideo.canManageApproval,
-                    }}
-                    isCreator={activeVideo.createdBy === user?.id}
-                  />
-                </div>
-              )}
-              {activeVideo.serverCheck?.transcript_pending && !viewingOld && (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  The transcript is still being made; the score is re-checked with it automatically.
-                </p>
-              )}
-            </div>
-          )}
-          <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
-            <div className="flex items-start gap-2.5 min-w-0">
-              <Hash className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-              <div className="min-w-0">
-                <h2 className="text-sm font-bold text-foreground">
-                  {platform === "YOUTUBE" ? "Description & Disclaimers" : "Caption & Hashtags"}
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  {hasDoDDisclaimer
-                    ? `${platformName} ${platform === "YOUTUBE" ? "description" : "caption"} is screened against the rulebook, including required disclaimers.`
-                    : `Needs: "${missingDisclaimers[0].missing_disclaimers![0]}"`}
-                </p>
-              </div>
-            </div>
-            <Badge
-              className={`text-[10px] font-semibold shrink-0 ${
-                hasDoDDisclaimer ? "rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-              }`}
-            >
-              {hasDoDDisclaimer ? "Disclaimers OK" : "Disclaimer Missing"}
-            </Badge>
-          </div>
-
-          <div className="px-4 space-y-1.5">
-            {platform === "YOUTUBE" ? (
-              <>
-                <Textarea
-                  rows={3}
-                  value={youtubeDescription}
-                  onChange={(e) => setYoutubeDescription(e.target.value)}
-                  readOnly={Boolean(submissionId)}
-                  className="text-xs font-mono resize-y"
-                  placeholder="Enter YouTube description..."
-                />
-                {!hasDoDDisclaimer && !submissionId && (
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      setYoutubeDescription((prev) => prev.trim() + "\n\n" + missingDisclaimers[0].missing_disclaimers![0]);
-                      toast.success(`Added the disclaimer ${missingDisclaimers[0].rule_number} asks for.`);
+                      setPartialUploadMode(false);
+                      setPartialUploadPercent(100);
+                      toast.success("Switched to full asset view (100% available).");
                     }}
-                    className="text-xs w-full text-amber-600 dark:text-amber-400 border-amber-500/40"
+                    className="text-xs shrink-0 bg-background/80"
                   >
-                    <Zap className="w-3.5 h-3.5 mr-1" />
-                    Insert Required Disclaimer
+                    Clear Incomplete State
                   </Button>
-                )}
-              </>
-            ) : (
-              <Textarea
-                rows={2}
-                value={tiktokCaption}
-                onChange={(e) => setTiktokCaption(e.target.value)}
-                readOnly={Boolean(submissionId)}
-                className="text-xs font-mono resize-y"
-                placeholder={submissionId ? "No caption was submitted." : "Enter caption and #hashtags..."}
-              />
-            )}
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>
-                Characters: {(platform === "YOUTUBE" ? youtubeDescription : tiktokCaption).length} /{" "}
-                {(CAPTION_LIMITS[platform] ?? 2200).toLocaleString()}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  navigator.clipboard.writeText(platform === "YOUTUBE" ? youtubeDescription : tiktokCaption);
-                  toast.success("Copied!");
-                }}
-                className="text-[11px] h-6 px-2 gap-1"
-              >
-                <Copy className="w-3 h-3" /> Copy {platform === "YOUTUBE" ? "Description" : "Caption"}
-              </Button>
-            </div>
-          </div>
-
-          <Tabs defaultValue="violations" className="@container px-4 pt-2 pb-4 gap-3 @5xl/screen:min-h-0 @5xl/screen:flex-1">
-            <TabsList variant="line" className="h-auto min-h-10 w-full flex-wrap justify-start border-b border-border/70">
-              {[
-                { value: "comments", icon: MessageSquare, label: `Comments (${comments.length})` },
-                { value: "violations", icon: AlertTriangle, label: `Flags (${scanResult?.violations_count || 0})` },
-                { value: "sentiment", icon: Sparkles, label: "Sentiment Analysis" },
-                { value: "script", icon: FileText, label: `Script (${segments.length})` },
-              ].map(({ value, icon: Icon, label }) => (
-                <TabsTrigger
-                  key={value}
-                  value={value}
-                  className="flex-none whitespace-nowrap px-2 text-xs font-semibold gap-1.5 data-active:text-blue-700 dark:data-active:text-blue-300 after:bg-blue-600"
-                >
-                  <Icon className="w-3.5 h-3.5 hidden sm:inline" />
-                  {label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* Sentiment (Gemini editorial read; submitted content only) */}
-            <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
-              {activeVideo?.submissionId ? (
-                <ReviewerSentimentPanel
-                  key={`${activeVideo.submissionId}-${viewVersion ?? "latest"}`}
-                  submissionId={activeVideo.submissionId}
-                  version={viewVersion ?? undefined}
-                  onSeek={seekTo}
-                />
-              ) : (
-                <p className="text-xs text-muted-foreground">Sentiment analysis runs on submitted content. Demo videos don't have one.</p>
+                </div>
               )}
-            </TabsContent>
 
-            {/* Flags */}
-            <TabsContent value="violations" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
-                <span className="text-xs font-semibold text-foreground">Violations Flagged & Compliant Fixes</span>
-                <span className="text-[11px] text-muted-foreground">
-                  {scanResult?.violations_count || 0} {scanResult?.violations_count === 1 ? "finding" : "findings"}
-                </span>
-              </div>
-              <div className="p-2.5 space-y-2.5 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
-                {scanResult && <ScoreBreakdown check={scanResult} />}
-                {scanResult && scanResult.violations.some((v) => v.status !== "CLEARED") ? (
-                  scanResult.violations.filter((v) => v.status !== "CLEARED").map((v, i) => {
-                    const seg = segmentForViolation(v);
-                    const isRed = v.traffic_light === "RED";
-                    return (
-                      <div
-                        key={i}
-                        onClick={() => {
-                          setSelectedViolation(v);
-                          if (seg) seekAndPause(seg.startSec, `Violation: ${v.rule_number}`);
-                        }}
-                        className={`p-3 rounded-lg border text-xs cursor-pointer transition-all flex gap-3 ${
-                          isRed ? "border-red-500/30 bg-red-500/5 hover:border-red-500/60" : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60"
-                        } ${selectedViolation?.rule_number === v.rule_number ? "ring-2 ring-blue-500/50" : ""}`}
-                      >
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white ${
-                            isRed ? "bg-red-600" : "bg-amber-500"
-                          }`}
+              {/* Background job progress */}
+              {activeJob && activeJob.status === "PROCESSING" && (
+                <Card className="py-0 border-blue-500/40 bg-blue-500/5 dark:bg-blue-950/20 shadow-xs">
+                  <div className="px-4 py-3 space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="flex items-center gap-2 font-semibold text-foreground min-w-0">
+                        <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
+                        <span className="truncate">Processing {activeVideo?.title || activeJob.filename}</span>
+                      </span>
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        {activeJob.current_stage_label} · {activeJob.progress_percent}%
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsJobExpanded(!isJobExpanded)}
+                          className="h-6 px-2 text-[11px] gap-1"
                         >
-                          {isRed ? <XCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-1.5">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <Badge className={`rounded-full text-[10px] font-semibold ${isRed ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"}`}>
-                              {isRed ? "Critical" : "Needs review"}
-                            </Badge>
-                            {seg && (
-                              <Badge variant="outline" className="text-[10px] font-mono">
-                                {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
-                              </Badge>
-                            )}
-                            <RuleNumberBadge v={v} />
-                          </div>
-                          <p className="font-semibold text-foreground">{v.title}</p>
-                          <p className="text-muted-foreground text-[11px] leading-relaxed">{v.explanation}</p>
-                          <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-red-500/20 bg-background/70 px-2 py-1.5">
-                            <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
-                              <XCircle className="w-3 h-3" /> Trigger word/phrase
-                            </span>
-                            <span className="text-[11px] font-mono text-foreground">
-                              {v.flagged_terms.map((t) => `"${t}"`).join(", ")}
-                            </span>
-                          </div>
-                          {v.remediation_guidance && (
-                            <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1.5 space-y-0.5">
-                              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> Suggested compliant fix
-                              </span>
-                              <p className="text-[11px] text-foreground/90">{v.remediation_guidance}</p>
-                            </div>
-                          )}
-                          {activeVideo?.submissionId && v.rule_id && (
-                            <FlagReviewControl
-                              submissionId={activeVideo.submissionId}
-                              ruleId={v.rule_id}
-                              ruleNumber={v.rule_number}
-                              currentVersion={activeVideo.currentVersion ?? 1}
-                              canDismiss={Boolean(activeVideo.canReview) && !viewingOld}
-                              evidence={v.status === "EVIDENCE_REQUIRED"}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-8 text-center text-xs text-muted-foreground">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                    No compliance flags found. Ready for publication.
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            {/* Comments */}
-            <TabsContent value="comments" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
-                <span className="text-xs font-semibold text-foreground">Reviewer Notes & Feedback</span>
-                <span className="text-[11px] text-muted-foreground">{comments.length} notes</span>
-              </div>
-              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
-                {comments.length > 0 ? (
-                  comments.map((c) => {
-                    const isCommentActive = activeCommentId === c.id;
-                    const startSec = c.timestampSec;
-                    const endSec = c.endTimestampSec;
-                    const hasRange = startSec !== null && typeof endSec === "number" && endSec > startSec;
-                    const jump = () => {
-                      setActiveCommentId(c.id);
-                      if (startSec !== null) {
-                        seekAndPause(
-                          startSec,
-                          hasRange ? `${c.author} range (${formatTime(startSec)} - ${formatTime(endSec!)})` : `${c.author} note`
-                        );
-                      }
-                    };
-                    return (
+                          {isJobExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          {isJobExpanded ? "Hide steps" : "Show steps"}
+                        </Button>
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                       <div
-                        key={c.id}
-                        onClick={jump}
-                        className={`p-3 rounded-lg border text-xs space-y-1.5 cursor-pointer transition-all ${
-                          isCommentActive
-                            ? "border-blue-500/60 bg-blue-500/5 ring-1 ring-blue-500/40"
-                            : "border-border/70 bg-card hover:bg-muted/30"
-                        }`}
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                            <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="whitespace-nowrap">{c.author}</span>
-                            <Badge
-                              className={`text-[9px] uppercase font-bold py-0 ${
-                                c.category === "LEGAL"
-                                  ? "rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
-                                  : c.category === "EDITORIAL"
-                                  ? "rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
-                                  : c.category === "COMPLIANCE"
-                                  ? "rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-                                  : "rounded-full bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300"
+                        className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
+                        style={{ width: `${activeJob.progress_percent}%` }}
+                      />
+                    </div>
+                    {isJobExpanded && (
+                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                        {activeJob.stages.map((stg, idx) => (
+                          <div
+                            key={stg.id}
+                            className={`p-2 rounded-lg border text-[11px] flex items-start gap-2 ${stg.status === "COMPLETED"
+                              ? "bg-emerald-500/10 border-emerald-500/30"
+                              : stg.status === "IN_PROGRESS"
+                                ? "bg-blue-500/10 border-blue-500/40"
+                                : "bg-card border-border/60 opacity-60"
                               }`}
-                            >
-                              {c.category}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {startSec !== null && (
-                              <Badge variant="outline" className="text-[10px] font-mono gap-1">
-                                <Clock className="w-2.5 h-2.5" />
-                                {hasRange ? `${formatTime(startSec)} - ${formatTime(endSec!)}` : formatTime(startSec)}
-                              </Badge>
+                          >
+                            {stg.status === "COMPLETED" ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                            ) : stg.status === "IN_PROGRESS" ? (
+                              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin shrink-0 mt-0.5" />
+                            ) : (
+                              <span className="font-mono text-[10px] text-muted-foreground shrink-0">0{idx + 1}</span>
                             )}
-                            {(c.canDelete ?? true) && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteComment(c.id);
-                                }}
-                                className="text-muted-foreground hover:text-red-500 p-1"
-                                title="Delete note"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
+                            <span className="font-medium leading-tight">{stg.label}</span>
                           </div>
-                        </div>
-                        <p className="text-foreground/95 leading-relaxed">{c.text}</p>
-                        <p className="text-[10px] text-muted-foreground">{c.createdAt}</p>
+                        ))}
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-8 text-center text-xs text-muted-foreground">
-                    No reviewer notes yet. Add one below.
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            {/* Script */}
-            <TabsContent value="script" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
-                <span className="text-xs font-semibold text-foreground">Voiceover & Script</span>
-                <span className="text-[11px] text-muted-foreground">
-                  {effectiveUploadPercent < 100
-                    ? `${segments.filter((s) => s.startSec <= maxBufferedSec).length} / ${segments.length} buffered`
-                    : `${segments.length} segments`}
-                </span>
-              </div>
-              <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
-                {segments.length === 0 && activeVideo?.submissionId && (
-                  <div className="flex flex-col items-center text-center gap-2 py-8 px-4 text-xs text-muted-foreground">
-                    {isStillPost ? (
-                      <>
-                        <FileText className="w-5 h-5" />
-                        <p className="font-semibold text-foreground">No video, so there's no script.</p>
-                        <p>This post's title, caption and images are what's screened against the rulebook and sentiment analysis.</p>
-                      </>
-                    ) : activeVideo.transcriptStatus === "FAILED" ? (
-                      <>
-                        <AlertTriangle className="w-5 h-5 text-amber-500" />
-                        <p className="font-semibold text-foreground">The transcript couldn't be generated.</p>
-                        {activeVideo.transcriptError && <p className="max-w-sm break-words">{activeVideo.transcriptError}</p>}
-                        <Button size="sm" variant="outline" className="text-xs gap-1.5 mt-1" disabled={isRetryingTranscript} onClick={retryTranscript}>
-                          {isRetryingTranscript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                          Try again
-                        </Button>
-                      </>
-                    ) : activeVideo.transcriptStatus === "COMPLETED" ? (
-                      <>
-                        <FileText className="w-5 h-5" />
-                        <p className="font-semibold text-foreground">No speech or on-screen text found.</p>
-                        <p>The title and caption are still screened against the rulebook.</p>
-                        <p className="max-w-sm">
-                          Videos read before on-screen text was added only have their speech. Read it again to check the text shown in the video too.
-                        </p>
-                        <Button size="sm" variant="outline" className="text-xs gap-1.5 mt-1" disabled={isRetryingTranscript} onClick={retryTranscript}>
-                          {isRetryingTranscript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                          Read the video again
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-                        <p className="font-semibold text-foreground">Reading the video...</p>
-                        <p>Speech and on-screen text are being transcribed automatically. This usually takes under a minute.</p>
-                      </>
                     )}
                   </div>
-                )}
-                {segments.map((seg) => {
-                  const isBuffered = seg.startSec <= maxBufferedSec;
-                  const isActive = currentTime >= seg.startSec && currentTime <= seg.endSec;
-                  return (
+                </Card>
+              )}
+
+              {/* Scan result banner */}
+              {scanResult && (
+                <div
+                  className="px-4 py-3 rounded-xl border border-border/70 bg-card shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      key={seg.id}
-                      onClick={() => isBuffered && seekAndPause(seg.startSec, "Voiceover segment")}
-                      className={`p-3 rounded-lg border text-xs cursor-pointer transition-all ${
-                        !isBuffered
-                          ? "border-dashed border-border/50 bg-muted/20 opacity-50"
-                          : isActive
-                          ? "ring-1 ring-blue-500/50 border-blue-500/50 bg-blue-500/5"
-                          : seg.risk === "RED"
-                          ? "border-red-500/30 bg-red-500/5"
-                          : seg.risk === "YELLOW"
-                          ? "border-amber-500/30 bg-amber-500/5"
-                          : "border-border/70 bg-card hover:bg-muted/30"
-                      }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${scanResult.traffic_light === "RED"
+                        ? "bg-red-50 text-red-600 dark:bg-red-500/10"
+                        : scanResult.traffic_light === "YELLOW"
+                          ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10"
+                          : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"
+                        }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5">
-                          {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
-                          {seg.onScreen && (
-                            <span className="font-sans rounded bg-muted px-1 py-px text-[9px] uppercase tracking-wide">On screen</span>
+                      {scanResult.traffic_light === "RED" ? (
+                        <XCircle className="w-5 h-5" />
+                      ) : scanResult.traffic_light === "YELLOW" ? (
+                        <AlertTriangle className="w-5 h-5" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`text-base font-bold ${scanResult.traffic_light === "RED"
+                            ? "text-red-700 dark:text-red-300"
+                            : scanResult.traffic_light === "YELLOW"
+                              ? "text-amber-700 dark:text-amber-300"
+                              : "text-emerald-700 dark:text-emerald-300"
+                            }`}
+                        >
+                          {analysing
+                            ? `Still reading this post for ${platformName}`
+                            : scanResult.is_compliant
+                              ? `No issues found in the text for ${platformName}`
+                              : `${scanResult.violations_count} Rule ${scanResult.violations_count === 1 ? "Violation" : "Violations"} Flagged for ${platformName}`}
+                        </span>
+                        <Badge
+                          className={`rounded-full text-[11px] font-semibold ${scanResult.traffic_light === "RED"
+                            ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                            : scanResult.traffic_light === "YELLOW"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                            }`}
+                        >
+                          {analysing ? "Under review" : scanResult.traffic_light === "RED" ? "Critical" : scanResult.traffic_light === "YELLOW" ? "Needs review" : "Text clear"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span>
+                          Compliance Health Score:{" "}
+                          {analysing ? (
+                            <strong className="text-blue-700 dark:text-blue-300">under review until the video and images are read</strong>
+                          ) : (
+                            <strong className="text-foreground">{scanResult.score} / 100</strong>
+                          )}
+                          {scanResult.blocked && <strong className="ml-1.5 text-red-600 dark:text-red-400">· Blocked (critical rule)</strong>}
+                        </span>
+                        <span className="text-border">|</span>
+                        <span>
+                          Required disclaimers:{" "}
+                          <strong className={hasDoDDisclaimer ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
+                            {hasDoDDisclaimer ? "None missing" : `Missing (${disclaimerRules})`}
+                          </strong>
+                        </span>
+                        <span className="text-border">|</span>
+                        <span>{comments.length} Reviewer Note(s)</span>
+                      </p>
+                      {activeVideo?.serverCheck && <CheckCoverage check={activeVideo.serverCheck} className="mt-1.5" />}
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={copyClearanceReport} className="text-xs gap-1.5 font-semibold bg-background self-end md:self-auto shrink-0">
+                    <Download className="w-3.5 h-3.5" />
+                    Copy Clearance Report
+                  </Button>
+                </div>
+              )}
+
+              {/* Player + review panel */}
+              <div className="grid grid-cols-1 @5xl/screen:grid-cols-12 gap-4 sm:gap-5 items-start @5xl/screen:items-stretch">
+                {/* Video Review Player (the queue pages to fit beside it) */}
+                <Card
+                  ref={playerCardRef}
+                  className={`${isPortrait ? "@5xl/screen:col-span-5" : "@5xl/screen:col-span-7"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 flex items-center justify-center shrink-0">
+                        <PlatformIcon platform={platform} className="w-4.5 h-4.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-sm font-bold text-foreground">{isStillPost ? "Post Preview" : "Video Review Player"}</h2>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {isStillPost
+                            ? `${CONTENT_TYPE_LABELS[activeVideo?.contentType ?? ""] ?? "Post"} · review its images and caption.`
+                            : "Preview and review flagged content in context."}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (videoUrl) {
+                          window.open(videoUrl, "_blank", "noopener");
+                        } else if (activeVideo?.images?.length) {
+                          window.open(activeVideo.images[0].url, "_blank", "noopener");
+                        } else if (isStillPost) {
+                          toast.info("This post has no image or video to open.");
+                        } else {
+                          toast.info("Upload or select a video file to open it in a new window.");
+                        }
+                      }}
+                      className="text-xs gap-1.5 font-semibold"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Open in New Window
+                    </Button>
+                  </div>
+
+                  {isStillPost && activeVideo ? (
+                    <PostStillPreview key={activeVideo.id} item={activeVideo} />
+                  ) : (
+                    <div
+                      className={`mx-4 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center ${isPortrait ? "px-3 py-4" : "p-3"}`}
+                    >
+                      <div
+                        ref={playerFrameRef}
+                        // Original: the video's own proportions, as wide as fits but no taller than about two-thirds of the screen.
+                        style={
+                          showOriginal && !isFullscreen
+                            ? { aspectRatio: String(nativeAspect), width: `min(100%, calc(64vh * ${nativeAspect!.toFixed(4)}))` }
+                            : undefined
+                        }
+                        className={`relative bg-zinc-950 text-white overflow-hidden group transition-all duration-300 ${isFullscreen
+                          ? "w-screen h-screen bg-black"
+                          : showOriginal
+                            ? `max-w-full shadow-xl ${isPortrait ? "rounded-[22px] border-[5px] border-zinc-900" : "rounded-xl"}`
+                            : isPortrait
+                              ? // Sized by height so a tall video fills the stage without pushing the page down.
+                              "h-[min(64vh,600px)] max-w-full aspect-[9/16] rounded-[22px] border-[5px] border-zinc-900 shadow-xl"
+                              : "w-full aspect-video rounded-xl shadow-xl"
+                          }`}
+                      >
+                        {videoUrl ? (
+                          <video
+                            ref={videoRef}
+                            src={videoUrl}
+                            poster={playerThumbnail.dataUrl ?? undefined}
+                            className={`w-full h-full ${isFullscreen ? "object-contain" : "object-cover"}`}
+                            onTimeUpdate={handleTimeUpdate}
+                            onLoadedMetadata={handleLoadedMetadata}
+                            onEnded={() => setIsPlaying(false)}
+                          />
+                        ) : (
+                          <div className="relative w-full h-full">
+                            <DemoPoster variant={activeVideo?.posterVariant} className="absolute inset-0 w-full h-full" />
+                            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/60 to-transparent" />
+                            <div className="absolute inset-x-0 top-8 px-4 text-center">
+                              <p className="text-sm font-bold text-white leading-tight drop-shadow">{videoTitle}</p>
+                              <p className="text-[10px] uppercase tracking-wider text-white/75 mt-1">
+                                {platformName} · {aspectRatio} demo preview
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {isPortrait && (
+                          <div className="absolute top-2.5 left-2.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-zinc-300 font-mono pointer-events-none">
+                            {platformName} safe zone
+                          </div>
+                        )}
+
+                        {activeSegment && (
+                          <div className="absolute bottom-14 inset-x-2.5 flex justify-center pointer-events-none">
+                            <div
+                              className={`px-2.5 py-1.5 rounded-lg backdrop-blur-md text-[11px] font-medium text-center shadow-lg max-w-full ${activeSegment.risk === "RED"
+                                ? "bg-red-950/90 text-red-100 border border-red-500/60"
+                                : activeSegment.risk === "YELLOW"
+                                  ? "bg-amber-950/90 text-amber-100 border border-amber-500/60"
+                                  : "bg-black/75 text-zinc-100 border border-white/10"
+                                }`}
+                            >
+                              "{activeSegment.text}"
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Compact controls */}
+                        <div className="absolute bottom-2 inset-x-2 rounded-xl bg-zinc-900/90 backdrop-blur-md border border-white/10 flex items-center gap-0.5 px-1.5 py-1 text-white">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={togglePlay}
+                            className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
+                            title={isPlaying ? "Pause" : "Play"}
+                          >
+                            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                          </Button>
+                          <span className="font-mono text-[11px] text-zinc-200 px-1 whitespace-nowrap">
+                            {formatTime(currentTime)} / {formatTime(duration)}
+                          </span>
+                          <span className="flex-1" />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              if (videoRef.current) videoRef.current.muted = !isMuted;
+                              setIsMuted(!isMuted);
+                            }}
+                            className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
+                            title={isMuted ? "Unmute" : "Mute"}
+                          >
+                            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white" title="Playback settings">
+                                <Settings className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" side="top" className="w-44">
+                              <DropdownMenuLabel className="text-[11px]">Playback speed</DropdownMenuLabel>
+                              {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                                <DropdownMenuItem key={rate} onClick={() => handlePlaybackRateChange(rate)} className="text-xs">
+                                  {rate}x {playbackRate === rate && <Check className="w-3.5 h-3.5 ml-auto" />}
+                                </DropdownMenuItem>
+                              ))}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => stepTime(-1)} className="text-xs gap-2">
+                                <SkipBack className="w-3.5 h-3.5" /> Back 1 second
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => stepTime(1)} className="text-xs gap-2">
+                                <SkipForward className="w-3.5 h-3.5" /> Forward 1 second
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => seekTo(0)} className="text-xs gap-2">
+                                <RotateCcw className="w-3.5 h-3.5" /> Restart
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={toggleFullscreen}
+                            className="h-7 w-7 shrink-0 text-white hover:bg-white/15 hover:text-white"
+                            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                          >
+                            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Flagged Moments timeline (videos only: it follows the video's time) */}
+                  {isStillPost ? (
+                    <div className="pb-4" />
+                  ) : (
+                    <div className="px-4 pt-4 pb-5 space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                          Flagged Moments
+                          <span className="font-normal text-muted-foreground hidden sm:inline">
+                            {activeVideo?.transcriptStatus === "COMPLETED" && segments.length === 0
+                              ? "(no speech or on-screen text found, so only the title and caption were checked)"
+                              : "(click the bar or press play to preview)"}
+                          </span>
+                          {effectiveUploadPercent < 100 && (
+                            <Badge variant="outline" className="text-[10px] text-amber-600 dark:text-amber-400 border-amber-500/40">
+                              Buffered to {formatTime(maxBufferedSec)}
+                            </Badge>
                           )}
                         </span>
-                        {!isBuffered ? (
-                          <Badge variant="secondary" className="text-[9px] gap-1">
-                            <Loader2 className="w-2.5 h-2.5 animate-spin" /> Uploading
-                          </Badge>
-                        ) : seg.risk === "RED" ? (
-                          <Badge className="rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300 text-[9px] font-semibold py-0">Critical</Badge>
-                        ) : seg.risk === "YELLOW" ? (
-                          <Badge className="rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 text-[9px] font-semibold py-0">Needs review</Badge>
-                        ) : (
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
-                            <Check className="w-3 h-3" /> Clear
+                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-sm bg-red-600" /> Critical ({riskCounts.red})
                           </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-sm bg-amber-500" /> Needs Review ({riskCounts.yellow})
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-sm bg-emerald-500" /> Clear ({riskCounts.green})
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-1.5 sm:gap-2.5">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => stepTime(-1)}
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hidden sm:inline-flex"
+                          title="Back 1 second"
+                        >
+                          <SkipBack className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          onClick={togglePlay}
+                          className="h-9 w-9 mt-[-2px] rounded-full shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
+                          title={isPlaying ? "Pause" : "Play"}
+                        >
+                          {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => stepTime(1)}
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hidden sm:inline-flex"
+                          title="Forward 1 second"
+                        >
+                          <SkipForward className="w-4 h-4" />
+                        </Button>
+                        <span className="font-mono text-xs font-bold text-foreground min-w-[34px] text-right shrink-0 leading-8">
+                          {formatTime(currentTime)}
+                        </span>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="relative h-8 select-none">
+                            {/* Base track so any time without a script section still reads as part of the video */}
+                            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-3 rounded-full bg-muted" />
+
+                            {/* Full-length coloured sections, one per script segment */}
+                            {timelineSegments.map((seg) => {
+                              const isBuffered = seg.startSec <= maxBufferedSec;
+                              const color = !isBuffered
+                                ? "bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,rgba(120,120,120,0.35)_3px,rgba(120,120,120,0.35)_6px)] bg-muted"
+                                : seg.risk === "RED"
+                                  ? "bg-red-600"
+                                  : seg.risk === "YELLOW"
+                                    ? "bg-amber-500"
+                                    : "bg-emerald-500/80";
+                              return (
+                                <div
+                                  key={seg.id}
+                                  style={{
+                                    left: `${(seg.startSec / duration) * 100}%`,
+                                    width: `calc(${((seg.endSec - seg.startSec) / duration) * 100}% - 3px)`,
+                                  }}
+                                  className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-full ${color}`}
+                                />
+                              );
+                            })}
+
+                            <input
+                              type="range"
+                              min={0}
+                              max={duration}
+                              step={0.01}
+                              value={currentTime}
+                              onMouseDown={() => setIsDragging(true)}
+                              onTouchStart={() => setIsDragging(true)}
+                              onMouseUp={() => setIsDragging(false)}
+                              onTouchEnd={() => setIsDragging(false)}
+                              onChange={(e) => seekTo(parseFloat(e.target.value))}
+                              className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
+                              aria-label="Seek video"
+                              title={activeSegment ? `${formatTime(activeSegment.startSec)} - ${formatTime(activeSegment.endSec)}: ${activeSegment.text}` : undefined}
+                            />
+
+                            {/* Playhead */}
+                            <div
+                              style={{ left: `${(Math.min(currentTime, duration) / duration) * 100}%`, willChange: "left" }}
+                              className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none z-20 ${isDragging ? "scale-110" : ""}`}
+                            >
+                              <div className="w-2.5 h-6 rounded-full bg-zinc-950 dark:bg-zinc-100 ring-2 ring-background shadow-md flex items-center justify-center">
+                                <div className="w-0.5 h-3 rounded-full bg-zinc-500" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Selected note's range: click to play just that part */}
+                          {activeComment &&
+                            activeComment.timestampSec !== null &&
+                            activeComment.endTimestampSec &&
+                            activeComment.endTimestampSec > activeComment.timestampSec &&
+                            activeComment.timestampSec < duration && (() => {
+                              const start = activeComment.timestampSec;
+                              const end = Math.min(activeComment.endTimestampSec, duration);
+                              const left = (start / duration) * 100;
+                              const label = `${activeComment.author} note · ${formatTime(start)}–${formatTime(activeComment.endTimestampSec)}`;
+                              return (
+                                <div className="relative h-5">
+                                  <button
+                                    type="button"
+                                    onClick={() => playRange(start, end)}
+                                    style={{ left: `${left}%`, width: `${((end - start) / duration) * 100}%` }}
+                                    className="group absolute top-0 h-2 border-x-2 border-b-2 border-blue-500 rounded-b-sm hover:border-blue-600 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    title={`Play ${label}`}
+                                    aria-label={`Play ${label}`}
+                                  >
+                                    <span
+                                      className={`absolute top-2.5 inline-flex max-w-[min(260px,60vw)] items-center gap-1 whitespace-nowrap rounded bg-blue-500/10 px-1.5 py-px text-[10px] font-semibold text-blue-700 group-hover:bg-blue-500/20 dark:text-blue-300 ${left > 60 ? "right-0" : "left-0"
+                                        }`}
+                                    >
+                                      <Play className="w-2.5 h-2.5 shrink-0 fill-current" /> <span className="truncate">{label}</span>
+                                    </span>
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                          <div className="relative h-4 text-[10px] font-mono text-muted-foreground">
+                            {timelineSegments
+                              .filter((seg) => seg.startSec > 0 && seg.startSec / duration < 0.92)
+                              .map((seg) => (
+                                <span
+                                  key={seg.id}
+                                  style={{ left: `${(seg.startSec / duration) * 100}%` }}
+                                  className={`absolute -translate-x-1/2 hidden sm:block ${seg.risk === "RED" ? "text-red-600 dark:text-red-400 font-semibold" : ""
+                                    }`}
+                                >
+                                  {formatTime(seg.startSec)}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                        <span className="font-mono text-xs text-muted-foreground min-w-[34px] shrink-0 leading-8">{formatTime(duration)}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Timestamped reviewer comment bar */}
+                  {isDecided ? (
+                    <p className="border-t border-border/60 px-4 py-3.5 text-xs text-muted-foreground">
+                      This was decided, so its notes are read-only. To raise something new, reopen it for changes.
+                    </p>
+                  ) : (
+                    <form onSubmit={handleAddComment} className="border-t border-border/60 px-4 py-3.5 space-y-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select value={commentCategory} onValueChange={(val) => setCommentCategory(val as CommentCategory)}>
+                          <SelectTrigger className="h-8 w-[150px] text-xs font-semibold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(Object.keys(CATEGORY_LABELS) as CommentCategory[]).map((cat) => (
+                              <SelectItem key={cat} value={cat} className="text-xs">
+                                {CATEGORY_LABELS[cat]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {!isStillPost && (
+                          <div className="flex flex-wrap items-center rounded-lg border border-border/70 p-0.5 bg-muted/40 text-[11px] font-semibold">
+                            <button
+                              type="button"
+                              onClick={() => setCommentTimeMode("POINT")}
+                              className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${commentTimeMode === "POINT" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                              <Clock className="w-3 h-3" /> Point ({formatTime(currentTime)})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCommentTimeMode("RANGE");
+                                const cur = Math.round(currentTime);
+                                setRangeStartSec(cur);
+                                setRangeEndSec(Math.min(duration, cur + 5));
+                              }}
+                              className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${commentTimeMode === "RANGE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                              <Layers className="w-3 h-3" /> Range ({formatTime(rangeStartSec)} - {formatTime(rangeEndSec)})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCommentTimeMode("NONE")}
+                              className={`px-2.5 py-1 rounded-md transition-colors ${commentTimeMode === "NONE" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                              No Time
+                            </button>
+                          </div>
                         )}
                       </div>
-                      <p className="text-foreground/90 leading-relaxed">{seg.text}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          </Tabs>
 
-        </Card>
-      </div>
-      </>
-      )}
+                      {!isStillPost && commentTimeMode === "RANGE" && (
+                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                          <span className="text-muted-foreground font-semibold">From</span>
+                          <input
+                            type="text"
+                            value={rangeStartInput}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setRangeStartInput(val);
+                              const parsed = parseTimeToSeconds(val);
+                              if (!isNaN(parsed)) {
+                                const clamped = Math.min(duration, Math.max(0, Math.round(parsed)));
+                                setRangeStartSec(clamped);
+                                if (rangeEndSec <= clamped) setRangeEndSec(Math.min(duration, clamped + 3));
+                              }
+                            }}
+                            onBlur={() => setRangeStartInput(`(${formatTime(rangeStartSec)})`)}
+                            className="w-16 h-7 px-1.5 rounded border border-border bg-background font-mono text-center font-semibold outline-none focus:border-foreground"
+                            title="Start time (e.g. 0:06)"
+                          />
+                          <span className="text-muted-foreground font-semibold">to</span>
+                          <input
+                            type="text"
+                            value={rangeEndInput}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setRangeEndInput(val);
+                              const parsed = parseTimeToSeconds(val);
+                              if (!isNaN(parsed)) setRangeEndSec(Math.min(duration, Math.max(0, Math.round(parsed))));
+                            }}
+                            onBlur={() => {
+                              if (rangeEndSec <= rangeStartSec) {
+                                const adjusted = Math.min(duration, rangeStartSec + 3);
+                                setRangeEndSec(adjusted);
+                                setRangeEndInput(`(${formatTime(adjusted)})`);
+                              } else {
+                                setRangeEndInput(`(${formatTime(rangeEndSec)})`);
+                              }
+                            }}
+                            className="w-16 h-7 px-1.5 rounded border border-border bg-background font-mono text-center font-semibold outline-none focus:border-foreground"
+                            title="End time (e.g. 0:15)"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const cur = Math.round(currentTime);
+                              setRangeStartSec(cur);
+                              if (rangeEndSec <= cur) setRangeEndSec(Math.min(duration, cur + 3));
+                            }}
+                            className="h-7 px-2 text-[11px]"
+                          >
+                            Set start ({formatTime(currentTime)})
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const cur = Math.round(currentTime);
+                              if (cur <= rangeStartSec) {
+                                setRangeStartSec(Math.max(0, cur - 3));
+                                setRangeEndSec(cur);
+                              } else {
+                                setRangeEndSec(cur);
+                              }
+                            }}
+                            className="h-7 px-2 text-[11px]"
+                          >
+                            Set end ({formatTime(currentTime)})
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => seekAndPause(rangeStartSec, "Range preview")}
+                            className="h-7 px-2 text-[11px]"
+                          >
+                            Preview range
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <Input
+                          value={commentInput}
+                          onChange={(e) => setCommentInput(e.target.value)}
+                          placeholder={
+                            commentTimeMode === "RANGE"
+                              ? `Add reviewer note for ${formatTime(rangeStartSec)} - ${formatTime(rangeEndSec)}... (e.g. cut this section)`
+                              : commentTimeMode === "POINT"
+                                ? `Add reviewer note at ${formatTime(currentTime)}... (e.g. adjust disclaimer or cut)`
+                                : "Add general reviewer note..."
+                          }
+                          className="h-9 text-sm flex-1 min-w-0"
+                        />
+                        <Button
+                          type="submit"
+                          className="h-9 text-xs font-semibold px-4 gap-1.5 shrink-0 self-end sm:self-auto bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          Post Comment
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </Card>
+
+                {/* Review panel */}
+                <Card className={`${isPortrait ? "@5xl/screen:col-span-7" : "@5xl/screen:col-span-5"} py-0 gap-0 border-border/70 shadow-xs overflow-hidden @5xl/screen:h-0 @5xl/screen:min-h-full`}>
+                  {activeVideo?.submissionId && (
+                    <div className="px-4 pt-4">
+                      {latestVersion > 1 && (
+                        <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                          <label htmlFor="version-picker">Viewing</label>
+                          <select
+                            id="version-picker"
+                            value={viewVersion ?? latestVersion}
+                            onChange={(e) => {
+                              const n = Number(e.target.value);
+                              setVersionPick(n >= latestVersion || !latestVideo ? null : { videoId: latestVideo.id, version: n });
+                            }}
+                            className="h-7 rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground"
+                          >
+                            {Array.from({ length: latestVersion }, (_, i) => latestVersion - i).map((n) => (
+                              <option key={n} value={n}>
+                                v{n}
+                                {n === latestVersion ? " (latest)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <span>of {latestVersion}</span>
+                          {viewVersion && versionQuery.isFetching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          {viewVersion && versionQuery.data && !versionQuery.data.video && (
+                            <span className="text-amber-700 dark:text-amber-300">That version had no video.</span>
+                          )}
+                        </div>
+                      )}
+                      {viewingOld && versionView ? (
+                        <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 px-3 py-2 text-xs text-violet-950 dark:text-violet-100 space-y-1">
+                          <p className="font-semibold">
+                            Version {versionView.version_number}, as submitted {format(new Date(versionView.created_at), "MMM d, h:mm a")}
+                            {versionView.created_by_name ? ` by ${versionView.created_by_name}` : ""}.
+                          </p>
+                          {versionView.review_job?.decision && (
+                            <p>
+                              {versionView.review_job.decision === "APPROVE" ? "Approved" : "Sent back for changes"}
+                              {versionView.review_job.decided_by_name ? ` by ${versionView.review_job.decided_by_name}` : ""}
+                              {versionView.review_job.decided_at ? ` on ${format(new Date(versionView.review_job.decided_at), "MMM d, h:mm a")}` : ""}
+                              {versionView.review_job.decision_notes ? `: "${versionView.review_job.decision_notes}"` : "."}
+                            </p>
+                          )}
+                          <p className="text-violet-950/80 dark:text-violet-100/80">
+                            Its video, caption, compliance result, sentiment and notes are shown as they were. Nothing can be changed here.
+                          </p>
+                          <button type="button" onClick={() => setVersionPick(null)} className="font-semibold underline underline-offset-2">
+                            Back to the latest version
+                          </button>
+                        </div>
+                      ) : activeVideo.canReview ? (
+                        <ReviewDecisionPanel
+                          compact
+                          target={{
+                            id: activeVideo.submissionId,
+                            reference_code: activeVideo.referenceCode ?? "",
+                            title: activeVideo.title,
+                            status: activeVideo.submissionStatus ?? "IN_REVIEW",
+                            current_version: activeVideo.currentVersion ?? 1,
+                            platforms: activeVideo.platforms ?? [],
+                            publish_at: activeVideo.publishAt,
+                            due_at: activeVideo.dueAt,
+                            due_kind: activeVideo.dueKind,
+                            ai_unavailable: activeVideo.serverCheck?.ai_unavailable,
+                            analysis_pending: isAnalysing(activeVideo.serverCheck),
+                            can_review: true,
+                            can_approve: activeVideo.canApprove,
+                            approver_names: activeVideo.approverNames,
+                            open_critical_flags: activeVideo.openCriticalFlags,
+                            approval_score: activeVideo.approvalScore,
+                            min_approval_score: activeVideo.minApprovalScore,
+                            manual_rules: activeVideo.serverCheck?.manual_review_rules,
+                            score: isAnalysing(activeVideo.serverCheck) ? null : activeVideo.serverCheck?.score ?? null,
+                          }}
+                        />
+                      ) : (
+                        <p
+                          className={`rounded-lg border px-3 py-2 text-xs ${activeVideo.submissionStatus === "APPROVED"
+                            ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-900 dark:text-emerald-100"
+                            : activeVideo.submissionStatus === "CHANGES_REQUESTED"
+                              ? "border-amber-500/40 bg-amber-500/5 text-amber-900 dark:text-amber-100"
+                              : "border-blue-500/30 bg-blue-500/5 text-blue-900 dark:text-blue-100"
+                            }`}
+                        >
+                          {activeVideo.submissionStatus === "APPROVED"
+                            ? "Approved. It's on the content calendar."
+                            : activeVideo.submissionStatus === "CHANGES_REQUESTED"
+                              ? "Changes requested. Waiting for the uploader to resubmit."
+                              : "In review. Waiting for a reviewer (reviewers can't approve their own uploads)."}
+                        </p>
+                      )}
+                      {activeVideo.submissionStatus === "APPROVED" && !viewingOld && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <ApprovalActions
+                            target={{
+                              id: activeVideo.submissionId,
+                              reference_code: activeVideo.referenceCode ?? "",
+                              title: activeVideo.title,
+                              status: "APPROVED",
+                              current_version: activeVideo.currentVersion ?? 1,
+                              publish_at: activeVideo.publishAt,
+                              can_manage_approval: activeVideo.canManageApproval,
+                            }}
+                            isCreator={activeVideo.createdBy === user?.id}
+                          />
+                        </div>
+                      )}
+                      {activeVideo.serverCheck?.transcript_pending && !viewingOld && (
+                        <p className="mt-2 text-[11px] text-muted-foreground">
+                          The transcript is still being made; the score is re-checked with it automatically.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <Hash className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h2 className="text-sm font-bold text-foreground">
+                          {platform === "YOUTUBE" ? "Description & Disclaimers" : "Caption & Hashtags"}
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          {hasDoDDisclaimer
+                            ? `${platformName} ${platform === "YOUTUBE" ? "description" : "caption"} is screened against the rulebook, including required disclaimers.`
+                            : `Needs: "${missingDisclaimers[0].missing_disclaimers![0]}"`}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      className={`text-[10px] font-semibold shrink-0 ${hasDoDDisclaimer ? "rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                        }`}
+                    >
+                      {hasDoDDisclaimer ? "Disclaimers OK" : "Disclaimer Missing"}
+                    </Badge>
+                  </div>
+
+                  <div className="px-4 space-y-1.5">
+                    {platform === "YOUTUBE" ? (
+                      <>
+                        <Textarea
+                          rows={3}
+                          value={youtubeDescription}
+                          onChange={(e) => setYoutubeDescription(e.target.value)}
+                          readOnly={Boolean(submissionId)}
+                          className="text-xs font-mono resize-y"
+                          placeholder="Enter YouTube description..."
+                        />
+                        {!hasDoDDisclaimer && !submissionId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setYoutubeDescription((prev) => prev.trim() + "\n\n" + missingDisclaimers[0].missing_disclaimers![0]);
+                              toast.success(`Added the disclaimer ${missingDisclaimers[0].rule_number} asks for.`);
+                            }}
+                            className="text-xs w-full text-amber-600 dark:text-amber-400 border-amber-500/40"
+                          >
+                            <Zap className="w-3.5 h-3.5 mr-1" />
+                            Insert Required Disclaimer
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <Textarea
+                        rows={2}
+                        value={tiktokCaption}
+                        onChange={(e) => setTiktokCaption(e.target.value)}
+                        readOnly={Boolean(submissionId)}
+                        className="text-xs font-mono resize-y"
+                        placeholder={submissionId ? "No caption was submitted." : "Enter caption and #hashtags..."}
+                      />
+                    )}
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>
+                        Characters: {(platform === "YOUTUBE" ? youtubeDescription : tiktokCaption).length} /{" "}
+                        {(CAPTION_LIMITS[platform] ?? 2200).toLocaleString()}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          navigator.clipboard.writeText(platform === "YOUTUBE" ? youtubeDescription : tiktokCaption);
+                          toast.success("Copied!");
+                        }}
+                        className="text-[11px] h-6 px-2 gap-1"
+                      >
+                        <Copy className="w-3 h-3" /> Copy {platform === "YOUTUBE" ? "Description" : "Caption"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Tabs defaultValue="violations" className="@container px-4 pt-2 pb-4 gap-3 @5xl/screen:min-h-0 @5xl/screen:flex-1">
+                    <TabsList variant="line" className="h-auto min-h-10 w-full flex-wrap justify-start border-b border-border/70">
+                      {[
+                        { value: "comments", icon: MessageSquare, label: `Comments (${comments.length})` },
+                        { value: "violations", icon: AlertTriangle, label: `Flags (${scanResult?.violations_count || 0})` },
+                        { value: "sentiment", icon: Sparkles, label: "Sentiment Analysis" },
+                        { value: "script", icon: FileText, label: `Script (${segments.length})` },
+                      ].map(({ value, icon: Icon, label }) => (
+                        <TabsTrigger
+                          key={value}
+                          value={value}
+                          className="flex-none whitespace-nowrap px-2 text-xs font-semibold gap-1.5 data-active:text-blue-700 dark:data-active:text-blue-300 after:bg-blue-600"
+                        >
+                          <Icon className="w-3.5 h-3.5 hidden sm:inline" />
+                          {label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+
+                    {/* Sentiment (Gemini editorial read; submitted content only) */}
+                    <TabsContent value="sentiment" className="rounded-lg border border-border/70 p-3 max-h-[460px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                      {activeVideo?.submissionId ? (
+                        <ReviewerSentimentPanel
+                          key={`${activeVideo.submissionId}-${viewVersion ?? "latest"}`}
+                          submissionId={activeVideo.submissionId}
+                          version={viewVersion ?? undefined}
+                          onSeek={seekTo}
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Sentiment analysis runs on submitted content. Demo videos don't have one.</p>
+                      )}
+                    </TabsContent>
+
+                    {/* Flags */}
+                    <TabsContent value="violations" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
+                        <span className="text-xs font-semibold text-foreground">Violations Flagged & Compliant Fixes</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {scanResult?.violations_count || 0} {scanResult?.violations_count === 1 ? "finding" : "findings"}
+                        </span>
+                      </div>
+                      <div className="p-2.5 space-y-2.5 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                        {scanResult && <ScoreBreakdown check={scanResult} />}
+                        {scanResult && scanResult.violations.some((v) => v.status !== "CLEARED") ? (
+                          scanResult.violations.filter((v) => v.status !== "CLEARED").map((v, i) => {
+                            const seg = segmentForViolation(v);
+                            const isRed = v.traffic_light === "RED";
+                            return (
+                              <div
+                                key={i}
+                                onClick={() => {
+                                  setSelectedViolation(v);
+                                  if (seg) seekAndPause(seg.startSec, `Violation: ${v.rule_number}`);
+                                }}
+                                className={`p-3 rounded-lg border text-xs cursor-pointer transition-all flex gap-3 ${isRed ? "border-red-500/30 bg-red-500/5 hover:border-red-500/60" : "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60"
+                                  } ${selectedViolation?.rule_number === v.rule_number ? "ring-2 ring-blue-500/50" : ""}`}
+                              >
+                                <div
+                                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white ${isRed ? "bg-red-600" : "bg-amber-500"
+                                    }`}
+                                >
+                                  {isRed ? <XCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                                </div>
+                                <div className="min-w-0 flex-1 space-y-1.5">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <Badge className={`rounded-full text-[10px] font-semibold ${isRed ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"}`}>
+                                      {isRed ? "Critical" : "Needs review"}
+                                    </Badge>
+                                    {seg && (
+                                      <Badge variant="outline" className="text-[10px] font-mono">
+                                        {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
+                                      </Badge>
+                                    )}
+                                    <RuleNumberBadge v={v} />
+                                  </div>
+                                  <p className="font-semibold text-foreground">{v.title}</p>
+                                  <p className="text-muted-foreground text-[11px] leading-relaxed">{v.explanation}</p>
+                                  <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-red-500/20 bg-background/70 px-2 py-1.5">
+                                    <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
+                                      <XCircle className="w-3 h-3" /> Trigger word/phrase
+                                    </span>
+                                    <span className="text-[11px] font-mono text-foreground">
+                                      {v.flagged_terms.map((t) => `"${t}"`).join(", ")}
+                                    </span>
+                                  </div>
+                                  {v.remediation_guidance && (
+                                    <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1.5 space-y-0.5">
+                                      <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3" /> Suggested compliant fix
+                                      </span>
+                                      <p className="text-[11px] text-foreground/90">{v.remediation_guidance}</p>
+                                    </div>
+                                  )}
+                                  {activeVideo?.submissionId && v.rule_id && (
+                                    <FlagReviewControl
+                                      submissionId={activeVideo.submissionId}
+                                      ruleId={v.rule_id}
+                                      ruleNumber={v.rule_number}
+                                      currentVersion={activeVideo.currentVersion ?? 1}
+                                      canDismiss={Boolean(activeVideo.canReview) && !viewingOld}
+                                      evidence={v.status === "EVIDENCE_REQUIRED"}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-xs text-muted-foreground">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                            No compliance flags found. Ready for publication.
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* Comments */}
+                    <TabsContent value="comments" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
+                        <span className="text-xs font-semibold text-foreground">Reviewer Notes & Feedback</span>
+                        <span className="text-[11px] text-muted-foreground">{comments.length} notes</span>
+                      </div>
+                      <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                        {comments.length > 0 ? (
+                          comments.map((c) => {
+                            const isCommentActive = activeCommentId === c.id;
+                            const startSec = c.timestampSec;
+                            const endSec = c.endTimestampSec;
+                            const hasRange = startSec !== null && typeof endSec === "number" && endSec > startSec;
+                            const jump = () => {
+                              setActiveCommentId(c.id);
+                              if (startSec !== null) {
+                                seekAndPause(
+                                  startSec,
+                                  hasRange ? `${c.author} range (${formatTime(startSec)} - ${formatTime(endSec!)})` : `${c.author} note`
+                                );
+                              }
+                            };
+                            return (
+                              <div
+                                key={c.id}
+                                onClick={jump}
+                                className={`p-3 rounded-lg border text-xs space-y-1.5 cursor-pointer transition-all ${isCommentActive
+                                  ? "border-blue-500/60 bg-blue-500/5 ring-1 ring-blue-500/40"
+                                  : "border-border/70 bg-card hover:bg-muted/30"
+                                  }`}
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                                    <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <span className="whitespace-nowrap">{c.author}</span>
+                                    <Badge
+                                      className={`text-[9px] uppercase font-bold py-0 ${c.category === "LEGAL"
+                                        ? "rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                                        : c.category === "EDITORIAL"
+                                          ? "rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                                          : c.category === "COMPLIANCE"
+                                            ? "rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+                                            : "rounded-full bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300"
+                                        }`}
+                                    >
+                                      {c.category}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {startSec !== null && (
+                                      <Badge variant="outline" className="text-[10px] font-mono gap-1">
+                                        <Clock className="w-2.5 h-2.5" />
+                                        {hasRange ? `${formatTime(startSec)} - ${formatTime(endSec!)}` : formatTime(startSec)}
+                                      </Badge>
+                                    )}
+                                    {(c.canDelete ?? true) && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteComment(c.id);
+                                        }}
+                                        className="text-muted-foreground hover:text-red-500 p-1"
+                                        title="Delete note"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-foreground/95 leading-relaxed">{c.text}</p>
+                                <p className="text-[10px] text-muted-foreground">{c.createdAt}</p>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="p-8 text-center text-xs text-muted-foreground">
+                            No reviewer notes yet. Add one below.
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* Script */}
+                    <TabsContent value="script" className="rounded-lg border border-border/70 @5xl/screen:flex @5xl/screen:flex-col @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
+                        <span className="text-xs font-semibold text-foreground">Voiceover & Script</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {effectiveUploadPercent < 100
+                            ? `${segments.filter((s) => s.startSec <= maxBufferedSec).length} / ${segments.length} buffered`
+                            : `${segments.length} segments`}
+                        </span>
+                      </div>
+                      <div className="p-2.5 space-y-2 max-h-[360px] overflow-y-auto @5xl/screen:max-h-none @5xl/screen:flex-1 @5xl/screen:min-h-0">
+                        {segments.length === 0 && activeVideo?.submissionId && (
+                          <div className="flex flex-col items-center text-center gap-2 py-8 px-4 text-xs text-muted-foreground">
+                            {isStillPost ? (
+                              <>
+                                <FileText className="w-5 h-5" />
+                                <p className="font-semibold text-foreground">No video, so there's no script.</p>
+                                <p>This post's title, caption and images are what's screened against the rulebook and sentiment analysis.</p>
+                              </>
+                            ) : activeVideo.transcriptStatus === "FAILED" ? (
+                              <>
+                                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                <p className="font-semibold text-foreground">The transcript couldn't be generated.</p>
+                                {activeVideo.transcriptError && <p className="max-w-sm break-words">{activeVideo.transcriptError}</p>}
+                                <Button size="sm" variant="outline" className="text-xs gap-1.5 mt-1" disabled={isRetryingTranscript} onClick={retryTranscript}>
+                                  {isRetryingTranscript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                                  Try again
+                                </Button>
+                              </>
+                            ) : activeVideo.transcriptStatus === "COMPLETED" ? (
+                              <>
+                                <FileText className="w-5 h-5" />
+                                <p className="font-semibold text-foreground">No speech or on-screen text found.</p>
+                                <p>The title and caption are still screened against the rulebook.</p>
+                                <p className="max-w-sm">
+                                  Videos read before on-screen text was added only have their speech. Read it again to check the text shown in the video too.
+                                </p>
+                                <Button size="sm" variant="outline" className="text-xs gap-1.5 mt-1" disabled={isRetryingTranscript} onClick={retryTranscript}>
+                                  {isRetryingTranscript ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                                  Read the video again
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                                <p className="font-semibold text-foreground">Reading the video...</p>
+                                <p>Speech and on-screen text are being transcribed automatically. This usually takes under a minute.</p>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {segments.map((seg) => {
+                          const isBuffered = seg.startSec <= maxBufferedSec;
+                          const isActive = currentTime >= seg.startSec && currentTime <= seg.endSec;
+                          return (
+                            <div
+                              key={seg.id}
+                              onClick={() => isBuffered && seekAndPause(seg.startSec, "Voiceover segment")}
+                              className={`p-3 rounded-lg border text-xs cursor-pointer transition-all ${!isBuffered
+                                ? "border-dashed border-border/50 bg-muted/20 opacity-50"
+                                : isActive
+                                  ? "ring-1 ring-blue-500/50 border-blue-500/50 bg-blue-500/5"
+                                  : seg.risk === "RED"
+                                    ? "border-red-500/30 bg-red-500/5"
+                                    : seg.risk === "YELLOW"
+                                      ? "border-amber-500/30 bg-amber-500/5"
+                                      : "border-border/70 bg-card hover:bg-muted/30"
+                                }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-mono text-[10px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                                  {formatTime(seg.startSec)} - {formatTime(seg.endSec)}
+                                  {seg.onScreen && (
+                                    <span className="font-sans rounded bg-muted px-1 py-px text-[9px] uppercase tracking-wide">On screen</span>
+                                  )}
+                                </span>
+                                {!isBuffered ? (
+                                  <Badge variant="secondary" className="text-[9px] gap-1">
+                                    <Loader2 className="w-2.5 h-2.5 animate-spin" /> Uploading
+                                  </Badge>
+                                ) : seg.risk === "RED" ? (
+                                  <Badge className="rounded-full bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300 text-[9px] font-semibold py-0">Critical</Badge>
+                                ) : seg.risk === "YELLOW" ? (
+                                  <Badge className="rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 text-[9px] font-semibold py-0">Needs review</Badge>
+                                ) : (
+                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
+                                    <Check className="w-3 h-3" /> Clear
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-foreground/90 leading-relaxed">{seg.text}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                </Card>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
