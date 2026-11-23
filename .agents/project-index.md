@@ -24,7 +24,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/common/ListPager.tsx (86 lines) - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
 - src/components/compliance/BrandManualSections.tsx (45 lines) - brand manual sections (components compliance)
-- src/components/compliance/BrandVoicePanel.tsx (430 lines) - brand voice panel (components compliance)
+- src/components/compliance/BrandVoicePanel.tsx (431 lines) - brand voice panel (components compliance)
 - src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - src/components/compliance/PolicyWatchPanel.tsx (214 lines) - policy watch panel (components compliance)
 - src/components/compliance/ScreenerCommentComposer.tsx (201 lines) - screener comment composer (components compliance)
