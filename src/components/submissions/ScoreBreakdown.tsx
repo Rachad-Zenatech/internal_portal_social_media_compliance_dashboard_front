@@ -12,12 +12,13 @@ import type { ComplianceCheckResponse } from "@/services/complianceService";
 export default function ScoreBreakdown({
   check,
   className = "",
+  provisional = false,
 }: {
   check: Pick<ComplianceCheckResponse, "score" | "violations" | "blocked" | "score_cap" | "raw_score"> & { ai_unavailable?: boolean };
   className?: string;
+  provisional?: boolean;
 }) {
   // Violations always list here; a warning only when it cost points. Cleared triggers never do.
-  if (check.ai_unavailable) return null;
   const scored = check.violations.filter((v) => {
     const status = v.status ?? "VIOLATION";
     if (v.penalty == null || status === "CLEARED") return false;
@@ -83,8 +84,8 @@ export default function ScoreBreakdown({
             </li>
           )}
           <li className="flex items-center justify-between gap-3 px-2.5 py-1.5 font-semibold text-foreground">
-            <span>Score</span>
-            <span className="tabular-nums">{check.ai_unavailable ? "No score" : `${check.score}/100`}</span>
+            <span>{provisional || check.ai_unavailable ? "Provisional score" : "Score"}</span>
+            <span className="tabular-nums">{check.score}/100</span>
           </li>
         </ul>
       )}

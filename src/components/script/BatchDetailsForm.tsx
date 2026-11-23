@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import BatchReviewerFields from "@/components/script/BatchReviewerFields";
+import ScriptRuleSetsField from "@/components/script/ScriptRuleSetsField";
 import { Field, MultiSelect } from "@/components/submissions/FormFields";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -121,16 +122,7 @@ export default function BatchDetailsForm({
           />
         )}
       </Field>
-      <Field label="Compliance Rule Set" required error={error("Rule sets", "Choose at least one rule set")}>
-        <MultiSelect
-          options={options?.rule_sets ?? []}
-          value={details.rule_sets ?? []}
-          onChange={(v) => onChange({ ...details, rule_sets: v })}
-          placeholder="Select rule sets"
-          compact
-          invalid={isMissing("Rule sets")}
-        />
-      </Field>
+      <ScriptRuleSetsField details={details} options={options?.rule_sets ?? []} disabled={disabled} onChange={onChange} />
       {!hideReviewers && <BatchReviewerFields details={details} missing={missing} onChange={onChange} />}
       <Field label="Need approval by" required error={error("Need approval by", "Pick a date in the future")}>
         <DateTimePicker

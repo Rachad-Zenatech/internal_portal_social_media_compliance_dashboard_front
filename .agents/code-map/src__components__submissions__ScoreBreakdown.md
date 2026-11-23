@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ScoreBreakdown.tsx (94 lines) - Violations always list here; a warning only when it cost points.
+## src/components/submissions/ScoreBreakdown.tsx (95 lines) - Violations always list here; a warning only when it cost points.
 - `ScoreBreakdown` (export function) L12 - How the compliance score was reached: 100, minus each finding's penalty (violations, claims that need a source, and  checks the AI thinks...

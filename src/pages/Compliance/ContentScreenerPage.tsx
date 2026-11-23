@@ -103,7 +103,7 @@ const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
 
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
-const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending || s.latest_check?.ai_unavailable ? null : s.latest_check?.score ?? null);
+const scoreOf = (s: ReviewQueueItem) => (s.latest_check?.analysis_pending ? null : s.latest_check?.score ?? null);
 const isFailing = (s: ReviewQueueItem) => {
   const score = scoreOf(s);
   return s.latest_check?.traffic_light === "RED" || (score != null && score < 60);
@@ -722,7 +722,7 @@ function ReviewPanel({
 
   const verdict =
     check?.ai_unavailable
-      ? { text: "No score yet", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
+      ? { text: "Provisional score", tone: "text-amber-700 dark:text-amber-400", ring: "border-amber-300 dark:border-amber-500/50" }
       : score == null
       ? { text: "Still checking", tone: "text-muted-foreground", ring: "border-muted" }
       : openCritical
@@ -741,7 +741,7 @@ function ReviewPanel({
     {
       key: "compliance",
       label: "Compliance",
-      value: check?.ai_unavailable ? "No score" : score == null ? "Checking" : `${score}/100`,
+      value: score == null ? "Checking" : `${score}/100`,
       sub: openCritical
         ? `${openCritical} critical flag${openCritical === 1 ? "" : "s"} open`
         : [open.length ? `${open.length} open` : "Nothing open", dismissedFlags.length ? `${dismissedFlags.length} dismissed` : ""].filter(Boolean).join(" · "),

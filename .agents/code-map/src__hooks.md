@@ -131,6 +131,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Wire` (type) L20
 - `useSharedEventSource` (export function) L22
 
+## src/hooks/useSourceComplianceRefresh.ts (19 lines) - Recheck once per changed source set after the creator opens Compliance; cancellation does not restart it.
+- `useSourceComplianceRefresh` (export function) L4 - Recheck once per changed source set after the creator opens Compliance; cancellation does not restart it.
+
 ## src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
 - `hostOf` (export function) L8 - A site as source trust keys it: lower case, without "www.".
 - `claimKey` (function) L17 - The claim as the server keys it: case, spacing and punctuation don't matter.

@@ -212,6 +212,7 @@ export default function SourceLinksField({
   useEffect(() => {
     return () => {
       if (pollTimerRef.current !== null) window.clearTimeout(pollTimerRef.current);
+      activityCbRef.current?.([]);
     };
   }, []);
 

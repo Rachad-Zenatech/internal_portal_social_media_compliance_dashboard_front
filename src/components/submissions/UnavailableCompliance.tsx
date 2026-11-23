@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import { AI_UNAVAILABLE_MESSAGE } from "@/components/submissions/submissionUi";
 
-/** Keep completed findings visible while withholding an unfinished review's final score. */
+/** A note below the calculated score when some review stages did not finish. */
 export default function UnavailableCompliance({ header, extra }: { header?: ReactNode; extra?: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5 shadow-xs sm:p-6">
-      {header ?? <h2 className="text-lg font-bold">Compliance check unavailable</h2>}
+    <div className="space-y-2">
+      {header}
       <p role="status" className="rounded-xl bg-amber-50 px-3.5 py-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
         {AI_UNAVAILABLE_MESSAGE}
       </p>
       {extra}
-    </section>
+    </div>
   );
 }

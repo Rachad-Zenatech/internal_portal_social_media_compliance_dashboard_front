@@ -4,9 +4,10 @@ import { AlertTriangle, Check, CheckCircle2, ChevronDown, ExternalLink, FileText
 import ClaimVsSource from "@/components/submissions/ClaimVsSource";
 import SourceTrustBar from "@/components/submissions/SourceTrustBar";
 import { SourceConfirmationsProvider, useSourceCalls } from "@/components/submissions/sourceConfirmationsContext";
-import type { SourceCheck, SourceClaim, SourceVerdict } from "@/services/complianceService";
+import type { SourceCheck, SourceVerdict } from "@/services/complianceService";
 import type { SourceLinkCheck } from "@/types/sourceLink";
 import { visibleSourceChecks } from "@/lib/sourceCheckVisibility";
+import { withSourceCoverage, type CoveredSourceClaim } from "@/lib/sourceCoverage";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
   SUPPORTED: { label: "Matches the source", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
@@ -56,16 +57,16 @@ function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<s
       })),
     });
   }
-  return visibleSourceChecks(merged);
+  return withSourceCoverage(visibleSourceChecks(merged));
 }
 
-function counts(claims: SourceClaim[]) {
+function counts(claims: CoveredSourceClaim[]) {
   const n = (v: SourceVerdict) => claims.filter((c) => c.verdict === v).length;
-  return { ok: n("SUPPORTED"), wrong: n("CONTRADICTED"), open: n("NOT_FOUND") + n("UNCLEAR") };
+  return { ok: n("SUPPORTED"), wrong: n("CONTRADICTED"), open: claims.filter((c) => !c.covered_by && ["NOT_FOUND", "UNCLEAR"].includes(c.verdict)).length };
 }
 
 /** The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm. */
-function ClaimRow({ claim, sourceUrl, creator }: { claim: SourceClaim; sourceUrl?: string | null; creator: boolean }) {
+function ClaimRow({ claim, sourceUrl, creator }: { claim: CoveredSourceClaim; sourceUrl?: string | null; creator: boolean }) {
   const calls = useSourceCalls();
   const url = claim.source_url || sourceUrl;
   const markedAsMatching = creator && url && calls?.mine(url, claim.claim)?.matches === true;
@@ -82,9 +83,10 @@ function ClaimRow({ claim, sourceUrl, creator }: { claim: SourceClaim; sourceUrl
           <Check aria-hidden="true" className="size-3.5" /> Marked as matching by you
         </p>
       )}
+      {claim.covered_by && <p className="text-xs font-medium text-emerald-700">Supported by another attached source: {claim.covered_by}</p>}
       <ClaimVsSource item={claim} sourceUrl={sourceUrl} />
-      {claim.note && claim.verdict !== "SUPPORTED" && <p className="ml-1 text-foreground/80">{claim.note}</p>}
-      {creator && !claim.note && claim.verdict === "NOT_FOUND" && (
+      {!claim.covered_by && claim.note && claim.verdict !== "SUPPORTED" && <p className="ml-1 text-foreground/80">{claim.note}</p>}
+      {creator && !claim.covered_by && !claim.note && claim.verdict === "NOT_FOUND" && (
         <p className="text-muted-foreground">Add a source that supports this claim or revise the wording.</p>
       )}
     </div>

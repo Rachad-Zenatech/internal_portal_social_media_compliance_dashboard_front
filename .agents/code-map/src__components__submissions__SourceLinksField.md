@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SourceLinksField.tsx (383 lines) - source links field (components submissions)
+## src/components/submissions/SourceLinksField.tsx (384 lines) - source links field (components submissions)
 - `Props` (interface) L13
 - `normalizeDraftUrl` (function) L25
 - `SourceLinkRow` (function) L38

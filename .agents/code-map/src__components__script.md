@@ -7,9 +7,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
 - `ApprovedScriptNextStep` (export function) L5
 
-## src/components/script/BatchDetailsForm.tsx (149 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `toLocalInput` (const) L13 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `BatchDetailsForm` (export function) L26 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
+## src/components/script/BatchDetailsForm.tsx (141 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `toLocalInput` (const) L14 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `BatchDetailsForm` (export function) L27 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
 ## src/components/script/BatchItemCard.tsx (333 lines) - batch item card (components script)
 - `Decision` (export interface) L20
@@ -155,6 +155,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `FlagCard` (export function) L758
     - `go` (fn) L789 - Go to the wording: in the script viewer when there is one, otherwise wherever it's shown on the page (the next    place it appears each c...
 - `VersionHistory` (export function) L901 - Every version of the script, newest first, with the reviewer's call and note on each.
+
+## src/components/script/ScriptRuleSetsField.tsx (31 lines) - Script rule sets use the post policy and are saved with the rest of the details.
+- `ScriptRuleSetsField` (export function) L7 - Script rule sets use the post policy and are saved with the rest of the details.
 
 ## src/components/script/ScriptSourcesChecked.tsx (18 lines) - script sources checked (components script)
 - `ScriptSourcesChecked` (export function) L5

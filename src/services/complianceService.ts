@@ -169,6 +169,7 @@ export interface ContextEvaluation {
 }
 
 export interface ComplianceCheckResponse {
+  checked_source_links?: string[];
   is_compliant: boolean;
   traffic_light: TrafficLight;
   score: number;

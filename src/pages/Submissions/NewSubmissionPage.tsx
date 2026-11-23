@@ -3,6 +3,8 @@ import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
 import { compressUploadImage } from "@/lib/compressUploadImage";
 import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
+import { complianceSourcesChanged, sourceLinksKey } from "@/lib/complianceSources";
+import { useSourceComplianceRefresh } from "@/hooks/useSourceComplianceRefresh";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -589,7 +591,6 @@ export default function NewSubmissionPage() {
     }
   }, [loadingExisting]);
 
-  // ----- Saving (S01, S02-S04, S06, S08) -----
   const buildPayload = (): SubmissionUpdate => {
     const clear: SubmissionUpdate["clear_fields"] = [];
     if (!publishDate) clear.push("publish_at");
@@ -725,7 +726,6 @@ export default function NewSubmissionPage() {
     markEdited();
   };
 
-  // ----- Files (S05, S07) -----
   const uploadFiles = async (list: File[], opts: { replacingMain?: boolean; asScript?: boolean } = {}) => {
     if (list.length === 0 || changingPostType) return;
 
@@ -969,7 +969,6 @@ export default function NewSubmissionPage() {
   const openStep = (target: EditorStep) =>
     target !== "suggestions" && onDetails && target !== "details" && !readOnly ? void leaveDetails(target) : goToStep(target);
 
-  /** Save and screen the post against the rulebook; settle duplicate/repost decisions first. */
   const runComplianceCheck = async (confirmRepost = false) => {
     if (checkController.current) return;
     if (!detailsComplete && !videoLocked) {
@@ -1046,7 +1045,9 @@ export default function NewSubmissionPage() {
 
   const hasCheck = Boolean(checkedSub?.latest_check);
   const localMediaChanged = mediaChanged(files, checkedSub);
-  const checkStale = hasCheck && (localMediaChanged || (scriptOnly && videoLocked
+  const sourceInputsChanged = complianceSourcesChanged(checkedSub?.latest_check, sourceLinks);
+  useSourceComplianceRefresh({ enabled: hasCheck && sourceInputsChanged && stepView === "compliance" && !readOnly && detailsComplete && !(scriptOnly && videoLocked), busy: checking || continuing || sourceChecking.length > 0, revision: `${submissionId}|${sourceLinksKey(sourceLinks)}`, onRefresh: runComplianceCheck });
+  const checkStale = hasCheck && (sourceInputsChanged || checkedSub?.check_outdated || localMediaChanged || (scriptOnly && videoLocked
     ? Boolean(scriptStage.data?.precheck_stale)
     : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
@@ -1202,7 +1203,6 @@ export default function NewSubmissionPage() {
     }
   };
 
-  // ----- Caption editor -----
   const exec = (command: string, arg?: string) => {
     editorRef.current?.focus();
     document.execCommand(command, false, arg);
@@ -1354,7 +1354,6 @@ export default function NewSubmissionPage() {
           current={stepView}
           states={{
             details: detailsComplete ? "done" : "todo",
-            // Post detail edits preserve results; replaced media makes them stale.
             compliance: hasCheck ? (checkStale ? "stale" : "done") : "todo",
             sentiment: sentimentAnalysis?.status === "COMPLETED" ? (recheck.sentiment ? "done" : "stale") : "todo",
             mood: mood ? "done" : "todo",
@@ -2264,7 +2263,7 @@ export default function NewSubmissionPage() {
                   )}
                   <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
-                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
+                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={checkStale || isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
                     disabled={submitting || checking || uploading.length > 0}
                     publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
                     onSubmit={() => void submit()}

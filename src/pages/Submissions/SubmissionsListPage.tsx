@@ -679,7 +679,7 @@ function ReviewCard({
           open_critical_flags: sub.open_critical_flags,
           approval_score: sub.approval_score,
           min_approval_score: sub.min_approval_score,
-          score: isAnalysing(sub.latest_check) || sub.latest_check?.ai_unavailable ? null : sub.latest_check?.score ?? null,
+          score: isAnalysing(sub.latest_check) ? null : sub.latest_check?.score ?? null,
           manual_rules: sub.latest_check?.manual_review_rules,
         }}
       />
@@ -880,7 +880,7 @@ function ReviewCard({
                 : check && isAnalysing(check)
                 ? "Under review: still reading the post"
                 : check?.ai_unavailable
-                ? "No score: the AI review couldn't run"
+                ? `${check.score}/100 ? Provisional; run Check again`
                 : check
                 ? `${check.score}/100 · ${check.blocked ? "Blocked" : check.is_compliant ? "No issues" : `${check.violations_count} issue${check.violations_count === 1 ? "" : "s"}`}`
                 : summary.script_status
