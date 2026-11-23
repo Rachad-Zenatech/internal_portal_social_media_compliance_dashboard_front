@@ -112,6 +112,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FinalPublishDate.tsx (21 lines) - final publish date (components submissions)
+- src/components/submissions/FindingExplanation.tsx (34 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
 - src/components/submissions/FindingStatus.tsx (227 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - src/components/submissions/FlagReviewControl.tsx (223 lines) - flag review control (components submissions)
 - src/components/submissions/FlaggedVideo.tsx (44 lines) - Video frame with the compliance checker’s yellow finding boxes.
@@ -122,7 +123,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
 - src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
-- src/components/submissions/MediaFindingOverlay.tsx (51 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- src/components/submissions/MediaFindingOverlay.tsx (52 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
@@ -166,12 +167,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SubmissionStartAnotherButton.tsx (12 lines) - submission start another button (components submissions)
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
 - src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
-- src/components/submissions/UnavailableCompliance.tsx (16 lines) - An unfinished AI review has no findings or score to present.
+- src/components/submissions/UnavailableCompliance.tsx (16 lines) - Keep completed findings visible while withholding an unfinished review's final score.
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
 - src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
-- src/components/submissions/submissionUi.tsx (437 lines) - submission ui (components submissions)
+- src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
 - src/components/submissions/topicTrendSignals.ts (22 lines) - Plain-language signals from the topic numbers, for the perception check.
 - src/components/ui/HelpIcon.tsx (30 lines) - help icon (components ui)
 - src/components/ui/MultiSelectFilter.tsx (108 lines) - multi select filter (components ui)
@@ -245,8 +246,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
-- src/lib/findingEvidence.ts (16 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
-- src/lib/findingImage.ts (34 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
+- src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
+- src/lib/findingImage.ts (38 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/imageProvenance.ts (14 lines) - image provenance (lib)
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
@@ -328,7 +329,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (59 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
-- src/services/complianceService.ts (379 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (382 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)

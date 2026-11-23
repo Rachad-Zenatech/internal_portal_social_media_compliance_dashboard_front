@@ -5,6 +5,7 @@ const clean = (text: string) => text.replace(/^\s*Text in image\s+\d+\s*:\s*/i, 
 
 /** Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding. */
 export function findingEvidence(finding: ComplianceViolation): string[] {
+  if (finding.evaluation?.source === "ADJUSTED" && finding.evaluation.model_decision === "NO_VIOLATION") return [];
   const matched = clean(finding.evaluation?.matched_text ?? "");
   const passage = clean(finding.passage ?? "");
   const context = passage.length <= 400 ? passage : "";

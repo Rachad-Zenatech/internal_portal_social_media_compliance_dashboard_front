@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/UnavailableCompliance.tsx (16 lines) - An unfinished AI review has no findings or score to present.
-- `UnavailableCompliance` (export function) L5 - An unfinished AI review has no findings or score to present.
+## src/components/submissions/UnavailableCompliance.tsx (16 lines) - Keep completed findings visible while withholding an unfinished review's final score.
+- `UnavailableCompliance` (export function) L5 - Keep completed findings visible while withholding an unfinished review's final score.

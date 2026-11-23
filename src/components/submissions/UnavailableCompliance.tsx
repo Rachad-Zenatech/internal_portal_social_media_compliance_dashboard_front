@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { AI_UNAVAILABLE_MESSAGE } from "@/components/submissions/submissionUi";
 
-/** An unfinished AI review has no findings or score to present. */
+/** Keep completed findings visible while withholding an unfinished review's final score. */
 export default function UnavailableCompliance({ header, extra }: { header?: ReactNode; extra?: ReactNode }) {
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5 shadow-xs sm:p-6">

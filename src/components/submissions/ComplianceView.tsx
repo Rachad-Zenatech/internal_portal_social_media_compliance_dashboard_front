@@ -33,9 +33,9 @@ export default function ComplianceView({
   if (!check) {
     return <p className="text-xs text-muted-foreground">{emptyText}</p>;
   }
-  if (check.ai_unavailable) return <UnavailableCompliance />;
   return (
     <div className="rounded-xl border border-border/70 p-4 space-y-3">
+      {check.ai_unavailable && <UnavailableCompliance />}
       <div className="flex items-center justify-between gap-2 text-sm font-semibold">
         <span className="flex items-center gap-1.5">
           {check.traffic_light === "RED" ? (
@@ -45,7 +45,7 @@ export default function ComplianceView({
           ) : (
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           )}
-          {check.is_compliant
+          {check.ai_unavailable ? "Findings from completed checks" : check.is_compliant
             ? "No issues found in the text"
             : check.violations_count > 0
             ? `${check.violations_count} potential issue${check.violations_count === 1 ? "" : "s"}`
@@ -54,7 +54,7 @@ export default function ComplianceView({
         {isAnalysing(check) ? (
           <UnderReviewBadge progress={sub.analysis_progress} />
         ) : (
-          <span className="tabular-nums">{check.score}/100</span>
+          !check.ai_unavailable && <span className="tabular-nums">{check.score}/100</span>
         )}
       </div>
       {isAnalysing(check) && <AnalysisProgressPanel progress={sub.analysis_progress} />}

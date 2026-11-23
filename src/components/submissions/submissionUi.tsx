@@ -43,9 +43,8 @@ export const isAnalysing = (check?: StoredCheck | null) =>
 export const isAiUnavailable = (check?: StoredCheck | null) => Boolean(check?.ai_unavailable);
 
 export const AI_UNAVAILABLE_MESSAGE =
-  // "The AI review couldn't run (the Gemini key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
-  "The AI review couldn't run (the AI key may be out of credits, or the service isn't responding), so this post has no compliance score yet. Run the check again once it's back.";
-export const AI_UNAVAILABLE_SHORT = "No score: the AI review couldn't run (out of credits or the service is down).";
+  "The AI review did not finish. Findings from completed checks are shown below, but there is no final compliance score or approval yet. Run the check again to complete the review.";
+export const AI_UNAVAILABLE_SHORT = "No final score: the AI review did not finish.";
 
 export function AiUnavailableBadge({ className = "" }: { className?: string }) {
   return (

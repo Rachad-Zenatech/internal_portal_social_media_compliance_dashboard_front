@@ -43,6 +43,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__DeleteDraftDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DuplicateNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FinalPublishDate.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__FindingExplanation.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FindingStatus.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlagReviewControl.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlaggedVideo.md | 1 | 1 KB |
