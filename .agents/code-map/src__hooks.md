@@ -10,6 +10,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - `useBackgroundSourceChecks` (export function) L6 - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 
+## src/hooks/useBrandManualSections.ts (13 lines) - Read the selected brand's full manual independently of AI extraction status.
+- `useBrandManualSections` (export function) L5 - Read the selected brand's full manual independently of AI extraction status.
+
 ## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
 

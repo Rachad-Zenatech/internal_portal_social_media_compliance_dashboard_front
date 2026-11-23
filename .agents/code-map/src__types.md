@@ -43,7 +43,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
 - `MarkedCaptionTerm` (export interface) L2 - A rule flag rendered over wording in the caption.
 
-## src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
+## src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) L2 - Kinds of Messaging Context the content analysis is given.
 - `ContextEntryInput` (export interface) L4
 - `ContextEntry` (export interface) L19
@@ -56,8 +56,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `BrandColor` (export interface) L96
 - `PaletteRow` (export interface) L103 - A row of swatches in the manual (e.g.
 - `BrandTypeface` (export interface) L109
-- `BrandVoiceInput` (export interface) L116 - What can be edited by hand.
-- `BrandVoice` (export interface) L127 - A brand's voice, read from its brand manual (PDF) or written by hand.
+- `BrandManualSection` (export interface) L116 - A complete PDF page grouped under its printed heading, with the original artwork available.
+- `BrandVoiceInput` (export interface) L125 - What can be edited by hand.
+- `BrandVoice` (export interface) L136 - A brand's voice, read from its brand manual (PDF) or written by hand.
 
 ## src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - `FlagDismissReason` (export type) L1

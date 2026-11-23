@@ -112,6 +112,15 @@ export interface BrandTypeface {
   usage?: string | null;
 }
 
+/** A complete PDF page grouped under its printed heading, with the original artwork available. */
+export interface BrandManualSection {
+  page: number;
+  title: string;
+  text: string;
+  width: number;
+  height: number;
+}
+
 /** What can be edited by hand. */
 export interface BrandVoiceInput {
   voice?: string | null;

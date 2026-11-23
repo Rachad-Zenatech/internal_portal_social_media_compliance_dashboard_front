@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, Download, FileUp, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Download, FileText, FileUp, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { withLinkToken } from "@/lib/linkToken";
 import { contextService } from "@/services/contextService";
 import type { BrandColor, BrandTypeface, BrandVoice, BrandVoiceInput } from "@/types/context";
+import BrandManualSections from "@/components/compliance/BrandManualSections";
 
 const STATUS: Record<BrandVoice["status"], { label: string; className: string }> = {
   NONE: { label: "No manual", className: "bg-muted text-muted-foreground" },
@@ -67,8 +68,8 @@ export default function BrandVoicePanel() {
       <div>
         <p className="text-sm font-semibold text-foreground">Brand voice by brand</p>
         <p className="text-xs text-muted-foreground">
-          Upload each brand's manual (PDF). Its voice, tone, colours, typefaces and logo are read from it and used when
-          content for that brand is analysed. You can edit anything that was read.
+          Upload each brand's manual (PDF). Read its full contents by title, including the original artwork.
+          Each manual stays with its selected brand.
         </p>
       </div>
       {list.length > 0 && (
@@ -100,7 +101,7 @@ export default function BrandVoicePanel() {
 
 function BrandCard({ voice: v, onChanged, onEdit }: { voice: BrandVoice; onChanged: () => void; onEdit: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const status = STATUS[v.status];
+  const status = v.manual_name ? { label: "Manual uploaded", className: "bg-muted text-muted-foreground" } : STATUS[v.status];
   const empty = !v.voice && !v.colors.length && !v.typefaces.length && !v.tone.length;
 
   const upload = useMutation({
@@ -126,7 +127,7 @@ function BrandCard({ voice: v, onChanged, onEdit }: { voice: BrandVoice; onChang
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-[12rem] flex-1 items-center gap-3">
           <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border border-border/70 bg-muted/30">
-            {v.has_logo ? (
+            {v.manual_name ? <FileText className="h-5 w-5 text-muted-foreground" /> : v.has_logo ? (
               <img
                 src={withLinkToken(`${contextService.brandLogoUrl(v.brand_code)}?v=${encodeURIComponent(v.extracted_at ?? "")}`)}
                 alt={`${v.brand_name} logo`}
@@ -185,13 +186,13 @@ function BrandCard({ voice: v, onChanged, onEdit }: { voice: BrandVoice; onChang
           )}
         </div>
       )}
-      {v.error && (v.status === "PARTIAL" || v.status === "FAILED") && (
+      {!v.manual_name && v.error && (v.status === "PARTIAL" || v.status === "FAILED") && (
         <p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
           <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" /> {v.error}
         </p>
       )}
 
-      {empty ? (
+      {v.manual_name ? <BrandManualSections voice={v} /> : empty ? (
         <p className="text-xs text-muted-foreground">
           {v.status === "PROCESSING"
             ? "Reading the manual…"

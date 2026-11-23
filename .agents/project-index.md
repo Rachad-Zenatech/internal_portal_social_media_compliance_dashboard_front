@@ -23,7 +23,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
 - src/components/common/ListPager.tsx (86 lines) - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
-- src/components/compliance/BrandVoicePanel.tsx (429 lines) - brand voice panel (components compliance)
+- src/components/compliance/BrandManualSections.tsx (45 lines) - brand manual sections (components compliance)
+- src/components/compliance/BrandVoicePanel.tsx (430 lines) - brand voice panel (components compliance)
 - src/components/compliance/NewsroomSyncBar.tsx (84 lines) - While a sync runs, follow it so new facts show up as they're added.
 - src/components/compliance/PolicyWatchPanel.tsx (214 lines) - policy watch panel (components compliance)
 - src/components/compliance/ScreenerCommentComposer.tsx (201 lines) - screener comment composer (components compliance)
@@ -204,6 +205,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/context/VideoUploadQueueContext.tsx (802 lines) - video upload queue context (context)
 - src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
+- src/hooks/useBrandManualSections.ts (13 lines) - Read the selected brand's full manual independently of AI extraction status.
 - src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 - src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
@@ -330,7 +332,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/complianceService.ts (379 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
-- src/services/contextService.ts (41 lines) - The newsroom sync running now, or the last one (null before the first).
+- src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
@@ -347,7 +349,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/canva.ts (20 lines) - The user's Canva account.
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
 - src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
-- src/types/context.ts (143 lines) - Kinds of Messaging Context the content analysis is given.
+- src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/imageProvenance.ts (12 lines) - Saved answer to the post's required AI-image disclosure question.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.

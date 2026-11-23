@@ -2,6 +2,7 @@ import { apiClient } from "@/services/apiClient";
 import type {
   BrandVoice,
   BrandVoiceInput,
+  BrandManualSection,
   ContextEntry,
   ContextEntryInput,
   ContextSync,
@@ -37,4 +38,8 @@ export const contextService = {
     apiClient.put<BrandVoice>(`/api/messaging-context/brand-voices/${brand}`, data),
   brandLogoUrl: (brand: string) => `/api/messaging-context/brand-voices/${brand}/logo`,
   brandManualUrl: (brand: string) => `/api/messaging-context/brand-voices/${brand}/manual`,
+  brandManualSections: (brand: string) =>
+    apiClient.get<BrandManualSection[]>(`/api/messaging-context/brand-voices/${encodeURIComponent(brand)}/manual/sections`),
+  brandManualPageUrl: (brand: string, page: number) =>
+    `/api/messaging-context/brand-voices/${encodeURIComponent(brand)}/manual/pages/${page}`,
 };
