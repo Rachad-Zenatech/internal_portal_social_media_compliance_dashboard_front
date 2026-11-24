@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { hasPostImages } from "@/lib/imageProvenance";
@@ -72,12 +73,23 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
       onRefresh(await submissionService.get(submissionId));
     } finally { setRetrying(false); }
   };
-  const statusText = failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : pending ? "Reading uploaded image(s) for faces…" : faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
+  const scanning = retrying || pending;
+  const statusText = !scanning && failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : !scanning && faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
   return (
     <fieldset disabled={disabled} className="mt-4 space-y-2 rounded-xl border border-border/70 px-4 pb-3 pt-2.5">
       <legend className="px-1 text-sm font-semibold text-foreground">People in images</legend>
-      {statusText && <p className="text-xs text-muted-foreground">{statusText}</p>}
-      {(pending || failedFiles.length > 0) && <button type="button" onClick={() => void retry()} disabled={retrying || disabled} className="w-fit text-xs font-medium text-primary underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60">{retrying ? "Retrying face detection…" : "Retry face detection"}</button>}
+      {scanning ? (
+        <div className="space-y-1.5" aria-live="polite">
+          <div className="flex items-center gap-2 text-xs font-medium text-primary">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" />
+            <span>{retrying ? "Restarting face detection scan…" : "Scanning uploaded image(s) for faces…"}</span>
+          </div>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-primary/15">
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-primary/60" />
+          </div>
+        </div>
+      ) : statusText ? <p className="text-xs text-muted-foreground">{statusText}</p> : null}
+      {!retrying && failedFiles.length > 0 && <button type="button" onClick={() => void retry()} disabled={disabled} className="w-fit text-xs font-medium text-primary underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60">Retry face detection</button>}
       {faces.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-medium text-foreground">Detected people ({faces.length}) — mark whether each person is an employee:</p>
