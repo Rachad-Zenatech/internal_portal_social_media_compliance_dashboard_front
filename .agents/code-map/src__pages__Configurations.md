@@ -4,8 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Configurations/AiStatusPage.tsx (76 lines) - ai status page (pages  configurations)
-- `AiStatusPage` (export function) L20
+## src/pages/Configurations/AiStatusPage.tsx (85 lines) - ai status page (pages  configurations)
+- `AiStatusPage` (export function) L22
 
 ## src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - `ApprovalPaths` (export function) L24 - Who gives final approval for which content.

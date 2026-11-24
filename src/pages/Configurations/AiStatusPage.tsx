@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAiOverview } from "@/hooks/useAiOverview";
+import type { AiErrorsFilter } from "@/types/aiOverview";
 import AiCoresGrid from "./aiStatus/AiCoresGrid";
+import AiErrorsDialog from "./aiStatus/AiErrorsDialog";
 import AiFeatureMatrix from "./aiStatus/AiFeatureMatrix";
 import AiPipelineTelemetry from "./aiStatus/AiPipelineTelemetry";
 import AiSummaryCards from "./aiStatus/AiSummaryCards";
@@ -20,6 +22,7 @@ const WINDOW_OPTIONS = [
 export default function AiStatusPage() {
   const [hours, setHours] = useState<number>(24);
   const [selectedCore, setSelectedCore] = useState<string>("ALL");
+  const [errorFilter, setErrorFilter] = useState<AiErrorsFilter | null>(null);
   const { data, isLoading, isError, error, isFetching, refetch } = useAiOverview(hours);
 
   if (isLoading) {
@@ -66,10 +69,16 @@ export default function AiStatusPage() {
           </div>
         }
       />
-      <AiSummaryCards data={data} />
+      <AiSummaryCards data={data} onShowErrors={setErrorFilter} />
       <AiCoresGrid cores={data.cores} selectedCore={selectedCore} onSelectCore={setSelectedCore} />
-      <AiFeatureMatrix features={data.features} selectedCore={selectedCore} coreLabel={coreLabel} />
-      <AiPipelineTelemetry data={data} />
+      <AiFeatureMatrix features={data.features} selectedCore={selectedCore} coreLabel={coreLabel} onShowErrors={setErrorFilter} />
+      <AiPipelineTelemetry data={data} onShowErrors={setErrorFilter} />
+      <AiErrorsDialog
+        hours={hours}
+        filter={errorFilter}
+        onChangeFilter={setErrorFilter}
+        onClose={() => setErrorFilter(null)}
+      />
     </div>
   );
 }

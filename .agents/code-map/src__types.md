@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/types/aiOverview.ts (124 lines) - ai overview (types)
+## src/types/aiOverview.ts (152 lines) - ai overview (types)
 - `AiStateCode` (export type) L1
 - `AiFeatureCoreRef` (export interface) L3
 - `AiFeatureUsage24h` (export interface) L8
@@ -13,7 +13,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `AiModelBreakdownRow` (export interface) L59
 - `AiStepBreakdownRow` (export interface) L72
 - `AiGuardBreakdownRow` (export interface) L81
-- `AiOverviewResponse` (export interface) L87
+- `AiErrorsFilter` (export interface) L87
+- `AiErrorEntry` (export interface) L93
+- `AiErrorsResponse` (export interface) L108
+- `AiOverviewResponse` (export interface) L115
 
 ## src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - `ApprovalPathInput` (export interface) L2 - Who gives final approval for which content.

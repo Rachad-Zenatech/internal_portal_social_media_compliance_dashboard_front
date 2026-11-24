@@ -84,6 +84,34 @@ export interface AiGuardBreakdownRow {
   calls: number;
 }
 
+export interface AiErrorsFilter {
+  feature?: string;
+  label?: string;
+  model?: string;
+}
+
+export interface AiErrorEntry {
+  id: string;
+  trace_id?: string | null;
+  feature: string;
+  model?: string | null;
+  status: string;
+  error_type?: string | null;
+  error_kind?: string | null;
+  route_tier?: string | null;
+  message?: string | null;
+  guard_verdict?: string | null;
+  latency_ms?: number | null;
+  created_at: string;
+}
+
+export interface AiErrorsResponse {
+  hours: number;
+  feature?: string | null;
+  model?: string | null;
+  items: AiErrorEntry[];
+}
+
 export interface AiOverviewResponse {
   generated_at: string;
   hours: number;

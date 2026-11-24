@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
+  AiErrorsFilter,
   AiGuardBreakdownRow,
   AiModelBreakdownRow,
   AiOverviewResponse,
@@ -11,7 +12,13 @@ import type {
 } from "@/types/aiOverview";
 import { formatCount, formatLatency } from "./statusStyles";
 
-function ModelsTable({ rows }: { rows: AiModelBreakdownRow[] }) {
+function ModelsTable({
+  rows,
+  onShowErrors,
+}: {
+  rows: AiModelBreakdownRow[];
+  onShowErrors: (filter: AiErrorsFilter) => void;
+}) {
   return (
     <Table>
       <TableHeader>
@@ -39,7 +46,17 @@ function ModelsTable({ rows }: { rows: AiModelBreakdownRow[] }) {
               <TableCell className="font-mono text-xs text-muted-foreground">{row.model || "—"}</TableCell>
               <TableCell className="text-right text-xs tabular-nums">{formatCount(row.calls)}</TableCell>
               <TableCell className="text-right text-xs tabular-nums">
-                {row.errors > 0 ? <span className="font-medium text-rose-600">{row.errors}</span> : "0"}
+                {row.errors > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onShowErrors({ feature: row.feature, model: row.model || undefined })}
+                    className="font-medium text-rose-600 underline decoration-rose-400/70 underline-offset-2 hover:text-rose-700"
+                  >
+                    {row.errors} err
+                  </button>
+                ) : (
+                  "0"
+                )}
               </TableCell>
               <TableCell className="text-right text-xs tabular-nums">{formatCount(row.cache_hits)}</TableCell>
               <TableCell className="text-right text-xs tabular-nums">
@@ -130,7 +147,13 @@ function GuardTable({ rows }: { rows: AiGuardBreakdownRow[] }) {
   );
 }
 
-export default function AiPipelineTelemetry({ data }: { data: AiOverviewResponse }) {
+export default function AiPipelineTelemetry({
+  data,
+  onShowErrors,
+}: {
+  data: AiOverviewResponse;
+  onShowErrors: (filter: AiErrorsFilter) => void;
+}) {
   return (
     <Card className="overflow-hidden py-0 shadow-xs">
       <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3">
@@ -146,7 +169,7 @@ export default function AiPipelineTelemetry({ data }: { data: AiOverviewResponse
             <TabsTrigger value="guard">Guardrails ({data.guard.length})</TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="models" className="m-0"><ModelsTable rows={data.models} /></TabsContent>
+        <TabsContent value="models" className="m-0"><ModelsTable rows={data.models} onShowErrors={onShowErrors} /></TabsContent>
         <TabsContent value="steps" className="m-0"><StepsTable rows={data.steps} /></TabsContent>
         <TabsContent value="guard" className="m-0"><GuardTable rows={data.guard} /></TabsContent>
       </Tabs>
