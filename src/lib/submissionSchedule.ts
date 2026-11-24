@@ -16,9 +16,9 @@ export function stageOf(submission: { status: string; calendar_scheduled_for?: s
 }
 
 /** Schedule a corrected post only after its submission has passed server checks. */
-export function scheduleCorrectedPost(submission: Pick<Submission, "id" | "status">, publishDate?: Date): string | null {
+export async function scheduleCorrectedPost(submission: Pick<Submission, "id" | "status">, publishDate?: Date): Promise<string | null> {
   if (submission.status !== "APPROVED" || !publishDate || !Number.isFinite(publishDate.getTime())) return null;
   const scheduledFor = publishDate.toISOString();
-  recordSproutSend(`sub-${submission.id}`, scheduledFor);
+  await recordSproutSend(`sub-${submission.id}`, scheduledFor);
   return `/content-calendar?date=${encodeURIComponent(scheduledFor)}&post=sub-${submission.id}`;
 }

@@ -15,7 +15,7 @@ export function useApprovedPublishing(submissionId: string, intended?: string | 
   const dateConfirmed = confirmedDate === finalDate.value;
   const needsDateConfirmation = usesIntendedDate && !dateConfirmed && !scheduled;
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const confirm = () => {
+  const confirm = async () => {
     if (scheduled) return;
     if (needsDateConfirmation) {
       toast.error("Confirm the intended publish date or choose a different date.");
@@ -26,7 +26,8 @@ export function useApprovedPublishing(submissionId: string, intended?: string | 
       toast.error("Choose a final publish date and time in the future.");
       return;
     }
-    recordSproutSend(itemId, finalDate.date.toISOString());
+    try { await recordSproutSend(itemId, finalDate.date.toISOString()); }
+    catch (error) { toast.error((error as Error).message); return; }
     setConfirmOpen(false);
     toast.success("Post added to the calendar (simulated).");
   };

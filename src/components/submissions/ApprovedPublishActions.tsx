@@ -1,3 +1,5 @@
+import PostApprovalSuggestionNotice from "./PostApprovalSuggestionNotice";
+import { useApprovedPostAccess } from "@/hooks/usePostApprovalSuggestions";
 import { useId } from "react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -16,15 +18,17 @@ export default function ApprovedPublishActions({ submissionId, platform, intende
 }) {
   const id = useId();
   const { finalDate, scheduled, confirmOpen, setConfirmOpen, confirm, usesIntendedDate, dateConfirmed, needsDateConfirmation, onDateConfirmed } = useApprovedPublishing(submissionId, intended);
-  const disabled = !platform || Boolean(finalDate.error) || Boolean(scheduled) || Boolean(needsDateConfirmation);
+  const suggestions = useApprovedPostAccess(submissionId);
+  const disabled = suggestions.isLoading || suggestions.isError || suggestions.publishingBlocked || !platform || Boolean(finalDate.error) || Boolean(scheduled) || Boolean(needsDateConfirmation);
   const when = finalDate.date ? format(finalDate.date, "EEE, MMM d, yyyy · h:mm a") : "";
 
   return (
     <div className="w-full space-y-3">
+      <PostApprovalSuggestionNotice access={suggestions} />
       <label htmlFor={id} className="block text-sm font-medium">Final publish date and time (required)</label>
       <p className="text-xs text-muted-foreground">{intended ? "Confirm the intended publish date below, or change it before publishing." : "No intended publish date is set. Choose the final publish date before publishing."} Times use your local time zone.</p>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="min-w-0 flex-1"><DateTimePicker id={id} aria-label="Final publish date and time" value={finalDate.value} onChange={finalDate.onChange} withTime disablePast disabled={Boolean(scheduled)} /></div>
+        <div className="min-w-0 flex-1"><DateTimePicker id={id} aria-label="Final publish date and time" value={finalDate.value} onChange={finalDate.onChange} withTime disablePast disabled={Boolean(scheduled) || suggestions.publishingBlocked} /></div>
         <PublishPostButton onClick={() => setConfirmOpen(true)} disabled={disabled} label={scheduled ? "Added to calendar" : "Publish post"} />
       </div>
       {usesIntendedDate && !scheduled && (

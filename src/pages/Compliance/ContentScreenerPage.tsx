@@ -43,6 +43,8 @@ import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import CommentComposer from "@/components/compliance/ScreenerCommentComposer";
 import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewCommentsPanel";
 import VideoTranscript from "@/components/submissions/VideoTranscript";
+import PostApprovalSuggestionNotice from "@/components/submissions/PostApprovalSuggestionNotice";
+import { usePostApprovalSuggestions } from "@/hooks/usePostApprovalSuggestions";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
@@ -697,7 +699,8 @@ function ReviewPanel({
   const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
-  const canComment = (canReview || isSuggester) && s.status === "IN_REVIEW";
+  const suggestions = usePostApprovalSuggestions(s);
+  const canComment = suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW");
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -990,12 +993,12 @@ function ReviewPanel({
           </div>
         )}
         {tab === "comments" && !canComment && s.status !== "IN_REVIEW" && (
-          <p className="text-xs text-muted-foreground">This was decided, so its notes are read-only. To raise something new, reopen it for changes.</p>
+          <p className="text-xs text-muted-foreground">The suggestion window is closed. These comments are read-only.</p>
         )}
         {tab === "comments" && (
           <ReviewCommentsPanel
             submissionId={s.id}
-            canComment={canReview || isSuggester}
+            canComment={canComment}
             currentTime={hasVideo ? now : undefined}
             onSeek={seek}
             activeCommentId={activeComment}
@@ -1010,6 +1013,7 @@ function ReviewPanel({
 
       </div>
 
+      <PostApprovalSuggestionNotice access={suggestions} />
       {/* Decision: always in view */}
       <div className="shrink-0 border-t border-border/70 bg-card px-4 py-3">
         {s.status === "IN_REVIEW" && canReview && (
@@ -1056,18 +1060,7 @@ function ReviewPanel({
             </p>
           )
         ) : s.status === "APPROVED" && s.can_manage_approval ? (
-          <ApprovalActions
-            target={{
-              id: s.id,
-              reference_code: s.reference_code,
-              title: s.title,
-              status: s.status,
-              current_version: s.current_version,
-              publish_at: s.publish_at,
-              can_manage_approval: s.can_manage_approval,
-            }}
-            isCreator={false}
-          />
+          <ApprovalActions target={s} isCreator={false} />
         ) : (
           <p className="text-sm text-muted-foreground">
             {s.status === "CHANGES_REQUESTED" ? "Sent back to the creator for changes." : s.status === "APPROVED" ? "Approved." : "Decided."}
@@ -1102,7 +1095,8 @@ function Workspace({
   // Which panel tab is open, and which flag was picked on the post. Clicking the post drives both.
   // Every reviewer (deciding or suggesting) opens a post in review on the comments, to leave their suggestions.
   const { isSuggester } = useAuth();
-  const startTab: PanelTab = s.status === "IN_REVIEW" && (canReview || isSuggester) ? "comments" : "compliance";
+  const suggestions = usePostApprovalSuggestions(s);
+  const startTab: PanelTab = suggestions.canComment || s.status === "IN_REVIEW" && (canReview || isSuggester) ? "comments" : "compliance";
   const [tab, setTab] = useState<PanelTab>(startTab);
   const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>([startTab]));
   useEffect(() => {
@@ -1144,7 +1138,7 @@ function Workspace({
           onPlaying={setPlaying}
           seek={seek}
           onUploadScript={onUploadScript}
-          canComment={(canReview || isSuggester) && s.status === "IN_REVIEW"}
+          canComment={suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW")}
           activeCommentId={activeComment}
           onActiveComment={(id) => {
             setActiveComment(id);
@@ -1264,7 +1258,7 @@ export default function ContentScreenerPage() {
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
   );
 
-  const { queue, counts } = useScreenerQueue(postTab, scope);
+  const { queue, counts, decidedItems } = useScreenerQueue(postTab, scope);
   const options = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 5 * 60_000 });
   const labels = useMemo(
     () => ({
@@ -1298,7 +1292,10 @@ export default function ContentScreenerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, selectedId]);
   // Whatever was picked last, else the first post on the page.
-  const selected = visible.find((s) => s.id === selectedId) ?? paged.pageItems[0] ?? null;
+  const selected = visible.find((s) => s.id === selectedId) ?? decidedItems.find((s) => s.id === selectedId && s.status === "APPROVED") ?? paged.pageItems[0] ?? null;
+  useEffect(() => {
+    if (!selectedId && selected) setSelectedId(selected.id);
+  }, [selectedId, selected]);
   const listCount = visible.length;
   const renderPostRow = (s: ReviewQueueItem) => {
         const due = dueText(s, postTab);

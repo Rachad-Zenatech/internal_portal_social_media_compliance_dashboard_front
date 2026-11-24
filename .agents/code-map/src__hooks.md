@@ -7,7 +7,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useAiOverview.ts (16 lines) - use ai overview (hooks)
 - `useAiOverview` (export function) L5
 
-## src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
+## src/hooks/useApprovedPublishing.ts (37 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
 
 ## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
@@ -18,6 +18,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
+
+## src/hooks/useCalendarSend.ts (16 lines) - Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
+- `useCalendarSend` (export function) L7
 
 ## src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 - `useCaptionCommentSelection` (export function) L7 - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
@@ -71,6 +74,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
+## src/hooks/usePostApprovalSuggestions.ts (27 lines) - use post approval suggestions (hooks)
+- `usePostApprovalSuggestions` (export function) L6
+- `useApprovedPostAccess` (export function) L18
+
 ## src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
 - `PostTypeChangeOptions` (interface) L7
 - `usePostTypeChange` (export function) L19 - Remove saved attachments before switching to another post type.
@@ -102,7 +109,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
 - `useScreenerMediaNavigation` (export function) L8 - Rule selection also navigates the carousel, including repeated clicks on the same rule.
 
-## src/hooks/useScreenerQueue.ts (40 lines) - Keep the screener aligned with the creator's existing calendar scheduling workflow.
+## src/hooks/useScreenerQueue.ts (46 lines) - Keep the screener aligned with the creator's existing calendar scheduling workflow.
 - `useScreenerQueue` (export function) L9 - Keep the screener aligned with the creator's existing calendar scheduling workflow.
 
 ## src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.

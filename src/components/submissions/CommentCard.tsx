@@ -123,7 +123,7 @@ function CommentFooter({
           {resolved ? <RotateCcw className="w-3 h-3" /> : <Check className="w-3 h-3" />} {resolved ? "Reopen" : "Mark resolved"}
         </button>
       )}
-      {c.can_delete && (
+      {c.can_delete && canResolve && (
         <button type="button" onClick={onDelete} className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:text-red-600" aria-label="Delete comment">
           <Trash2 className="w-3 h-3" />
         </button>

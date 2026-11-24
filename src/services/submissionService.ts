@@ -59,6 +59,7 @@ export interface ScrapeStatus {
 }
 
 export const submissionService = {
+  publishingAccess: (id: string) => apiClient.get<import("@/types/postApprovalSuggestions").PublishingAccess>(`/api/submissions/${id}/publishing-access`),
   getOptions: () => apiClient.get<SubmissionOptions>("/api/submissions/options"),
 
   /** Reviewers and super admins the content can be sent to: on any of these brands, or everyone when there are none. */
