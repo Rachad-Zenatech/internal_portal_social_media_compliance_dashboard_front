@@ -44,12 +44,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `formatLastSeen` (fn) L353
     - `renderMetric` (fn) L375
 
-## src/components/AppShell/Navigation.tsx (165 lines) - navigation (components  app shell)
+## src/components/AppShell/Navigation.tsx (166 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface) L17
 - `NavigationItem` (export interface) L23
 - `AppView` (export type) L37
 - `navigation` (export const) L45 - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) L161 - Whether a page belongs to a view.
+- `pathInView` (export function) L162 - Whether a page belongs to a view.
 
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function) L22

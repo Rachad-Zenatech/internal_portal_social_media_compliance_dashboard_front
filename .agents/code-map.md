@@ -113,11 +113,12 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 36 | 12 KB |
+| .agents/code-map/src__hooks.md | 37 | 12 KB |
 | .agents/code-map/src__lib.md | 44 | 19 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
-| .agents/code-map/src__pages__Configurations.md | 16 | 7 KB |
+| .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
+| .agents/code-map/src__pages__Configurations__aiStatus.md | 5 | 1 KB |
 | .agents/code-map/src__pages__ContentCalendar.md | 2 | 1 KB |
 | .agents/code-map/src__pages__Dashboard.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Delegations.md | 1 | 1 KB |
@@ -128,4 +129,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 16 | 6 KB |
-| .agents/code-map/src__types.md | 22 | 15 KB |
+| .agents/code-map/src__types.md | 23 | 16 KB |

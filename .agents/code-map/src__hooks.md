@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/hooks/useAiOverview.ts (16 lines) - use ai overview (hooks)
+- `useAiOverview` (export function) L5
+
 ## src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
 

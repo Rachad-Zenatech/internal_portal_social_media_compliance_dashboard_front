@@ -142,6 +142,7 @@ export const navigation: NavigationItem[] = [
       { label: "API Permissions", path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS" },
       { label: "MCP Tool Permissions", path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS" },
       { label: "Integrations & OAuth", path: "/configurations/integrations", navigationCode: "CONFIG_ROLES" },
+      { label: "AI Status & Usage", path: "/configurations/ai-status", navigationCode: "SYSTEM_LOGS" },
       { label: "Training data & quality", path: "/configurations/training-data", navigationCode: "AUDIT_LOG" },
     ],
   },
