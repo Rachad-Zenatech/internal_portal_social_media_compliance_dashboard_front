@@ -21,8 +21,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `IntegrationStatusResponse` (export interface) L34
 - `ConnectionStatusLight` (export function) L39
 
-## src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
+## src/components/AppShell/GlobalProgressOverlay.tsx (243 lines) - A clock for "running for 0:42", only while something runs.
 - `GlobalProgressOverlay` (export function) L10
+- `RunningJobCard` (function) L201
 
 ## src/components/AppShell/MessageHubStatusDropdown.tsx (558 lines) - message hub status dropdown (components  app shell)
 - `HubQueueOrStreamItem` (export interface) L28

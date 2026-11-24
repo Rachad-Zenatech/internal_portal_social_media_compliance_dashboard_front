@@ -91,10 +91,6 @@
       "max_lines": 93,
       "kind": "jsx_return"
     },
-    "src/components/AppShell/GlobalProgressOverlay.tsx#GlobalProgressOverlay": {
-      "max_lines": 97,
-      "kind": "jsx_return"
-    },
     "src/components/AppShell/MessageHubStatusDropdown.tsx#MessageHubStatusDropdown": {
       "max_lines": 154,
       "kind": "jsx_return"
