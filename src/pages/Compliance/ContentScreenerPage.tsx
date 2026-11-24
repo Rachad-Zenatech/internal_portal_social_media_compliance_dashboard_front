@@ -1,8 +1,10 @@
+import ReviewerFindingDetails from "@/components/submissions/ReviewerFindingDetails";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { findingEvidence } from "@/lib/findingEvidence";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
 import ReviewerCaption from "@/components/compliance/screener/ReviewerCaption";
+import MarkedReviewerCaption from "@/components/compliance/screener/MarkedReviewerCaption";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import { useScreenerMediaNavigation } from "@/hooks/useScreenerMediaNavigation";
 import type { MarkedCaptionTerm as MarkedTerm } from "@/types/captionReview";
@@ -46,19 +48,16 @@ import VideoTranscript from "@/components/submissions/VideoTranscript";
 import PostApprovalSuggestionNotice from "@/components/submissions/PostApprovalSuggestionNotice";
 import { usePostApprovalSuggestions } from "@/hooks/usePostApprovalSuggestions";
 import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
-import PlatformCaptionsView from "@/components/submissions/PlatformCaptionsView";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import SourceChecks from "@/components/submissions/SourceChecks";
 import {
-  ContextNote,
   FINDING_META,
   FINDING_ORDER,
   FindingGroup,
   StatusPill,
   groupFindings,
-  isWarning,
   statusOf,
 } from "@/components/submissions/FindingStatus";
 import {
@@ -78,6 +77,7 @@ import { useFlagReviews } from "@/hooks/useReview";
 import { useAuth } from "@/lib/AuthContext";
 import { submissionService } from "@/services/submissionService";
 import { ResizablePanel } from "@/components/ui/ResizeHandle";
+import "./contentScreenerLayout.css";
 import type { ComplianceViolation } from "@/services/complianceService";
 import type { FlagReview, ReviewQueueItem } from "@/types/submission";
 import { useScreenerQueue } from "@/hooks/useScreenerQueue";
@@ -250,58 +250,6 @@ export function HighlightedCaption({ text, terms }: { text: string; terms: strin
           <span key={i}>{part}</span>
         )
       )}
-    </>
-  );
-}
-
-/** One flagged phrase in the caption: which rule found it, and whether it was dismissed. */
-/**
- * The caption with its flagged wording marked: amber for an open flag, purple and dashed for one that was dismissed.
- * Clicking marked wording opens that flag in the panel; clicking anything else opens a comment.
- */
-function MarkedCaption({
-  text,
-  terms,
-  picked,
-  onFlag,
-  onComment,
-}: {
-  text: string;
-  terms: MarkedTerm[];
-  picked: string | null;
-  onFlag: (ruleId: string) => void;
-  onComment: () => void;
-}) {
-  const byTerm = new Map(terms.map((t) => [t.term.toLowerCase(), t]));
-  const pieces = terms.length
-    ? text.split(new RegExp(`(${[...byTerm.keys()].sort((a, b) => b.length - a.length).map(escapeRe).join("|")})`, "gi"))
-    : [text];
-  return (
-    <>
-      {pieces.map((part, i) => {
-        const hit = i % 2 ? byTerm.get(part.toLowerCase()) : undefined;
-        if (!hit) {
-          return (
-            <span key={i} onClick={onComment} className="cursor-text rounded hover:bg-blue-50 dark:hover:bg-blue-500/10">
-              {part}
-            </span>
-          );
-        }
-        return (
-          <mark
-            key={i}
-            onClick={() => onFlag(hit.ruleId)}
-            title={hit.dismissed ? "Dismissed: click to see why" : "Click to see the flag"}
-            className={`cursor-pointer rounded px-0.5 text-foreground ${
-              hit.dismissed
-                ? "border-b-2 border-dashed border-violet-500 bg-violet-200/60 dark:bg-violet-500/30"
-                : "bg-amber-200/70 dark:bg-amber-500/30"
-            } ${picked === hit.ruleId ? "ring-2 ring-violet-500" : ""}`}
-          >
-            {part}
-          </mark>
-        );
-      })}
     </>
   );
 }
@@ -604,7 +552,6 @@ function PostView({
               <ReviewerImageViewer
                 submissionId={s.id}
                 file={image}
-                findings={flags.map((flag) => flag.v)}
                 canDraw={canComment}
                 activeId={activeCommentId}
                 onActive={onActiveComment}
@@ -635,10 +582,9 @@ function PostView({
           </div>
         ) : null}
 
-        <ReviewerCaption key={`${s.id}:${s.current_version}`} submissionId={s.id} canComment={canComment} hasCaption={Boolean(s.caption_text)} onSaved={(id) => onActiveComment(id)}>
-          <MarkedCaption text={s.caption_text ?? ""} terms={terms} picked={picked} onFlag={onFlag} onComment={onComment} />
+        <ReviewerCaption key={`${s.id}:${s.current_version}`} submissionId={s.id} canComment={canComment} captionText={s.caption_text ?? ""}>
+          {(text, html, showFlags) => <MarkedReviewerCaption text={text} html={html} terms={showFlags ? terms : []} picked={picked} onFlag={onFlag} onComment={onComment} />}
         </ReviewerCaption>
-        <PlatformCaptionsView platforms={s.platforms} captions={s.platform_captions} mainCaption={s.caption_text} />
       </div>
     </div>
   );
@@ -934,22 +880,7 @@ function ReviewPanel({
                       <span className="ml-auto text-xs text-muted-foreground">{f.where}</span>
                     </div>
                     <p className="text-sm font-semibold text-foreground">{f.v.title}</p>
-                    {f.v.flagged_terms.length > 0 && (
-                      <p className="rounded-lg bg-muted px-2.5 py-1.5 text-[13px] text-foreground">
-                        {f.v.flagged_terms.map((t) => `“${t}”`).join(", ")}
-                      </p>
-                    )}
-                    <ContextNote v={f.v} />
-                    {f.v.kind === "MISSING_DISCLAIMER" && f.v.missing_disclaimers?.[0] && statusOf(f.v) !== "CLEARED" && (
-                      <p className="text-[13px] text-foreground/80">
-                        <span className="font-semibold">Needs:</span> “{f.v.missing_disclaimers[0]}”
-                      </p>
-                    )}
-                    {f.v.remediation_guidance && statusOf(f.v) !== "CLEARED" && (
-                      <p className="text-[13px] text-foreground/80">
-                        <span className="font-semibold">{isWarning(f.v) ? "What to check:" : "Suggested fix:"}</span> {f.v.remediation_guidance}
-                      </p>
-                    )}
+                    <ReviewerFindingDetails finding={f.v} />
                     {statusOf(f.v) !== "CLEARED" && (
                       <FlagReviewControl
                         submissionId={s.id}
@@ -1148,12 +1079,11 @@ function Workspace({
       </section>
       <ResizablePanel
         as="aside"
-        label="Your review"
-        storageKey="review"
+        label="Your review" storageKey="review"
         edge="left"
         min={320}
         max={900}
-        className="flex min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
+        className="screener-review flex min-w-0 min-h-[480px] shrink-0 flex-col border-t border-border/70 lg:min-h-0 lg:border-l lg:border-t-0"
         defaultWidth="lg:w-[360px] 2xl:w-[440px] min-[112.5rem]:w-[500px]"
       >
         <ReviewPanel
@@ -1364,7 +1294,7 @@ export default function ContentScreenerPage() {
   };
 
   return (
-    <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)] lg:flex-row">
+    <div className="screener-layout flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-border/70 bg-card lg:h-[calc(100dvh-10.5rem)] lg:flex-row">
       {/* ===== Queue, collapsed (wide screens): a slim strip of thumbnails ===== */}
       {queueCollapsed && (
         <QueueStrip
@@ -1380,12 +1310,11 @@ export default function ContentScreenerPage() {
       {/* ===== Queue ===== */}
       <ResizablePanel
         as="section"
-        label="Review queue"
-        storageKey="queue"
+        label="Review queue" storageKey="queue"
         edge="right"
         min={240}
         max={560}
-        className={`flex max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:border-b-0 lg:border-r ${queueCollapsed ? "lg:hidden" : ""}`}
+        className={`screener-queue flex min-w-0 max-h-[420px] shrink-0 flex-col border-b border-border/70 lg:max-h-none lg:border-b-0 lg:border-r ${queueCollapsed ? "lg:hidden" : ""}`}
         defaultWidth="lg:w-[300px] min-[112.5rem]:w-[360px]"
       >
         <div className="flex flex-col gap-2.5 border-b border-border/70 p-4">
@@ -1423,7 +1352,7 @@ export default function ContentScreenerPage() {
             ))}
           </div>
           <div className="flex gap-2">
-            <div className="relative flex-1">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}

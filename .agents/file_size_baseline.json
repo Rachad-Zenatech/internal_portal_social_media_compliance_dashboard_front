@@ -34,7 +34,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/ContentScreenerPage.tsx": {
-      "max_lines": 1507,
+      "max_lines": 1491,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2496,
+      "max_lines": 2490,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -82,7 +82,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/types/submission.ts": {
-      "max_lines": 638,
+      "max_lines": 613,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     }
   },
@@ -108,11 +108,11 @@
       "kind": "jsx_return"
     },
     "src/components/compliance/BrandVoicePanel.tsx#BrandCard": {
-      "max_lines": 179,
+      "max_lines": 171,
       "kind": "jsx_return"
     },
     "src/components/compliance/BrandVoicePanel.tsx#EditDialog": {
-      "max_lines": 87,
+      "max_lines": 84,
       "kind": "jsx_return"
     },
     "src/components/dashboard/CreatorDashboard.tsx#CreatorDashboard": {
@@ -124,7 +124,7 @@
       "kind": "jsx_return"
     },
     "src/components/script/BatchDetailsForm.tsx#BatchDetailsForm": {
-      "max_lines": 95,
+      "max_lines": 86,
       "kind": "jsx_return"
     },
     "src/components/script/BatchItemCard.tsx#BatchItemCard": {
@@ -156,7 +156,7 @@
       "kind": "jsx_return"
     },
     "src/components/submissions/ComplianceStep.tsx#ComplianceStep": {
-      "max_lines": 229,
+      "max_lines": 204,
       "kind": "jsx_return"
     },
     "src/components/submissions/FlagReviewControl.tsx#FlagReviewControl": {
@@ -236,7 +236,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#ReviewPanel": {
-      "max_lines": 297,
+      "max_lines": 282,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx#TabIcon": {
@@ -316,7 +316,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1181,
+      "max_lines": 1167,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {

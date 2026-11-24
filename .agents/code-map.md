@@ -15,7 +15,7 @@ to find the right file.
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
 | .agents/code-map/src__components__compliance.md | 6 | 3 KB |
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
-| .agents/code-map/src__components__compliance__screener.md | 4 | 2 KB |
+| .agents/code-map/src__components__compliance__screener.md | 9 | 3 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
 | .agents/code-map/src__components__script.md | 26 | 12 KB |
 | .agents/code-map/src__components__scriptdoc.md | 15 | 9 KB |
@@ -81,6 +81,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ReviewDecisionBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewDecisionPanel.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewGlance.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ReviewerFindingDetails.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerImageViewer.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerPicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerSentimentConcerns.md | 1 | 1 KB |
@@ -117,8 +118,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 40 | 13 KB |
-| .agents/code-map/src__lib.md | 46 | 20 KB |
+| .agents/code-map/src__hooks.md | 41 | 13 KB |
+| .agents/code-map/src__lib.md | 48 | 21 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -132,5 +133,5 @@ to find the right file.
 | .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
-| .agents/code-map/src__services.md | 17 | 6 KB |
-| .agents/code-map/src__types.md | 27 | 17 KB |
+| .agents/code-map/src__services.md | 18 | 7 KB |
+| .agents/code-map/src__types.md | 29 | 17 KB |

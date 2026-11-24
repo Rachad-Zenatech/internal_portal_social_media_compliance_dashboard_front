@@ -54,8 +54,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `HashtagLibrary` (export interface) L32 - Hashtags (and the cashtag) suited to a post's brand, audience and platforms, already screened by the rulebook.
 - `CaptionSuggestions` (export interface) L41
 
+## src/types/captionEdit.ts (27 lines) - caption edit (types)
+- `CaptionRevision` (export interface) L1
+- `CaptionReview` (export interface) L12
+- `CaptionEditRequest` (export interface) L22
+
 ## src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
 - `MarkedCaptionTerm` (export interface) L2 - A rule flag rendered over wording in the caption.
+
+## src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)
+- `IncompleteCheckStage` (export interface) L1
 
 ## src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - `ContextKind` (export type) L2 - Kinds of Messaging Context the content analysis is given.

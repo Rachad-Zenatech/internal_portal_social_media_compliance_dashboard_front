@@ -286,9 +286,7 @@ function SummaryRow({ icon: Icon, label, children }: { icon: LucideIcon; label: 
   );
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function NewSubmissionPage() {
   const navigate = useNavigate();

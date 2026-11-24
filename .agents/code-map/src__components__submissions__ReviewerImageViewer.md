@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewerImageViewer.tsx (59 lines) - Reviewer image with comments plus the full-size rule-inspection view.
-- `ReviewerImageViewer` (export function) L12 - Reviewer image with comments plus the full-size rule-inspection view.
+## src/components/submissions/ReviewerImageViewer.tsx (55 lines) - Reviewer image with comment annotations and an unobstructed full-size view.
+- `ReviewerImageViewer` (export function) L11 - Reviewer image with comment annotations and an unobstructed full-size view.

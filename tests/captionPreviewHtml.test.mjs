@@ -50,6 +50,19 @@ test("caption rich text, wrapping, highlights and sanitization in a real browser
       const escaped=format('<p>Cost is $5 (estimate).</p>',[part('Cost is '),part('$5 (estimate).','flag')]);
       preview.innerHTML=escaped;
       check(preview.querySelector('mark')?.textContent==='$5 (estimate).','literal punctuation highlights correctly');
+      const reviewer=format('<p>Your team uses Outlook,\\nand Teams.</p><p>✔ Sync calendars and\\nbookings<br>✔ Manage workspace reservations</p>',[
+        part('Your team uses Outlook, and Teams.\\n✔ '),
+        {text:'Sync calendars and bookings',tone:'chosen',ruleId:'rule-18',dismissed:false},
+        part('\\n✔ Manage workspace reservations')]);
+      check(reviewer!==null,'reviewer source wrapping matches extracted caption text');
+      preview.innerHTML=reviewer;
+      check(preview.innerText.includes('Outlook, and Teams.'),'source wrapping collapses within a sentence');
+      check(preview.innerText.includes('✔ Manage workspace reservations'),'checkmark remains with its list wording');
+      check(preview.querySelectorAll('p').length===2&&preview.querySelectorAll('br').length===1,'intentional paragraph and list breaks preserved');
+      check(preview.querySelector('mark')?.dataset.ruleId==='rule-18','reviewer highlight retains the rule click target');
+      const dismissed=format('<p>Supported capability</p>',[{text:'Supported capability',tone:'flag',ruleId:'rule-9',dismissed:true}]);
+      preview.innerHTML=dismissed;
+      check(preview.querySelector('mark')?.className.includes('border-violet-500'),'dismissed reviewer highlight remains distinct');
       document.body.textContent='CAPTION_TEST_PASS:'+passed;
     } catch(error) {document.body.textContent='CAPTION_TEST_FAIL:'+error.stack;}`;
   writeFileSync(join(folder, "fixture.js"), code);
@@ -61,7 +74,7 @@ test("caption rich text, wrapping, highlights and sanitization in a real browser
       "--disable-background-networking", `--user-data-dir=${join(folder, "profile")}`, "--dump-dom",
       pathToFileURL(join(folder, "index.html")).href], { encoding: "utf8", windowsHide: true, timeout: 30_000 });
     assert.equal(result.status, 0, result.error?.message || result.stderr);
-    assert.match(result.stdout, /CAPTION_TEST_PASS:11/, result.stdout);
+    assert.match(result.stdout, /CAPTION_TEST_PASS:17/, result.stdout);
   } finally {
     assert.equal(resolve(dirname(folder)), resolve(tmpdir()));
     assert.ok(basename(folder).startsWith("caption-dom-test-"));

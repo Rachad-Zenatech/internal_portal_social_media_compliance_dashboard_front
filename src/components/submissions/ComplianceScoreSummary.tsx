@@ -6,11 +6,12 @@ interface Props {
   heading: string;
   description: string;
   recalculatedScore?: number;
+  provisional?: boolean;
 }
 
 /** Keep the saved score prominent and show the separate pending-request calculation beneath it. */
-export default function ComplianceScoreSummary({ score, minimumScore, heading, description, recalculatedScore }: Props) {
-  const color = score >= minimumScore ? "#059669" : "#DC2626";
+export default function ComplianceScoreSummary({ score, minimumScore, heading, description, recalculatedScore, provisional = false }: Props) {
+  const color = provisional ? "#D97706" : score >= minimumScore ? "#059669" : "#DC2626";
   const ringStyle = { background: `conic-gradient(${color} ${score * 3.6}deg, var(--muted) 0)` };
   const barStyle = { width: `${score}%`, background: color };
   const markerStyle = { left: `${minimumScore}%`, height: 18 };

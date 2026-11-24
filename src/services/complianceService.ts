@@ -169,6 +169,8 @@ export interface ContextEvaluation {
 }
 
 export interface ComplianceCheckResponse {
+  incomplete_stages?: import("@/types/checkDiagnostics").IncompleteCheckStage[];
+  visual_checks?: { status: string; name?: string; message?: string }[];
   checked_source_links?: string[];
   is_compliant: boolean;
   traffic_light: TrafficLight;

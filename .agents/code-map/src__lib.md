@@ -25,6 +25,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `GlobalProgressProvider` (export function) L54
 - `useGlobalProgress` (export function) L170
 
+## src/lib/captionChanges.ts (65 lines) - Preserve the exact text and highlight the changed span between shared word boundaries.
+- `captionChanges` (export function) L2 - Preserve the exact text and highlight the changed span between shared word boundaries.
+- `CaptionDiffPart` (export interface) L18
+- `tokens` (const) L20
+- `isSpace` (const) L21
+- `tokenKey` (const) L22
+- `appendPart` (function) L24
+- `captionDiff` (export function) L32 - Word-level changes, retaining exact spacing without marking rewrapped lines as rewritten wording.
+
 ## src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
 - `selectedCaptionText` (export function) L4 - Only accept a selection wholly inside the caption, including selections across flagged spans.
 - `captionNoteBody` (export function) L12 - Keep the exact caption excerpt in the saved comment, visible to both reviewer and creator.
@@ -32,7 +41,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
-## src/lib/captionPreviewHtml.ts (58 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
+## src/lib/captionPreviewHtml.ts (65 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
 - `CaptionPart` (export interface) L3
 - `TextRun` (interface) L4
 - `compact` (const) L6
@@ -122,6 +131,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `hasPostImages` (export function) L3
 - `imageProvenanceAnswer` (export function) L7
 - `imageProvenancePayload` (export function) L11
+
+## src/lib/incompleteCheck.ts (29 lines) - Read explicit diagnostics, with conservative explanations for previously saved checks.
+- `incompleteCheckDetails` (export function) L11 - Read explicit diagnostics, with conservative explanations for previously saved checks.
 
 ## src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - `set` (function) L18

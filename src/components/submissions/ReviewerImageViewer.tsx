@@ -5,14 +5,12 @@ import ImageAnnotator from "@/components/submissions/ImageAnnotator";
 import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
-import type { ComplianceViolation } from "@/services/complianceService";
 import type { SubmissionFile } from "@/types/submission";
 
-/** Reviewer image with comments plus the full-size rule-inspection view. */
+/** Reviewer image with comment annotations and an unobstructed full-size view. */
 export default function ReviewerImageViewer({
   submissionId,
   file,
-  findings,
   canDraw,
   activeId,
   onActive,
@@ -20,7 +18,6 @@ export default function ReviewerImageViewer({
 }: {
   submissionId: string;
   file: SubmissionFile;
-  findings: ComplianceViolation[];
   canDraw: boolean;
   activeId: string | null;
   onActive: (id: string | null) => void;
@@ -39,7 +36,6 @@ export default function ReviewerImageViewer({
           activeId={activeId}
           onActive={onActive}
           onPlainClick={onPlainClick}
-          findings={findings}
         />
         <Button type="button" size="sm" variant="secondary" onClick={() => setImageOpen(true)} className="h-8 gap-1.5 px-2.5 shadow-sm">
           <Maximize2 className="h-3.5 w-3.5" /> Open full size
@@ -50,8 +46,8 @@ export default function ReviewerImageViewer({
         open={imageOpen}
         onOpenChange={setImageOpen}
         src={authedFileUrl(file.url)}
+        findings={[]}
         fileId={file.id}
-        findings={findings}
       />
     </>
   );

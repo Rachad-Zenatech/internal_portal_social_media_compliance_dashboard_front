@@ -4,5 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/UnavailableCompliance.tsx (16 lines) - A note below the calculated score when some review stages did not finish.
-- `UnavailableCompliance` (export function) L5 - A note below the calculated score when some review stages did not finish.
+## src/components/submissions/UnavailableCompliance.tsx (25 lines) - A note below the calculated score when some review stages did not finish.
+- `UnavailableCompliance` (export function) L6 - A note below the calculated score when some review stages did not finish.
+- `IncompleteFindingsNotice` (export function) L22

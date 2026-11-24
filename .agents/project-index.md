@@ -38,9 +38,14 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/compliance/context/KindTabs.tsx (65 lines) - The four kinds of context as tabs, each with how many entries it has.
 - src/components/compliance/context/RemoveEntryDialog.tsx (38 lines) - Asks before removing an entry, and points to turning it off instead.
 - src/components/compliance/context/kinds.ts (71 lines) - A value and its display name, as used by the brand, audience and platform pickers.
+- src/components/compliance/screener/CaptionChangeDialog.tsx (19 lines) - caption change dialog (components compliance screener)
+- src/components/compliance/screener/CaptionComparison.tsx (30 lines) - caption comparison (components compliance screener)
+- src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
+- src/components/compliance/screener/CaptionEditor.tsx (24 lines) - caption editor (components compliance screener)
 - src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
+- src/components/compliance/screener/MarkedReviewerCaption.tsx (33 lines) - Show saved caption paragraphs and lists, retaining clickable rule highlights.
 - src/components/compliance/screener/QueueFilters.tsx (196 lines) - Brand codes and platforms to show; none picked means all.
-- src/components/compliance/screener/ReviewerCaption.tsx (35 lines) - reviewer caption (components compliance screener)
+- src/components/compliance/screener/ReviewerCaption.tsx (45 lines) - reviewer caption (components compliance screener)
 - src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
 - src/components/dashboard/CreatorDashboard.tsx (444 lines) - creator dashboard (components dashboard)
 - src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
@@ -106,8 +111,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceScoreSummary.tsx (41 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
-- src/components/submissions/ComplianceStep.tsx (477 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceScoreSummary.tsx (42 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
+- src/components/submissions/ComplianceStep.tsx (479 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
@@ -153,7 +158,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewDecisionBar.tsx (46 lines) - review decision bar (components submissions)
 - src/components/submissions/ReviewDecisionPanel.tsx (411 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (58 lines) - The one thing to know at a glance: a score, a verdict, a count.
-- src/components/submissions/ReviewerImageViewer.tsx (59 lines) - Reviewer image with comments plus the full-size rule-inspection view.
+- src/components/submissions/ReviewerFindingDetails.tsx (39 lines) - Reviewers and creators read the same saved evidence and explanation.
+- src/components/submissions/ReviewerImageViewer.tsx (55 lines) - Reviewer image with comment annotations and an unobstructed full-size view.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
 - src/components/submissions/ReviewerSentimentConcerns.tsx (71 lines) - reviewer sentiment concerns (components submissions)
 - src/components/submissions/ReviewerSentimentOverview.tsx (52 lines) - reviewer sentiment overview (components submissions)
@@ -177,7 +183,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SubmissionStartAnotherButton.tsx (12 lines) - submission start another button (components submissions)
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
 - src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
-- src/components/submissions/UnavailableCompliance.tsx (16 lines) - A note below the calculated score when some review stages did not finish.
+- src/components/submissions/UnavailableCompliance.tsx (25 lines) - A note below the calculated score when some review stages did not finish.
 - src/components/submissions/VideoScriptModeCheckbox.tsx (27 lines) - video script mode checkbox (components submissions)
 - src/components/submissions/VideoScriptTemplate.tsx (20 lines) - video script template (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
@@ -221,6 +227,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - src/hooks/useCalendarSend.ts (16 lines) - Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
 - src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
+- src/hooks/useCaptionEdit.ts (38 lines) - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
 - src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
 - src/hooks/useCaptionSuggestions.ts (26 lines) - Caption suggestions for a draft, and how many are left today.
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
@@ -256,8 +263,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
+- src/lib/captionChanges.ts (65 lines) - Preserve the exact text and highlight the changed span between shared word boundaries.
 - src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
-- src/lib/captionPreviewHtml.ts (58 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
+- src/lib/captionPreviewHtml.ts (65 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
 - src/lib/chunkRecovery.ts (30 lines) - Recover an open tab whose lazy-loaded page belongs to an older deployment.
 - src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
@@ -270,6 +278,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/findingImage.ts (38 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
 - src/lib/imageProvenance.ts (14 lines) - image provenance (lib)
+- src/lib/incompleteCheck.ts (29 lines) - Read explicit diagnostics, with conservative explanations for previously saved checks.
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
@@ -305,7 +314,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1505 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1434 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2858 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/AiStatusPage.tsx (85 lines) - ai status page (pages  configurations)
@@ -349,7 +358,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2492 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2490 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
@@ -358,7 +367,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
-- src/services/complianceService.ts (383 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/captionReviewService.ts (10 lines) - caption review service (services)
+- src/services/complianceService.ts (385 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
@@ -377,7 +387,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.
 - src/types/canva.ts (20 lines) - The user's Canva account.
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
+- src/types/captionEdit.ts (27 lines) - caption edit (types)
 - src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
+- src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)
 - src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/imageProvenance.ts (12 lines) - Saved answer to the post's required AI-image disclosure question.

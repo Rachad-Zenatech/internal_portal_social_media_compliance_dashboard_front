@@ -4,8 +4,26 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/components/compliance/screener/CaptionChangeDialog.tsx (19 lines) - caption change dialog (components compliance screener)
+- `CaptionChangeDialog` (export function) L5
+
+## src/components/compliance/screener/CaptionComparison.tsx (30 lines) - caption comparison (components compliance screener)
+- `ComparisonText` (function) L3
+- `CaptionComparison` (export function) L12
+
+## src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
+- `CaptionRevisionEntry` (function) L8
+- `CaptionEditHistory` (export function) L25
+
+## src/components/compliance/screener/CaptionEditor.tsx (24 lines) - caption editor (components compliance screener)
+- `CaptionEditor` (export function) L5
+
 ## src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
 - `CaptionNoteDialog` (export function) L5
+
+## src/components/compliance/screener/MarkedReviewerCaption.tsx (33 lines) - Show saved caption paragraphs and lists, retaining clickable rule highlights.
+- `escapePattern` (const) L5
+- `MarkedReviewerCaption` (export function) L8 - Show saved caption paragraphs and lists, retaining clickable rule highlights.
 
 ## src/components/compliance/screener/QueueFilters.tsx (196 lines) - Brand codes and platforms to show; none picked means all.
 - `DueFilter` (export type) L11
@@ -25,8 +43,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ActiveFilterChips` (export function) L170 - The filters in use, each as a chip that clears it.
 - `FilterChip` (function) L186
 
-## src/components/compliance/screener/ReviewerCaption.tsx (35 lines) - reviewer caption (components compliance screener)
-- `ReviewerCaption` (export function) L8
+## src/components/compliance/screener/ReviewerCaption.tsx (45 lines) - reviewer caption (components compliance screener)
+- `ReviewerCaption` (export function) L9
 
 ## src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
 - `ScriptReviewNotice` (export function) L4

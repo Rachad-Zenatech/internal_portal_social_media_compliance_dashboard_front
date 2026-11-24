@@ -25,6 +25,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 - `useCaptionCommentSelection` (export function) L7 - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 
+## src/hooks/useCaptionEdit.ts (38 lines) - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
+- `useCaptionEdit` (export function) L7 - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
+
 ## src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
 - `useCaptionNote` (export function) L7 - A reviewer note on selected caption wording, saved through the shared comment API.
 

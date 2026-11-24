@@ -1,34 +1,44 @@
 import type { ReactNode } from "react";
-import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CaptionNoteDialog from "@/components/compliance/screener/CaptionNoteDialog";
-import { useCaptionNote } from "@/hooks/useCaptionNote";
+import { useCaptionEdit } from "@/hooks/useCaptionEdit";
+import CaptionEditor from "./CaptionEditor";
+import CaptionEditHistory from "./CaptionEditHistory";
+import { Check, Pencil } from "lucide-react";
 import { captionTextId } from "@/lib/captionNote";
 
-export default function ReviewerCaption({ submissionId, canComment, hasCaption, onSaved, children }: {
+export default function ReviewerCaption({ submissionId, canComment, captionText, children }: {
   submissionId: string;
   canComment: boolean;
-  hasCaption: boolean;
-  onSaved: (id: string) => void;
-  children: ReactNode;
+  captionText: string;
+  children: (text: string, html: string | null | undefined, showFlags: boolean) => ReactNode;
 }) {
-  const { contentRef, quote, note, setNote, open, onOpenChange, captureSelection, onCaptionClick, save, saving } = useCaptionNote(submissionId, canComment, onSaved);
-  const hint = canComment ? "Highlight caption wording to add a note. Click marked wording to see its flag." : "Click marked wording to see its flag.";
+  const state = useCaptionEdit(submissionId);
+  const { query, editor, platform } = state;
+  const editable = canComment && query.data?.can_edit;
+  const platformOptions = query.data?.platforms.map((name) => <option key={name} value={name}>{name.toLowerCase().replaceAll("_", " ")}</option>);
+  const hasOverrides = Boolean(Object.keys(query.data?.platform_captions ?? {}).length);
+  const showSelector = (query.data?.platforms.length ?? 0) > 1 || hasOverrides;
+  const current = query.data ? state.current : captionText;
+  const mainCaption = !platform || !query.data?.platform_captions[platform];
+  const html = mainCaption ? query.data?.caption_html : undefined;
+  const showFlags = mainCaption && current === captionText && !query.data?.needs_recheck;
+  const caption = children(current, html, showFlags);
   return (
-    <section aria-label="Caption" className="flex flex-col gap-2 rounded-xl border border-border/70 px-4 py-3">
+    <section aria-label="Caption" className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Caption</h3>
-        <span className="text-xs text-muted-foreground">{hint}</span>
+        {editable && !editor && <Button type="button" variant="outline" size="sm" className="gap-2" onClick={state.start}><Pencil className="size-3.5" />Edit caption</Button>}
       </div>
-      <p id={captionTextId(submissionId)} ref={contentRef} onPointerUp={captureSelection} onKeyUp={captureSelection} onClickCapture={onCaptionClick} className="select-text whitespace-pre-wrap break-words text-sm text-foreground/90">
-        {hasCaption ? children : <span className="text-muted-foreground">No caption.</span>}
-      </p>
-      {canComment && hasCaption && (
-        <Button type="button" variant="outline" size="sm" className="self-start gap-1.5" disabled={!quote} onPointerDown={(event) => event.preventDefault()} onClick={() => onOpenChange(true)}>
-          <MessageSquarePlus className="size-4" /> Add note to selected text
-        </Button>
-      )}
-      <CaptionNoteDialog open={open} onOpenChange={onOpenChange} quote={quote} note={note} onNote={setNote} saving={saving} onSave={save} />
+      {showSelector ? <label className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Show caption for
+        <select aria-label="Caption for" className="max-w-full rounded-md border bg-background px-2 py-1.5 capitalize text-foreground" value={platform} onChange={(event) => state.setPlatform(event.target.value)} disabled={Boolean(editor)}>
+          <option value="">Default caption</option>{platformOptions}
+        </select>
+      </label> : <p className="text-xs text-muted-foreground">The caption that will appear with this post.</p>}
+      {editor ? <CaptionEditor base={editor.base} draft={editor.draft} onDraft={state.setDraft} onSave={state.save} onCancel={state.cancel} saving={state.saving} error={state.error} />
+        : <div id={captionTextId(submissionId)} className="min-w-0 max-w-prose text-foreground/90">{current ? caption : <span className="text-sm text-muted-foreground">No caption yet. Add one using Edit caption.</span>}</div>}
+      {query.isError && <p role="alert" className="text-sm text-destructive">Caption history could not load. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry</button></p>}
+      {state.saved && !editor && <div role="status" className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"><Check className="mt-0.5 size-3.5 shrink-0" /><p><span className="font-medium">Caption saved.</span> Ready for review. Compliance will run again before approval.</p></div>}
+      <CaptionEditHistory revisions={query.data?.revisions ?? []} />
     </section>
   );
 }

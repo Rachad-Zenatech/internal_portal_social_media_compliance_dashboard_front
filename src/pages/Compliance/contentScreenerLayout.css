@@ -1,0 +1,42 @@
+/* Saved desktop widths must share the workspace instead of hiding the post on laptops. */
+.screener-layout,
+.screener-layout > .screener-queue,
+.screener-layout > .screener-review {
+  min-width: 0;
+}
+
+.screener-queue {
+  container: screener-queue / inline-size;
+}
+
+@media (min-width: 64rem) {
+  .screener-layout {
+    min-height: 0;
+  }
+
+  .screener-layout > .screener-queue {
+    max-width: min(26%, 360px);
+  }
+
+  .screener-layout > .screener-review {
+    max-width: min(48%, 680px);
+  }
+
+  .screener-layout > section[aria-label="Post"] {
+    min-width: 26%;
+  }
+}
+
+@container screener-queue (max-width: 20rem) {
+  .screener-queue [role="tablist"][aria-label="Queue"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .screener-queue [role="tab"] {
+    min-width: 0;
+    height: auto;
+    min-height: 1.75rem;
+    white-space: normal;
+  }
+}

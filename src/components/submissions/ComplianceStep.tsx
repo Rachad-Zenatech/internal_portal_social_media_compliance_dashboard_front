@@ -15,7 +15,7 @@ import ManuallyCheckedClaims, { useManuallyCheckedClaims } from "@/components/su
 import MarkedUpImageSlideshow from "@/components/submissions/MarkedUpImageSlideshow";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
 import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
-import UnavailableCompliance from "@/components/submissions/UnavailableCompliance";
+import UnavailableCompliance, { IncompleteFindingsNotice } from "@/components/submissions/UnavailableCompliance";
 import SyntheticMediaFixNote from "@/components/submissions/SyntheticMediaFixNote";
 import VideoTranscript from "@/components/submissions/VideoTranscript";
 import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
@@ -269,16 +269,17 @@ export default function ComplianceStep({
   const scoreHeading = stale || check.ai_unavailable ? "Provisional score" : headline.length ? headline.join(", ") : checkedClaims.length ? "Claims checked by you" : "No issues found";
   const scoreAdvice = stale || check.ai_unavailable ? "Based on the findings available from this check." : advice;
   const routingScore = stale ? undefined : reviewRoutingScore;
+  const scoreSummary = (
+    <ComplianceScoreSummary score={score} minimumScore={minimumScore} heading={scoreHeading}
+      description={scoreAdvice} recalculatedScore={routingScore} provisional={Boolean(stale || check.ai_unavailable)} />
+  );
   return (
     <div className={`grid grid-cols-1 items-start gap-4 sm:gap-5 ${scriptText ? "2xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.4fr)]" : "xl:grid-cols-[minmax(0,1fr)_minmax(340px,440px)]"}`}>
       <div className="flex min-w-0 flex-col gap-4 sm:gap-5">
         <section className={`${card} flex flex-col gap-4`}>
           {header}
-          {analysing ? pendingScore : (
-            <ComplianceScoreSummary score={score} minimumScore={minimumScore} heading={scoreHeading}
-              description={scoreAdvice} recalculatedScore={routingScore} />
-          )}
-          {stale ? <StaleComplianceNotice /> : check.ai_unavailable && <UnavailableCompliance />}
+          {analysing ? pendingScore : scoreSummary}
+          {stale ? <StaleComplianceNotice /> : check.ai_unavailable && <UnavailableCompliance check={check} />}
           {extra}
           <CheckCoverage check={check} />
           {!analysing && <ScoreBreakdown check={check} provisional={stale} />}
@@ -294,6 +295,7 @@ export default function ComplianceStep({
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
             </p>
           )}
+          {!stale && check.ai_unavailable && !analysing && findings.length === 0 && <IncompleteFindingsNotice />}
           {findings.map((f, i) => {
             const st = statusOf(f.v);
             const critical = f.v.traffic_light === "RED";

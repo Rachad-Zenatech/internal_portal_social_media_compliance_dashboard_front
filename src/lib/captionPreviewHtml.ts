@@ -1,6 +1,6 @@
 import { sanitizeCaptionHtml } from "@/lib/sanitizeHtml";
 
-export interface CaptionPart { text: string; tone: string }
+export interface CaptionPart { text: string; tone: string; ruleId?: string; dismissed?: boolean }
 interface TextRun { node: Text; start: number; end: number }
 const BLOCKS = new Set(["P", "DIV", "BR", "LI", "H2", "H3", "BLOCKQUOTE", "UL", "OL"]);
 const compact = (text: string) => text.replace(/\s+/g, " ").trim();
@@ -30,7 +30,7 @@ export function captionPreviewHtml(html: string | undefined, parts: CaptionPart[
   const matches = parts.filter((part) => part.tone && part.text.trim()).flatMap((part) => {
     const pattern = part.text.trim().split(/\s+/).map(escapePattern).join("\\s+");
     return [...text.matchAll(new RegExp(pattern, "gi"))].map((match) => ({
-      start: match.index, end: match.index + match[0].length, tone: part.tone,
+      start: match.index, end: match.index + match[0].length, tone: part.tone, ruleId: part.ruleId, dismissed: part.dismissed,
     }));
   });
   for (const run of runs) {
@@ -48,6 +48,13 @@ export function captionPreviewHtml(html: string | undefined, parts: CaptionPart[
       const chosen = covering.some((hit) => hit.tone === "chosen");
       mark.className = chosen ? "rounded bg-red-200 px-0.5 text-foreground ring-2 ring-red-500 dark:bg-red-500/40"
         : "rounded bg-amber-200/70 px-0.5 text-foreground dark:bg-amber-500/30";
+      const finding = covering.find((hit) => hit.ruleId);
+      if (finding?.ruleId) {
+        mark.dataset.ruleId = finding.ruleId;
+        mark.className += " cursor-pointer";
+        mark.title = finding.dismissed ? "Dismissed: click to see why" : "Click to see the flag";
+        if (finding.dismissed) mark.className += " border-b-2 border-dashed border-violet-500 bg-violet-200/60 dark:bg-violet-500/30";
+      }
       mark.textContent = value;
       fragment.append(mark);
     }

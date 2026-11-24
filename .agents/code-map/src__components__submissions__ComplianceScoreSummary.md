@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ComplianceScoreSummary.tsx (41 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
+## src/components/submissions/ComplianceScoreSummary.tsx (42 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
 - `Props` (interface) L3
-- `ComplianceScoreSummary` (export function) L12 - Keep the saved score prominent and show the separate pending-request calculation beneath it.
+- `ComplianceScoreSummary` (export function) L13 - Keep the saved score prominent and show the separate pending-request calculation beneath it.
