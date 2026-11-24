@@ -1,5 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy as reactLazy, Suspense, type ComponentType, type ReactNode } from "react";
+
+function lazy<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return reactLazy(() =>
+    factory().catch((err) => {
+      const msg = String((err as Error)?.message || err);
+      const last = Number(sessionStorage.getItem("chunk-reload") || "0");
+      if (/dynamically imported module|importing a module script/i.test(msg) && Date.now() - last > 15_000) {
+        sessionStorage.setItem("chunk-reload", String(Date.now()));
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {});
+      }
+      throw err;
+    })
+  );
+}
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "./components/ui/button";

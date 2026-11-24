@@ -4,10 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/App.tsx (188 lines) - app
-- `PrefixRedirect` (function) L97
-- `PostsListRoute` (function) L103 - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
-- `NotFoundAlert` (function) L108
-- `App` (function) L126
+## src/App.tsx (203 lines) - app
+- `lazy` (function) L4
+- `PrefixRedirect` (function) L112
+- `PostsListRoute` (function) L118 - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
+- `NotFoundAlert` (function) L123
+- `App` (function) L141
 
 ## src/main.tsx (61 lines) - After a new deploy removes old hashed chunks from S3, reload once so an open tab picks up the new manifest.
