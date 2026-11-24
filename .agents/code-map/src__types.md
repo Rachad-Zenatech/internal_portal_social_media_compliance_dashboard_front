@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/types/aiOverview.ts (123 lines) - ai overview (types)
+## src/types/aiOverview.ts (124 lines) - ai overview (types)
 - `AiStateCode` (export type) L1
 - `AiFeatureCoreRef` (export interface) L3
 - `AiFeatureUsage24h` (export interface) L8

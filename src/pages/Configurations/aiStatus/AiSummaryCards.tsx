@@ -35,6 +35,7 @@ export default function AiSummaryCards({ data }: { data: AiOverviewResponse }) {
   const hasOverflow = totals.features_overflow > 0;
   const totalTokens = totals.input_tokens + totals.output_tokens;
   const cachePct = totals.calls > 0 ? Math.round((totals.cache_hits / totals.calls) * 100) : 0;
+  const affectedList = Array.from(new Set(health.degraded_features.flatMap((d) => d.affected_features ?? [])));
 
   return (
     <div className="space-y-3">
@@ -68,6 +69,11 @@ export default function AiSummaryCards({ data }: { data: AiOverviewResponse }) {
                 ? health.message
                 : `Last updated ${new Date(data.generated_at).toLocaleTimeString()} · Rolling ${hours}h window`}
             </p>
+            {affectedList.length > 0 && (
+              <p className="mt-0.5 text-xs text-foreground/85">
+                <strong>Affected features:</strong> {affectedList.join(", ")}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

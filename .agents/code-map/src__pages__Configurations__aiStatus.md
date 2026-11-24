@@ -18,7 +18,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `GuardTable` (function) L100
 - `AiPipelineTelemetry` (export function) L133
 
-## src/pages/Configurations/aiStatus/AiSummaryCards.tsx (109 lines) - ai summary cards (pages  configurations ai status)
+## src/pages/Configurations/aiStatus/AiSummaryCards.tsx (115 lines) - ai summary cards (pages  configurations ai status)
 - `KpiCard` (function) L6
 - `AiSummaryCards` (export function) L32
 

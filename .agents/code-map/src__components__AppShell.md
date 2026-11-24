@@ -4,10 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/AppShell/AiStatusBanner.tsx (92 lines) - ai status banner (components  app shell)
+## src/components/AppShell/AiStatusBanner.tsx (108 lines) - ai status banner (components  app shell)
 - `FeatureIssue` (interface) L8
-- `AiStatus` (interface) L17
-- `AiStatusBanner` (export function) L30 - Overhead alert strip across the top of every page whenever the AI globally or any specific AI feature  is out or experiencing overflow/th...
+- `AiStatus` (interface) L18
+- `IssueDetailsList` (function) L27
+- `AiStatusBanner` (export function) L51 - Overhead alert strip across the top of every page whenever the AI globally or any specific AI feature  is out or experiencing overflow/th...
 
 ## src/components/AppShell/AppShell.tsx (65 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - `Props` (interface) L11

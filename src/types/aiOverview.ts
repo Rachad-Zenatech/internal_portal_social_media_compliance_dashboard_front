@@ -100,6 +100,7 @@ export interface AiOverviewResponse {
       reason: string;
       message: string;
       since?: string | null;
+      affected_features?: string[];
     }[];
   };
   totals: {

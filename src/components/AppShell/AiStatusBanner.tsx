@@ -12,6 +12,7 @@ interface FeatureIssue {
   reason: string;
   message: string;
   since?: string | null;
+  affected_features?: string[];
 }
 
 interface AiStatus {
@@ -21,6 +22,26 @@ interface AiStatus {
   message?: string | null;
   since?: string | null;
   degraded_features?: FeatureIssue[];
+}
+
+function IssueDetailsList({ issues }: { issues: FeatureIssue[] }) {
+  return (
+    <ul className="space-y-1 pt-1 text-xs opacity-90">
+      {issues.map((issue) => (
+        <li key={issue.feature}>
+          <div>
+            <strong>{issue.label} ({issue.status}):</strong> {issue.message}
+            {issue.since ? ` · since ${formatDistanceToNow(new Date(issue.since))} ago` : ""}
+          </div>
+          {issue.affected_features && issue.affected_features.length > 0 && (
+            <div className="pl-2 text-[11px] opacity-85">
+              Affected features: {issue.affected_features.join(", ")}
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /**
@@ -44,6 +65,7 @@ export default function AiStatusBanner() {
   const tone = hasOut
     ? "border-rose-300 bg-rose-50 text-rose-950 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-100"
     : "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100";
+  const affectedSummary = Array.from(new Set(issues.flatMap((i) => i.affected_features ?? [])));
 
   return (
     <div role="alert" className={`border-b px-4 py-2 text-[13px] ${tone}`}>
@@ -66,18 +88,12 @@ export default function AiStatusBanner() {
                     <span>{issue.label}</span>
                   </span>
                 ))}
+                {affectedSummary.length > 0 && (
+                  <span className="text-xs opacity-90">· Affects: {affectedSummary.join(", ")}</span>
+                )}
               </div>
             )}
-            {expanded && issues.length > 0 && (
-              <ul className="space-y-0.5 pt-1 text-xs opacity-90">
-                {issues.map((issue) => (
-                  <li key={issue.feature}>
-                    <strong>{issue.label} ({issue.status}):</strong> {issue.message}
-                    {issue.since ? ` · since ${formatDistanceToNow(new Date(issue.since))} ago` : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {expanded && issues.length > 0 && <IssueDetailsList issues={issues} />}
           </div>
         </div>
         {issues.length > 0 && (

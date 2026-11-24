@@ -6,7 +6,7 @@ Scan this index first to locate the right file and description without loading s
 For function and route definitions with their line numbers, grep `.agents/code-map/` (listed in `.agents/code-map.md`).
 
 - src/App.tsx (205 lines) - app
-- src/components/AppShell/AiStatusBanner.tsx (92 lines) - ai status banner (components  app shell)
+- src/components/AppShell/AiStatusBanner.tsx (108 lines) - ai status banner (components  app shell)
 - src/components/AppShell/AppShell.tsx (65 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - src/components/AppShell/Breadcrumbs.tsx (166 lines) - Reviewers don't have My posts: a post's details lead back to it in the Content screener instead.
 - src/components/AppShell/ConnectionStatusLight.tsx (263 lines) - connection status light (components  app shell)
@@ -317,7 +317,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/aiStatus/AiCoresGrid.tsx (78 lines) - ai cores grid (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/AiFeatureMatrix.tsx (184 lines) - ai feature matrix (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (156 lines) - ai pipeline telemetry (pages  configurations ai status)
-- src/pages/Configurations/aiStatus/AiSummaryCards.tsx (109 lines) - ai summary cards (pages  configurations ai status)
+- src/pages/Configurations/aiStatus/AiSummaryCards.tsx (115 lines) - ai summary cards (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/statusStyles.ts (31 lines) - status styles (pages  configurations ai status)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (307 lines) - publish draft page (pages  content calendar)
@@ -358,7 +358,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/scriptDocService.ts (57 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - src/services/submissionService.ts (389 lines) - submission service (services)
-- src/types/aiOverview.ts (123 lines) - ai overview (types)
+- src/types/aiOverview.ts (124 lines) - ai overview (types)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.
