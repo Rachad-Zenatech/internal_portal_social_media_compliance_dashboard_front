@@ -3,9 +3,9 @@
  * backend's services/post_signals.py; the server check is the one that counts, this is instant feedback.
  */
 
-const CASHTAG = /(?<![\w$])\$([A-Za-z][A-Za-z.]{0,14})(?![\w])/g;
-const HASHTAG = /(?<![\w#&])#([A-Za-z][A-Za-z0-9_]{0,99})/g;
-const MENTION = /(?<![\w@.])@([A-Za-z0-9_](?:[A-Za-z0-9_.]{0,48}[A-Za-z0-9_])?)/g;
+const CASHTAG = /(?:^|[^\w$])\$([A-Za-z][A-Za-z.]{0,14})(?![\w])/g;
+const HASHTAG = /(?:^|[^\w#&])#([A-Za-z][A-Za-z0-9_]{0,99})/g;
+const MENTION = /(?:^|[^\w@.])@([A-Za-z0-9_](?:[A-Za-z0-9_.]{0,48}[A-Za-z0-9_])?)/g;
 
 function unique(items: string[]): string[] {
   const seen = new Set<string>();
@@ -34,5 +34,5 @@ export function readSignals(text: string): CaptionSignals {
 /** Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife"). */
 export function hasTag(text: string, tag: string): boolean {
   const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?<![\\w#$])${escaped}(?![\\w])`, "i").test(text);
+  return new RegExp(`(?:^|[^\\w#$])${escaped}(?![\\w])`, "i").test(text);
 }

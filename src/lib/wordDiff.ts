@@ -110,8 +110,8 @@ export function diffWords(before: string, after: string): DiffPart[] {
   const b = tokens(after.replace(/\r\n/g, "\n"));
   if ((a.length + 1) * (b.length + 1) > MAX_CELLS * 4) {
     // Very long scripts: compare whole lines, which is quick and still shows where the edits are.
-    const la = before.split(/(?<=\n)/);
-    const lb = after.split(/(?<=\n)/);
+    const la = before.match(/[^\n]*\n|[^\n]+/g) || [];
+    const lb = after.match(/[^\n]*\n|[^\n]+/g) || [];
     return diffTokens(la, lb);
   }
   return diffTokens(a, b);
