@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { installChunkRecovery } from "@/lib/chunkRecovery";
 import App from './App.tsx'
 import GlobalLoadingScreen from "@/components/common/GlobalLoadingScreen";
 
@@ -13,15 +14,7 @@ import { installGlobalErrorReporting } from "@/services/errorReporting"
 
 installGlobalErrorReporting();
 
-// After a new deploy removes old hashed chunks from S3, reload once so an open tab picks up the new manifest.
-window.addEventListener('vite:preloadError', () => {
-  const key = 'chunk-reload-at';
-  const last = Number(sessionStorage.getItem(key) || '0');
-  if (Date.now() - last > 10_000) {
-    sessionStorage.setItem(key, String(Date.now()));
-    window.location.reload();
-  }
-});
+installChunkRecovery();
 
 // Create a client
 const queryClient = new QueryClient({

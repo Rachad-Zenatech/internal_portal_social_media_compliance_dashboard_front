@@ -19,7 +19,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/AppShell/TopBar.tsx (488 lines) - top bar (components  app shell)
 - src/components/AppShell/messageHubDefaults.ts (25 lines) - Development-only Message Hub addresses.
 - src/components/common/CheckingNotice.tsx (50 lines) - What is being checked, as it reads in "Checking for …": "compliance", "sentiment", "public mood".
-- src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
+- src/components/common/ErrorBoundary.tsx (50 lines) - error boundary (components common)
 - src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
 - src/components/common/ListPager.tsx (86 lines) - The page numbers to show: the first, the last, and the ones around the current page, with gaps as null.
 - src/components/common/ProtectedRoute.tsx (74 lines) - protected route (components common)
@@ -248,6 +248,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
+- src/lib/chunkRecovery.ts (30 lines) - Recover an open tab whose lazy-loaded page belongs to an older deployment.
 - src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
@@ -288,7 +289,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/utils.ts (7 lines) - utils (lib)
 - src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
-- src/main.tsx (61 lines) - After a new deploy removes old hashed chunks from S3, reload once so an open tab picks up the new manifest.
+- src/main.tsx (54 lines) - Create a client
 - src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Auth/TestLoginAccounts.tsx (32 lines) - test login accounts (pages  auth)

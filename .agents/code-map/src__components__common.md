@@ -7,10 +7,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/common/CheckingNotice.tsx (50 lines) - What is being checked, as it reads in "Checking for …": "compliance", "sentiment", "public mood".
 - `CheckingNotice` (export function) L9 - Shown while a check runs (compliance, sentiment, public mood): a gentle animation and a plain message that it can take  a few seconds or ...
 
-## src/components/common/ErrorBoundary.tsx (48 lines) - error boundary (components common)
-- `Props` (interface) L6
-- `State` (interface) L10
-- `ErrorBoundary` (export class) L14
+## src/components/common/ErrorBoundary.tsx (50 lines) - error boundary (components common)
+- `Props` (interface) L7
+- `State` (interface) L11
+- `ErrorBoundary` (export class) L15
 
 ## src/components/common/GlobalLoadingScreen.tsx (105 lines) - global loading screen (components common)
 - `GlobalLoadingScreen` (export function) L5

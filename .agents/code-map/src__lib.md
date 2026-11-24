@@ -32,6 +32,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
+## src/lib/chunkRecovery.ts (30 lines) - Recover an open tab whose lazy-loaded page belongs to an older deployment.
+- `ReloadRuntime` (interface) L2 - Recover an open tab whose lazy-loaded page belongs to an older deployment.
+- `recoverChunkLoad` (export function) L7
+- `installChunkRecovery` (export function) L24
+
 ## src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - `isVisibleFinding` (export function) L4 - Unavailable and rule-based checks have no model confidence estimate.
 - `findingConfidence` (export function) L9

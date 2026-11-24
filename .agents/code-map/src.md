@@ -10,4 +10,4 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `NotFoundAlert` (function) L108
 - `App` (function) L126
 
-## src/main.tsx (61 lines) - After a new deploy removes old hashed chunks from S3, reload once so an open tab picks up the new manifest.
+## src/main.tsx (54 lines) - Create a client

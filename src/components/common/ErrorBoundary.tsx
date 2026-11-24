@@ -1,3 +1,4 @@
+import { recoverChunkLoad } from "@/lib/chunkRecovery";
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
@@ -19,6 +20,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
+    recoverChunkLoad(error);
     reportClientError("react", error, info.componentStack ?? undefined);
   }
 
