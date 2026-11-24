@@ -79,8 +79,8 @@ export const submissionService = {
 
   get: (id: string) => apiClient.get<Submission>(`/api/submissions/${id}`),
 
-  create: (title: string, contentType: ContentType) =>
-    apiClient.post<Submission>("/api/submissions", { title, content_type: contentType }, quiet),
+  create: (title: string, contentType: ContentType, scriptRequired?: boolean) =>
+    apiClient.post<Submission>("/api/submissions", { title, content_type: contentType, script_required: scriptRequired }, quiet),
 
   /** Autosave and explicit saves both use this; it never shows the global loading overlay. */
   update: (id: string, data: SubmissionUpdate) => apiClient.patch<Submission>(`/api/submissions/${id}`, data, quiet),

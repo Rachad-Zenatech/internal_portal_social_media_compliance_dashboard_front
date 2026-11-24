@@ -4,7 +4,7 @@ import type { ScriptMatch } from "@/types/scriptMatch";
 import type { ComplianceCheckResponse } from "@/services/complianceService";
 import type { ScriptStatus } from "@/types/script";
 import type { SubmissionSourceFields } from "@/types/sourceLink";
-
+import type { VideoScriptOptions } from "@/types/videoScript";
 /** AD: paid social ad. Ad-specific fields and rules are still to be defined. */
 export type ContentType = "VIDEO" | "SOCIAL_POST" | "CAROUSEL" | "IMAGE" | "BLOG" | "AD";
 export type SubmissionFileKind = "MAIN" | "SCRIPT" | "IMAGE" | "SUPPORTING";
@@ -312,7 +312,7 @@ export interface SubmissionSummary extends ReviewScoreFields {
   can_manage_approval?: boolean;
 }
 
-export interface SubmissionUpdate extends SubmissionSourceFields {
+export interface SubmissionUpdate extends SubmissionSourceFields, VideoScriptOptions {
   title?: string;
   content_type?: ContentType;
   brand_code?: string;

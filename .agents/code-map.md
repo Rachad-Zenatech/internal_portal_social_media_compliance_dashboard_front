@@ -101,6 +101,8 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__UnavailableCompliance.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__VideoScriptModeCheckbox.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__VideoScriptTemplate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoTranscript.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ZoomableImageDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__commentParts.md | 1 | 1 KB |
@@ -125,4 +127,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
 | .agents/code-map/src__services.md | 16 | 6 KB |
-| .agents/code-map/src__types.md | 22 | 15 KB |
+| .agents/code-map/src__types.md | 23 | 16 KB |

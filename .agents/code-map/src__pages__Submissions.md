@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2496 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2490 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L177 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L216
 - `timeOptions` (const) L223
@@ -17,59 +17,59 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `navigate` (fn) L294
     - `queryClient` (fn) L299
     - `optionsQuery` (fn) L301
-    - `reviewState` (fn) L369
-    - `checking` (fn) L381
-    - `markEdited` (fn) L402
-    - `accounts` (fn) L408
-    - `reviewersQuery` (fn) L410
-    - `reviewerOptions` (fn) L415
-    - `approverOptions` (fn) L421 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
-    - `suggesterOptions` (fn) L422
-    - `selectedAccounts` (fn) L425
-    - `brandAccounts` (fn) L429
-    - `scriptStage` (fn) L443 - The selected type controls the upload layout, even if the draft previously skipped script review.
+    - `reviewState` (fn) L370
+    - `checking` (fn) L382
+    - `markEdited` (fn) L403
+    - `accounts` (fn) L409
+    - `reviewersQuery` (fn) L411
+    - `reviewerOptions` (fn) L416
+    - `approverOptions` (fn) L422 - Approvers and suggesting reviewers are picked in two boxes; both end up in the one list sent to the server.
+    - `suggesterOptions` (fn) L423
+    - `selectedAccounts` (fn) L426
+    - `brandAccounts` (fn) L430
+    - `scriptStage` (fn) L444
     - `duplicatesQuery` (fn) L451
     - `refreshScript` (fn) L461
-    - `sentBack` (fn) L487
-    - `applyServer` (fn) L521
-    - `buildPayload` (fn) L594
-    - `save` (fn) L627 - Create the draft if needed, then save the current fields.
-    - `handler` (fn) L670
-    - `saveNow` (fn) L677
-    - `suggestRouting` (fn) L688
-    - `onBrandsChange` (fn) L702
-    - `onAccountsChange` (fn) L711
-    - `onAudiencesChange` (fn) L723
-    - `uploadFiles` (fn) L729
-    - `clearBatch` (fn) L756
-    - `removeFile` (fn) L794
-    - `replaceMain` (fn) L810 - Swap the main file for a new one (the revision workspace's "Replace video").
-    - `onCanvaImported` (fn) L834
-    - `reimportCanva` (fn) L842 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
-    - `atApprovalTime` (fn) L868 - Need approval by": the picked day at the chosen time, never after the publish time.
-    - `pickApproval` (fn) L869
-    - `isMissing` (fn) L895
-    - `errorFor` (fn) L897
-    - `titleOf` (fn) L910
-    - `detailsMissing` (fn) L912
-    - `toolView` (fn) L917
-    - `goToStep` (fn) L918
-    - `repostKey` (fn) L929
-    - `leaveDetails` (fn) L930
-    - `backToCaption` (fn) L965
-    - `openStep` (fn) L969
-    - `runComplianceCheck` (fn) L972
-    - `sourceChecking` (fn) L1044
-    - `submit` (fn) L1061
-    - `exec` (fn) L1206
-    - `insertHashtag` (fn) L1214 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
-    - `text` (fn) L1226
-    - `typedTail` (fn) L1231 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
-    - `removeHashtag` (fn) L1238 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1262 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1278 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1286
-    - `onConfirmRepostDate` (fn) L1299
+    - `sentBack` (fn) L493
+    - `applyServer` (fn) L527
+    - `buildPayload` (fn) L601
+    - `save` (fn) L635 - Create the draft if needed, then save the current fields.
+    - `handler` (fn) L678
+    - `saveNow` (fn) L685
+    - `suggestRouting` (fn) L696
+    - `onBrandsChange` (fn) L710
+    - `onAccountsChange` (fn) L719
+    - `onAudiencesChange` (fn) L731
+    - `uploadFiles` (fn) L737
+    - `clearBatch` (fn) L764
+    - `removeFile` (fn) L802
+    - `replaceMain` (fn) L818 - Swap the main file for a new one (the revision workspace's "Replace video").
+    - `onCanvaImported` (fn) L842
+    - `reimportCanva` (fn) L850 - Bring in the linked design's latest revision; after changes were requested, optionally resubmit too.
+    - `atApprovalTime` (fn) L876 - Need approval by": the picked day at the chosen time, never after the publish time.
+    - `pickApproval` (fn) L877
+    - `isMissing` (fn) L903
+    - `errorFor` (fn) L905
+    - `titleOf` (fn) L918
+    - `detailsMissing` (fn) L920
+    - `toolView` (fn) L925
+    - `goToStep` (fn) L926
+    - `repostKey` (fn) L937
+    - `leaveDetails` (fn) L938
+    - `backToCaption` (fn) L973
+    - `openStep` (fn) L977
+    - `runComplianceCheck` (fn) L980
+    - `sourceChecking` (fn) L1052
+    - `submit` (fn) L1069
+    - `exec` (fn) L1214
+    - `insertHashtag` (fn) L1222 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
+    - `text` (fn) L1234
+    - `typedTail` (fn) L1239 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
+    - `removeHashtag` (fn) L1246 - Takes a hashtag or cashtag out of the caption (undo brings it back).
+    - `applySuggestedCaption` (fn) L1270 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1286 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1294
+    - `onConfirmRepostDate` (fn) L1307
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...

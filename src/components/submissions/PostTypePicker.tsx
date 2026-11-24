@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import VideoScriptModeCheckbox, { type VideoScriptMode } from "./VideoScriptModeCheckbox";
 import type { ContentType } from "@/types/submission";
 
 interface PostTypeOption {
@@ -11,13 +12,14 @@ interface PostTypeOption {
 
 interface PostTypePickerProps {
   value: ContentType;
+  scriptMode?: VideoScriptMode;
   options: PostTypeOption[];
   description?: string;
   disabled: boolean;
   onChange: (value: ContentType) => void;
 }
 
-export default function PostTypePicker({ value, options, description, disabled, onChange }: PostTypePickerProps) {
+export default function PostTypePicker({ value, options, description, disabled, onChange, scriptMode }: PostTypePickerProps) {
   return (
     <div className="space-y-2">
       <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
@@ -25,6 +27,7 @@ export default function PostTypePicker({ value, options, description, disabled, 
         {options.map((option) => <PostTypeButton key={option.value} option={option} selected={value === option.value} disabled={disabled} onChange={onChange} />)}
       </div>
       <p className="text-xs text-muted-foreground">{description}</p>
+      {value === "VIDEO" && scriptMode && <VideoScriptModeCheckbox {...scriptMode} disabled={disabled || scriptMode.disabled} />}
     </div>
   );
 }

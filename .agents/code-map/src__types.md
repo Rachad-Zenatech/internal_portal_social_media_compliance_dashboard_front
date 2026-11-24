@@ -237,3 +237,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/types/submissionSchedule.ts (7 lines) - Calendar timing displayed alongside the server's review status.
 - `SubmissionStage` (export type) L3
 - `CalendarSubmission` (export type) L6 - Calendar timing displayed alongside the server's review status.
+
+## src/types/videoScript.ts (5 lines) - Whether this video needs the platform's script review before upload.
+- `VideoScriptOptions` (export interface) L2 - Whether this video needs the platform's script review before upload.

@@ -13,6 +13,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - `PendingAccess` (export function) L8
 
-## src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
-- `TestAccount` (export type) L11
-- `TestLoginAccounts` (export function) L13
+## src/pages/Auth/TestLoginAccounts.tsx (32 lines) - test login accounts (pages  auth)
+- `TestAccount` (export type) L12
+- `TestLoginAccounts` (export function) L14

@@ -4,8 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostTypePicker.tsx (51 lines) - post type picker (components submissions)
-- `PostTypeOption` (interface) L5
-- `PostTypePickerProps` (interface) L12
-- `PostTypePicker` (export function) L20
-- `PostTypeButton` (function) L32
+## src/components/submissions/PostTypePicker.tsx (54 lines) - post type picker (components submissions)
+- `PostTypeOption` (interface) L6
+- `PostTypePickerProps` (interface) L13
+- `PostTypePicker` (export function) L22
+- `PostTypeButton` (function) L35

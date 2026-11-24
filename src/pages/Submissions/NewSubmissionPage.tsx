@@ -25,7 +25,6 @@ import {
   ShieldCheck,
   Clock,
   CloudUpload,
-  Download,
   FileText,
   GalleryHorizontalEnd,
   Globe,
@@ -103,6 +102,7 @@ import ReviewConversation from "@/components/submissions/ReviewConversation";
 import { useReviewComments } from "@/hooks/useReview";
 import { useSubmissionReviewState } from "@/hooks/useSubmissionReviewState";
 import PostTypePicker from "@/components/submissions/PostTypePicker";
+import VideoScriptTemplate from "@/components/submissions/VideoScriptTemplate";
 import { usePostTypeChange } from "@/hooks/usePostTypeChange";
 import { STEP_TITLE, STEP_DESCRIPTION, submissionRevisionSteps, type EditorStep } from "@/lib/submissionRevisionSteps";
 import CanvaImportDialog, { CANVA_PURPLE, CanvaMark, designFits } from "@/components/submissions/CanvaImportDialog";
@@ -322,6 +322,7 @@ export default function NewSubmissionPage() {
     const picked = searchParams.get("type");
     return CONTENT_TYPES.find((c) => c.value === picked)?.value ?? "VIDEO";
   });
+  const [scriptRequired, setScriptRequired] = useState(true);
   const [title, setTitle] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   // Publishing accounts, primary first.
@@ -439,11 +440,10 @@ export default function NewSubmissionPage() {
   const mainUpload = MAIN_UPLOAD[contentType];
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
-  // The selected type controls the upload layout, even if the draft previously skipped script review.
-  const scriptStage = useScriptStage(submissionId, contentType === "VIDEO");
-  const scriptFirst = contentType === "VIDEO";
+  const scriptFirst = contentType === "VIDEO" && scriptRequired;
+  const scriptStage = useScriptStage(submissionId, scriptFirst && !loadingExisting);
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
-  const scriptOnly = contentType === "VIDEO" && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
+  const scriptOnly = scriptFirst && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
   const checkedSub = scriptOnly && videoLocked && storedSub && scriptStage.data?.precheck ? { ...storedSub, latest_check: scriptStage.data.precheck } : storedSub;
   const preparationSteps = postPreparationSteps(scriptOnly);
   // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
@@ -460,11 +460,17 @@ export default function NewSubmissionPage() {
   const needScriptFirst = videoLocked && !files.some((f) => f.kind === "SCRIPT");
   const refreshScript = () => queryClient.invalidateQueries({ queryKey: ["script"] });
   const postTypeBusy = readOnly || uploading.length > 0 || saveState === "saving" || Boolean(removingId) || replacingMain || reimporting || canvaOpen || checking || submitting;
+  const scriptMode = {
+    required: scriptRequired,
+    disabled: postTypeBusy || status !== "DRAFT" || Boolean(storedSub?.current_version) || Boolean(scriptStage.data?.processing) || Boolean(scriptStage.data?.status && scriptStage.data.status !== "DRAFT"),
+    onChange: (required: boolean) => { setScriptRequired(required); markEdited(); },
+  };
   const { changingPostType, changePostType } = usePostTypeChange({
     contentType, files, idRef, saveChain, busy: postTypeBusy, refreshScript,
     onRemove: (id) => setFiles((prev) => prev.filter((file) => file.id !== id)),
     onChange: (value) => {
       setContentType(value);
+      setScriptRequired(true);
       setAiGeneratedImages(null);
       setIsDraggingMain(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -546,6 +552,7 @@ export default function NewSubmissionPage() {
         setReadOnly(!s.can_edit);
         setSentAt(s.submitted_at ?? null);
         setContentType(s.content_type);
+        setScriptRequired(s.script_required ?? true);
         setTitle(s.title === "Untitled submission" ? "" : s.title);
         setBrands(brandCodes(s));
         setAccountIds(s.account_ids?.length ? s.account_ids : s.account_id ? [s.account_id] : []);
@@ -601,6 +608,7 @@ export default function NewSubmissionPage() {
     return {
       title: title.trim() || "Untitled submission",
       content_type: contentType,
+      ...(contentType === "VIDEO" ? { script_required: scriptRequired } : {}),
       ...(brands.length ? { brand_codes: brands } : {}),
       ...(audiences.length ? { audiences } : {}),
       ...(region ? { region } : {}),
@@ -635,7 +643,7 @@ export default function NewSubmissionPage() {
         setSaveState("saving");
         try {
           if (!idRef.current) {
-            const created = await submissionService.create(payload.title || "Untitled submission", contentType);
+            const created = await submissionService.create(payload.title || "Untitled submission", contentType, payload.script_required);
             idRef.current = created.id;
             createdIdRef.current = created.id;
             setSubmissionId(created.id);
@@ -731,7 +739,7 @@ export default function NewSubmissionPage() {
 
     let mainTaken = !opts.replacingMain && files.some((f) => f.kind === "MAIN");
     // One script per submission: a new one replaces the old (the server keeps the old with its version).
-    let scriptTaken = !opts.asScript && files.some((f) => f.kind === "SCRIPT");
+    let scriptTaken = !opts.asScript && (files.some((f) => f.kind === "SCRIPT") || (contentType === "VIDEO" && !scriptRequired));
     const batch: { file: File; kind: SubmissionFileKind; key: string }[] = [];
     for (const file of list) {
       const result: { kind: SubmissionFileKind } | { error: string } = opts.asScript
@@ -1437,7 +1445,7 @@ export default function NewSubmissionPage() {
 
                     <PostTypePicker value={contentType} options={VISIBLE_CONTENT_TYPES}
                       description={CONTENT_TYPES.find((c) => c.value === contentType)?.description}
-                      disabled={postTypeBusy || changingPostType} onChange={changePostType} />
+                      disabled={postTypeBusy || changingPostType} onChange={changePostType} scriptMode={scriptMode} />
 
                     <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                       <Field label="Brand" required error={errorFor("brand_code", "Choose a brand")}>
@@ -1727,28 +1735,14 @@ export default function NewSubmissionPage() {
 
                 <Section
                   step={3}
-                  title={videoLocked ? "Script" : "Image and sources"}
+                  title={videoLocked ? "Script" : contentType === "VIDEO" ? "Video and sources" : "Image and sources"}
                   description={
                     videoLocked
                       ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
                       : "Upload your image or video, and any documents that back up your claims."
                   }
                 >
-                  {/* A blank script layout (title, storyline, hook, timed shot table) for writing scripts in Word. Videos only, until the script is approved. */}
-                  {contentType === "VIDEO" && scriptStage.data?.status !== "APPROVED" && (
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
-                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <FileText className="w-3.5 h-3.5 shrink-0" />
-                        Writing a script? Start from the template: title, storyline, hook and a timed shot table.
-                      </p>
-                      <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-                        <a href={`${import.meta.env.BASE_URL}templates/script-template.docx`} download="script-template.docx">
-                          <Download className="w-3.5 h-3.5" />
-                          Export template (.docx)
-                        </a>
-                      </Button>
-                    </div>
-                  )}
+                  {videoLocked && <VideoScriptTemplate />}
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1851,7 +1845,7 @@ export default function NewSubmissionPage() {
                       </button>
                     </div>
                   )}
-                  {!scriptFirst && (
+                  {contentType !== "VIDEO" && (
                     <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                       <Button
                         type="button"
