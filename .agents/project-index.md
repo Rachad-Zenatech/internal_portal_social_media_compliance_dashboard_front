@@ -297,7 +297,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Compliance/ContentScreenerPage.tsx (1508 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2869 lines) - video compliance scanner page (pages  compliance)
-- src/pages/Configurations/AiStatusPage.tsx (76 lines) - ai status page (pages  configurations)
+- src/pages/Configurations/AiStatusPage.tsx (85 lines) - ai status page (pages  configurations)
 - src/pages/Configurations/ApprovalPaths.tsx (266 lines) - approval paths (pages  configurations)
 - src/pages/Configurations/InteractiveRuleMetrics.tsx (207 lines) - interactive rule metrics (pages  configurations)
 - src/pages/Configurations/ModelStatusCard.tsx (196 lines) - model status card (pages  configurations)
@@ -315,9 +315,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/UserRoleAssignment.tsx (477 lines) - A user's brand access, with every active brand to choose from.
 - src/pages/Configurations/Users.tsx (692 lines) - users (pages  configurations)
 - src/pages/Configurations/aiStatus/AiCoresGrid.tsx (78 lines) - ai cores grid (pages  configurations ai status)
-- src/pages/Configurations/aiStatus/AiFeatureMatrix.tsx (184 lines) - ai feature matrix (pages  configurations ai status)
-- src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (156 lines) - ai pipeline telemetry (pages  configurations ai status)
-- src/pages/Configurations/aiStatus/AiSummaryCards.tsx (115 lines) - ai summary cards (pages  configurations ai status)
+- src/pages/Configurations/aiStatus/AiErrorsDialog.tsx (110 lines) - ai errors dialog (pages  configurations ai status)
+- src/pages/Configurations/aiStatus/AiFeatureMatrix.tsx (203 lines) - ai feature matrix (pages  configurations ai status)
+- src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (179 lines) - ai pipeline telemetry (pages  configurations ai status)
+- src/pages/Configurations/aiStatus/AiSummaryCards.tsx (140 lines) - ai summary cards (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/statusStyles.ts (31 lines) - status styles (pages  configurations ai status)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (634 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (307 lines) - publish draft page (pages  content calendar)
@@ -358,7 +359,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/scriptDocService.ts (57 lines) - Scripts written from a template and reviewed live by several reviewers (see the backend's script_doc_service).
 - src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - src/services/submissionService.ts (389 lines) - submission service (services)
-- src/types/aiOverview.ts (124 lines) - ai overview (types)
+- src/types/aiOverview.ts (152 lines) - ai overview (types)
 - src/types/approvalPath.ts (31 lines) - Who gives final approval for which content.
 - src/types/auth.ts (97 lines) - auth (types)
 - src/types/calendar.ts (77 lines) - Approved content placed on the publishing calendar.

@@ -4,12 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { AiOverviewFeature } from "@/types/aiOverview";
+import type { AiErrorsFilter, AiOverviewFeature } from "@/types/aiOverview";
 import { STATUS_BADGE_CLASS, STATUS_LABEL, formatCount, formatLatency } from "./statusStyles";
 
 type StatusFilter = "ALL" | "ISSUES" | "HEALTHY";
 
-function FeatureRow({ item }: { item: AiOverviewFeature }) {
+function FeatureRow({
+  item,
+  onShowErrors,
+}: {
+  item: AiOverviewFeature;
+  onShowErrors: (filter: AiErrorsFilter) => void;
+}) {
   const u = item.usage_24h;
   const totalTokens = item.input_tokens + item.output_tokens;
   return (
@@ -49,7 +55,18 @@ function FeatureRow({ item }: { item: AiOverviewFeature }) {
       <TableCell className="align-top text-right text-xs tabular-nums">
         <div className="font-semibold">{formatCount(item.calls)}</div>
         <div className="text-[10px] text-muted-foreground">
-          {item.errors > 0 ? <span className="text-rose-600">{item.errors} err</span> : "0 err"} · {item.cache_hits} cache
+          {item.errors > 0 ? (
+            <button
+              type="button"
+              onClick={() => onShowErrors({ feature: item.feature, label: item.label })}
+              className="font-medium text-rose-600 underline decoration-rose-400/70 underline-offset-2 hover:text-rose-700"
+            >
+              {item.errors} err
+            </button>
+          ) : (
+            "0 err"
+          )}{" "}
+          · {item.cache_hits} cache
         </div>
       </TableCell>
       <TableCell className="align-top text-right text-xs tabular-nums">
@@ -82,10 +99,12 @@ export default function AiFeatureMatrix({
   features,
   selectedCore,
   coreLabel,
+  onShowErrors,
 }: {
   features: AiOverviewFeature[];
   selectedCore: string;
   coreLabel?: string;
+  onShowErrors: (filter: AiErrorsFilter) => void;
 }) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
@@ -174,7 +193,7 @@ export default function AiFeatureMatrix({
               </TableCell>
             </TableRow>
           ) : (
-            filtered.map((item) => <FeatureRow key={item.feature} item={item} />)
+            filtered.map((item) => <FeatureRow key={item.feature} item={item} onShowErrors={onShowErrors} />)
           )}
         </TableBody>
       </Table>

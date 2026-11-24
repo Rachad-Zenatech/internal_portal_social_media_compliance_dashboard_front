@@ -7,20 +7,25 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Configurations/aiStatus/AiCoresGrid.tsx (78 lines) - ai cores grid (pages  configurations ai status)
 - `AiCoresGrid` (export function) L7
 
-## src/pages/Configurations/aiStatus/AiFeatureMatrix.tsx (184 lines) - ai feature matrix (pages  configurations ai status)
+## src/pages/Configurations/aiStatus/AiErrorsDialog.tsx (110 lines) - ai errors dialog (pages  configurations ai status)
+- `ErrorEntryRow` (function) L10
+- `AiErrorsDialog` (export function) L47
+
+## src/pages/Configurations/aiStatus/AiFeatureMatrix.tsx (203 lines) - ai feature matrix (pages  configurations ai status)
 - `StatusFilter` (type) L10
 - `FeatureRow` (function) L12
-- `AiFeatureMatrix` (export function) L81
+- `AiFeatureMatrix` (export function) L98
 
-## src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (156 lines) - ai pipeline telemetry (pages  configurations ai status)
-- `ModelsTable` (function) L14
-- `StepsTable` (function) L59
-- `GuardTable` (function) L100
-- `AiPipelineTelemetry` (export function) L133
+## src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (179 lines) - ai pipeline telemetry (pages  configurations ai status)
+- `ModelsTable` (function) L15
+- `StepsTable` (function) L76
+- `GuardTable` (function) L117
+- `AiPipelineTelemetry` (export function) L150
 
-## src/pages/Configurations/aiStatus/AiSummaryCards.tsx (115 lines) - ai summary cards (pages  configurations ai status)
+## src/pages/Configurations/aiStatus/AiSummaryCards.tsx (140 lines) - ai summary cards (pages  configurations ai status)
 - `KpiCard` (function) L6
-- `AiSummaryCards` (export function) L32
+- `OverallStatusBanner` (function) L32
+- `AiSummaryCards` (export function) L88
 
 ## src/pages/Configurations/aiStatus/statusStyles.ts (31 lines) - status styles (pages  configurations ai status)
 - `STATUS_BADGE_CLASS` (export const) L3
