@@ -10,7 +10,7 @@ function quotePattern(quote: string): RegExp | null {
   const words = quote.replace(/[‘’]/g, "'").match(WORD);
   if (!words?.length) return null;
   const parts = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['‘’]"));
-  return new RegExp(`(?<![\\p{L}\\p{N}_$%'‘’])${parts.join("[^\\p{L}\\p{N}_$%'‘’]+")}(?![\\p{L}\\p{N}_$%'‘’])`, "iu");
+  return new RegExp(`(^|[^\\p{L}\\p{N}_$%'‘’])(${parts.join("[^\\p{L}\\p{N}_$%'‘’]+")})(?![\\p{L}\\p{N}_$%'‘’])`, "iu");
 }
 
 /** Where the quote is in text: [start, end), taking in a closing punctuation mark the revision already ends with. */
@@ -18,10 +18,11 @@ function locate(text: string, quote: string, revision: string): [number, number]
   const pattern = quotePattern(quote);
   const m = pattern ? pattern.exec(text) : null;
   if (!m) return null;
-  let end = m.index + m[0].length;
+  const start = m.index + m[1].length;
+  let end = start + m[2].length;
   const last = revision.trim().slice(-1);
   if (/[.!?,;:]/.test(last) && text[end] === last) end += 1;
-  return [m.index, end];
+  return [start, end];
 }
 
 /** The text with the quoted wording replaced, or null when it isn't there. */

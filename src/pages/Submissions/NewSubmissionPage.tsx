@@ -1247,14 +1247,15 @@ export default function NewSubmissionPage() {
     const editor = editorRef.current;
     if (!editor) return;
     const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = new RegExp(`\\s?(?<![\\w#$])${escaped}(?![\\w])`, "i");
+    const pattern = new RegExp(`(^|[^\\w#$])(${escaped})(?![\\w])`, "i");
     const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const m = pattern.exec(node.textContent ?? "");
       if (!m) continue;
       editor.focus();
       const range = document.createRange();
-      range.setStart(node, m.index);
+      const start = /\s/.test(m[1]) ? m.index : m.index + m[1].length;
+      range.setStart(node, start);
       range.setEnd(node, m.index + m[0].length);
       const sel = window.getSelection();
       sel?.removeAllRanges();
