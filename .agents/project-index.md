@@ -245,7 +245,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - src/hooks/useSentiment.ts (138 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
-- src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
+- src/hooks/useSharedEventSource.ts (96 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSourceComplianceRefresh.ts (19 lines) - Recheck once per changed source set after the creator opens Compliance; cancellation does not restart it.
 - src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
@@ -349,7 +349,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - src/pages/Submissions/SubmissionsListPage.tsx (1591 lines) - submissions list page (pages  submissions)
-- src/services/apiClient.ts (345 lines) - api client (services)
+- src/services/apiClient.ts (355 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.

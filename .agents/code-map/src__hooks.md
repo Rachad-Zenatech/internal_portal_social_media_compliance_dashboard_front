@@ -132,7 +132,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `isSentimentRunning` (export function) L11
 - `useSentiment` (export function) L16 - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
 
-## src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
+## src/hooks/useSharedEventSource.ts (96 lines) - The latest handlers, so changing them doesn't reconnect.
 - `SharedStreamHandlers` (export interface) L14 - One server-sent-events connection shared by every open tab of the app.
 - `Wire` (type) L20
 - `useSharedEventSource` (export function) L22

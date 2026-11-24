@@ -39,7 +39,9 @@ export function useSharedEventSource(name: string, url: string | null, handlers:
     let source: EventSource | null = null;
     let release: (() => void) | null = null;
     let stopped = false;
+    let held = false;
     const connect = () => {
+      source?.close();
       source = new EventSource(url, { withCredentials: true });
       const send = (w: Wire) => {
         dispatch(w, true);
@@ -50,6 +52,17 @@ export function useSharedEventSource(name: string, url: string | null, handlers:
       source.onerror = () => send({ type: "error" });
     };
 
+    const reconnectIfClosed = () => {
+      if (!stopped && held && (!source || source.readyState === EventSource.CLOSED)) {
+        connect();
+      }
+    };
+    window.addEventListener("online", reconnectIfClosed);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") reconnectIfClosed();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
     const waiting = new AbortController();
     if (locks && channel) {
@@ -58,17 +71,21 @@ export function useSharedEventSource(name: string, url: string | null, handlers:
         .request(`sse:${name}`, { signal: waiting.signal }, () =>
           new Promise<void>((resolve) => {
             release = resolve;
+            held = true;
             if (stopped) resolve();
             else connect();
           }),
         )
         .catch(() => undefined); // Aborted while waiting: this tab closed or the URL changed.
     } else {
+      held = true;
       connect();
     }
 
     return () => {
       stopped = true;
+      window.removeEventListener("online", reconnectIfClosed);
+      document.removeEventListener("visibilitychange", onVisibility);
       waiting.abort();
       source?.close();
       release?.();
