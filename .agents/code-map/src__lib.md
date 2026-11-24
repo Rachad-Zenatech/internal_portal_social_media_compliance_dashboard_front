@@ -55,32 +55,32 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
 - `compressUploadImage` (export function) L5 - Reduce large image uploads before they leave the browser.
 
-## src/lib/contentCalendar.ts (433 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
-- `MODE_OF_STYLE` (export const) L16 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
-- `PublishInfo` (export type) L27 - A platform's publish info with its caption limit always set.
-- `PUBLISH_INFO` (export const) L29
-- `MODE_LABELS` (export const) L122
-- `publishInfo` (export function) L129
-- `account` (function) L137
-- `Sample` (type) L162 - still upcoming.
-- `sampleItems` (export function) L228
-- `fromSubmission` (export function) L245 - A real approved submission with a publish date, as a calendar item.
-- `LegacyRecord` (type) L279 - Records saved by an older version of this page (mode, at, ref) are read as the current shape.
-- `upgrade` (function) L281
-- `read` (function) L303
-- `write` (function) L320
-- `subscribe` (function) L329
-- `publishKey` (export const) L338
-- `usePublished` (export function) L341 - Simulated publish results, shared by the calendar and the publish page.
-- `recordPublish` (export function) L345
-- `clearPublished` (export function) L362
-- `SproutRecord` (export interface) L371 - One approved post handed to Sprout Social, which then schedules and publishes it on each profile.
-- `readSprout` (function) L384
-- `writeSprout` (function) L401
-- `subscribeSprout` (function) L410
-- `useSentToSprout` (export function) L420 - Posts sent to Sprout Social (simulated), by calendar item id.
-- `recordSproutSend` (export function) L424
-- `clearSproutSends` (export function) L430
+## src/lib/contentCalendar.ts (436 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
+- `MODE_OF_STYLE` (export const) L17 - The mode each on-screen style maps to: everything but a scheduled post is saved on the platform as a draft.
+- `PublishInfo` (export type) L28 - A platform's publish info with its caption limit always set.
+- `PUBLISH_INFO` (export const) L30
+- `MODE_LABELS` (export const) L123
+- `publishInfo` (export function) L130
+- `account` (function) L138
+- `Sample` (type) L163 - still upcoming.
+- `sampleItems` (export function) L229
+- `fromSubmission` (export function) L246 - A real approved submission with a publish date, as a calendar item.
+- `LegacyRecord` (type) L280 - Records saved by an older version of this page (mode, at, ref) are read as the current shape.
+- `upgrade` (function) L282
+- `read` (function) L304
+- `write` (function) L321
+- `subscribe` (function) L330
+- `publishKey` (export const) L339
+- `usePublished` (export function) L342 - Simulated publish results, shared by the calendar and the publish page.
+- `recordPublish` (export function) L346
+- `clearPublished` (export function) L364
+- `SproutRecord` (export interface) L373 - One approved post handed to Sprout Social, which then schedules and publishes it on each profile.
+- `readSprout` (function) L386
+- `writeSprout` (function) L403
+- `subscribeSprout` (function) L412
+- `useSentToSprout` (export function) L422 - Posts sent to Sprout Social (simulated), by calendar item id.
+- `recordSproutSend` (export function) L426
+- `clearSproutSends` (export function) L433
 
 ## src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
 - `MessagingReport` (export type) L5
@@ -152,6 +152,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `analysisIsCurrent` (export function) L9
 - `mediaChanged` (export function) L13
 - `checkIsCurrent` (export function) L17
+
+## src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
+- `SuggestionPost` (export type) L3
+- `postSuggestionState` (export function) L5
+- `suggestionTimeLabel` (export function) L14
 
 ## src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - `unique` (function) L10

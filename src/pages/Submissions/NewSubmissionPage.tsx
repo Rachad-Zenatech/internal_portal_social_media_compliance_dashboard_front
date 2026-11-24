@@ -1183,7 +1183,7 @@ export default function NewSubmissionPage() {
           ? `${result.submission.reference_code} was updated and added to the calendar (simulated).`
           : `${result.submission.reference_code} ${resubmitting ? "resubmitted" : "sent"} for review (version ${result.submission.current_version}). Reviewers have been notified. Automated check: ${result.review_job.automated_check?.ai_unavailable ? "no score, the AI review couldn't run" : result.review_job.score == null ? "under review" : `${result.review_job.score}/100`}.`
       );
-      const calendarPath = scheduleCorrectedPost(result.submission, publishAfterChanges ? publishDate : undefined);
+      const calendarPath = await scheduleCorrectedPost(result.submission, publishAfterChanges ? publishDate : undefined);
       navigate(calendarPath ?? "/submissions");
     } catch (err) {
       if (err instanceof ApiError && err.status === 422 && err.detail && typeof err.detail === "object" && "missing" in err.detail) {

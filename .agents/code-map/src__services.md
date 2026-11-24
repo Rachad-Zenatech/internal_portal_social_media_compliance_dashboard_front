@@ -95,6 +95,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/preparationComplianceService.ts (22 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
 - `runPreparationCompliance` (export function) L7 - Script drafts use the saved script check; finished posts use the streamed post check.
 
+## src/services/publishingAccess.ts (9 lines) - Validate immediately before writing a simulated schedule or publish result.
+- `requirePublishingAccess` (export function) L4 - Validate immediately before writing a simulated schedule or publish result.
+
 ## src/services/scriptBatchService.ts (41 lines) - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 - `scriptBatchService` (export const) L7 - Scripts uploaded together, reviewed together (see the backend's script_batch_service).
 
@@ -104,6 +107,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/scriptService.ts (65 lines) - The script stage of video posts (see the backend's script_review_service).
 - `scriptService` (export const) L10 - The script stage of video posts (see the backend's script_review_service).
 
-## src/services/submissionService.ts (389 lines) - submission service (services)
+## src/services/submissionService.ts (390 lines) - submission service (services)
 - `ScrapeStatus` (export interface) L47
 - `submissionService` (export const) L61

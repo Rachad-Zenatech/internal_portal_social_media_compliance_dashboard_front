@@ -2,6 +2,7 @@
  * Content Calendar mock layer: sample approved posts, what each platform's API can create, and a
  * browser-only record of simulated publishes. Replace with API calls once platform publishing exists.
  */
+import { requirePublishingAccess } from "@/services/publishingAccess";
 import { useSyncExternalStore } from "react";
 import { addDays, addHours, setHours, setMinutes, startOfDay, startOfHour } from "date-fns";
 
@@ -342,7 +343,8 @@ export function usePublished() {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
 
-export function recordPublish(itemId: string, platform: string, style: PublishStyle, scheduledFor?: string): PublishRecord {
+export async function recordPublish(itemId: string, platform: string, style: PublishStyle, scheduledFor?: string): Promise<PublishRecord> {
+  await requirePublishingAccess(itemId);
   const ref = `${platform.slice(0, 2)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const record: PublishRecord = {
     id: ref,
@@ -421,7 +423,8 @@ export function useSentToSprout() {
   return useSyncExternalStore(subscribeSprout, readSprout, () => NONE);
 }
 
-export function recordSproutSend(itemId: string, scheduledFor?: string): SproutRecord {
+export async function recordSproutSend(itemId: string, scheduledFor?: string): Promise<SproutRecord> {
+  await requirePublishingAccess(itemId);
   const record: SproutRecord = { at: new Date().toISOString(), scheduled_for: scheduledFor, ref: `SPR-${Math.random().toString(36).slice(2, 8).toUpperCase()}` };
   writeSprout({ ...readSprout(), [itemId]: record });
   return record;

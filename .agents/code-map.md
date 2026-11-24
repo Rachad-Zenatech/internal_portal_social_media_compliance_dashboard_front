@@ -55,6 +55,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ImageAnnotator.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImagePersonField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageProvenanceField.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__LegacyApprovedSuggestions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ManuallyCheckedClaims.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MarkedUpImageSlideshow.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MediaFindingOverlay.md | 1 | 1 KB |
@@ -64,6 +65,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__PendingDismissalScore.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptionsView.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PostApprovalSuggestionNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostDetailParts.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostPreview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostStepNav.md | 1 | 1 KB |
@@ -115,8 +117,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 38 | 12 KB |
-| .agents/code-map/src__lib.md | 45 | 20 KB |
+| .agents/code-map/src__hooks.md | 40 | 13 KB |
+| .agents/code-map/src__lib.md | 46 | 20 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -130,5 +132,5 @@ to find the right file.
 | .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
-| .agents/code-map/src__services.md | 16 | 6 KB |
-| .agents/code-map/src__types.md | 25 | 16 KB |
+| .agents/code-map/src__services.md | 17 | 6 KB |
+| .agents/code-map/src__types.md | 27 | 17 KB |

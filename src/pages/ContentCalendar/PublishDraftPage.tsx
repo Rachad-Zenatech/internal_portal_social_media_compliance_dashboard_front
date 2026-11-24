@@ -127,11 +127,12 @@ export default function PublishDraftPage() {
     setStepIndex(0);
     steps.forEach((_, i) => {
       timers.current.push(
-        window.setTimeout(() => {
+        window.setTimeout(async () => {
           if (i < steps.length - 1) {
             setStepIndex(i + 1);
           } else {
-            recordPublish(item.id, platform, info.style, scheduledFor);
+            try { await recordPublish(item.id, platform, info.style, scheduledFor); }
+            catch (error) { toast.error((error as Error).message); setRunning(false); setStepIndex(-1); return; }
             setRunning(false);
             setStepIndex(-1);
             toast.success(`${MODE_LABELS[info.style]} created for ${name} (simulated).`);

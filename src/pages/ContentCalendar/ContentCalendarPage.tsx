@@ -1,3 +1,4 @@
+import { useCalendarSend } from "@/hooks/useCalendarSend";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCalendarSelection } from "@/hooks/useCalendarSelection";
@@ -17,7 +18,6 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Crown, ExternalLink, FlaskConical, Plus, RotateCcw, Send } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
@@ -28,7 +28,6 @@ import {
   clearPublished,
   clearSproutSends,
   fromSubmission,
-  recordSproutSend,
   sampleItems,
   usePublished,
   useSentToSprout,
@@ -227,12 +226,7 @@ export default function ContentCalendarPage() {
   const anyActivity = Object.keys(sent).length > 0 || Object.keys(published).length > 0;
   const filtersOn = [profileSel, brandSel, platformSel, statusSel].some((v) => v.length > 0);
 
-  const send = (item: CalendarItem) => {
-    // Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
-    setSelectedId(item.id);
-    recordSproutSend(item.id);
-    toast.success(`${item.reference_code} sent to Sprout Social (simulated) and scheduled for ${format(new Date(item.scheduled_for), "EEE, MMM d · h:mm a")}.`);
-  };
+  const send = useCalendarSend(setSelectedId);
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[2400px]">

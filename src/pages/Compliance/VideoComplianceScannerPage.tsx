@@ -1,3 +1,5 @@
+import { useApprovedPostAccess } from "@/hooks/usePostApprovalSuggestions";
+import LegacyApprovedSuggestions from "@/components/submissions/LegacyApprovedSuggestions";
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import {
   Upload,
@@ -87,7 +89,6 @@ import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import CheckCoverage from "@/components/submissions/CheckCoverage";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import ApprovalActions from "@/components/submissions/ApprovalActions";
 import type { QueueTab } from "@/types/submission";
 import { useReviewComments } from "@/hooks/useReview";
 import { format, formatDistanceToNow } from "date-fns";
@@ -522,6 +523,8 @@ export default function VideoComplianceScannerPage() {
   const commentsKey = activeVideo?.id ?? "demo";
   const startingNotes = !activeVideo || activeVideo.isDemo ? SAMPLE_COMMENTS : NO_COMMENTS;
   const savedComments = useReviewComments(submissionId);
+  const suggestions = useApprovedPostAccess(submissionId);
+  const canWriteComments = !viewingOld && (activeVideo?.submissionStatus !== "APPROVED" || suggestions.canComment || suggestions.post?.created_by === user?.id);
   const comments: ReviewerComment[] = submissionId
     ? savedComments.comments.filter((c) => !viewVersion || c.version_number === viewVersion).map((c) => ({
       id: c.id,
@@ -1055,6 +1058,7 @@ export default function VideoComplianceScannerPage() {
 
   // Delete a comment
   const handleDeleteComment = (id: string) => {
+    if (!canWriteComments) { toast.info("The suggestion window is closed."); return; }
     if (submissionId) {
       savedComments.remove.mutate(id);
       return;
@@ -2208,7 +2212,7 @@ export default function VideoComplianceScannerPage() {
                       This was decided, so its notes are read-only. To raise something new, reopen it for changes.
                     </p>
                   ) : (
-                    <form onSubmit={handleAddComment} className="border-t border-border/60 px-4 py-3.5 space-y-2.5">
+                    <fieldset disabled={!canWriteComments}><form onSubmit={handleAddComment} className="border-t border-border/60 px-4 py-3.5 space-y-2.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <Select value={commentCategory} onValueChange={(val) => setCommentCategory(val as CommentCategory)}>
                           <SelectTrigger className="h-8 w-[150px] text-xs font-semibold">
@@ -2365,7 +2369,7 @@ export default function VideoComplianceScannerPage() {
                           Post Comment
                         </Button>
                       </div>
-                    </form>
+                    </form></fieldset>
                   )}
                 </Card>
 
@@ -2461,22 +2465,7 @@ export default function VideoComplianceScannerPage() {
                               : "In review. Waiting for a reviewer (reviewers can't approve their own uploads)."}
                         </p>
                       )}
-                      {activeVideo.submissionStatus === "APPROVED" && !viewingOld && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <ApprovalActions
-                            target={{
-                              id: activeVideo.submissionId,
-                              reference_code: activeVideo.referenceCode ?? "",
-                              title: activeVideo.title,
-                              status: "APPROVED",
-                              current_version: activeVideo.currentVersion ?? 1,
-                              publish_at: activeVideo.publishAt,
-                              can_manage_approval: activeVideo.canManageApproval,
-                            }}
-                            isCreator={activeVideo.createdBy === user?.id}
-                          />
-                        </div>
-                      )}
+                      {activeVideo.submissionStatus === "APPROVED" && !viewingOld && <LegacyApprovedSuggestions access={suggestions} />}
                       {activeVideo.serverCheck?.transcript_pending && !viewingOld && (
                         <p className="mt-2 text-[11px] text-muted-foreground">
                           The transcript is still being made; the score is re-checked with it automatically.

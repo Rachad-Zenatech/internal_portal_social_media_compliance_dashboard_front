@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ApprovedPublishActions.tsx (54 lines) - Confirm the creator's final timing before leaving an approved post to publish.
-- `ApprovedPublishActions` (export function) L12 - Confirm the creator's final timing before leaving an approved post to publish.
+## src/components/submissions/ApprovedPublishActions.tsx (58 lines) - Confirm the creator's final timing before leaving an approved post to publish.
+- `ApprovedPublishActions` (export function) L14 - Confirm the creator's final timing before leaving an approved post to publish.
