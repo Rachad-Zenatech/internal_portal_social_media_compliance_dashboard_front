@@ -1,3 +1,4 @@
+import PendingDismissalScore from "@/components/submissions/PendingDismissalScore";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RevisionPublishActions from "@/components/submissions/RevisionPublishActions";
@@ -42,8 +43,10 @@ export default function SubmissionSendActions(props: Props) {
     : checkStale ? "Edited since your last check. It runs again when you send."
     : "Ready when you are. The reviewer sees the same check and analysis.";
 
+  const recalculatedScore = !checkStale && !videoLocked ? pendingScore : undefined;
   return (
     <div className="space-y-3 border-t border-border/60 pt-3">
+      <PendingDismissalScore originalScore={props.score ?? 0} recalculatedScore={recalculatedScore} minimumScore={props.minimumScore} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-[11px] text-muted-foreground">{description}</p>
         <Button type="button" onClick={props.onSubmit} disabled={props.disabled || scoreTooLow} className="gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">

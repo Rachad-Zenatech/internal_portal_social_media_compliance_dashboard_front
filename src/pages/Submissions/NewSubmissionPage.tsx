@@ -1047,12 +1047,13 @@ export default function NewSubmissionPage() {
   const localMediaChanged = mediaChanged(files, checkedSub);
   const sourceInputsChanged = complianceSourcesChanged(checkedSub?.latest_check, sourceLinks);
   useSourceComplianceRefresh({ enabled: hasCheck && sourceInputsChanged && stepView === "compliance" && !readOnly && detailsComplete && !(scriptOnly && videoLocked), busy: checking || continuing || sourceChecking.length > 0, revision: `${submissionId}|${sourceLinksKey(sourceLinks)}`, onRefresh: runComplianceCheck });
-  const checkStale = hasCheck && (sourceInputsChanged || checkedSub?.check_outdated || localMediaChanged || (scriptOnly && videoLocked
+  const inputCheckStale = hasCheck && (sourceInputsChanged || localMediaChanged || (scriptOnly && videoLocked
     ? Boolean(scriptStage.data?.precheck_stale)
     : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
+  const checkStale = inputCheckStale || Boolean(hasCheck && checkedSub?.check_outdated);
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
   const recheck = {
-    compliance: hasCheck && !checkStale,
+    compliance: hasCheck && !inputCheckStale,
     sentiment: sentimentAnalysis?.status === "COMPLETED" && sentimentAnalysis.is_current && !localMediaChanged && analysisIsCurrent(sentimentAnalysis.created_at, checkedSub?.media_edited_at),
     mood: Boolean(mood),
   };
@@ -1135,8 +1136,7 @@ export default function NewSubmissionPage() {
       openStep("sentiment");
       return;
     }
-    // Replaced media must be checked before sending.
-    if (checkStale) {
+    if (inputCheckStale) {
       toast.error("The media has changed. Run the compliance check again before sending.");
       openStep("compliance");
       return;
@@ -2105,6 +2105,7 @@ export default function NewSubmissionPage() {
                 reviewState={reviewState}
                 title={title}
                 caption={caption}
+                captionHtml={editorRef.current?.innerHTML ?? storedSub?.caption_html ?? undefined}
                 mainFile={mainFiles[0]} files={files} scriptText={videoLocked ? scriptTextOf(files, scriptStage.data?.versions) : undefined}
                 editable={!readOnly}
                 checking={checking}
@@ -2263,7 +2264,7 @@ export default function NewSubmissionPage() {
                   )}
                   <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
-                    hasCheck={hasCheck} checkStale={checkStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={checkStale || isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
+                    hasCheck={hasCheck} checkStale={inputCheckStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={inputCheckStale || isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
                     disabled={submitting || checking || uploading.length > 0}
                     publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
                     onSubmit={() => void submit()}

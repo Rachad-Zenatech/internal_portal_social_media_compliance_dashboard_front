@@ -34,6 +34,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ClaimVsSource.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CommentCard.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CommentThread.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ComplianceScoreSummary.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ComplianceStep.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ComplianceView.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ContextFeedbackCards.md | 1 | 1 KB |
@@ -49,6 +50,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__FlagReviewControl.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlaggedVideo.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FormFields.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__FormattedCaptionPreview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__HashtagPicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageAnnotator.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImagePersonField.md | 1 | 1 KB |
@@ -59,6 +61,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__MoodVisuals.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PanelComposer.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PastedArticleCheck.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PendingDismissalScore.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptionsView.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostDetailParts.md | 1 | 1 KB |
@@ -111,7 +114,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 36 | 12 KB |
-| .agents/code-map/src__lib.md | 43 | 19 KB |
+| .agents/code-map/src__lib.md | 44 | 19 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 16 | 7 KB |

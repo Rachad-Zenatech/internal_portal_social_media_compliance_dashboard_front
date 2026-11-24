@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostTextPreview.tsx (27 lines) - A formatted script document, or the post's caption with its flagged words marked.
-- `Props` (interface) L3
-- `PostTextPreview` (export function) L10 - A formatted script document, or the post's caption with its flagged words marked.
+## src/components/submissions/PostTextPreview.tsx (24 lines) - A formatted script document, or the post's caption with its flagged words marked.
+- `Props` (interface) L4
+- `PostTextPreview` (export function) L12 - A formatted script document, or the post's caption with its flagged words marked.

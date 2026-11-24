@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2496 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2497 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L177 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L216
 - `timeOptions` (const) L223
@@ -60,7 +60,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `openStep` (fn) L969
     - `runComplianceCheck` (fn) L972
     - `sourceChecking` (fn) L1044
-    - `submit` (fn) L1061
+    - `submit` (fn) L1062
     - `exec` (fn) L1206
     - `insertHashtag` (fn) L1214 - Adds a hashtag or cashtag at the end of the caption: on the tag line if there is one, else on a new line.
     - `text` (fn) L1226

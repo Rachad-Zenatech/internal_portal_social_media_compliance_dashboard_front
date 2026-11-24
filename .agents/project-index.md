@@ -104,7 +104,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
-- src/components/submissions/ComplianceStep.tsx (496 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceScoreSummary.tsx (41 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
+- src/components/submissions/ComplianceStep.tsx (477 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
@@ -119,6 +120,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/FlagReviewControl.tsx (223 lines) - flag review control (components submissions)
 - src/components/submissions/FlaggedVideo.tsx (44 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
+- src/components/submissions/FormattedCaptionPreview.tsx (15 lines) - Preserve editor paragraphs, emphasis and links without treating HTML source wrapping as line breaks.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/ImagePersonField.tsx (112 lines) - image person field (components submissions)
@@ -129,13 +131,14 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
+- src/components/submissions/PendingDismissalScore.tsx (27 lines) - Pending requests can unlock review routing; a reviewer still decides whether to dismiss them.
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
 - src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (102 lines) - lg: the dots grow on wide screens (the My posts rows).
-- src/components/submissions/PostTextPreview.tsx (27 lines) - A formatted script document, or the post's caption with its flagged words marked.
+- src/components/submissions/PostTextPreview.tsx (24 lines) - A formatted script document, or the post's caption with its flagged words marked.
 - src/components/submissions/PostTypePicker.tsx (51 lines) - post type picker (components submissions)
 - src/components/submissions/PrePublishMood.tsx (33 lines) - Optional final timing check for approved content immediately before publication.
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
@@ -166,7 +169,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/StaleComplianceNotice.tsx (8 lines) - stale compliance notice (components submissions)
-- src/components/submissions/SubmissionSendActions.tsx (57 lines) - submission send actions (components submissions)
+- src/components/submissions/SubmissionSendActions.tsx (60 lines) - submission send actions (components submissions)
 - src/components/submissions/SubmissionStartAnotherButton.tsx (12 lines) - submission start another button (components submissions)
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
 - src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
@@ -244,6 +247,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
+- src/lib/captionPreviewHtml.ts (58 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
 - src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
@@ -326,7 +330,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2496 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2497 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.

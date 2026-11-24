@@ -28,7 +28,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DesignHead` (function) L691 - The creator's short verdict; detailed context feedback sits beside the post.
 - `DesignRest` (function) L714 - Audiences, the controversy dial and what was flagged, each in its own card, as in the design.
 - `DesignAside` (function) L802 - The side column: what the analysis read, and how to use it.
-- `SentimentPanel` (export function) L838 - Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
+- `SentimentPanel` (export function) L838 - AI editorial read of a submission: tone, brand voice, controversy and flagged wording.
     - `topics` (fn) L879 - The topics' current mood only means something for the current content, not an earlier version.
     - `analyseAll` (fn) L883 - Save the current post and run only the requested sentiment analysis.
     - `statusChain` (fn) L910
