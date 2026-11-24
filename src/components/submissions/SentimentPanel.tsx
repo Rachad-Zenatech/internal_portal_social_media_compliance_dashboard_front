@@ -832,7 +832,7 @@ function DesignAside({ analysis, result }: { analysis: SentimentAnalysis | null 
 }
 
 /**
- * Gemini's editorial read of a submission: tone, brand voice, controversy and flagged wording.
+ * AI editorial read of a submission: tone, brand voice, controversy and flagged wording.
  * Advisory only, shown alongside (never instead of) the rulebook check and human review.
  */
 export default function SentimentPanel({
@@ -926,7 +926,7 @@ export default function SentimentPanel({
             <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
             {analysis.status === "WAITING_TRANSCRIPT"
               ? "Waiting for the video transcript, then the tone analysis starts."
-              : "Analysing tone, brand fit and controversy with Gemini..."}
+              : "Analysing tone, brand fit and controversy..."}
           </p>
         </div>
       ) : analysis.error === "Stopped by user." ? (
@@ -942,10 +942,10 @@ export default function SentimentPanel({
       ) : analysis.status === "FAILED" && analysis.retry_at ? (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-xs text-amber-800 dark:text-amber-200 space-y-2">
           <p>
-            Gemini's daily limit for {analysis.model || "this model"} was reached, so this couldn't run. It resets{" "}
+            The AI usage limit for {analysis.model || "this model"} was reached. Try again after{" "}
             {format(new Date(analysis.retry_at), "MMM d 'at' h:mm a")} ({formatDistanceToNow(new Date(analysis.retry_at), { addSuffix: true })}).
           </p>
-          <p>Use Run sentiment check when you are ready to try again.</p>
+
         </div>
       ) : analysis.status === "FAILED" ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5 text-xs text-red-700 dark:text-red-300 space-y-2">

@@ -132,14 +132,15 @@ export function useScrapeTwitter(_submissionId?: string | null, onAfterScrape?: 
         // 409: one is already running (started elsewhere): wait for that one instead.
         if (!/already running/i.test((err as Error).message)) throw err;
       }
-      const deadline = Date.now() + 12 * 60 * 1000;
+      const deadline = Date.now() + 6.5 * 60 * 1000;
       while (Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 3000));
         const status = await submissionService.scrapeStatus();
         if (status.state === "failed") throw new Error(status.error || "The scrape failed.");
+        if (status.state === "idle") throw new Error("The scrape was interrupted. Please try again.");
         if (status.state === "finished") return status;
       }
-      throw new Error("The scrape is still running after 12 minutes; check again later.");
+      throw new Error("The scrape timed out after 6 minutes; please try again.");
     },
     onSuccess: (status) => {
       const sources = status.collection?.sources ?? [];

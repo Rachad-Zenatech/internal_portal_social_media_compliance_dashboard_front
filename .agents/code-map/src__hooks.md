@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/hooks/useAiOverview.ts (16 lines) - use ai overview (hooks)
+- `useAiOverview` (export function) L5
+
 ## src/hooks/useApprovedPublishing.ts (36 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
 
@@ -72,7 +75,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PostTypeChangeOptions` (interface) L7
 - `usePostTypeChange` (export function) L19 - Remove saved attachments before switching to another post type.
 
-## src/hooks/usePublicMood.ts (165 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
+## src/hooks/usePublicMood.ts (166 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
 - `usePublicMood` (export function) L14 - Public mood for a submission's topics, and the action that writes (or reuses) its summary.
 - `useMarketTrends` (export function) L101 - Live market & world-news trends scraped from X/news with VADER sentiment and POST/WAIT/HOLD recommendations.
 - `useNavPublicMood` (export function) L111 - Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood.

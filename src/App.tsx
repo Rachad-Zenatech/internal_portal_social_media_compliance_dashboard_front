@@ -1,5 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy as reactLazy, Suspense, type ComponentType, type ReactNode } from "react";
+
+function lazy<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return reactLazy(() =>
+    factory().catch((err) => {
+      const msg = String((err as Error)?.message || err);
+      const last = Number(sessionStorage.getItem("chunk-reload") || "0");
+      if (/dynamically imported module|importing a module script/i.test(msg) && Date.now() - last > 15_000) {
+        sessionStorage.setItem("chunk-reload", String(Date.now()));
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {});
+      }
+      throw err;
+    })
+  );
+}
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -17,6 +32,7 @@ const ApprovalPaths = lazy(() => import("./pages/Configurations/ApprovalPaths"))
 const RoleGroupPermissions = lazy(() => import("./pages/Configurations/RoleGroupPermissions"));
 const RoleApiPermissions = lazy(() => import("./pages/Configurations/RoleApiPermissions"));
 const RoleMcpToolPermissions = lazy(() => import("./pages/Configurations/RoleMcpToolPermissions"));
+const AiStatusPage = lazy(() => import("./pages/Configurations/AiStatusPage"));
 const TrainingDataPage = lazy(() => import("./pages/Configurations/TrainingDataPage"));
 const SocialMediaPage = lazy(() => import("./pages/SocialMedia/SocialMediaPage"));
 const OAuthIntegrations = lazy(() => import("./pages/Configurations/OAuthIntegrations"));
@@ -76,6 +92,7 @@ const PAGES: { path: string; navigationCode?: string; element: ReactNode }[] = [
   { path: "/configurations/role-group-permissions", navigationCode: "CONFIG_ROLES", element: <RoleGroupPermissions /> },
   { path: "/configurations/role-api-permissions", navigationCode: "CONFIG_ROLE_API_PERMISSIONS", element: <RoleApiPermissions /> },
   { path: "/configurations/role-mcp-tool-permissions", navigationCode: "CONFIG_ROLE_MCP_TOOL_PERMISSIONS", element: <RoleMcpToolPermissions /> },
+  { path: "/configurations/ai-status", navigationCode: "SYSTEM_LOGS", element: <AiStatusPage /> },
   { path: "/configurations/training-data", navigationCode: "AUDIT_LOG", element: <TrainingDataPage /> },
   { path: "/log/audit", navigationCode: "AUDIT_LOG", element: <AuditLog /> },
   { path: "/log/system-logs", navigationCode: "AUDIT_LOG", element: <SystemLogsPage /> },

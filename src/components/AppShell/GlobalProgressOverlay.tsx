@@ -1,4 +1,4 @@
-import { FileText, Loader2, Database, Upload, Settings, ShieldCheck, ChevronUp, ChevronDown, ArrowUpRight } from "lucide-react";
+import { FileText, Loader2, Database, Upload, Settings, ShieldCheck, ChevronUp, ChevronDown, ArrowUpRight, X } from "lucide-react";
 import { jobHref, useGlobalProgress, type GlobalProgressJob } from "@/lib/GlobalProgressContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { submissionService } from "@/services/submissionService";
@@ -157,68 +157,13 @@ export function GlobalProgressOverlay() {
   return (
     <>
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        {/* Expanded list of jobs */}
         {isExpanded && (
           <div className="flex flex-col gap-3 animate-in slide-in-from-bottom-2 fade-in duration-200">
-            {activeJobs.map((job) => {
-              let Icon = FileText;
-              if (job.type === "database") Icon = Database;
-              else if (job.type === "upload") Icon = Upload;
-              else if (job.type === "generic") Icon = Settings;
-              else if (job.type === "check") Icon = ShieldCheck;
-              const seconds = job.startedAt ? Math.max(0, Math.floor((now - job.startedAt) / 1000)) : null;
-              const elapsed = seconds == null ? null : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-
-              const href = jobHref(job);
-              return (
-                <div key={job.id} className="pointer-events-auto">
-                  <button
-                    type="button"
-                    onClick={() => open(job)}
-                    disabled={!href}
-                    title={href ? "Open the page it's running for" : undefined}
-                    className="group w-full text-left bg-background border shadow-xl rounded-xl p-4 flex items-center gap-4 min-w-[300px] max-w-[400px] transition-colors enabled:hover:border-primary/40 enabled:hover:bg-accent/40 disabled:cursor-default"
-                  >
-                    <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm font-bold text-foreground truncate mr-2">
-                          {job.title}
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1.5">
-                          {href && (
-                            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary opacity-70 group-hover:opacity-100">
-                              Open <ArrowUpRight className="h-3 w-3" />
-                            </span>
-                          )}
-                          <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">
-                        {job.description || "Processing..."}
-                        {elapsed ? ` · ${elapsed}` : ""}
-                      </p>
-                      {job.type === "check" && (
-                        <>
-                          <div className="relative mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                            <span className="absolute h-full rounded-full bg-primary" style={{ animation: "indeterminate 1.4s ease-in-out infinite" }} />
-                          </div>
-                          <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground normal-case">
-                            A few seconds to a few minutes. You can keep using the site; we&apos;ll tell you when it&apos;s done.
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
+            {activeJobs.map((job) => (
+              <RunningJobCard key={job.id} job={job} now={now} onOpen={open} onDismiss={() => removeJob(job.id)} />
+            ))}
           </div>
         )}
-
-        {/* The pill: its label opens the page (one task) or the list (several); the arrow shows or hides the list. */}
         <div className="pointer-events-auto flex items-center bg-background border shadow-xl rounded-full text-foreground overflow-hidden">
           <button
             type="button"
@@ -250,6 +195,48 @@ export function GlobalProgressOverlay() {
         }
       `}</style>
     </>
+  );
+}
+
+function RunningJobCard({ job, now, onOpen, onDismiss }: {
+  job: GlobalProgressJob;
+  now: number;
+  onOpen: (job: GlobalProgressJob) => void;
+  onDismiss: () => void;
+}) {
+  let Icon = FileText;
+  if (job.type === "database") Icon = Database;
+  else if (job.type === "upload") Icon = Upload;
+  else if (job.type === "generic") Icon = Settings;
+  else if (job.type === "check") Icon = ShieldCheck;
+  const seconds = job.startedAt ? Math.max(0, Math.floor((now - job.startedAt) / 1000)) : null;
+  const elapsed = seconds == null ? null : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  const href = jobHref(job);
+  return (
+    <div className="pointer-events-auto relative bg-background border shadow-xl rounded-xl p-4 flex items-center gap-4 min-w-[300px] max-w-[400px]">
+      <button type="button" onClick={() => onOpen(job)} disabled={!href} title={href ? "Open the page it's running for" : undefined} className="group flex flex-1 min-w-0 items-center gap-4 text-left enabled:hover:opacity-90 disabled:cursor-default">
+        <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0"><Icon className="h-5 w-5" /></div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-sm font-bold text-foreground truncate mr-2">{job.title}</span>
+            <span className="flex shrink-0 items-center gap-1.5">
+              {href && <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary opacity-70 group-hover:opacity-100">Open <ArrowUpRight className="h-3 w-3" /></span>}
+              <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
+            </span>
+          </div>
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5">{job.description || "Processing..."}{elapsed ? ` · ${elapsed}` : ""}</p>
+          {job.type === "check" && (
+            <>
+              <div className="relative mt-2 h-1 overflow-hidden rounded-full bg-muted"><span className="absolute h-full rounded-full bg-primary" style={{ animation: "indeterminate 1.4s ease-in-out infinite" }} /></div>
+              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground normal-case">A few seconds to a few minutes. You can keep using the site; we&apos;ll tell you when it&apos;s done.</p>
+            </>
+          )}
+        </div>
+      </button>
+      <button type="button" onClick={onDismiss} aria-label={`Dismiss ${job.title}`} title="Dismiss" className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 

@@ -4,10 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/App.tsx (188 lines) - app
-- `PrefixRedirect` (function) L97
-- `PostsListRoute` (function) L103 - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
-- `NotFoundAlert` (function) L108
-- `App` (function) L126
+## src/App.tsx (205 lines) - app
+- `lazy` (function) L4
+- `PrefixRedirect` (function) L114
+- `PostsListRoute` (function) L120 - My posts is the creators' page; reviewers work from the Content screener, so they're sent there.
+- `NotFoundAlert` (function) L125
+- `App` (function) L143
 
 ## src/main.tsx (54 lines) - Create a client

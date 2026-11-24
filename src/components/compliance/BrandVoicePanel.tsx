@@ -1,17 +1,18 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, Download, FileText, FileUp, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Download, FileUp, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { withLinkToken } from "@/lib/linkToken";
 import { contextService } from "@/services/contextService";
 import type { BrandColor, BrandTypeface, BrandVoice, BrandVoiceInput } from "@/types/context";
+import { BrandVoiceLogo, BrandVoiceDialogHeader } from "./BrandVoiceHeader";
 import BrandManualSections from "@/components/compliance/BrandManualSections";
 
 const STATUS: Record<BrandVoice["status"], { label: string; className: string }> = {
@@ -128,15 +129,7 @@ function BrandCard({ voice: v, onChanged, onEdit }: { voice: BrandVoice; onChang
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-[12rem] flex-1 items-center gap-3">
           <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border border-border/70 bg-muted/30">
-            {showManualSections ? <FileText className="h-5 w-5 text-muted-foreground" /> : v.has_logo ? (
-              <img
-                src={withLinkToken(`${contextService.brandLogoUrl(v.brand_code)}?v=${encodeURIComponent(v.extracted_at ?? "")}`)}
-                alt={`${v.brand_name} logo`}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <span className="text-[10px] text-muted-foreground">No logo</span>
-            )}
+            <BrandVoiceLogo voice={v} showManualSections={showManualSections} />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{v.brand_name}</p>
@@ -343,10 +336,7 @@ function EditDialog({ voice, onClose, onSaved }: { voice: BrandVoice; onClose: (
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{voice.brand_name} brand voice</DialogTitle>
-          <DialogDescription>What content for {voice.brand_name} is checked against. Changes apply to new analyses.</DialogDescription>
-        </DialogHeader>
+        <BrandVoiceDialogHeader brandName={voice.brand_name} />
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Voice</Label>

@@ -4,9 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/AppShell/AiStatusBanner.tsx (45 lines) - ai status banner (components  app shell)
-- `AiStatus` (interface) L7
-- `AiStatusBanner` (export function) L20 - A strip across the top of every page, for every signed-in user, while the AI (Gemini) isn't working: an expired  or revoked key, a used-u...
+## src/components/AppShell/AiStatusBanner.tsx (108 lines) - ai status banner (components  app shell)
+- `FeatureIssue` (interface) L8
+- `AiStatus` (interface) L18
+- `IssueDetailsList` (function) L27
+- `AiStatusBanner` (export function) L51 - Overhead alert strip across the top of every page whenever the AI globally or any specific AI feature  is out or experiencing overflow/th...
 
 ## src/components/AppShell/AppShell.tsx (65 lines) - Matches the `laptop` breakpoint in index.css: below it the sidebar is an overlay drawer.
 - `Props` (interface) L11
@@ -21,8 +23,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `IntegrationStatusResponse` (export interface) L34
 - `ConnectionStatusLight` (export function) L39
 
-## src/components/AppShell/GlobalProgressOverlay.tsx (256 lines) - A clock for "running for 0:42", only while something runs.
+## src/components/AppShell/GlobalProgressOverlay.tsx (243 lines) - A clock for "running for 0:42", only while something runs.
 - `GlobalProgressOverlay` (export function) L10
+- `RunningJobCard` (function) L201
 
 ## src/components/AppShell/MessageHubStatusDropdown.tsx (558 lines) - message hub status dropdown (components  app shell)
 - `HubQueueOrStreamItem` (export interface) L28
@@ -42,12 +45,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `formatLastSeen` (fn) L353
     - `renderMetric` (fn) L375
 
-## src/components/AppShell/Navigation.tsx (165 lines) - navigation (components  app shell)
+## src/components/AppShell/Navigation.tsx (166 lines) - navigation (components  app shell)
 - `NavigationSubItem` (export interface) L17
 - `NavigationItem` (export interface) L23
 - `AppView` (export type) L37
 - `navigation` (export const) L45 - What each side sees:    creators   Dashboard, My posts, New submission, Compliance rulebook (view only), Content calendar (their posts)  ...
-- `pathInView` (export function) L161 - Whether a page belongs to a view.
+- `pathInView` (export function) L162 - Whether a page belongs to a view.
 
 ## src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - `formatRelativeTime` (function) L22

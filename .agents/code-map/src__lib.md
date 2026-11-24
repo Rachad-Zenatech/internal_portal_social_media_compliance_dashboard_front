@@ -32,6 +32,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
+## src/lib/captionPreviewHtml.ts (58 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
+- `CaptionPart` (export interface) L3
+- `TextRun` (interface) L4
+- `compact` (const) L6
+- `escapePattern` (const) L7
+- `captionPreviewHtml` (export function) L10 - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
+
 ## src/lib/chunkRecovery.ts (30 lines) - Recover an open tab whose lazy-loaded page belongs to an older deployment.
 - `ReloadRuntime` (interface) L2 - Recover an open tab whose lazy-loaded page belongs to an older deployment.
 - `recoverChunkLoad` (export function) L7
