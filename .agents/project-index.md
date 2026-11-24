@@ -125,7 +125,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/FormattedCaptionPreview.tsx (15 lines) - Preserve editor paragraphs, emphasis and links without treating HTML source wrapping as line breaks.
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
-- src/components/submissions/ImagePersonField.tsx (112 lines) - image person field (components submissions)
+- src/components/submissions/ImagePersonField.tsx (124 lines) - image person field (components submissions)
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
@@ -249,7 +249,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - src/hooks/useSentiment.ts (138 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
-- src/hooks/useSharedEventSource.ts (79 lines) - The latest handlers, so changing them doesn't reconnect.
+- src/hooks/useSharedEventSource.ts (96 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSourceComplianceRefresh.ts (19 lines) - Recheck once per changed source set after the creator opens Compliance; cancellation does not restart it.
 - src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
@@ -276,7 +276,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - src/lib/postSteps.ts (106 lines) - post steps (lib)
-- src/lib/replaceQuote.ts (70 lines) - Put a suggested revision in place of the wording a finding quotes.
+- src/lib/replaceQuote.ts (71 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
 - src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
 - src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
@@ -303,7 +303,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/main.tsx (54 lines) - Create a client
 - src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
-- src/pages/Auth/TestLoginAccounts.tsx (32 lines) - test login accounts (pages  auth)
+- src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - src/pages/Compliance/ContentScreenerPage.tsx (1505 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
@@ -349,12 +349,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2491 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2492 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - src/pages/Submissions/SubmissionsListPage.tsx (1591 lines) - submissions list page (pages  submissions)
-- src/services/apiClient.ts (345 lines) - api client (services)
+- src/services/apiClient.ts (355 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.

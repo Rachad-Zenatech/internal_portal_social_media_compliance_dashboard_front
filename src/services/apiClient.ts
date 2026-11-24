@@ -186,7 +186,17 @@ async function monitoredFetch(endpoint: string, options: ApiRequestOptions): Pro
   }
 
   try {
-    const response = await fetch(`${BASE_URL}${targetEndpoint}`, options);
+    const canRetry = (method === "GET" || method === "HEAD") && !options.signal?.aborted;
+    let response: Response;
+    try {
+      response = await fetch(`${BASE_URL}${targetEndpoint}`, options);
+    } catch (err) {
+      if (!canRetry || !(err instanceof TypeError) || options.signal?.aborted) {
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      response = await fetch(`${BASE_URL}${targetEndpoint}`, options);
+    }
     statusCode = response.status;
     return response;
   } finally {

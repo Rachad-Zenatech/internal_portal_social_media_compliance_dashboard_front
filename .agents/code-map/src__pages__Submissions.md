@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2491 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2492 lines) - new submission page (pages  submissions)
 - `classifyFile` (function) L177 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
 - `SaveState` (type) L216
 - `timeOptions` (const) L223
@@ -66,10 +66,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `text` (fn) L1234
     - `typedTail` (fn) L1239 - The cursor sits after any trailing spaces or line breaks already typed; only add what's missing.
     - `removeHashtag` (fn) L1246 - Takes a hashtag or cashtag out of the caption (undo brings it back).
-    - `applySuggestedCaption` (fn) L1270 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
-    - `charLimit` (fn) L1286 - The main caption only has to fit the platforms that post it (not those with their own).
-    - `hashtagLibrary` (fn) L1294
-    - `onConfirmRepostDate` (fn) L1307
+    - `applySuggestedCaption` (fn) L1271 - A suggested caption, in place of whatever is in the editor (undo brings the old one back).
+    - `charLimit` (fn) L1287 - The main caption only has to fit the platforms that post it (not those with their own).
+    - `hashtagLibrary` (fn) L1295
+    - `onConfirmRepostDate` (fn) L1308
 
 ## src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - `PostRedirect` (export function) L9 - Old and shared links to a post (/submissions/:id) land on the right page for who is looking: reviewers on the  Content screener, everyone...
