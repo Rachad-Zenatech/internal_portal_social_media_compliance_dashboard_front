@@ -31,10 +31,17 @@ export function ClaimResultRow({ item, sourceUrl }: { item: SourceLinkClaim; sou
 
 function ResultHeading({ result }: { result: SourceLinkCheck }) {
   const Icon = result.status === "READ" ? CheckCircle2 : AlertCircle;
+  const problem = result.status !== "READ";
+  const statusLabel = result.status === "NOT_PROVIDED" ? "Source not attached" : "Unable to reach or read source";
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-      <Icon className={`h-3.5 w-3.5 ${result.status === "READ" ? "text-emerald-600" : "text-amber-600"}`} />
-      <span className="font-medium text-foreground">{result.title || result.status}</span>
+      <Icon className={`h-3.5 w-3.5 ${problem ? "text-amber-600" : "text-emerald-600"}`} />
+      <span className="font-medium text-foreground">{result.title || statusLabel}</span>
+      {problem && result.title && (
+        <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+          {statusLabel}
+        </span>
+      )}
       {result.published && <span className="text-muted-foreground">({result.published})</span>}
     </div>
   );
@@ -42,12 +49,18 @@ function ResultHeading({ result }: { result: SourceLinkCheck }) {
 
 /** What checking one source showed: its title, any message, and each claim's verdict. */
 export default function SourceCheckResult({ result }: { result: SourceLinkCheck }) {
-  const readWithNothingToCheck = result.status === "READ" && result.claims.length === 0 && !result.message;
+  const problem = result.status !== "READ";
+  const readWithNothingToCheck = !problem && result.claims.length === 0 && !result.message;
+  const reason = result.message || (problem ? "The checker couldn't reach or read this source. Attach a copy as a supporting document." : "");
   return (
     <div className="mt-2 space-y-1.5 border-t border-border/60 pt-2">
       <ResultHeading result={result} />
-      {result.status === "READ" && <SourceTrustBar url={result.url} />}
-      {result.message && <p className="text-[11px] text-muted-foreground">{result.message}</p>}
+      {!problem && <SourceTrustBar url={result.url} />}
+      {reason && (
+        <p className={`text-[11px] ${problem ? "text-amber-800 dark:text-amber-300" : "text-muted-foreground"}`}>
+          {reason}
+        </p>
+      )}
       {readWithNothingToCheck && (
         <p className="text-[11px] text-muted-foreground">
           Source read successfully. No specific claims in the current draft needed verification against this source.

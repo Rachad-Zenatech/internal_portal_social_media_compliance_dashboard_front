@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
+## src/components/submissions/SourceCheckResult.tsx (79 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - `ClaimResultRow` (export function) L19 - One claim from the post next to what the source says, with the AI's verdict and a link to that spot in the source.
 - `ResultHeading` (function) L32
-- `SourceCheckResult` (export function) L44 - What checking one source showed: its title, any message, and each claim's verdict.
+- `SourceCheckResult` (export function) L51 - What checking one source showed: its title, any message, and each claim's verdict.

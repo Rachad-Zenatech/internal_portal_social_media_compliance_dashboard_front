@@ -178,8 +178,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScoreBreakdown.tsx (100 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
 - src/components/submissions/SentimentPanel.tsx (1259 lines) - sentiment panel (components submissions)
-- src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
-- src/components/submissions/SourceChecks.tsx (269 lines) - source checks (components submissions)
+- src/components/submissions/SourceCheckResult.tsx (79 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
+- src/components/submissions/SourceChecks.tsx (274 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (389 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.

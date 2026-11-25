@@ -71,9 +71,10 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
   const name = source.title || source.reference;
   const Icon = problem ? AlertTriangle : wrong > 0 ? XCircle : ok > 0 ? CheckCircle2 : FileText;
   const tone = problem ? "text-amber-600" : wrong > 0 ? "text-red-600" : ok > 0 ? "text-emerald-600" : "text-muted-foreground";
-  const hasDetail = Boolean(source.message) || source.claims.length > 0;
+  const hasDetail = Boolean(source.message) || problem || source.claims.length > 0;
   const primaryClaims = creator ? source.claims.filter((claim) => claim.verdict !== "SUPPORTED" && !claim.covered_by) : source.claims;
   const matchedClaims = creator ? source.claims.filter((claim) => claim.verdict === "SUPPORTED" || claim.covered_by) : [];
+  const statusSummary = source.status === "NOT_PROVIDED" ? "Source not attached" : "Unable to reach or read source";
   const summary = [
     ok > 0 && `${ok} ${ok === 1 ? "match" : "matches"}`,
     wrong > 0 && `${wrong} don't match`,
@@ -103,9 +104,9 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
               .filter(Boolean)
               .join(" · ")}
           </span>
-          {source.status === "READ" && (
-            <span className={`block text-[11px] ${tone}`}>{summary}</span>
-          )}
+          <span className={`block text-[11px] ${tone}`}>
+            {problem ? statusSummary : summary}
+          </span>
         </span>
         {hasDetail && <ChevronDown className={`mt-px h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />}
       </button>
@@ -124,7 +125,11 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
       {open && hasDetail && (
         <div className="mt-1.5 space-y-1.5 border-t border-border/50 pt-1.5">
           {!creator && source.status === "READ" && <SourceTrustBar url={source.url} />}
-          {source.message && <p className="text-amber-800 dark:text-amber-300">{source.message}</p>}
+          {(source.message || problem) && (
+            <p className="text-amber-800 dark:text-amber-300">
+              {source.message || "The checker couldn't reach or read this source. Attach a copy as a supporting document."}
+            </p>
+          )}
           {primaryClaims.map((claim, index) => (
             <ClaimRow key={`${claim.claim}-${index}`} claim={claim} sourceUrl={source.url} creator={creator} />
           ))}
