@@ -24,20 +24,20 @@ export default function ReviewerCaption({ submissionId, canComment, captionText,
   const showFlags = mainCaption && current === captionText && !query.data?.needs_recheck;
   const caption = children(current, html, showFlags);
   return (
-    <section aria-label="Caption" className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 p-4 sm:p-5">
+    <section aria-label="Text" className="flex min-w-0 flex-col gap-4 rounded-xl border border-border/70 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">Caption</h3>
-        {editable && !editor && <Button type="button" variant="outline" size="sm" className="gap-2" onClick={state.start}><Pencil className="size-3.5" />Edit caption</Button>}
+        <h3 className="text-sm font-semibold text-foreground">Text</h3>
+        {editable && !editor && <Button type="button" variant="outline" size="sm" className="gap-2" onClick={state.start}><Pencil className="size-3.5" />Edit text</Button>}
       </div>
-      {showSelector ? <label className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Show caption for
-        <select aria-label="Caption for" className="max-w-full rounded-md border bg-background px-2 py-1.5 capitalize text-foreground" value={platform} onChange={(event) => state.setPlatform(event.target.value)} disabled={Boolean(editor)}>
-          <option value="">Default caption</option>{platformOptions}
+      {showSelector ? <label className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">Show text for
+        <select aria-label="Text for" className="max-w-full rounded-md border bg-background px-2 py-1.5 capitalize text-foreground" value={platform} onChange={(event) => state.setPlatform(event.target.value)} disabled={Boolean(editor)}>
+          <option value="">Default text</option>{platformOptions}
         </select>
-      </label> : <p className="text-xs text-muted-foreground">The caption that will appear with this post.</p>}
+      </label> : <p className="text-xs text-muted-foreground">The text that will appear with this post.</p>}
       {editor ? <CaptionEditor base={editor.base} draft={editor.draft} onDraft={state.setDraft} onSave={state.save} onCancel={state.cancel} saving={state.saving} error={state.error} />
-        : <div id={captionTextId(submissionId)} className="min-w-0 max-w-prose text-foreground/90">{current ? caption : <span className="text-sm text-muted-foreground">No caption yet. Add one using Edit caption.</span>}</div>}
-      {query.isError && <p role="alert" className="text-sm text-destructive">Caption history could not load. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry</button></p>}
-      {state.saved && !editor && <div role="status" className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"><Check className="mt-0.5 size-3.5 shrink-0" /><p><span className="font-medium">Caption saved.</span> Ready for review. Compliance will run again before approval.</p></div>}
+        : <div id={captionTextId(submissionId)} className="min-w-0 max-w-prose text-foreground/90">{current ? caption : <span className="text-sm text-muted-foreground">No text yet. Add it using Edit text.</span>}</div>}
+      {query.isError && <p role="alert" className="text-sm text-destructive">Text history could not load. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry</button></p>}
+      {state.saved && !editor && <div role="status" className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"><Check className="mt-0.5 size-3.5 shrink-0" /><p><span className="font-medium">Text saved.</span> Ready for review. Compliance will run again before approval.</p></div>}
       <CaptionEditHistory revisions={query.data?.revisions ?? []} />
     </section>
   );

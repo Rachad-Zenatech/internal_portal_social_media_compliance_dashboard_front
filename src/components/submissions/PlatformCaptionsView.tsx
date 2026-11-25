@@ -15,7 +15,7 @@ export default function PlatformCaptionsView({
   if (platforms.length < 2 || !own.length) return null;
   return (
     <div className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Caption for each platform</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Text for each platform</p>
       <ul className="space-y-2">
         {platforms.map((p) => {
           const text = captions?.[p]?.trim();
@@ -24,9 +24,9 @@ export default function PlatformCaptionsView({
               <p className="flex items-center gap-1.5 text-xs font-semibold">
                 <PlatformIcon platform={p as SocialPlatform} className="h-3.5 w-3.5" />
                 {PLATFORM_LABELS[p as SocialPlatform] ?? p}
-                {!text && <span className="font-normal text-muted-foreground">· main caption</span>}
+                {!text && <span className="font-normal text-muted-foreground">· main text</span>}
               </p>
-              <p className="whitespace-pre-line text-sm text-foreground/90">{text || mainCaption || "No caption"}</p>
+              <p className="whitespace-pre-line text-sm text-foreground/90">{text || mainCaption || "No text"}</p>
             </li>
           );
         })}

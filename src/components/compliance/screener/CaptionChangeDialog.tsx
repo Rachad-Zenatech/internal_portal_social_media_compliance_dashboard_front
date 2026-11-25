@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { CaptionComparison } from "./CaptionComparison";
 
-export default function CaptionChangeDialog({ before, after, label = "Compare", description = "Review the previous and updated captions.", subject = "caption" }: {
+export default function CaptionChangeDialog({ before, after, label = "Compare", description = "Review the previous and updated text.", subject = "caption" }: {
   before: string; after: string; label?: string; description?: string; subject?: "caption" | "post text";
 }) {
-  const title = subject === "post text" ? "Post text changes" : "Caption changes";
+  const title = subject === "post text" ? "Post text changes" : "Text changes";
   return (
     <Dialog>
       <DialogTrigger asChild><Button type="button" variant="outline" size="sm">{label}</Button></DialogTrigger>

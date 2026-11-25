@@ -35,7 +35,7 @@ export function useCaptionNote(submissionId: string, canComment: boolean, onSave
       setQuote("");
       window.getSelection()?.removeAllRanges();
       onSaved(saved.id);
-      toast.success("Caption note added.");
+      toast.success("Text note added.");
     } catch {
       // The shared comment mutation reports the error; retain the draft for retrying.
     }

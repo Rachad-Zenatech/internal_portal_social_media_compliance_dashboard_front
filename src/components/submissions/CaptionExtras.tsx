@@ -29,7 +29,7 @@ export default function CaptionExtras(props: Props) {
         <PlatformCaptions
           platforms={props.platforms}
           captions={props.platformCaptions}
-          mainCaption={props.mainCaption} contentLabel={props.linksOnly ? "post" : "caption"}
+          mainCaption={props.mainCaption} contentLabel="text"
           limitFor={props.limitFor}
           readOnly={props.readOnly}
           onChange={props.onPlatformCaptionsChange}

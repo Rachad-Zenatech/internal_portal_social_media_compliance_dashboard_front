@@ -10,7 +10,7 @@ export const POST_STEPS: { key: PostStepKey; label: string; purpose: string }[] 
   {
     key: "details",
     label: "Post details",
-    purpose: "Fill in the post: title, brands, audience, accounts, caption and media.",
+    purpose: "Fill in the post: title, brands, audience, accounts, text and media.",
   },
   {
     key: "compliance",
@@ -93,7 +93,7 @@ const FIELD_WORDS: Record<string, string> = {
   platforms: "platform",
   account_id: "account",
   rule_sets: "rule set",
-  caption: "caption",
+  caption: "text",
   main_file: "media",
   ai_generated_images: "answer to the AI image question",
   script_approval: "an approved script",

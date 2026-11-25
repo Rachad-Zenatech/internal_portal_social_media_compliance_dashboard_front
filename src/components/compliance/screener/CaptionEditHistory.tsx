@@ -7,7 +7,7 @@ import CaptionChangeDialog from "./CaptionChangeDialog";
 
 function CaptionRevisionEntry({ revision }: { revision: CaptionRevision }) {
   const when = new Date(revision.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  const target = revision.platform ? revision.platform.toLowerCase().replaceAll("_", " ") : "default caption";
+  const target = revision.platform ? revision.platform.toLowerCase().replaceAll("_", " ") : "default text";
   const { formattingOnly } = captionDiff(revision.before, revision.after);
   const change = formattingOnly ? "Spacing updated" : "Wording updated";
   const description = `${revision.actor_name} edited the ${target} on ${when}.`;

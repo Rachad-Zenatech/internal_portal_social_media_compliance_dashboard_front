@@ -13,7 +13,7 @@ export default function PlatformCaptions({
   mainCaption,
   limitFor,
   readOnly = false,
-  contentLabel = "caption",
+  contentLabel = "text",
   onChange,
 }: {
   platforms: string[];
@@ -22,7 +22,7 @@ export default function PlatformCaptions({
   mainCaption: string;
   limitFor: (platform: string) => number | undefined;
   readOnly?: boolean;
-  contentLabel?: "post" | "caption";
+  contentLabel?: "post" | "caption" | "text";
   onChange: (next: Record<string, string>) => void;
 }) {
   const own = platforms.filter((p) => p in captions);
@@ -36,7 +36,7 @@ export default function PlatformCaptions({
   return (
     <div className="mt-4 rounded-lg border border-border/80">
       <div className="border-b border-border/70 bg-muted/30 px-3.5 py-2.5">
-        <p className="text-sm font-semibold text-foreground">A different {contentLabel} for each platform</p>
+        <p className="text-sm font-semibold text-foreground">Different {contentLabel} for each platform</p>
         <p className="text-xs text-muted-foreground">
           {own.length
             ? `${own.length} of ${platforms.length} platforms have their own ${contentLabel}; the rest use the one above.`

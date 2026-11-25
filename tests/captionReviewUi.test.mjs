@@ -49,24 +49,24 @@ createRoot(document.getElementById('root')).render(<QueryClientProvider client={
 </QueryClientProvider>);
 (async()=>{
   try {
-    await until(()=>button('Edit caption'));
+    await until(()=>button('Edit text'));
     check(document.querySelector('strong mark')?.textContent==='caption','Formatted clickable highlight is missing');
     document.querySelector('mark').click();check(document.body.dataset.flag==='rule-18','Rule highlight does not open its finding');
-    button('Edit caption').click();await until(()=>document.querySelector('textarea'));
+    button('Edit text').click();await until(()=>document.querySelector('textarea'));
     type('New caption.');await until(()=>!button('Save changes').disabled);
     pauseNextGet=true;void client.invalidateQueries({queryKey:['caption-review','post']});await until(()=>waitingGet);
     button('Save changes').click();await until(()=>saves===1&&!document.querySelector('textarea'));
     check(abortedGets===1,'Older polling request was not cancelled before saving');
-    check(document.querySelector('[aria-label="Caption"]').textContent.includes('New caption.'),'Saved caption is not shown');
+    check(document.querySelector('[aria-label="Text"]').textContent.includes('New caption.'),'Saved caption is not shown');
     check(!document.querySelector('mark'),'Old compliance highlights should wait for a new check');
     const history=document.querySelector('details');check(history,'Edit history is missing');history.open=true;
     check(history.textContent.includes('Arifa Mansoor'),'Edit author is missing');
     button('Compare').click();await until(()=>document.querySelector('[role="dialog"]'));
     const dialog=document.querySelector('[role="dialog"]');
-    check(dialog.querySelector('[aria-label="Caption before changes"]').textContent.includes('Old caption.'),'Previous caption is missing');
-    check(dialog.querySelector('[aria-label="Caption after changes"]').textContent.includes('New caption.'),'Updated caption is missing');
+    check(dialog.querySelector('[aria-label="Text before changes"]').textContent.includes('Old caption.'),'Previous caption is missing');
+    check(dialog.querySelector('[aria-label="Text after changes"]').textContent.includes('New caption.'),'Updated caption is missing');
     button('Close').click();await until(()=>!document.querySelector('[role="dialog"]'));
-    button('Edit caption').click();await until(()=>document.querySelector('textarea'));
+    button('Edit text').click();await until(()=>document.querySelector('textarea'));
     type('   ');await until(()=>button('Save changes').disabled);
     button('Cancel').click();await until(()=>!document.querySelector('textarea'));
     check(saves===1,'Cancel must not save a second edit');

@@ -11,18 +11,19 @@ function ComparisonText({ parts, removed }: { parts: CaptionDiffPart[]; removed?
 
 export function CaptionComparison({ before, after, subject = "caption" }: { before: string; after: string; subject?: "caption" | "post text" }) {
   const diff = captionDiff(before, after);
-  const name = subject === "post text" ? "Post text" : "Caption";
-  const empty = subject === "post text" ? "No post text" : "No caption";
+  const name = subject === "post text" ? "Post text" : "Text";
+  const empty = subject === "post text" ? "No post text" : "No text";
+  const label = name.toLowerCase();
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{diff.formattingOnly ? "Only spacing or line breaks changed. The wording is unchanged." : "Red shows removed wording. Green shows added wording."}</p>
       <div className="grid min-w-0 gap-4 md:grid-cols-2">
         <section aria-label={`${name} before changes`} className="min-w-0 overflow-hidden rounded-xl border">
-          <h4 className="border-b bg-muted/40 px-4 py-3 text-sm font-semibold">Previous {subject}</h4>
+          <h4 className="border-b bg-muted/40 px-4 py-3 text-sm font-semibold">Previous {label}</h4>
           <div className="p-4"><ComparisonText parts={diff.before} removed />{!before && <p className="text-sm text-muted-foreground">{empty}</p>}</div>
         </section>
         <section aria-label={`${name} after changes`} className="min-w-0 overflow-hidden rounded-xl border">
-          <h4 className="border-b bg-muted/40 px-4 py-3 text-sm font-semibold">Updated {subject}</h4>
+          <h4 className="border-b bg-muted/40 px-4 py-3 text-sm font-semibold">Updated {label}</h4>
           <div className="p-4"><ComparisonText parts={diff.after} />{!after && <p className="text-sm text-muted-foreground">{empty}</p>}</div>
         </section>
       </div>

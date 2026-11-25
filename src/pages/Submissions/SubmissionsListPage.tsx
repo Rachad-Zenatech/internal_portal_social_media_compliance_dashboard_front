@@ -320,7 +320,7 @@ function SubmissionCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/60 pt-2.5 text-[11px] text-muted-foreground">
-        <span className="min-w-0 truncate">{s.caption_text?.trim() || "No caption yet."}</span>
+        <span className="min-w-0 truncate">{s.caption_text?.trim() || "No text yet."}</span>
         <span className="inline-flex shrink-0 items-center gap-1" title="Review comments">
           <MessageSquare className="w-3.5 h-3.5" /> {s.comment_count ?? 0}
         </span>
@@ -852,8 +852,8 @@ function ReviewCard({
             </div>
           )}
           <div className="col-span-2 min-w-0">
-            <dt className="text-muted-foreground">Caption</dt>
-            <dd className="mt-0.5 text-foreground whitespace-pre-wrap break-words">{(sub?.caption_text ?? summary.caption_text)?.trim() || "No caption yet."}</dd>
+            <dt className="text-muted-foreground">Text</dt>
+            <dd className="mt-0.5 text-foreground whitespace-pre-wrap break-words">{(sub?.caption_text ?? summary.caption_text)?.trim() || "No text yet."}</dd>
           </div>
         </dl>
       </div>

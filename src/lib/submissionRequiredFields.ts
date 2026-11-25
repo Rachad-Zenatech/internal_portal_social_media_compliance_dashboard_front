@@ -9,6 +9,6 @@ export const SUBMISSION_REQUIRED_LABELS: Record<string, string> = {
   script: "Script",
   main_file: "Image or video",
   ai_generated_images: "AI image question",
-  caption: "Caption",
+  caption: "Text",
   rule_sets: "Rule set",
 };

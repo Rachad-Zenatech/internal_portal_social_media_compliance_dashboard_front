@@ -3,7 +3,7 @@ import type { ContentType, SubmissionFileKind } from "@/types/submission";
 
 // Static presentation config (allowed values themselves come from the API)
 export const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
-  { value: "IMAGE", label: "Image", description: "Single image with a caption and sources", icon: ImageIcon },
+  { value: "IMAGE", label: "Image", description: "Single image with text and sources", icon: ImageIcon },
   { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
   { value: "SOCIAL_POST", label: "Social Post", description: "Single image social post", icon: MessageSquareText },
   { value: "TEXT_POST", label: "Text Post", description: "Post text and source links, without images or video", icon: FileText },
@@ -100,15 +100,15 @@ export const CONTENT_TYPE_LABELS: Record<string, string> = {
 
 export const EDITOR_COPY = {
   TEXT_POST: {
-    title: "Post", noun: "post",
-    description: "Required. Write or paste your post, or have a draft suggested for you.",
-    placeholder: "Write your post here...", suggest: "Suggest a post",
-    missing: "Add your post. Compliance and sentiment analysis use this text.",
+    title: "Text", noun: "text",
+    description: "Required. Write or paste your text, or have text suggested for your post.",
+    placeholder: "Write your text here...", suggest: "Suggest text",
+    missing: "Add text. Compliance and sentiment analysis use this text.",
   },
   DEFAULT: {
-    title: "Caption", noun: "caption",
-    description: "Required. Write or paste your caption, or have one suggested for your post.",
-    placeholder: "Write your caption here...", suggest: "Suggest a caption",
-    missing: "Add a caption. Compliance and sentiment analysis use this text.",
+    title: "Text", noun: "text",
+    description: "Required. Write or paste your text, or have text suggested for your post.",
+    placeholder: "Write your text here...", suggest: "Suggest text",
+    missing: "Add text. Compliance and sentiment analysis use this text.",
   },
 } as const;

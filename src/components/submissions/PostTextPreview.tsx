@@ -12,7 +12,7 @@ interface Props {
 export default function PostTextPreview({ scriptText, captionParts, terms, captionHtml }: Props) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5 border-t border-border/60 pt-3">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{scriptText ? "Script" : "Caption"}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{scriptText ? "Script" : "Text"}</span>
       {scriptText ? (
         <ScriptDocumentPreview text={scriptText} terms={terms} />
       ) : (

@@ -9,13 +9,13 @@ export default function ReviewCaptionPreview({ submissionId, caption, onEdit }: 
   onEdit?: () => void;
 }) {
   return (
-    <section aria-label="Caption / copy" className="space-y-1.5 rounded-lg border border-border/80 p-3">
+    <section aria-label="Text" className="space-y-1.5 rounded-lg border border-border/80 p-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-xs font-semibold text-foreground">Caption / copy</h3>
-        {onEdit && <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={onEdit}><PenLine className="size-3.5" /> Edit caption</Button>}
+        <h3 className="text-xs font-semibold text-foreground">Text</h3>
+        {onEdit && <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={onEdit}><PenLine className="size-3.5" /> Edit text</Button>}
       </div>
       <p id={captionTextId(submissionId)} className="whitespace-pre-wrap break-words text-sm text-foreground">
-        {caption.trim() ? caption : <span className="text-muted-foreground">No caption.</span>}
+        {caption.trim() ? caption : <span className="text-muted-foreground">No text.</span>}
       </p>
     </section>
   );

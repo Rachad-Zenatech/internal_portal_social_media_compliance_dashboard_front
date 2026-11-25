@@ -25,7 +25,7 @@ export function useCaptionEdit(submissionId: string) {
         ["flag-reviews", submissionId], ["flag-verdicts", submissionId], ["creator-flag-dismissals", submissionId]]) {
         void client.invalidateQueries({ queryKey });
       }
-      toast.success("Caption changes saved.");
+      toast.success("Text changes saved.");
     },
   });
   const start = () => { mutation.reset(); setEditor({ base: current, draft: current }); };

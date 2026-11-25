@@ -214,7 +214,7 @@ function flagsOf(s: ReviewQueueItem): Flag[] {
         .sort((a, b) => a.start_sec - b.start_sec)[0];
       const terms = findingEvidence(v).map((t) => t.toLowerCase());
       const where = terms.some((t) => caption.includes(t))
-        ? "Caption"
+        ? "Text"
         : seg
         ? "Video"
         : terms.some((t) => title.includes(t))

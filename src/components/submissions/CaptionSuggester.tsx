@@ -48,7 +48,7 @@ export default function CaptionSuggester({
   ensureSubmissionId,
   maxChars,
   hasCaption,
-  contentLabel = "caption",
+  contentLabel = "text",
   onUse,
   onClose,
 }: {
@@ -57,7 +57,7 @@ export default function CaptionSuggester({
   ensureSubmissionId: () => Promise<string | null>;
   maxChars: number;
   hasCaption: boolean;
-  contentLabel?: "post" | "caption";
+  contentLabel?: "post" | "caption" | "text";
   onUse: (caption: string) => void;
   onClose: () => void;
 }) {
@@ -76,7 +76,7 @@ export default function CaptionSuggester({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-            <Sparkles className="w-4 h-4 text-violet-500" /> Suggest a {contentLabel}
+            <Sparkles className="w-4 h-4 text-violet-500" /> Suggest {contentLabel}
           </p>
           <p className="text-[11px] text-muted-foreground">
             Written in your brand's voice and checked against the rulebook. Review all facts before using a suggestion.
@@ -98,7 +98,7 @@ export default function CaptionSuggester({
         />
         <Button size="sm" className="h-8 text-xs gap-1.5 shrink-0" disabled={suggest.isPending || outOfRuns} onClick={run}>
           {suggest.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-          {result ? "Suggest again" : `Suggest ${contentLabel === "post" ? "post drafts" : "captions"}`}
+          {result ? "Suggest again" : "Suggest text"}
         </Button>
       </div>
       {usage?.remaining != null && (
@@ -109,7 +109,7 @@ export default function CaptionSuggester({
 
       {suggest.isPending && (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {contentLabel === "post" ? "Drafting post suggestions..." : "Watching your post and drafting captions. Videos can take up to a minute..."}
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Drafting text suggestions. Videos can take up to a minute...
         </p>
       )}
 

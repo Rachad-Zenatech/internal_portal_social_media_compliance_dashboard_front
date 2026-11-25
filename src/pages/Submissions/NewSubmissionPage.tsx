@@ -1210,7 +1210,7 @@ export default function NewSubmissionPage() {
     document.execCommand("insertText", false, text);
     setCaption(editor.innerText || "");
     markEdited();
-    toast.success("Caption added. Edit it as you like; it's checked with the rest of the post.");
+    toast.success("Text added. Edit it as you like; it's checked with the rest of the post.");
   };
 
   // The main caption only has to fit the platforms that post it (not those with their own).
@@ -1789,7 +1789,7 @@ export default function NewSubmissionPage() {
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
                       <p className="text-xs text-foreground">
                         <span className="font-semibold">Your post is in.</span>{" "}
-                        <span className="text-muted-foreground">It needs a caption: write one in section 4, or have one suggested from it.</span>
+                        <span className="text-muted-foreground">It needs text: write it in section 4, or have text suggested from it.</span>
                       </p>
                       <Button
                         size="sm"
@@ -1800,7 +1800,7 @@ export default function NewSubmissionPage() {
                           captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }}
                       >
-                        <Sparkles className="w-3 h-3 text-violet-500" /> Create a caption
+                        <Sparkles className="w-3 h-3 text-violet-500" /> Create text
                       </Button>
                     </div>
                   )}

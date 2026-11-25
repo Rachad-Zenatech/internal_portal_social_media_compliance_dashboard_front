@@ -39,7 +39,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/compliance/context/RemoveEntryDialog.tsx (38 lines) - Asks before removing an entry, and points to turning it off instead.
 - src/components/compliance/context/kinds.ts (71 lines) - A value and its display name, as used by the brand, audience and platform pickers.
 - src/components/compliance/screener/CaptionChangeDialog.tsx (20 lines) - caption change dialog (components compliance screener)
-- src/components/compliance/screener/CaptionComparison.tsx (32 lines) - caption comparison (components compliance screener)
+- src/components/compliance/screener/CaptionComparison.tsx (33 lines) - caption comparison (components compliance screener)
 - src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
 - src/components/compliance/screener/CaptionEditor.tsx (24 lines) - caption editor (components compliance screener)
 - src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
