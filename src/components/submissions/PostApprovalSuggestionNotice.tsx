@@ -3,9 +3,12 @@ import { format } from "date-fns";
 import { suggestionTimeLabel, type postSuggestionState } from "@/lib/postApprovalSuggestions";
 
 export default function PostApprovalSuggestionNotice({ access }: { access: ReturnType<typeof postSuggestionState> }) {
-  if (!access.approved || !Number.isFinite(access.deadline)) return null;
+  if ((!access.approved && !access.pending) || !Number.isFinite(access.deadline)) return null;
   const until = format(new Date(access.deadline), "EEE, MMM d · h:mm a");
-  const message = access.open
+  const message = access.pending
+    ? access.open ? "A review decision is saved. Reviewers can suggest changes until " + until + ". The post returns to the creator after this deadline."
+      : "The suggestion deadline has passed. The saved review decision is being handed back to the creator."
+    : access.open
     ? "Approved. Other reviewers can leave suggestions until " + until + ". Publishing opens after this deadline."
     : "Suggestion window closed. Other reviewers' notes are read-only. The creator can now choose the final publish date.";
   return (

@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleSubmitForm` (fn) L460
     - `handleRunScanner` (fn) L532
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1425 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1424 lines) - content screener page (pages  compliance)
 - `scoreOf` (const) L101
 - `isFailing` (const) L102
 - `hasCritical` (const) L106
@@ -55,29 +55,29 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PanelTab` (type) L596
 - `ReviewPanel` (function) L598
     - `suggestions` (fn) L639
-- `useFlags` (function) L997 - Flags, with this version's dismissals, for one post.
-    - `flags` (fn) L998
-    - `dismissed` (fn) L1000
-- `Workspace` (function) L1005 - The selected post: media in the middle, the review panel on the right.
-    - `suggestions` (fn) L1020
-    - `seek` (fn) L1032
-- `QueueStrip` (function) L1107 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
-- `ContentScreenerPage` (export function) L1159
-    - `navigate` (fn) L1166
-    - `options` (fn) L1183
-    - `labels` (fn) L1184
-    - `items` (fn) L1193
-    - `visible` (fn) L1195
-    - `rows` (fn) L1197 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
-    - `time` (fn) L1198
-    - `paged` (fn) L1206 - 20 to a page; a new tab, search, filter or order starts from the first page.
-    - `shownLinked` (fn) L1208 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
-    - `renderPostRow` (fn) L1221
-    - `brands` (fn) L1257
-    - `platforms` (fn) L1258
-    - `brandLabel` (fn) L1259
-    - `setCollapsed` (fn) L1269
-    - `pick` (fn) L1278
+- `useFlags` (function) L996 - Flags, with this version's dismissals, for one post.
+    - `flags` (fn) L997
+    - `dismissed` (fn) L999
+- `Workspace` (function) L1004 - The selected post: media in the middle, the review panel on the right.
+    - `suggestions` (fn) L1019
+    - `seek` (fn) L1031
+- `QueueStrip` (function) L1106 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
+- `ContentScreenerPage` (export function) L1158
+    - `navigate` (fn) L1165
+    - `options` (fn) L1182
+    - `labels` (fn) L1183
+    - `items` (fn) L1192
+    - `visible` (fn) L1194
+    - `rows` (fn) L1196 - Posts by when each was sent for review, newest or oldest first; posts without a date go last.
+    - `time` (fn) L1197
+    - `paged` (fn) L1205 - 20 to a page; a new tab, search, filter or order starts from the first page.
+    - `shownLinked` (fn) L1207 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
+    - `renderPostRow` (fn) L1220
+    - `brands` (fn) L1256
+    - `platforms` (fn) L1257
+    - `brandLabel` (fn) L1258
+    - `setCollapsed` (fn) L1268
+    - `pick` (fn) L1277
 
 ## src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - `MessagingContextPage` (export function) L22 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...

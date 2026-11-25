@@ -158,11 +158,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `flashRange` (function) L127
 - `locateOnPage` (export function) L152 - Go to the wording on the page (the next place it appears each time).
 
-## src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
+## src/lib/mediaFreshness.ts (26 lines) - Supporting documents and extraction updates do not replace the post's media.
 - `mediaKey` (export function) L4 - Supporting documents and extraction updates do not replace the post's media.
 - `analysisIsCurrent` (export function) L9
-- `mediaChanged` (export function) L13
-- `checkIsCurrent` (export function) L17
+- `mediaChanged` (export function) L14
+- `checkIsCurrent` (export function) L18
 
 ## src/lib/mergeSourceChecks.ts (66 lines) - Normalize known aliases without conflating different pages or meaningful query parameters.
 - `sourceIdentity` (export function) L5 - Normalize known aliases without conflating different pages or meaningful query parameters.
@@ -170,10 +170,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `uniqueClaims` (function) L26
 - `mergeSourceChecks` (export function) L39 - Full compliance results take precedence over older quick checks for the same article.
 
-## src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
+## src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
 - `SuggestionPost` (export type) L3
 - `postSuggestionState` (export function) L5
-- `suggestionTimeLabel` (export function) L14
+- `suggestionTimeLabel` (export function) L16
 
 ## src/lib/postContentTypes.ts (115 lines) - Static presentation config (allowed values themselves come from the API)
 - `CONTENT_TYPES` (export const) L5 - Static presentation config (allowed values themselves come from the API)
@@ -207,6 +207,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ranOnce` (export function) L57 - Normalize progress without hiding stale media checks.
 - `stepStatusText` (export function) L65 - What a step is up to, as a sentence for the hover.
 - `missingText` (export function) L102
+
+## src/lib/preparationFreshness.ts (15 lines) - preparation freshness (lib)
+- `preparationCheckState` (export function) L4
 
 ## src/lib/replaceQuote.ts (71 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9

@@ -926,8 +926,8 @@ function ReviewCard({
       </section>
       )}
 
-      {/* Feedback: nothing to show on a draft until it's been sent for review (kept if a withdrawn draft has comments) */}
-      {summary.status !== "APPROVED" && (summary.status !== "DRAFT" || (summary.comment_count ?? 0) > 0) && (
+      {/* Creators receive review feedback after the decision is handed back. */}
+      {!(mine && summary.status === "IN_REVIEW") && summary.status !== "APPROVED" && (summary.status !== "DRAFT" || (summary.comment_count ?? 0) > 0) && (
         <section className="border-t border-border/70 px-5 py-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">

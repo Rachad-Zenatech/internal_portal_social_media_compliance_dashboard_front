@@ -59,10 +59,10 @@ function ReviewDecisionHeader({ mode, reference }: { mode: Mode; reference: stri
   const title = mode === "changes" || mode === "changes_publish"
     ? `Send ${reference} back for changes` : `Approve ${reference} for creator to publish`;
   const description = mode === "changes_publish"
-    ? "The creator gets your feedback, can update the content, and can publish the corrected version directly without another review round."
+    ? "The post stays with reviewers until the Get approval by deadline. Then the creator receives all feedback and can publish after making the changes without another review round."
     : mode === "changes"
-      ? "The person who uploaded it gets a notification with your note and comments, makes the changes and resubmits it to you."
-      : "It's approved and placed on the content calendar for the creator to publish.";
+      ? "The decision is recorded now. Suggestions stay open until the Get approval by deadline; then the creator receives the feedback and can make changes and resubmit."
+      : "The approval is recorded now. The post stays with reviewers for suggestions until the Get approval by deadline, then becomes available to its creator.";
   return (
     <DialogHeader>
       <DialogTitle className="text-base">{title}</DialogTitle>
@@ -285,7 +285,7 @@ export default function ReviewDecisionPanel({
               onClick={confirm}
             >
               {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "changes" ? "Send back for changes" : mode === "changes_publish" ? "Send back & allow publishing" : "Approve & send to creator"}
+              {mode === "changes" ? "Record requested changes" : mode === "changes_publish" ? "Record changes & publishing permission" : "Record approval"}
             </Button>
           </DialogFooter>
         </DialogContent>

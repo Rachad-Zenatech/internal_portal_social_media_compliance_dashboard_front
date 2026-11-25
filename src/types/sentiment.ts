@@ -147,6 +147,7 @@ export interface SentimentAnalysis {
   error?: string | null;
   /** False when the content, scope or rules changed since it ran. */
   is_current: boolean;
+  validated_media_edited_at?: string | null;
   /** The Messaging Context entries it was given (e.g. "LinkedIn", "Investors"). */
   context_used?: string[];
   /** The entries it was given (scope, date, source; flagged when old) and those that didn't apply. */

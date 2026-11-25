@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostApprovalSuggestionNotice.tsx (19 lines) - post approval suggestion notice (components submissions)
+## src/components/submissions/PostApprovalSuggestionNotice.tsx (22 lines) - post approval suggestion notice (components submissions)
 - `PostApprovalSuggestionNotice` (export function) L5

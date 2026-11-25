@@ -6,7 +6,8 @@ export function mediaKey(files: SubmissionFile[]): string {
     .map((file) => file.id).sort().join(",");
 }
 
-export function analysisIsCurrent(completedAt?: string | null, mediaEditedAt?: string | null): boolean {
+export function analysisIsCurrent(completedAt?: string | null, mediaEditedAt?: string | null, validatedAt?: string | null): boolean {
+  if (validatedAt != null) return Boolean(completedAt && mediaEditedAt) && Date.parse(validatedAt) === Date.parse(mediaEditedAt!);
   return Boolean(completedAt) && (!mediaEditedAt || Date.parse(completedAt!) >= Date.parse(mediaEditedAt));
 }
 

@@ -1,10 +1,12 @@
 import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, EDITOR_COPY, UPLOAD_FORMAT_HINTS, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
+import { preparationCheckState } from "@/lib/preparationFreshness";
+import SubmissionReviewStatus from "@/components/submissions/SubmissionReviewStatus";
 import SubmissionReviewUpdates from "@/components/submissions/SubmissionReviewUpdates";
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
 import { compressUploadImage } from "@/lib/compressUploadImage";
-import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
+import { checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
 import { complianceSourcesChanged, sourceLinksKey } from "@/lib/complianceSources";
 import { useSourceComplianceRefresh } from "@/hooks/useSourceComplianceRefresh";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -991,11 +993,8 @@ export default function NewSubmissionPage() {
     : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
   const checkStale = inputCheckStale || Boolean(hasCheck && checkedSub?.check_outdated);
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
-  const recheck = {
-    compliance: hasCheck && !inputCheckStale,
-    sentiment: sentimentAnalysis?.status === "COMPLETED" && sentimentAnalysis.is_current && !localMediaChanged && analysisIsCurrent(sentimentAnalysis.created_at, checkedSub?.media_edited_at),
-    mood: Boolean(mood),
-  };
+  const recheck = preparationCheckState({ hasCheck, inputCheckStale, sentiment: sentimentAnalysis,
+    mediaEditedAt: checkedSub?.media_edited_at, mediaChanged: localMediaChanged, hasMood: Boolean(mood) });
   const changesMade = editCounter > 0 || recheck.compliance || Boolean(sentBackAt && checkedSub?.content_edited_at && Date.parse(checkedSub.content_edited_at) > sentBackAt);
 
   const submit = async (confirmRepost = false) => {
@@ -1260,21 +1259,7 @@ export default function NewSubmissionPage() {
         actions={submissionId ? <SubmissionStartAnotherButton /> : undefined}
       />
 
-      {readOnly && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3.5 dark:border-blue-500/30 dark:bg-blue-500/10">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-blue-950 dark:text-blue-100">
-              {status === "APPROVED" ? "Approved: this post is locked" : "In review: this post is locked"}
-            </p>
-            <p className="text-[13px] text-blue-950/80 dark:text-blue-100/80">
-              You can look through every step and the results you ran before sending, but nothing can be changed or run again.
-            </p>
-          </div>
-          <Button type="button" variant="outline" size="sm" className="h-8 bg-card text-xs" onClick={() => navigate(`/submissions/${submissionId}`)}>
-            Open the post page
-          </Button>
-        </div>
-      )}
+      <SubmissionReviewStatus readOnly={readOnly} submissionId={submissionId} status={status} />
 
       {resubmitting && submissionId ? (
         <PostStepNav<EditorStep>
@@ -1328,7 +1313,7 @@ export default function NewSubmissionPage() {
           }
         />
       )}
-      <SubmissionReviewUpdates suggestions={onSuggestions} textOnly={contentType === "TEXT_POST"} submissionId={submissionId} onContinue={() => goToStep("details")} />
+      {(status === "APPROVED" || resubmitting) && <SubmissionReviewUpdates suggestions={onSuggestions} textOnly={contentType === "TEXT_POST"} submissionId={submissionId} onContinue={() => goToStep("details")} />}
       {resubmitting && submissionId && onDetails && (
         <RevisionWorkspace
           submissionId={submissionId}

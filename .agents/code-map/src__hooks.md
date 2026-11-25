@@ -94,14 +94,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useNavPublicMood` (export function) L111 - Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood.
 - `useScrapeTwitter` (export function) L121 - Trigger live scraping of ZenaTech financial and/or today's posts (scope=all|financial|today) and refresh queries.
 
-## src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
+## src/hooks/useReview.ts (209 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12
 - `useCommentReply` (export function) L18 - The comment being replied to on this post, and setting or clearing it.
 - `invalidateSubmission` (function) L30 - Everything that shows a submission's status or review state.
 - `useReviewComments` (export function) L38 - Saved review comments for a submission, with add / resolve / delete.
 - `useFlagReviews` (export function) L72 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
 - `useReviewDecision` (export function) L166
-- `useApprovalActions` (export function) L185 - Approved content: a reviewer reschedules it or reopens it for changes.
+- `useApprovalActions` (export function) L187 - Approved content: a reviewer reschedules it or reopens it for changes.
 
 ## src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
 - `useReviewSendScore` (export function) L7 - Share the creator-request cache so sending updates immediately after a request is saved.

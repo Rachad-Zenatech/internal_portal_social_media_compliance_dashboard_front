@@ -636,8 +636,7 @@ function ReviewPanel({
   const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
-  const suggestions = usePostApprovalSuggestions(s);
-  const canComment = suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW");
+  const suggestions = usePostApprovalSuggestions(s, canReview || isSuggester), canComment = suggestions.canComment;
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -943,7 +942,7 @@ function ReviewPanel({
             {toLookAt.length ? `Still to review: ${toLookAt.join(", ")}` : "All sections opened. Ready for your decision."}
           </p>
         )}
-        {s.status === "IN_REVIEW" ? (
+        {s.review_decision_pending ? null : s.status === "IN_REVIEW" ? (
           canReview ? (
             <ReviewDecisionPanel
               layout="bar"
@@ -1018,7 +1017,7 @@ function Workspace({
   // Every reviewer (deciding or suggesting) opens a post in review on the comments, to leave their suggestions.
   const { isSuggester } = useAuth();
   const suggestions = usePostApprovalSuggestions(s);
-  const startTab: PanelTab = suggestions.canComment || s.status === "IN_REVIEW" && (canReview || isSuggester) ? "comments" : "compliance";
+  const startTab: PanelTab = suggestions.canComment || s.status === "IN_REVIEW" && !s.review_decision_pending && (canReview || isSuggester) ? "comments" : "compliance";
   const [tab, setTab] = useState<PanelTab>(startTab);
   const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set<PanelTab>([startTab]));
   useEffect(() => {
@@ -1060,7 +1059,7 @@ function Workspace({
           onPlaying={setPlaying}
           seek={seek}
           onUploadScript={onUploadScript}
-          canComment={suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW")}
+          canComment={suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW" && !s.review_decision_pending)}
           activeCommentId={activeComment}
           onActiveComment={(id) => {
             setActiveComment(id);
@@ -1213,7 +1212,7 @@ export default function ContentScreenerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, selectedId]);
   // Whatever was picked last, else the first post on the page.
-  const selected = visible.find((s) => s.id === selectedId) ?? decidedItems.find((s) => s.id === selectedId && s.status === "APPROVED") ?? paged.pageItems[0] ?? null;
+  const selected = visible.find((s) => s.id === selectedId) ?? decidedItems.find((s) => s.id === selectedId && (s.status === "APPROVED" || s.review_decision_pending)) ?? paged.pageItems[0] ?? null;
   useEffect(() => {
     if (!selectedId && selected) setSelectedId(selected.id);
   }, [selectedId, selected]);

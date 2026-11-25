@@ -74,6 +74,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__PostTextChanges.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTextPreview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTextReview.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PostTextVersions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTypePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PrePublishMood.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ProcessLog.md | 1 | 1 KB |
@@ -106,6 +107,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StaleComplianceNotice.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SubmissionReviewStatus.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionReviewUpdates.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionStartAnotherButton.md | 1 | 1 KB |
@@ -126,7 +128,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 42 | 13 KB |
-| .agents/code-map/src__lib.md | 52 | 23 KB |
+| .agents/code-map/src__lib.md | 53 | 23 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |

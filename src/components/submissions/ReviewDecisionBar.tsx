@@ -18,7 +18,7 @@ export default function ReviewDecisionBar({ target, mayApprove, onStart }: {
               <MessageSquareWarning className="size-4" /> Request changes
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Send the post back for changes and another review.</TooltipContent>
+          <TooltipContent>Record requested changes. The post stays with reviewers until the Get approval by deadline.</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -28,7 +28,7 @@ export default function ReviewDecisionBar({ target, mayApprove, onStart }: {
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent>Approve this version so the creator can publish it.</TooltipContent>
+          <TooltipContent>Record approval. The creator receives it after the Get approval by deadline.</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -36,7 +36,7 @@ export default function ReviewDecisionBar({ target, mayApprove, onStart }: {
               <FilePen className="size-4" /> Send back &amp; allow publishing
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Let the creator publish after making your requested changes.</TooltipContent>
+          <TooltipContent>Record changes and publishing permission. The creator receives them after the Get approval by deadline.</TooltipContent>
         </Tooltip>
         {target.can_delegate && <DelegateReviewButton target={target} className="h-8 justify-self-end border-transparent bg-transparent px-2 text-xs text-muted-foreground shadow-none hover:bg-muted @[22rem]:col-span-2" />}
       </div>
