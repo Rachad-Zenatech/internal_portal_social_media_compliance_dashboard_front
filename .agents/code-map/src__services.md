@@ -33,7 +33,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/captionReviewService.ts (10 lines) - caption review service (services)
 - `captionReviewService` (export const) L5
 
-## src/services/complianceService.ts (385 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+## src/services/complianceService.ts (387 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - `ComplianceSeverity` (export type) L4
 - `TrafficLight` (export type) L5
 - `ComplianceRule` (export interface) L7
@@ -48,15 +48,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourceVerdict` (export type) L214 - SUPPORTED: the source says it.
 - `SourceClaim` (export interface) L216
 - `SourceCheck` (export interface) L234
-- `CheckSignals` (export interface) L253 - What the check read from the post's symbols, before its wording was matched against the rules.
-- `ManualReviewRule` (export interface) L268 - An applicable rule the automated check can't test from text (e.g.
-- `RuleExampleResult` (export interface) L276 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
-- `RuleSelfTest` (export interface) L286
-- `ComplianceCheckRequest` (export interface) L297 - Who and where the content is for; only rules whose scope matches are run.
-- `ComplianceStats` (export interface) L308
-- `VideoJobStage` (export interface) L320
-- `VideoJob` (export interface) L326
-- `complianceService` (export const) L345
+- `CheckSignals` (export interface) L255 - What the check read from the post's symbols, before its wording was matched against the rules.
+- `ManualReviewRule` (export interface) L270 - An applicable rule the automated check can't test from text (e.g.
+- `RuleExampleResult` (export interface) L278 - One rule run against its own examples: "not acceptable" ones should be flagged, "acceptable" ones not.
+- `RuleSelfTest` (export interface) L288
+- `ComplianceCheckRequest` (export interface) L299 - Who and where the content is for; only rules whose scope matches are run.
+- `ComplianceStats` (export interface) L310
+- `VideoJobStage` (export interface) L322
+- `VideoJob` (export interface) L328
+- `complianceService` (export const) L347
 
 ## src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L13

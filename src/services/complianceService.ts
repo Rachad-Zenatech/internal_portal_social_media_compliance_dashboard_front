@@ -232,6 +232,8 @@ export interface SourceClaim {
 }
 
 export interface SourceCheck {
+  /** All places this article was found, combined for display. */
+  origins?: SourceCheck['where'][];
   /** The link, the cited document's name, or the attached file's name. */
   reference: string;
   kind: 'URL' | 'NAMED' | 'DOCUMENT';

@@ -177,7 +177,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
 - src/components/submissions/SentimentPanel.tsx (1259 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
-- src/components/submissions/SourceChecks.tsx (294 lines) - source checks (components submissions)
+- src/components/submissions/SourceChecks.tsx (263 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (389 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
@@ -288,6 +288,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/linkToken.ts (55 lines) - The current link token, if signed in.
 - src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
+- src/lib/mergeSourceChecks.ts (66 lines) - Normalize known aliases without conflating different pages or meaningful query parameters.
 - src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
 - src/lib/postContentTypes.ts (91 lines) - Static presentation config (allowed values themselves come from the API)
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
@@ -306,7 +307,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
 - src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
-- src/lib/sourceCoverage.ts (20 lines) - Keep each source's verdict truthful while showing when another attachment covers the claim.
+- src/lib/sourceCoverage.ts (35 lines) - Match the backend assertion comparison: ignore spacing and list separators,
 - src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - src/lib/submissionRequiredFields.ts (15 lines) - Required post-detail fields, as shown in the creator checklist.
 - src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
@@ -375,7 +376,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/captionReviewService.ts (10 lines) - caption review service (services)
-- src/services/complianceService.ts (385 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (387 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)

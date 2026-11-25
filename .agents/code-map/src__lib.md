@@ -164,6 +164,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `mediaChanged` (export function) L13
 - `checkIsCurrent` (export function) L17
 
+## src/lib/mergeSourceChecks.ts (66 lines) - Normalize known aliases without conflating different pages or meaningful query parameters.
+- `sourceIdentity` (export function) L5 - Normalize known aliases without conflating different pages or meaningful query parameters.
+- `identity` (function) L22
+- `uniqueClaims` (function) L26
+- `mergeSourceChecks` (export function) L39 - Full compliance results take precedence over older quick checks for the same article.
+
 ## src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
 - `SuggestionPost` (export type) L3
 - `postSuggestionState` (export function) L5
@@ -281,10 +287,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
 - `visibleSourceChecks` (export function) L4 - Automatic newsroom summaries only surface corroboration or an explicit conflict.
 
-## src/lib/sourceCoverage.ts (20 lines) - Keep each source's verdict truthful while showing when another attachment covers the claim.
+## src/lib/sourceCoverage.ts (35 lines) - Match the backend assertion comparison: ignore spacing and list separators,
 - `CoveredSourceClaim` (export type) L3
-- `key` (const) L4
-- `withSourceCoverage` (export function) L7 - Keep each source's verdict truthful while showing when another attachment covers the claim.
+- `CoveredSourceCheck` (export type) L4
+- `key` (const) L5
+- `sourceCoverageCounts` (export function) L12
+- `withSourceCoverage` (export function) L22 - Keep each source's verdict truthful while showing when another attachment covers the claim.
 
 ## src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
 - `isScriptPreparation` (export function) L5

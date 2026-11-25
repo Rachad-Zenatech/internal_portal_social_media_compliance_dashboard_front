@@ -7,7 +7,8 @@ import { SourceConfirmationsProvider, useSourceCalls } from "@/components/submis
 import type { SourceCheck, SourceVerdict } from "@/services/complianceService";
 import type { SourceLinkCheck } from "@/types/sourceLink";
 import { visibleSourceChecks } from "@/lib/sourceCheckVisibility";
-import { withSourceCoverage, type CoveredSourceClaim } from "@/lib/sourceCoverage";
+import { withSourceCoverage, sourceCoverageCounts as counts, type CoveredSourceClaim, type CoveredSourceCheck } from "@/lib/sourceCoverage";
+import { mergeSourceChecks } from "@/lib/mergeSourceChecks";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
   SUPPORTED: { label: "Matches the source", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
@@ -32,49 +33,17 @@ const WHERE: Record<SourceCheck["where"], string> = {
   script: "cited in the script",
 };
 
-/** Keep quick checks made from Post details visible when the rulebook response omitted that URL. */
-function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<string, SourceLinkCheck>): SourceCheck[] {
-  const merged = [...(checks ?? [])];
-  const knownUrls = new Set(
-    merged
-      .filter((check) => check.kind === "URL" && check.where !== "newsroom")
-      .flatMap((check) => [check.url, check.reference])
-      .filter((url): url is string => Boolean(url))
-      .map((url) => url.toLowerCase())
-  );
-
-  const checksMap = savedChecks && typeof savedChecks === "object" ? savedChecks : {};
-  for (const [url, saved] of Object.entries(checksMap)) {
-    if (!saved || knownUrls.has(url.toLowerCase())) continue;
-    merged.push({
-      ...saved,
-      reference: saved.reference || url,
-      where: saved.where ?? "caption",
-      claims: (saved.claims ?? []).map((claim) => ({
-        ...claim,
-        where: claim.where ?? "caption",
-        confidence: claim.confidence ?? 0,
-      })),
-    });
-  }
-  return withSourceCoverage(visibleSourceChecks(merged));
-}
-
-function counts(claims: CoveredSourceClaim[]) {
-  const n = (v: SourceVerdict) => claims.filter((c) => c.verdict === v).length;
-  return { ok: n("SUPPORTED"), wrong: n("CONTRADICTED"), open: claims.filter((c) => !c.covered_by && ["NOT_FOUND", "UNCLEAR"].includes(c.verdict)).length };
-}
-
 /** The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm. */
 function ClaimRow({ claim, sourceUrl, creator }: { claim: CoveredSourceClaim; sourceUrl?: string | null; creator: boolean }) {
   const calls = useSourceCalls();
   const url = claim.source_url || sourceUrl;
   const markedAsMatching = creator && url && calls?.mine(url, claim.claim)?.matches === true;
+  const verdict = claim.covered_by ? { label: "Supported by another source", tone: VERDICT.SUPPORTED.tone } : VERDICT[claim.verdict];
   return (
     <div className={creator ? "space-y-2 rounded-xl border border-border/70 bg-card p-3.5" : "space-y-0.5 rounded-md border border-border/40 p-1.5"}>
       <p className="flex flex-wrap items-center gap-1.5">
-        <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${VERDICT[claim.verdict].tone}`}>
-          {creator ? "" : "AI: "}{VERDICT[claim.verdict].label}
+        <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${verdict.tone}`}>
+          {creator ? "" : "AI: "}{verdict.label}
         </span>
         {(creator || claim.where === "image") && <span className="text-xs text-muted-foreground">{claim.where === "image" ? "Image text" : "Post text"}</span>}
       </p>
@@ -93,8 +62,8 @@ function ClaimRow({ claim, sourceUrl, creator }: { claim: CoveredSourceClaim; so
   );
 }
 
-function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
-  const { ok, wrong, open: unsettled } = counts(source.claims);
+function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean }) {
+  const { ok, covered, wrong, open: unsettled } = counts(source.claims);
   const problem = source.status !== "READ";
   const needsLook = problem || wrong > 0 || unsettled > 0;
   const [open, setOpen] = useState(needsLook);
@@ -102,8 +71,14 @@ function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
   const Icon = problem ? AlertTriangle : wrong > 0 ? XCircle : unsettled > 0 ? AlertTriangle : CheckCircle2;
   const tone = problem || unsettled > 0 ? "text-amber-600" : wrong > 0 ? "text-red-600" : "text-emerald-600";
   const hasDetail = Boolean(source.message) || source.claims.length > 0;
-  const primaryClaims = creator ? source.claims.filter((claim) => claim.verdict !== "SUPPORTED") : source.claims;
-  const matchedClaims = creator ? source.claims.filter((claim) => claim.verdict === "SUPPORTED") : [];
+  const primaryClaims = creator ? source.claims.filter((claim) => claim.verdict !== "SUPPORTED" && !claim.covered_by) : source.claims;
+  const matchedClaims = creator ? source.claims.filter((claim) => claim.verdict === "SUPPORTED" || claim.covered_by) : [];
+  const summary = [
+    ok > 0 && `${ok} match${ok === 1 ? "es" : ""}`,
+    covered > 0 && `${covered} supported elsewhere`,
+    wrong > 0 && `${wrong} don't match`,
+    unsettled > 0 && `${unsettled} to check`,
+  ].filter(Boolean).join(" \u00b7 ");
 
   return (
     <li className={creator ? "rounded-xl border border-border/70 bg-muted/20 p-3.5 sm:p-4" : "rounded-lg border border-border/60 bg-background/60 px-2.5 py-2"}>
@@ -122,7 +97,7 @@ function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
           </span>
           <span className="block text-[10px] text-muted-foreground">
             {[
-              WHERE[source.where],
+              (source.origins ?? [source.where]).map((where) => WHERE[where]).join(", "),
               source.authority ? AUTHORITY[source.authority] : null,
               source.published ? `published ${source.published.slice(0, 10)}` : null,
             ]
@@ -130,13 +105,7 @@ function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
               .join(" · ")}
           </span>
           {source.status === "READ" && source.claims.length > 0 && (
-            <span className="block text-[11px]">
-              {ok > 0 && <span className="text-emerald-700 dark:text-emerald-300">{ok} match{ok === 1 ? "es" : ""}</span>}
-              {ok > 0 && (wrong > 0 || unsettled > 0) && " · "}
-              {wrong > 0 && <span className="text-red-700 dark:text-red-300">{wrong} don't match</span>}
-              {wrong > 0 && unsettled > 0 && " · "}
-              {unsettled > 0 && <span className="text-amber-800 dark:text-amber-300">{unsettled} to check</span>}
-            </span>
+            <span className={`block text-[11px] ${tone}`}>{summary}</span>
           )}
         </span>
         {hasDetail && <ChevronDown className={`mt-px h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />}
@@ -163,7 +132,7 @@ function Row({ source, creator }: { source: SourceCheck; creator: boolean }) {
           {matchedClaims.length > 0 && (
             <details className="rounded-lg border border-border/70 bg-background">
               <summary className="cursor-pointer px-3 py-2.5 font-medium text-emerald-700 dark:text-emerald-300">
-                {source.where === "newsroom" ? "Supporting evidence" : "Matched claims"} ({matchedClaims.length})
+                Supporting evidence ({matchedClaims.length})
               </summary>
               <div className="space-y-2 px-3 pb-3">
                 {matchedClaims.map((claim, index) => <ClaimRow key={`${claim.claim}-${index}`} claim={claim} sourceUrl={source.url} creator />)}
@@ -217,7 +186,7 @@ export function SourcesCheckedSection({
   submissionId?: string | null;
   className?: string;
 }) {
-  const sourceChecks = mergeSourceChecks(checks, savedChecks);
+  const sourceChecks = withSourceCoverage(visibleSourceChecks(mergeSourceChecks(checks, savedChecks)));
   if (sourceChecks.length === 0 && (checking?.length ?? 0) === 0) return null;
   return (
     <section className={className}>
@@ -250,7 +219,7 @@ export default function SourceChecks({
   onViewChange?: (view: "checks" | "review") => void;
   creator?: boolean;
 }) {
-  const sourceChecks = mergeSourceChecks(checks, savedChecks);
+  const sourceChecks = withSourceCoverage(visibleSourceChecks(mergeSourceChecks(checks, savedChecks)));
 
   const links = sourceChecks.filter((c) => c.kind === "URL").length;
   const needsReview = sourceChecks.filter((source) => {
