@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { KeyboardEvent } from "react";
+import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { useState, type KeyboardEvent } from "react";
 
 import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
@@ -28,11 +28,15 @@ function SlideThumbnail({ file, index, selected, onSelect }: {
 }
 
 /** Every image in the post, with highlights scoped to the currently displayed file. */
-export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegions, disclaimerRegions }: Props) {
+export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegions = [], disclaimerRegions = [] }: Props) {
+  const [showMetaBoxes, setShowMetaBoxes] = useState(true);
   const { slides, active, activeIndex, select, move, imageOpen, setImageOpen } = slideshow;
   if (!active) return null;
   const multiple = slides.length > 1;
   const counter = `Image ${activeIndex + 1} of ${slides.length}`;
+  const hasMetaBoxes = sourceRegions.length > 0 || disclaimerRegions.length > 0;
+  const visibleSources = showMetaBoxes ? sourceRegions : [];
+  const visibleDisclaimers = showMetaBoxes ? disclaimerRegions : [];
   const previous = () => move(-1);
   const next = () => move(1);
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -49,21 +53,36 @@ export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegi
     <div role="region" aria-roledescription="carousel" aria-label="Post images" onKeyDown={onKeyDown} className="flex min-w-0 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <span aria-live="polite" aria-atomic="true" className="text-xs text-muted-foreground">{counter}</span>
-        {multiple && <div className="flex gap-1">
-          <button type="button" onClick={previous} aria-label="Previous image" className="rounded-md border p-1.5 hover:bg-muted"><ChevronLeft className="size-4" /></button>
-          <button type="button" onClick={next} aria-label="Next image" className="rounded-md border p-1.5 hover:bg-muted"><ChevronRight className="size-4" /></button>
-        </div>}
+        <div className="flex items-center gap-1.5">
+          {hasMetaBoxes && (
+            <button
+              type="button"
+              aria-pressed={showMetaBoxes}
+              onClick={() => setShowMetaBoxes((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {showMetaBoxes ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+              {showMetaBoxes ? "Hide sources & disclaimers" : "Show sources & disclaimers"}
+            </button>
+          )}
+          {multiple && (
+            <div className="flex gap-1">
+              <button type="button" onClick={previous} aria-label="Previous image" className="rounded-md border p-1.5 hover:bg-muted"><ChevronLeft className="size-4" /></button>
+              <button type="button" onClick={next} aria-label="Next image" className="rounded-md border p-1.5 hover:bg-muted"><ChevronRight className="size-4" /></button>
+            </div>
+          )}
+        </div>
       </div>
       <div role="group" aria-roledescription="slide" aria-label={counter}>
         <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
           <div className="relative mx-auto w-fit max-w-full">
             <img src={authedFileUrl(active.url)} alt={`${counter}: ${active.original_name}`} className="block max-h-[420px] max-w-full rounded-xl" />
-            <MediaFindingOverlay findings={findings} sourceRegions={sourceRegions} disclaimerRegions={disclaimerRegions} fileId={active.id} />
+            <MediaFindingOverlay findings={findings} sourceRegions={visibleSources} disclaimerRegions={visibleDisclaimers} fileId={active.id} />
           </div>
         </button>
       </div>
       {multiple && <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Choose an image">{thumbnails}</div>}
-      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} sourceRegions={sourceRegions} disclaimerRegions={disclaimerRegions} />
+      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} sourceRegions={visibleSources} disclaimerRegions={visibleDisclaimers} />
     </div>
   );
 }
