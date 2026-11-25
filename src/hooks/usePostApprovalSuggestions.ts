@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { submissionService } from "@/services/submissionService";
 import { postSuggestionState, type SuggestionPost } from "@/lib/postApprovalSuggestions";
 
-export function usePostApprovalSuggestions(post: SuggestionPost | null | undefined) {
+export function usePostApprovalSuggestions(post: SuggestionPost | null | undefined, mayCommentInReview = false) {
   const [now, setNow] = useState(Date.now);
   const state = postSuggestionState(post, now);
   const running = state.open;
@@ -12,7 +12,7 @@ export function usePostApprovalSuggestions(post: SuggestionPost | null | undefin
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [running]);
-  return state;
+  return { ...state, canComment: state.canComment || (mayCommentInReview && post?.status === "IN_REVIEW" && !state.pending) };
 }
 
 export function useApprovedPostAccess(submissionId?: string | null) {

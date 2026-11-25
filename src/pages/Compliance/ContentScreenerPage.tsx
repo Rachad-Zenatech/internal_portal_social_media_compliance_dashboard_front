@@ -636,8 +636,7 @@ function ReviewPanel({
   const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
-  const suggestions = usePostApprovalSuggestions(s);
-  const canComment = suggestions.canComment || ((canReview || isSuggester) && s.status === "IN_REVIEW" && !s.review_decision_pending);
+  const suggestions = usePostApprovalSuggestions(s, canReview || isSuggester), canComment = suggestions.canComment;
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
