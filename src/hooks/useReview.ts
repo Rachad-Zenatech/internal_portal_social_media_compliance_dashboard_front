@@ -170,7 +170,9 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
     onSuccess: (saved, data) => {
       invalidateSubmission(queryClient, submissionId);
       queryClient.setQueryData(["submission", submissionId], saved);
-      if (data.publish_after_changes && saved.publish_after_changes !== true) {
+      if (saved.review_decision_pending) {
+        toast.success(`${referenceCode}: decision saved. Reviewer suggestions stay open until the approval deadline; the creator receives the outcome afterward.`);
+      } else if (data.publish_after_changes && saved.publish_after_changes !== true) {
         toast.error(`${referenceCode}: the backend did not save permission to publish after changes. This decision still requires another review. The backend needs updating before this action can work.`);
       } else if (data.publish_after_changes) toast.success(`${referenceCode} sent back with your comments. The creator can publish after making the changes.`);
       else if (data.decision === "REQUEST_CHANGES") toast.success(`${referenceCode} sent back with your comments. The creator has been notified.`);

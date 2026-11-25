@@ -170,10 +170,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `uniqueClaims` (function) L26
 - `mergeSourceChecks` (export function) L39 - Full compliance results take precedence over older quick checks for the same article.
 
-## src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
+## src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
 - `SuggestionPost` (export type) L3
 - `postSuggestionState` (export function) L5
-- `suggestionTimeLabel` (export function) L14
+- `suggestionTimeLabel` (export function) L16
 
 ## src/lib/postContentTypes.ts (91 lines) - Static presentation config (allowed values themselves come from the API)
 - `CONTENT_TYPES` (export const) L5 - Static presentation config (allowed values themselves come from the API)

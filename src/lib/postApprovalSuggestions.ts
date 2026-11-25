@@ -4,11 +4,13 @@ export type SuggestionPost = PostApprovalSuggestionFields & { status?: string; c
 
 export function postSuggestionState(post: SuggestionPost | null | undefined, now = Date.now()) {
   const approved = post?.status === "APPROVED";
-  const deadline = approved && post.suggestions_until ? Date.parse(post.suggestions_until) : NaN;
+  const pending = Boolean(post?.review_decision_pending);
+  const deadline = (approved || pending) && post?.suggestions_until ? Date.parse(post.suggestions_until) : NaN;
   const remainingMs = Number.isFinite(deadline) ? Math.max(0, deadline - now) : 0;
-  const open = approved && remainingMs > 0;
-  const canComment = approved && Boolean(post.can_manage_approval || (open && post.can_suggest_after_approval));
-  return { approved, deadline, remainingMs, open, canComment, publishingBlocked: open };
+  const open = (approved || pending) && remainingMs > 0;
+  const canComment = Boolean(post && (pending ? open && post.can_suggest_after_approval
+    : approved && (post.can_manage_approval || (open && post.can_suggest_after_approval))));
+  return { approved, pending, deadline, remainingMs, open, canComment, publishingBlocked: open || pending };
 }
 
 export function suggestionTimeLabel(milliseconds: number) {

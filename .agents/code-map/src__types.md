@@ -102,9 +102,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PerformanceReport` (export interface) L101
 - `PerformanceFilters` (export interface) L114
 
-## src/types/postApprovalSuggestions.ts (11 lines) - post approval suggestions (types)
+## src/types/postApprovalSuggestions.ts (12 lines) - post approval suggestions (types)
 - `PostApprovalSuggestionFields` (export interface) L1
-- `PublishingAccess` (export interface) L6
+- `PublishingAccess` (export interface) L7
 
 ## src/types/postTextReview.ts (23 lines) - post text review (types)
 - `PostTextEdit` (export interface) L1

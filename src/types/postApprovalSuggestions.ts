@@ -1,4 +1,5 @@
 export interface PostApprovalSuggestionFields {
+  review_decision_pending?: boolean;
   suggestions_until?: string | null;
   can_suggest_after_approval?: boolean;
 }

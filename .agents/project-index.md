@@ -143,7 +143,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PendingDismissalScore.tsx (27 lines) - Pending requests can unlock review routing; a reviewer still decides whether to dismiss them.
 - src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
-- src/components/submissions/PostApprovalSuggestionNotice.tsx (19 lines) - post approval suggestion notice (components submissions)
+- src/components/submissions/PostApprovalSuggestionNotice.tsx (22 lines) - post approval suggestion notice (components submissions)
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
 - src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
@@ -251,7 +251,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/usePostTextReview.ts (60 lines) - use post text review (hooks)
 - src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
 - src/hooks/usePublicMood.ts (166 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
-- src/hooks/useReview.ts (207 lines) - The comment being replied to, per post.
+- src/hooks/useReview.ts (209 lines) - The comment being replied to, per post.
 - src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
 - src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
@@ -290,7 +290,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/mediaFreshness.ts (25 lines) - Supporting documents and extraction updates do not replace the post's media.
 - src/lib/mergeSourceChecks.ts (66 lines) - Normalize known aliases without conflating different pages or meaningful query parameters.
-- src/lib/postApprovalSuggestions.ts (22 lines) - post approval suggestions (lib)
+- src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
 - src/lib/postContentTypes.ts (91 lines) - Static presentation config (allowed values themselves come from the API)
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - src/lib/postSteps.ts (106 lines) - post steps (lib)
@@ -404,7 +404,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/imageProvenance.ts (12 lines) - Saved answer to the post's required AI-image disclosure question.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
-- src/types/postApprovalSuggestions.ts (11 lines) - post approval suggestions (types)
+- src/types/postApprovalSuggestions.ts (12 lines) - post approval suggestions (types)
 - src/types/postTextReview.ts (23 lines) - post text review (types)
 - src/types/publicMood.ts (202 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - src/types/reviewQueue.ts (59 lines) - Video posts with a script stage: where the script is (to link to it).
