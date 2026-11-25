@@ -4,9 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SourceLinksField.tsx (384 lines) - source links field (components submissions)
+## src/components/submissions/SourceLinksField.tsx (389 lines) - source links field (components submissions)
 - `Props` (interface) L13
-- `normalizeDraftUrl` (function) L25
-- `SourceLinkRow` (function) L38
-- `SourceLinkInputBar` (function) L93
-- `SourceLinksField` (export function) L167 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.
+- `normalizeDraftUrl` (function) L26
+- `SourceLinkRow` (function) L39
+- `SourceLinkInputBar` (function) L94
+- `SourceLinksField` (export function) L170 - Source links added in Details so creators can quick-check them with AI and include them in compliance runs.

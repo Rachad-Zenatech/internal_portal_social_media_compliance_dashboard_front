@@ -46,5 +46,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/compliance/screener/ReviewerCaption.tsx (45 lines) - reviewer caption (components compliance screener)
 - `ReviewerCaption` (export function) L9
 
+## src/components/compliance/screener/ReviewerPostText.tsx (21 lines) - reviewer post text (components compliance screener)
+- `ReviewerPostText` (export function) L7
+
 ## src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
 - `ScriptReviewNotice` (export function) L4

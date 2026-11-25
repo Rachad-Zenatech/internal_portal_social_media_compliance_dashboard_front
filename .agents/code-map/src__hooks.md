@@ -81,6 +81,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `usePostApprovalSuggestions` (export function) L6
 - `useApprovedPostAccess` (export function) L18
 
+## src/hooks/usePostTextReview.ts (60 lines) - use post text review (hooks)
+- `usePostTextReview` (export function) L9
+
 ## src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
 - `PostTypeChangeOptions` (interface) L7
 - `usePostTypeChange` (export function) L19 - Remove saved attachments before switching to another post type.

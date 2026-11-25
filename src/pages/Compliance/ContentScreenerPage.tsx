@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { findingEvidence } from "@/lib/findingEvidence";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
-import ReviewerCaption from "@/components/compliance/screener/ReviewerCaption";
 import MarkedReviewerCaption from "@/components/compliance/screener/MarkedReviewerCaption";
+import ReviewerPostText from "@/components/compliance/screener/ReviewerPostText";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import { useScreenerMediaNavigation } from "@/hooks/useScreenerMediaNavigation";
 import type { MarkedCaptionTerm as MarkedTerm } from "@/types/captionReview";
@@ -96,6 +96,7 @@ const TABS: { value: ScreenerTab; label: string }[] = [
 
 const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
   VIDEO: { label: "Video", cls: "bg-muted text-muted-foreground" },
+  TEXT_POST: { label: "Text Post", cls: "bg-muted text-muted-foreground" },
   SOCIAL_POST: { label: "Post", cls: "bg-muted text-muted-foreground" },
   CAROUSEL: { label: "Carousel", cls: "bg-muted text-muted-foreground" },
   IMAGE: { label: "Image", cls: "bg-muted text-muted-foreground" },
@@ -582,9 +583,9 @@ function PostView({
           </div>
         ) : null}
 
-        <ReviewerCaption key={`${s.id}:${s.current_version}`} submissionId={s.id} canComment={canComment} captionText={s.caption_text ?? ""}>
+        <ReviewerPostText post={s} canComment={canComment}>
           {(text, html, showFlags) => <MarkedReviewerCaption text={text} html={html} terms={showFlags ? terms : []} picked={picked} onFlag={onFlag} onComment={onComment} />}
-        </ReviewerCaption>
+        </ReviewerPostText>
       </div>
     </div>
   );

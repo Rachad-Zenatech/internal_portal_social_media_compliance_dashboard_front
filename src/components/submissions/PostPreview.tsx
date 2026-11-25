@@ -56,7 +56,7 @@ const CONTENT_ICONS: Record<string, typeof FileText> = {
   VIDEO: Film,
   IMAGE: ImageIcon,
   CAROUSEL: ImageIcon,
-  SOCIAL_POST: MessageCircle,
+  TEXT_POST: MessageCircle, SOCIAL_POST: MessageCircle,
   BLOG: FileText,
   AD: Megaphone,
 };
@@ -66,7 +66,7 @@ const EMPTY_LABELS: Record<string, string> = {
   IMAGE: "Image not added yet",
   CAROUSEL: "Images not added yet",
   AD: "Creative not added yet",
-  SOCIAL_POST: "No copy yet",
+  TEXT_POST: "No copy yet", SOCIAL_POST: "No copy yet",
   BLOG: "No copy yet",
 };
 

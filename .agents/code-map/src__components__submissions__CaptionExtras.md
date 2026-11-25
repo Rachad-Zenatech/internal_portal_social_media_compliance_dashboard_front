@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/CaptionExtras.tsx (52 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+## src/components/submissions/CaptionExtras.tsx (54 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 - `Props` (interface) L6
-- `CaptionExtras` (export function) L24 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
+- `CaptionExtras` (export function) L25 - Per-platform caption overrides and source links placed at the bottom of the Details caption section.

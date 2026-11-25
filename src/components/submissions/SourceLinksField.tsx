@@ -15,6 +15,7 @@ interface Props {
   submissionId: string | null;
   ensureSubmissionId: () => Promise<string | null>;
   readOnly?: boolean;
+  linksOnly?: boolean;
   onChange: (next: string[]) => void;
   uploadedFiles?: SubmissionFile[];
   savedResults?: Record<string, SourceLinkCheck>;
@@ -91,6 +92,7 @@ function SourceLinkRow({
 }
 
 function SourceLinkInputBar({
+  linksOnly,
   draftUrl,
   busy,
   scanningImage,
@@ -101,6 +103,7 @@ function SourceLinkInputBar({
   onPickImage,
   onScanUploaded,
 }: {
+  linksOnly?: boolean;
   draftUrl: string;
   busy: boolean;
   scanningImage: boolean;
@@ -142,7 +145,7 @@ function SourceLinkInputBar({
       >
         <Sparkles className="h-3.5 w-3.5" /> Add &amp; analyze
       </button>
-      <input
+      {!linksOnly && <><input
         ref={fileInputRef}
         type="file"
         accept="image/*"
@@ -158,13 +161,14 @@ function SourceLinkInputBar({
         uploadedImages={uploadedImages}
         fileInputRef={fileInputRef}
         onScanUploaded={onScanUploaded}
-      />
+      /></>}
     </div>
   );
 }
 
 /** Source links added in Details so creators can quick-check them with AI and include them in compliance runs. */
 export default function SourceLinksField({
+  linksOnly,
   links,
   submissionId,
   ensureSubmissionId,
@@ -337,6 +341,7 @@ export default function SourceLinksField({
 
       {!readOnly && (
         <SourceLinkInputBar
+          linksOnly={linksOnly}
           draftUrl={draftUrl}
           busy={checkingUrl !== null}
           scanningImage={scanningImage}

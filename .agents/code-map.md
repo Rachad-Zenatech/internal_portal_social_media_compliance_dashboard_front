@@ -15,7 +15,7 @@ to find the right file.
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
 | .agents/code-map/src__components__compliance.md | 6 | 3 KB |
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
-| .agents/code-map/src__components__compliance__screener.md | 9 | 3 KB |
+| .agents/code-map/src__components__compliance__screener.md | 10 | 3 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
 | .agents/code-map/src__components__script.md | 26 | 12 KB |
 | .agents/code-map/src__components__scriptdoc.md | 15 | 9 KB |
@@ -70,7 +70,9 @@ to find the right file.
 | .agents/code-map/src__components__submissions__PostPreview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostStepNav.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostSteps.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PostTextChanges.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTextPreview.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PostTextReview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTypePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PrePublishMood.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ProcessLog.md | 1 | 1 KB |
@@ -105,6 +107,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionStartAnotherButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__TextPostRevisionWorkspace.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__UnavailableCompliance.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoScriptModeCheckbox.md | 1 | 1 KB |
@@ -118,8 +121,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 41 | 13 KB |
-| .agents/code-map/src__lib.md | 48 | 21 KB |
+| .agents/code-map/src__hooks.md | 42 | 13 KB |
+| .agents/code-map/src__lib.md | 49 | 21 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -132,6 +135,6 @@ to find the right file.
 | .agents/code-map/src__pages__PublicMood.md | 6 | 2 KB |
 | .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
-| .agents/code-map/src__pages__Submissions.md | 5 | 8 KB |
-| .agents/code-map/src__services.md | 18 | 7 KB |
-| .agents/code-map/src__types.md | 29 | 17 KB |
+| .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
+| .agents/code-map/src__services.md | 19 | 7 KB |
+| .agents/code-map/src__types.md | 30 | 17 KB |

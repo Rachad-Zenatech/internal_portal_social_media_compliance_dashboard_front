@@ -1,3 +1,5 @@
+import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
+import PostTextReview from "@/components/submissions/PostTextReview";
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
@@ -26,18 +28,15 @@ import {
   Clock,
   CloudUpload,
   FileText,
-  GalleryHorizontalEnd,
   Globe,
   Globe2,
   Hash,
-  Image as ImageIcon,
   Italic,
   Layers,
   Link2,
   List,
   ListOrdered,
   Loader2,
-  Megaphone,
   MessageSquareText,
   Redo2,
   Sparkles,
@@ -45,7 +44,6 @@ import {
   Undo2,
   Upload,
   Users,
-  Video,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -136,73 +134,6 @@ import type {
   SubmissionStatus,
   SubmissionUpdate,
 } from "@/types/submission";
-
-// Static presentation config (allowed values themselves come from the API)
-const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
-  { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
-  { value: "SOCIAL_POST", label: "Social Post", description: "Single image or text post", icon: MessageSquareText },
-  { value: "CAROUSEL", label: "Carousel", description: "Multi-image post", icon: GalleryHorizontalEnd },
-  { value: "IMAGE", label: "Image", description: "Single image asset", icon: ImageIcon },
-  { value: "BLOG", label: "Blog / Article", description: "Long-form content", icon: FileText },
-  { value: "AD", label: "Paid Ad", description: "Sponsored post or ad creative", icon: Megaphone },
-];
-const VISIBLE_CONTENT_TYPES = CONTENT_TYPES.filter(({ value }) => value !== "BLOG" && value !== "AD");
-
-const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
-  VIDEO: { main: "your video" },
-  SOCIAL_POST: { main: "your image or video" },
-  CAROUSEL: { main: "your carousel images" },
-  IMAGE: { main: "your image" },
-  BLOG: { main: "your article" },
-  AD: { main: "your ad creative (image or video)" },
-};
-/** Types whose main file is required: there's nothing to review without it. */
-const MAIN_REQUIRED: ContentType[] = ["VIDEO", "IMAGE", "CAROUSEL", "AD"];
-/** Selected automatically with the Paid Ad type. */
-const ADS_RULE_SET = "Paid Social Ads";
-
-const ACCEPT_ALL = "video/*,image/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.pdf,.doc,.docx,.txt,.md,.xls,.xlsx,.csv,.zip,.ppt,.pptx";
-const VIDEO_RE = /\.(mp4|mov|avi|webm|mkv|m4v)$/i;
-const IMAGE_RE = /\.(jpe?g|png|webp|gif)$/i;
-const ARTICLE_RE = /\.(pdf|docx?|md|txt)$/i;
-const DOC_RE = /\.(pdf|docx?|md|txt|xlsx?|csv|zip|pptx?)$/i;
-/** Files the check can read as a script. */
-const SCRIPT_RE = /\.(pdf|docx?|md|txt)$/i;
-const ACCEPT_SCRIPT = ".pdf,.docx,.doc,.txt,.md";
-
-/**
- * Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
- * Returns null with a reason for files this submission can't take.
- */
-function classifyFile(
-  file: File,
-  type: ContentType,
-  mainTaken: boolean,
-  scriptTaken = false
-): { kind: SubmissionFileKind } | { error: string } {
-  const name = file.name;
-  const isVideo = VIDEO_RE.test(name) || file.type.startsWith("video/");
-  const isImage = IMAGE_RE.test(name) || file.type.startsWith("image/");
-  const isMainType =
-    (type === "VIDEO" && isVideo) ||
-    ((type === "IMAGE" || type === "CAROUSEL") && isImage) ||
-    ((type === "SOCIAL_POST" || type === "AD") && (isVideo || isImage)) ||
-    (type === "BLOG" && ARTICLE_RE.test(name));
-
-  if (isMainType && (type === "CAROUSEL" || !mainTaken)) return { kind: "MAIN" };
-  if (isVideo) {
-    return {
-      error: mainTaken && (type === "VIDEO" || type === "SOCIAL_POST" || type === "AD")
-        ? "only one video per submission. Remove the current one to replace it."
-        : "videos can only be added to Video, Social Post or Paid Ad submissions.",
-    };
-  }
-  if (isImage) return { kind: "IMAGE" };
-  // A document named as a script is the script (read into the compliance check); other documents are supporting.
-  if (SCRIPT_RE.test(name) && !scriptTaken && /script/i.test(name)) return { kind: "SCRIPT" };
-  if (DOC_RE.test(name)) return { kind: "SUPPORTING" };
-  return { error: "this file type isn't supported." };
-}
 
 const CHAR_LIMITS: Partial<Record<string, number>> = {
   X: 280,
@@ -1396,12 +1327,12 @@ export default function NewSubmissionPage() {
         />
       )}
       {onSuggestions && <StepFooter next={{ label: "Continue to make the changes", onClick: () => goToStep("details") }} />}
-
       {/* The reviewer's comments beside the content, where the edits are made: on the details step only. */}
+      {contentType === "TEXT_POST" && submissionId && <PostTextReview submissionId={submissionId} />}
       {resubmitting && submissionId && onDetails && (
         <RevisionWorkspace
           submissionId={submissionId}
-          dueAt={dueAt}
+          dueAt={dueAt} textOnly={contentType === "TEXT_POST"}
           mainFile={files.find((f) => f.kind === "MAIN")}
           caption={caption}
           accept={ACCEPT_ALL}
@@ -1732,7 +1663,7 @@ export default function NewSubmissionPage() {
                 </Section>
 
 
-                <Section
+                {contentType !== "TEXT_POST" && <Section
                   step={3}
                   title={videoLocked ? "Script" : contentType === "VIDEO" ? "Video and sources" : "Image and sources"}
                   description={
@@ -1918,7 +1849,7 @@ export default function NewSubmissionPage() {
                     ensureSubmissionId={() => save({ force: true })}
                     onImported={onCanvaImported}
                   />
-                </Section>
+                </Section>}
               </div>
             )}
 
@@ -2060,7 +1991,7 @@ export default function NewSubmissionPage() {
                 <CaptionExtras
                   platforms={platforms} platformCaptions={platformCaptions} mainCaption={caption}
                   limitFor={(p) => CHAR_LIMITS[p]} sourceLinks={sourceLinks}
-                  submissionId={submissionId} readOnly={readOnly} uploadedFiles={files} savedSourceChecks={checkedSub?.source_link_checks}
+                  submissionId={submissionId} readOnly={readOnly} linksOnly={contentType === "TEXT_POST"} uploadedFiles={files} savedSourceChecks={checkedSub?.source_link_checks}
                   ensureSubmissionId={() => save({ force: true })}
                   onPlatformCaptionsChange={(next) => { setPlatformCaptions(next); markEdited(); }} onSourceLinksChange={(next) => { setSourceLinks(next); markEdited(); }}
                   onSourceCheckActivityChange={setLocalSourceChecking}

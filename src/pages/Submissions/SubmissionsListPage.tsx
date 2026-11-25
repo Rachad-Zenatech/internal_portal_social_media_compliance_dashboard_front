@@ -217,7 +217,7 @@ function StagePill({ stage, small = false, script }: { stage: Stage; small?: boo
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   VIDEO: "Video",
-  SOCIAL_POST: "Post",
+  TEXT_POST: "Text Post", SOCIAL_POST: "Post",
   CAROUSEL: "Carousel",
   IMAGE: "Image",
   BLOG: "Article",

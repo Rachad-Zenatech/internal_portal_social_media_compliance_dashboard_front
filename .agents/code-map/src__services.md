@@ -95,6 +95,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - `performanceService` (export const) L4
 
+## src/services/postTextReviewService.ts (8 lines) - post text review service (services)
+- `postTextReviewService` (export const) L4
+
 ## src/services/preparationComplianceService.ts (22 lines) - Script drafts use the saved script check; finished posts use the streamed post check.
 - `runPreparationCompliance` (export function) L7 - Script drafts use the saved script check; finished posts use the streamed post check.
 

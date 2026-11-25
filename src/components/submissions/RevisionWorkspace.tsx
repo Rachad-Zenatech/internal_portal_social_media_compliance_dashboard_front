@@ -8,6 +8,7 @@ import ReviewCommentsPanel, { formatSec } from "@/components/submissions/ReviewC
 import { authedFileUrl, dueInfo } from "@/components/submissions/submissionUi";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import ReviewCaptionPreview from "@/components/submissions/ReviewCaptionPreview";
+import TextPostRevisionWorkspace from "./TextPostRevisionWorkspace";
 import type { ReviewComment, SubmissionFile } from "@/types/submission";
 
 /**
@@ -16,6 +17,7 @@ import type { ReviewComment, SubmissionFile } from "@/types/submission";
  */
 export default function RevisionWorkspace({
   submissionId,
+  textOnly = false,
   dueAt,
   mainFile,
   caption,
@@ -27,6 +29,7 @@ export default function RevisionWorkspace({
   onDone,
 }: {
   submissionId: string;
+  textOnly?: boolean;
   /** Resubmit-by date for the requested changes. */
   dueAt?: string | null;
   mainFile?: SubmissionFile;
@@ -62,6 +65,7 @@ export default function RevisionWorkspace({
     void v.play().catch(() => undefined);
   };
 
+  if (textOnly) return <TextPostRevisionWorkspace submissionId={submissionId} caption={caption} dueAt={dueAt} submitting={submitting} onEditCaption={onEditCaption} onDone={onDone} />;
   return (
     <Card className="py-0 gap-0 border-border/80 shadow-xs overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3 border-b border-border/70">

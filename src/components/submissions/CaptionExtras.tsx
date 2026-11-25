@@ -12,6 +12,7 @@ interface Props {
   submissionId: string | null;
   ensureSubmissionId: () => Promise<string | null>;
   readOnly?: boolean;
+  linksOnly?: boolean;
   onPlatformCaptionsChange: (next: Record<string, string>) => void;
   onSourceLinksChange: (next: string[]) => void;
   onSourceCheckActivityChange?: (activities: string[]) => void;
@@ -35,6 +36,7 @@ export default function CaptionExtras(props: Props) {
         />
       )}
       <SourceLinksField
+        linksOnly={props.linksOnly}
         links={props.sourceLinks}
         submissionId={props.submissionId}
         ensureSubmissionId={props.ensureSubmissionId}

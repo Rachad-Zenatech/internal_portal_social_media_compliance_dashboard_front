@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/RevisionWorkspace.tsx (188 lines) - revision workspace (components submissions)
-- `RevisionWorkspace` (export function) L17 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
-- `CommentMarks` (function) L162 - Where the comments are, on the video's timeline: blue open, grey resolved; a click jumps there.
+## src/components/submissions/RevisionWorkspace.tsx (192 lines) - revision workspace (components submissions)
+- `RevisionWorkspace` (export function) L18 - What the uploader sees after a reviewer asks for changes: the content and the reviewer's comments side by  side.
+- `CommentMarks` (function) L166 - Where the comments are, on the video's timeline: blue open, grey resolved; a click jumps there.

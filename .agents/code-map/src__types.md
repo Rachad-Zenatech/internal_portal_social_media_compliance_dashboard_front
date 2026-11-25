@@ -106,6 +106,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PostApprovalSuggestionFields` (export interface) L1
 - `PublishingAccess` (export interface) L6
 
+## src/types/postTextReview.ts (23 lines) - post text review (types)
+- `PostTextEdit` (export interface) L1
+- `PostTextReview` (export interface) L11
+- `PostTextSave` (export interface) L18
+
 ## src/types/publicMood.ts (202 lines) - Public mood: how people online currently feel about the topics a post touches (social listening).
 - `PublishingRecommendation` (export type) L3
 - `ListeningPost` (export interface) L5

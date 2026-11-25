@@ -34,7 +34,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/ContentScreenerPage.tsx": {
-      "max_lines": 1491,
+      "max_lines": 1434,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2490,
+      "max_lines": 2421,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -82,7 +82,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/types/submission.ts": {
-      "max_lines": 613,
+      "max_lines": 562,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     }
   },
@@ -224,7 +224,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#ContentScreenerPage": {
-      "max_lines": 138,
+      "max_lines": 137,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#FlaggedMoments": {
@@ -232,11 +232,11 @@
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#PostView": {
-      "max_lines": 133,
+      "max_lines": 131,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#ReviewPanel": {
-      "max_lines": 282,
+      "max_lines": 272,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx#TabIcon": {
