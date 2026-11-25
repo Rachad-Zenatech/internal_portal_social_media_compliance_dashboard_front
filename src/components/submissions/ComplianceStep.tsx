@@ -1,3 +1,5 @@
+import GroupedComplianceFindings from "@/components/submissions/GroupedComplianceFindings";
+import { previewFindings } from "@/lib/rule18Presentation";
 import ComplianceScoreSummary from "@/components/submissions/ComplianceScoreSummary";
 import StaleComplianceNotice from "@/components/submissions/StaleComplianceNotice";
 import { useMemo, useRef, useState, type ReactNode } from "react";
@@ -170,9 +172,10 @@ export default function ComplianceStep({
     if (next && isVideo && f.at != null) seek(f.at);
   };
 
+  const highlightedFindings = previewFindings(findings, picked);
   const terms = (list: Finding[]) => list.flatMap((f) => findingEvidence(f.v));
   const captionParts = (() => {
-    const all = terms(findings);
+    const all = terms(highlightedFindings);
     const preview = caption;
     if (!all.length || !preview) return [{ text: preview, tone: "" }];
     const chosen = new Set(selected ? findingEvidence(selected.v).map((t) => t.toLowerCase()) : []);
@@ -180,7 +183,7 @@ export default function ComplianceStep({
       .split(new RegExp(`(${all.map(escapeRe).join("|")})`, "gi"))
       .map((text, i) => ({ text, tone: i % 2 ? (chosen.has(text.toLowerCase()) ? "chosen" : "flag") : "" }));
   })();
-  const mediaFindings = findings.filter((f) => f.v.image_regions?.length || f.where === "Image or on-screen text" || f.where === "Video");
+  const mediaFindings = highlightedFindings.filter((f) => f.v.image_regions?.length || f.where === "Image or on-screen text" || f.where === "Video");
 
   const header = (
     <div className="@container/compliance-header">
@@ -296,7 +299,7 @@ export default function ComplianceStep({
             </p>
           )}
           {!stale && check.ai_unavailable && !analysing && findings.length === 0 && <IncompleteFindingsNotice />}
-          {findings.map((f, i) => {
+          <GroupedComplianceFindings findings={findings} onClose={() => setPicked(null)} renderFinding={(f, i) => {
             const st = statusOf(f.v);
             const critical = f.v.traffic_light === "RED";
             const on = f.key === picked;
@@ -348,7 +351,7 @@ export default function ComplianceStep({
                 )}
               </article>
             );
-          })}
+          }} />
           <ManuallyCheckedClaims findings={checkedClaims} />
           {cleared.length > 0 && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 text-[13px] leading-relaxed text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
@@ -442,7 +445,7 @@ export default function ComplianceStep({
           )}
           {!isVideo && <MarkedUpImageSlideshow slideshow={slideshow} findings={mediaFindings.map((f) => f.v)} />}
 
-          <PostTextPreview scriptText={scriptText} captionParts={captionParts} captionHtml={captionHtml ?? sub?.caption_html ?? undefined} terms={terms(findings.filter((f) => f.where === "Script"))} />
+          <PostTextPreview scriptText={scriptText} captionParts={captionParts} captionHtml={captionHtml ?? sub?.caption_html ?? undefined} terms={terms(highlightedFindings.filter((f) => f.where === "Script"))} />
           {selected && (
             <p className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-[13px] text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

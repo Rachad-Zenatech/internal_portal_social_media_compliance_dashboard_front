@@ -1,3 +1,5 @@
+import Rule18ScoreRow from "@/components/submissions/Rule18ScoreRow";
+import { groupRule18, isRule18 } from "@/lib/rule18Presentation";
 import { Ban } from "lucide-react";
 
 import { ConfidenceBadge } from "@/components/submissions/FindingStatus";
@@ -48,7 +50,10 @@ export default function ScoreBreakdown({
             <span>Starting score</span>
             <span className="tabular-nums">100</span>
           </li>
-          {scored.map((v, index) => (
+          {groupRule18(scored, (v) => v).map((group, index) => {
+            const v = group[0];
+            if (isRule18(v)) return <Rule18ScoreRow key="rule-18" findings={group} />;
+            return (
             <li key={`${v.rule_id}-${v.kind ?? ""}-${index}`} className="flex items-start justify-between gap-3 px-2.5 py-1.5">
               <span className="min-w-0">
                 <RuleNumberBadge v={v} /><ConfidenceBadge v={v} />
@@ -76,7 +81,7 @@ export default function ScoreBreakdown({
                 </span>
               )}
             </li>
-          ))}
+          ); })}
           {check.score_cap != null && (
             <li className="flex items-center justify-between gap-3 px-2.5 py-1.5 text-red-700 dark:text-red-300">
               <span>Critical rule broken: capped</span>
