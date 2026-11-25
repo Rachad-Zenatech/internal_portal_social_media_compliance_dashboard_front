@@ -1,5 +1,5 @@
 import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
-import PostTextReview from "@/components/submissions/PostTextReview";
+import SubmissionReviewUpdates from "@/components/submissions/SubmissionReviewUpdates";
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
@@ -1326,9 +1326,7 @@ export default function NewSubmissionPage() {
           }
         />
       )}
-      {onSuggestions && <StepFooter next={{ label: "Continue to make the changes", onClick: () => goToStep("details") }} />}
-      {/* The reviewer's comments beside the content, where the edits are made: on the details step only. */}
-      {contentType === "TEXT_POST" && submissionId && <PostTextReview submissionId={submissionId} />}
+      <SubmissionReviewUpdates suggestions={onSuggestions} textOnly={contentType === "TEXT_POST"} submissionId={submissionId} onContinue={() => goToStep("details")} />
       {resubmitting && submissionId && onDetails && (
         <RevisionWorkspace
           submissionId={submissionId}

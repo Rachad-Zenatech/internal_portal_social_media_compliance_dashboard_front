@@ -170,7 +170,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `postSuggestionState` (export function) L5
 - `suggestionTimeLabel` (export function) L14
 
-## src/lib/postContentTypes.ts (73 lines) - Static presentation config (allowed values themselves come from the API)
+## src/lib/postContentTypes.ts (91 lines) - Static presentation config (allowed values themselves come from the API)
 - `CONTENT_TYPES` (export const) L5 - Static presentation config (allowed values themselves come from the API)
 - `VISIBLE_CONTENT_TYPES` (export const) L14
 - `MAIN_UPLOAD` (export const) L16
@@ -180,6 +180,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SCRIPT_RE` (export const) L36 - Files the check can read as a script.
 - `ACCEPT_SCRIPT` (export const) L37
 - `classifyFile` (export function) L43 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `CONTENT_TYPE_BADGES` (export const) L74
+- `CONTENT_TYPE_LABELS` (export const) L84
 
 ## src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - `unique` (function) L10

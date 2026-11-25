@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_LABELS } from "@/lib/postContentTypes";
 import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
 import ApprovedPostPublishing from "@/components/submissions/ApprovedPostPublishing";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -215,13 +216,7 @@ function StagePill({ stage, small = false, script }: { stage: Stage; small?: boo
   );
 }
 
-const CONTENT_TYPE_LABELS: Record<string, string> = {
-  VIDEO: "Video",
-  TEXT_POST: "Text Post", SOCIAL_POST: "Post",
-  CAROUSEL: "Carousel",
-  IMAGE: "Image",
-  BLOG: "Article",
-};
+
 
 /** Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue. */
 function DueLine({ dueAt, kind, className = "" }: { dueAt?: string | null; kind?: SubmissionSummary["due_kind"]; className?: string }) {

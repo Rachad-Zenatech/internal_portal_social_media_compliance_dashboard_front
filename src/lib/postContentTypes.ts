@@ -70,3 +70,21 @@ export function classifyFile(
   if (DOC_RE.test(name)) return { kind: "SUPPORTING" };
   return { error: "this file type isn't supported." };
 }
+
+export const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
+  VIDEO: { label: "Video", cls: "bg-muted text-muted-foreground" },
+  TEXT_POST: { label: "Text Post", cls: "bg-muted text-muted-foreground" },
+  SOCIAL_POST: { label: "Post", cls: "bg-muted text-muted-foreground" },
+  CAROUSEL: { label: "Carousel", cls: "bg-muted text-muted-foreground" },
+  IMAGE: { label: "Image", cls: "bg-muted text-muted-foreground" },
+  BLOG: { label: "Article", cls: "bg-muted text-muted-foreground" },
+  AD: { label: "Paid Ad", cls: "bg-muted text-muted-foreground" },
+};
+
+export const CONTENT_TYPE_LABELS: Record<string, string> = {
+  VIDEO: "Video",
+  TEXT_POST: "Text Post", SOCIAL_POST: "Post",
+  CAROUSEL: "Carousel",
+  IMAGE: "Image",
+  BLOG: "Article",
+};

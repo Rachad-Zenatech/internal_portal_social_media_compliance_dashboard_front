@@ -104,6 +104,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StaleComplianceNotice.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SubmissionReviewUpdates.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionStartAnotherButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
@@ -137,4 +138,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
 | .agents/code-map/src__services.md | 19 | 7 KB |
-| .agents/code-map/src__types.md | 30 | 17 KB |
+| .agents/code-map/src__types.md | 31 | 17 KB |

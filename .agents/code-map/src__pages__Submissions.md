@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2421 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2419 lines) - new submission page (pages  submissions)
 - `SaveState` (type) L147
 - `timeOptions` (const) L154
 - `timeLabel` (function) L157 - 17:00" -> "5:00 PM".
@@ -94,53 +94,53 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
 - `SubmissionsLayout` (export function) L4 - One content area: the portal and the new-submission form.
 
-## src/pages/Submissions/SubmissionsListPage.tsx (1591 lines) - submissions list page (pages  submissions)
-- `tabOf` (function) L108 - The tab a post is counted under.
-- `SortBy` (type) L135
-- `Prefs` (type) L146
-- `loadPrefs` (function) L149
-- `savePrefs` (function) L158
-- `platformName` (const) L166
-- `sortItems` (function) L168
-    - `time` (fn) L170
-- `accountsOf` (const) L179 - Every account it posts through; older data may only have the single primary one.
-- `isVideo` (const) L181
-- `submitLabel` (const) L182
-- `useIsWide` (function) L187
-    - `onChange` (fn) L191
-- `Labels` (interface) L199 - Names for brand and audience codes, from the same options New Submission uses.
-- `StagePill` (function) L209
-- `DueLine` (function) L227 - Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue.
-- `whenText` (function) L239 - When it goes out (or was last touched), with "past due" when a planned time passed without approval.
-- `SubmissionCard` (function) L252
-- `friendlyDate` (function) L344 - Today", "Tomorrow", a weekday within the week ahead, otherwise the date.
-- `statusLine` (function) L355 - One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,  grey when it's waiting on so...
-- `PlatformBadges` (function) L394 - The platforms a post goes to, as their own marks.
-- `EmptyTile` (function) L408 - What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing.
-- `ScoreRing` (function) L423 - The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100.
-- `progressText` (function) L454 - 3 of 5 steps done", or where a sent post is.
-- `PostRow` (function) L458
-- `ReviewCard` (function) L569
-    - `navigate` (fn) L587
-    - `queryClient` (fn) L588
-    - `runCheck` (fn) L603
-    - `openInScreener` (fn) L628
-- `SubmissionsListPage` (export function) L992
-    - `navigate` (fn) L1004
-    - `isWide` (fn) L1005
-    - `submit` (fn) L1006
-    - `openPost` (fn) L1015
-    - `openStep` (fn) L1030
-    - `setPrefs` (fn) L1036
-    - `data` (fn) L1054
-    - `inMonth` (fn) L1074
-    - `stageCounts` (fn) L1077
-    - `platformsInList` (fn) L1093 - Platform options come from what's actually in the list.
-    - `audiencesInList` (fn) L1095 - The audiences that are actually in the list.
-    - `brandsInList` (fn) L1098 - older content, so it can be found.
-    - `managed` (fn) L1099
-    - `visible` (fn) L1104
-    - `paged` (fn) L1123 - 25 to a page; a new filter, search or sort starts again from the first page.
-    - `pager` (fn) L1124
-    - `clearFilters` (fn) L1144
-    - `panel` (fn) L1153
+## src/pages/Submissions/SubmissionsListPage.tsx (1586 lines) - submissions list page (pages  submissions)
+- `tabOf` (function) L109 - The tab a post is counted under.
+- `SortBy` (type) L136
+- `Prefs` (type) L147
+- `loadPrefs` (function) L150
+- `savePrefs` (function) L159
+- `platformName` (const) L167
+- `sortItems` (function) L169
+    - `time` (fn) L171
+- `accountsOf` (const) L180 - Every account it posts through; older data may only have the single primary one.
+- `isVideo` (const) L182
+- `submitLabel` (const) L183
+- `useIsWide` (function) L188
+    - `onChange` (fn) L192
+- `Labels` (interface) L200 - Names for brand and audience codes, from the same options New Submission uses.
+- `StagePill` (function) L210
+- `DueLine` (function) L222 - Deadline text, coloured by who it's waiting on: blue for a reviewer, amber for the creator, red once overdue.
+- `whenText` (function) L234 - When it goes out (or was last touched), with "past due" when a planned time passed without approval.
+- `SubmissionCard` (function) L247
+- `friendlyDate` (function) L339 - Today", "Tomorrow", a weekday within the week ahead, otherwise the date.
+- `statusLine` (function) L350 - One line saying where the post stands, coloured by whose turn it is: amber/red when the creator has to act,  grey when it's waiting on so...
+- `PlatformBadges` (function) L389 - The platforms a post goes to, as their own marks.
+- `EmptyTile` (function) L403 - What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing.
+- `ScoreRing` (function) L418 - The compliance score as a clean meter: the number, and a thin bar showing how close it is to 100.
+- `progressText` (function) L449 - 3 of 5 steps done", or where a sent post is.
+- `PostRow` (function) L453
+- `ReviewCard` (function) L564
+    - `navigate` (fn) L582
+    - `queryClient` (fn) L583
+    - `runCheck` (fn) L598
+    - `openInScreener` (fn) L623
+- `SubmissionsListPage` (export function) L987
+    - `navigate` (fn) L999
+    - `isWide` (fn) L1000
+    - `submit` (fn) L1001
+    - `openPost` (fn) L1010
+    - `openStep` (fn) L1025
+    - `setPrefs` (fn) L1031
+    - `data` (fn) L1049
+    - `inMonth` (fn) L1069
+    - `stageCounts` (fn) L1072
+    - `platformsInList` (fn) L1088 - Platform options come from what's actually in the list.
+    - `audiencesInList` (fn) L1090 - The audiences that are actually in the list.
+    - `brandsInList` (fn) L1093 - older content, so it can be found.
+    - `managed` (fn) L1094
+    - `visible` (fn) L1099
+    - `paged` (fn) L1118 - 25 to a page; a new filter, search or sort starts again from the first page.
+    - `pager` (fn) L1119
+    - `clearFilters` (fn) L1139
+    - `panel` (fn) L1148

@@ -1,9 +1,9 @@
+import { CONTENT_TYPE_BADGES } from "@/lib/postContentTypes";
 import ReviewerFindingDetails from "@/components/submissions/ReviewerFindingDetails";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { findingEvidence } from "@/lib/findingEvidence";
 import ListPager from "@/components/common/ListPager";
 import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNotice";
-import MarkedReviewerCaption from "@/components/compliance/screener/MarkedReviewerCaption";
 import ReviewerPostText from "@/components/compliance/screener/ReviewerPostText";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import { useScreenerMediaNavigation } from "@/hooks/useScreenerMediaNavigation";
@@ -94,15 +94,7 @@ const TABS: { value: ScreenerTab; label: string }[] = [
   { value: "done", label: "Scheduled" },
 ];
 
-const CONTENT_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
-  VIDEO: { label: "Video", cls: "bg-muted text-muted-foreground" },
-  TEXT_POST: { label: "Text Post", cls: "bg-muted text-muted-foreground" },
-  SOCIAL_POST: { label: "Post", cls: "bg-muted text-muted-foreground" },
-  CAROUSEL: { label: "Carousel", cls: "bg-muted text-muted-foreground" },
-  IMAGE: { label: "Image", cls: "bg-muted text-muted-foreground" },
-  BLOG: { label: "Article", cls: "bg-muted text-muted-foreground" },
-  AD: { label: "Paid Ad", cls: "bg-muted text-muted-foreground" },
-};
+
 
 const COLLAPSE_KEY = "contentScreener.queueCollapsed";
 
@@ -583,9 +575,7 @@ function PostView({
           </div>
         ) : null}
 
-        <ReviewerPostText post={s} canComment={canComment}>
-          {(text, html, showFlags) => <MarkedReviewerCaption text={text} html={html} terms={showFlags ? terms : []} picked={picked} onFlag={onFlag} onComment={onComment} />}
-        </ReviewerPostText>
+        <ReviewerPostText post={s} canComment={canComment} captionProps={{ terms, picked, onFlag, onComment }} />
       </div>
     </div>
   );
