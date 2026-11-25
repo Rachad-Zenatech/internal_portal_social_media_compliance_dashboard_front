@@ -136,8 +136,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
-- src/components/submissions/MarkedUpImageSlideshow.tsx (69 lines) - marked up image slideshow (components submissions)
-- src/components/submissions/MediaFindingOverlay.tsx (71 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+- src/components/submissions/MarkedUpImageSlideshow.tsx (70 lines) - marked up image slideshow (components submissions)
+- src/components/submissions/MediaFindingOverlay.tsx (84 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
 - src/components/submissions/PastedArticleCheck.tsx (104 lines) - The server needs at least this much text to check against (a whole article, not a sentence).
@@ -197,7 +197,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/VideoScriptModeCheckbox.tsx (27 lines) - video script mode checkbox (components submissions)
 - src/components/submissions/VideoScriptTemplate.tsx (20 lines) - video script template (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
-- src/components/submissions/ZoomableImageDialog.tsx (53 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
+- src/components/submissions/ZoomableImageDialog.tsx (54 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
 - src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
@@ -384,7 +384,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/captionReviewService.ts (10 lines) - caption review service (services)
-- src/services/complianceService.ts (394 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (396 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)

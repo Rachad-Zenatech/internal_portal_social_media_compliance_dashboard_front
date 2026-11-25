@@ -207,6 +207,8 @@ export interface ComplianceCheckResponse {
   source_checks?: SourceCheck[];
   /** Printed source-attribution boxes detected in post images. */
   source_regions?: ImageFindingRegion[];
+  /** Printed disclaimer/caveat boxes detected in post images. */
+  disclaimer_regions?: ImageFindingRegion[];
 }
 
 /**

@@ -12,6 +12,7 @@ interface Props {
   slideshow: ReturnType<typeof useImageSlideshow>;
   findings: ComplianceViolation[];
   sourceRegions?: ImageFindingRegion[];
+  disclaimerRegions?: ImageFindingRegion[];
 }
 
 function SlideThumbnail({ file, index, selected, onSelect }: {
@@ -27,7 +28,7 @@ function SlideThumbnail({ file, index, selected, onSelect }: {
 }
 
 /** Every image in the post, with highlights scoped to the currently displayed file. */
-export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegions }: Props) {
+export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegions, disclaimerRegions }: Props) {
   const { slides, active, activeIndex, select, move, imageOpen, setImageOpen } = slideshow;
   if (!active) return null;
   const multiple = slides.length > 1;
@@ -57,12 +58,12 @@ export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegi
         <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
           <div className="relative mx-auto w-fit max-w-full">
             <img src={authedFileUrl(active.url)} alt={`${counter}: ${active.original_name}`} className="block max-h-[420px] max-w-full rounded-xl" />
-            <MediaFindingOverlay findings={findings} sourceRegions={sourceRegions} fileId={active.id} />
+            <MediaFindingOverlay findings={findings} sourceRegions={sourceRegions} disclaimerRegions={disclaimerRegions} fileId={active.id} />
           </div>
         </button>
       </div>
       {multiple && <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Choose an image">{thumbnails}</div>}
-      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} sourceRegions={sourceRegions} />
+      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} sourceRegions={sourceRegions} disclaimerRegions={disclaimerRegions} />
     </div>
   );
 }

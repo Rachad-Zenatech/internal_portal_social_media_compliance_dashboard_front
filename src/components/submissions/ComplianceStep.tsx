@@ -443,7 +443,7 @@ export default function ComplianceStep({
               <VideoTranscript file={checkedVideo ?? mainFile} check={stale || !checkedVideo ? null : check} now={now} seek={seek} />
             </>
           )}
-          {!isVideo && <MarkedUpImageSlideshow slideshow={slideshow} findings={mediaFindings.map((f) => f.v)} sourceRegions={stale ? [] : (check?.source_regions ?? [])} />}
+          {!isVideo && <MarkedUpImageSlideshow slideshow={slideshow} findings={mediaFindings.map((f) => f.v)} sourceRegions={stale ? [] : (check?.source_regions ?? [])} disclaimerRegions={stale ? [] : (check?.disclaimer_regions ?? [])} />}
 
           <PostTextPreview scriptText={scriptText} captionParts={captionParts} captionHtml={captionHtml ?? sub?.caption_html ?? undefined} terms={terms(highlightedFindings.filter((f) => f.where === "Script"))} />
           {selected && (

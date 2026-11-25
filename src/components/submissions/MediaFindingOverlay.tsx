@@ -4,6 +4,7 @@ import { useComplianceRules } from "@/hooks/useComplianceRules";
 interface Props {
   findings: ComplianceViolation[];
   sourceRegions?: ImageFindingRegion[];
+  disclaimerRegions?: ImageFindingRegion[];
   fileId?: string;
   currentTime?: number;
   showRuleTooltip?: boolean;
@@ -21,7 +22,7 @@ function validRegion(
 }
 
 /** Only measured regions are shown; never place a finding in an arbitrary area. */
-export default function MediaFindingOverlay({ findings, sourceRegions = [], fileId, currentTime, showRuleTooltip = false }: Props) {
+export default function MediaFindingOverlay({ findings, sourceRegions = [], disclaimerRegions = [], fileId, currentTime, showRuleTooltip = false }: Props) {
   const { data: rules } = useComplianceRules();
   const descriptions = new Map((rules ?? []).map((rule) => [rule.id, rule.summary]));
   const boxes = findings.flatMap((finding, index) => {
@@ -37,16 +38,28 @@ export default function MediaFindingOverlay({ findings, sourceRegions = [], file
       key: `${index}-${n}`,
     }));
   });
-  const sources = (fileId ? sourceRegions.filter((r) => r.file_id === fileId) : sourceRegions)
-    .filter((r) => validRegion(r, currentTime));
+  const filterRegions = (list: ImageFindingRegion[]) =>
+    (fileId ? list.filter((r) => r.file_id === fileId) : list).filter((r) => validRegion(r, currentTime));
+  const badges = [
+    ...filterRegions(sourceRegions).map((region, idx) => ({
+      key: `source-${idx}`, label: "Source", title: "Detected source citation",
+      boxCls: "border-sky-500 bg-sky-400/20 shadow-[0_0_0_1px_rgba(3,105,161,0.55)]",
+      tagCls: "bg-sky-500 text-white", region,
+    })),
+    ...filterRegions(disclaimerRegions).map((region, idx) => ({
+      key: `disclaimer-${idx}`, label: "Disclaimer", title: "Detected disclaimer",
+      boxCls: "border-emerald-500 bg-emerald-400/20 shadow-[0_0_0_1px_rgba(4,120,87,0.55)]",
+      tagCls: "bg-emerald-600 text-white", region,
+    })),
+  ];
   return (
     <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
-      {sources.map((region, idx) => (
-        <div key={`source-${idx}`} title="Detected source citation" onClick={(event) => event.stopPropagation()}
-          className="absolute rounded-sm border-2 border-sky-500 bg-sky-400/20 shadow-[0_0_0_1px_rgba(3,105,161,0.55)]"
+      {badges.map(({ key, label, title, boxCls, tagCls, region }) => (
+        <div key={key} title={title} onClick={(event) => event.stopPropagation()}
+          className={`absolute rounded-sm border-2 ${boxCls}`}
           style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.w * 100}%`, height: `${region.h * 100}%` }}>
-          <span className="absolute bottom-full left-0 whitespace-nowrap rounded bg-sky-500 px-1 py-0.5 text-[10px] font-bold text-white">
-            Source
+          <span className={`absolute bottom-full left-0 whitespace-nowrap rounded px-1 py-0.5 text-[10px] font-bold ${tagCls}`}>
+            {label}
           </span>
         </div>
       ))}

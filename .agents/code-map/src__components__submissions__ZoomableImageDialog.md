@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ZoomableImageDialog.tsx (53 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
+## src/components/submissions/ZoomableImageDialog.tsx (54 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - `Props` (interface) L7
-- `ZoomableImageDialog` (export function) L21 - Full-size image preview that zooms toward the point under the mouse wheel.
+- `ZoomableImageDialog` (export function) L22 - Full-size image preview that zooms toward the point under the mouse wheel.
