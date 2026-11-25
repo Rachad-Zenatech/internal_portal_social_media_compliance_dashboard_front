@@ -1,10 +1,11 @@
 import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
+import { preparationCheckState } from "@/lib/preparationFreshness";
 import SubmissionReviewUpdates from "@/components/submissions/SubmissionReviewUpdates";
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
 import { hasPostImages, imageProvenanceAnswer, imageProvenancePayload } from "@/lib/imageProvenance";
 import { compressUploadImage } from "@/lib/compressUploadImage";
-import { analysisIsCurrent, checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
+import { checkIsCurrent, mediaChanged } from "@/lib/mediaFreshness";
 import { complianceSourcesChanged, sourceLinksKey } from "@/lib/complianceSources";
 import { useSourceComplianceRefresh } from "@/hooks/useSourceComplianceRefresh";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -989,11 +990,8 @@ export default function NewSubmissionPage() {
     : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
   const checkStale = inputCheckStale || Boolean(hasCheck && checkedSub?.check_outdated);
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
-  const recheck = {
-    compliance: hasCheck && !inputCheckStale,
-    sentiment: sentimentAnalysis?.status === "COMPLETED" && sentimentAnalysis.is_current && !localMediaChanged && analysisIsCurrent(sentimentAnalysis.created_at, checkedSub?.media_edited_at),
-    mood: Boolean(mood),
-  };
+  const recheck = preparationCheckState({ hasCheck, inputCheckStale, sentiment: sentimentAnalysis,
+    mediaEditedAt: checkedSub?.media_edited_at, mediaChanged: localMediaChanged, hasMood: Boolean(mood) });
   const changesMade = editCounter > 0 || recheck.compliance || Boolean(sentBackAt && checkedSub?.content_edited_at && Date.parse(checkedSub.content_edited_at) > sentBackAt);
 
   const submit = async (confirmRepost = false) => {
