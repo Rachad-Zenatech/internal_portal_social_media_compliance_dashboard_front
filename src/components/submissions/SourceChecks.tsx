@@ -6,9 +6,10 @@ import SourceTrustBar from "@/components/submissions/SourceTrustBar";
 import { SourceConfirmationsProvider, useSourceCalls } from "@/components/submissions/sourceConfirmationsContext";
 import type { SourceCheck, SourceVerdict } from "@/services/complianceService";
 import type { SourceLinkCheck } from "@/types/sourceLink";
-import { visibleSourceChecks } from "@/lib/sourceCheckVisibility";
-import { withSourceCoverage, sourceCoverageCounts as counts, type CoveredSourceClaim, type CoveredSourceCheck } from "@/lib/sourceCoverage";
+import { sourceCoverageCounts as counts, type CoveredSourceClaim, type CoveredSourceCheck } from "@/lib/sourceCoverage";
 import { mergeSourceChecks } from "@/lib/mergeSourceChecks";
+import { sourceClaimGroups } from "@/lib/sourceClaimGroups";
+import UnmatchedSourceClaims from "@/components/submissions/UnmatchedSourceClaims";
 
 const VERDICT: Record<SourceVerdict, { label: string; tone: string }> = {
   SUPPORTED: { label: "Matches the source", tone: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300" },
@@ -29,7 +30,7 @@ const WHERE: Record<SourceCheck["where"], string> = {
   image: "cited on the image",
   attached: "attached document",
   source_links: "added source link",
-  newsroom: "automatic supporting cross-check",
+  newsroom: "ZenaTech Newsroom (automatic cross-check)",
   script: "cited in the script",
 };
 
@@ -63,22 +64,20 @@ function ClaimRow({ claim, sourceUrl, creator }: { claim: CoveredSourceClaim; so
 }
 
 function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean }) {
-  const { ok, covered, wrong, open: unsettled } = counts(source.claims);
+  const { ok, wrong } = counts(source.claims);
   const problem = source.status !== "READ";
-  const needsLook = problem || wrong > 0 || unsettled > 0;
+  const needsLook = problem || wrong > 0;
   const [open, setOpen] = useState(needsLook);
   const name = source.title || source.reference;
-  const Icon = problem ? AlertTriangle : wrong > 0 ? XCircle : unsettled > 0 ? AlertTriangle : CheckCircle2;
-  const tone = problem || unsettled > 0 ? "text-amber-600" : wrong > 0 ? "text-red-600" : "text-emerald-600";
+  const Icon = problem ? AlertTriangle : wrong > 0 ? XCircle : ok > 0 ? CheckCircle2 : FileText;
+  const tone = problem ? "text-amber-600" : wrong > 0 ? "text-red-600" : ok > 0 ? "text-emerald-600" : "text-muted-foreground";
   const hasDetail = Boolean(source.message) || source.claims.length > 0;
   const primaryClaims = creator ? source.claims.filter((claim) => claim.verdict !== "SUPPORTED" && !claim.covered_by) : source.claims;
   const matchedClaims = creator ? source.claims.filter((claim) => claim.verdict === "SUPPORTED" || claim.covered_by) : [];
   const summary = [
-    ok > 0 && `${ok} match${ok === 1 ? "es" : ""}`,
-    covered > 0 && `${covered} supported elsewhere`,
+    ok > 0 && `${ok} ${ok === 1 ? "match" : "matches"}`,
     wrong > 0 && `${wrong} don't match`,
-    unsettled > 0 && `${unsettled} to check`,
-  ].filter(Boolean).join(" \u00b7 ");
+  ].filter(Boolean).join(" \u00b7 ") || "No matches or contradictions";
 
   return (
     <li className={creator ? "rounded-xl border border-border/70 bg-muted/20 p-3.5 sm:p-4" : "rounded-lg border border-border/60 bg-background/60 px-2.5 py-2"}>
@@ -104,7 +103,7 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
               .filter(Boolean)
               .join(" · ")}
           </span>
-          {source.status === "READ" && source.claims.length > 0 && (
+          {source.status === "READ" && (
             <span className={`block text-[11px] ${tone}`}>{summary}</span>
           )}
         </span>
@@ -186,7 +185,7 @@ export function SourcesCheckedSection({
   submissionId?: string | null;
   className?: string;
 }) {
-  const sourceChecks = withSourceCoverage(visibleSourceChecks(mergeSourceChecks(checks, savedChecks)));
+  const sourceChecks = mergeSourceChecks(checks, savedChecks);
   if (sourceChecks.length === 0 && (checking?.length ?? 0) === 0) return null;
   return (
     <section className={className}>
@@ -219,17 +218,19 @@ export default function SourceChecks({
   onViewChange?: (view: "checks" | "review") => void;
   creator?: boolean;
 }) {
-  const sourceChecks = withSourceCoverage(visibleSourceChecks(mergeSourceChecks(checks, savedChecks)));
+  const grouped = sourceClaimGroups(mergeSourceChecks(checks, savedChecks));
+  const sourceChecks = grouped.sources;
+  const hasNewsroom = sourceChecks.some((source) => source.where === "newsroom");
 
   const links = sourceChecks.filter((c) => c.kind === "URL").length;
   const needsReview = sourceChecks.filter((source) => {
-    const { wrong, open } = counts(source.claims);
-    return source.status !== "READ" || wrong > 0 || open > 0;
+    const { wrong } = counts(source.claims);
+    return source.status !== "READ" || wrong > 0;
   });
-  const [activeTab, setActiveTab] = useState<"checks" | "review">(
+  const [activeTab, setActiveTab] = useState<"checks" | "review" | "unmatched">(
     onViewChange || (creator && needsReview.length > 0) ? "review" : "checks",
   );
-  if (sourceChecks.length === 0) return null;
+  if (sourceChecks.length === 0 && grouped.unmatched.length === 0) return null;
   const visibleChecks = activeTab === "review" ? needsReview : sourceChecks;
   const urls = [...new Set(sourceChecks.flatMap((c) => [c.url, ...c.claims.map((k) => k.source_url)]).filter(Boolean) as string[])];
   return (
@@ -239,22 +240,27 @@ export default function SourceChecks({
         {links > 0 ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
         Sources checked ({sourceChecks.length})
       </div>}
-      <div role="tablist" aria-label="Source check results" className="flex gap-1 border-b border-border/60">
+      <div role="tablist" aria-label="Source check results" className="flex flex-wrap gap-1 border-b border-border/60">
         <button type="button" role="tab" aria-selected={activeTab === "review"} onClick={() => { setActiveTab("review"); onViewChange?.("review"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "review" ? "border-amber-600 text-amber-700 dark:text-amber-300" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
           Needs review ({needsReview.length})
         </button>
         <button type="button" role="tab" aria-selected={activeTab === "checks"} onClick={() => { setActiveTab("checks"); onViewChange?.("checks"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "checks" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
           {creator ? "All sources" : "Check source"} ({sourceChecks.length})
         </button>
+        <button type="button" role="tab" aria-selected={activeTab === "unmatched"} onClick={() => { setActiveTab("unmatched"); onViewChange?.("checks"); }} className={`border-b-2 px-2 py-1 font-semibold ${activeTab === "unmatched" ? "border-amber-600 text-amber-700 dark:text-amber-300" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          Unmatched claims ({grouped.unmatched.length})
+        </button>
       </div>
-      {(!onViewChange || activeTab === "checks") && (visibleChecks.length > 0 ? (
+      {hasNewsroom && <p className="text-xs text-muted-foreground">ZenaTech Newsroom results show confirmed evidence or articles that could not be read. Other searched articles may not appear.</p>}
+      {activeTab === "unmatched" && <UnmatchedSourceClaims claims={grouped.unmatched} />}
+      {activeTab !== "unmatched" && (!onViewChange || activeTab === "checks") && (visibleChecks.length > 0 ? (
         <ul role="tabpanel" className={creator ? "space-y-3" : "space-y-1.5"}>
           {visibleChecks.map((c, index) => (
             <Row key={`${c.kind}-${c.reference}-${index}`} source={c} creator={creator} />
           ))}
         </ul>
       ) : (
-        <p role="tabpanel" className="rounded-lg border border-dashed border-border/60 px-2.5 py-3 text-muted-foreground">All source claims are supported.</p>
+        <p role="tabpanel" className="rounded-lg border border-dashed border-border/60 px-2.5 py-3 text-muted-foreground">No source issues to review.</p>
       ))}
     </div>
     </SourceConfirmationsProvider>

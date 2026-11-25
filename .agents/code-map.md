@@ -29,7 +29,6 @@ to find the right file.
 | .agents/code-map/src__components__submissions__CaptionExtras.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CaptionSignalsBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CaptionSuggester.md | 1 | 1 KB |
-| .agents/code-map/src__components__submissions__CheckAttemptList.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CheckCoverage.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CheckProgress.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ClaimVsSource.md | 1 | 1 KB |
@@ -119,7 +118,6 @@ to find the right file.
 | .agents/code-map/src__components__submissions__VideoScriptTemplate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoTranscript.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ZoomableImageDialog.md | 1 | 1 KB |
-| .agents/code-map/src__components__submissions__checkProgressPresentation.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__commentParts.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__sourceConfirmationsContext.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__submissionUi.md | 1 | 3 KB |

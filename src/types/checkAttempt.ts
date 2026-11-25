@@ -1,11 +1,6 @@
 /** One model attempt, including its optional document-reading progress. */
 export interface CheckAttempt {
   progress_label?: string;
-  /** Stable identity of one task across its retries; not the model name. */
-  task_id?: string;
-  task_kind?: "CLAIM_EXTRACTION" | "SOURCE_COMPARISON";
-  source_title?: string;
-  claim_count?: number;
   id: string;
   status: "RUNNING" | "OK" | "FAILED";
   model: string;

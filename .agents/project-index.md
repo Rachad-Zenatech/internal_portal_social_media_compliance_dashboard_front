@@ -107,9 +107,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CaptionExtras.tsx (54 lines) - Per-platform caption overrides and source links placed at the bottom of the Details caption section.
 - src/components/submissions/CaptionSignalsBar.tsx (84 lines) - The post's target audiences; with the cashtag in the caption but no Investors, offers to add it.
 - src/components/submissions/CaptionSuggester.tsx (145 lines) - caption suggester (components submissions)
-- src/components/submissions/CheckAttemptList.tsx (42 lines) - check attempt list (components submissions)
 - src/components/submissions/CheckCoverage.tsx (105 lines) - check coverage (components submissions)
-- src/components/submissions/CheckProgress.tsx (79 lines) - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
+- src/components/submissions/CheckProgress.tsx (147 lines) - What each AI step of the check is, in the creator's words.
 - src/components/submissions/ClaimVsSource.tsx (127 lines) - What both the quick check and the reviewer's view know about a claim.
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
@@ -197,7 +196,6 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/VideoScriptTemplate.tsx (20 lines) - video script template (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
 - src/components/submissions/ZoomableImageDialog.tsx (52 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
-- src/components/submissions/checkProgressPresentation.ts (53 lines) - check progress presentation (components submissions)
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.
 - src/components/submissions/sourceConfirmationsContext.tsx (25 lines) - Gives the source rows inside it the post's saved calls on its sources and each source's standing with reviewers.
 - src/components/submissions/submissionUi.tsx (436 lines) - submission ui (components submissions)
@@ -405,7 +403,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/caption.ts (49 lines) - Caption suggestions drafted from the post itself, each already run through the compliance check.
 - src/types/captionEdit.ts (27 lines) - caption edit (types)
 - src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
-- src/types/checkAttempt.ts (21 lines) - One model attempt, including its optional document-reading progress.
+- src/types/checkAttempt.ts (16 lines) - One model attempt, including its optional document-reading progress.
 - src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)
 - src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.

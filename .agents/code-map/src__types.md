@@ -62,7 +62,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/types/captionReview.ts (7 lines) - A rule flag rendered over wording in the caption.
 - `MarkedCaptionTerm` (export interface) L2 - A rule flag rendered over wording in the caption.
 
-## src/types/checkAttempt.ts (21 lines) - One model attempt, including its optional document-reading progress.
+## src/types/checkAttempt.ts (16 lines) - One model attempt, including its optional document-reading progress.
 - `CheckAttempt` (export interface) L2 - One model attempt, including its optional document-reading progress.
 
 ## src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)

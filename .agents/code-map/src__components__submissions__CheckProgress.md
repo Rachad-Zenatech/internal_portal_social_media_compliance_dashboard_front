@@ -4,9 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/CheckProgress.tsx (79 lines) - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
-- `seconds` (const) L8
-- `Elapsed` (function) L10
-- `CheckProgress` (export function) L20 - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
-- `CheckModelsUsed` (export function) L42 - After a check: which models answered, and how many fallbacks it took.
-- `SavedCheckModels` (export function) L66 - The models a saved check used, read from the saved result, so it shows after a reload too.
+## src/components/submissions/CheckProgress.tsx (147 lines) - What each AI step of the check is, in the creator's words.
+- `stepLabel` (const) L26
+- `seconds` (const) L29
+- `Elapsed` (function) L31
+- `AttemptList` (function) L41 - Each step's model attempts in the order they ran; a model tried after another failed is a fallback.
+- `CheckProgress` (export function) L91 - Shown in place of the result while a compliance check runs: elapsed time and every model tried so far.
+- `CheckModelsUsed` (export function) L113 - After a check: which models answered, and how many fallbacks it took.
+- `SavedCheckModels` (export function) L134 - The models a saved check used, read from the saved result, so it shows after a reload too.
