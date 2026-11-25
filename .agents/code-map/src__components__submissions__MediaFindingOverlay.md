@@ -4,6 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/MediaFindingOverlay.tsx (52 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
+## src/components/submissions/MediaFindingOverlay.tsx (71 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - `Props` (interface) L4
-- `MediaFindingOverlay` (export function) L12 - Only measured regions are shown; never place a finding in an arbitrary area.
+- `validRegion` (function) L12
+- `MediaFindingOverlay` (export function) L24 - Only measured regions are shown; never place a finding in an arbitrary area.

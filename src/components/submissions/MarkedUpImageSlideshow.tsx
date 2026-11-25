@@ -5,12 +5,13 @@ import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
 import ZoomableImageDialog from "@/components/submissions/ZoomableImageDialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import type { useImageSlideshow } from "@/hooks/useImageSlideshow";
-import type { ComplianceViolation } from "@/services/complianceService";
+import type { ComplianceViolation, ImageFindingRegion } from "@/services/complianceService";
 import type { SubmissionFile } from "@/types/submission";
 
 interface Props {
   slideshow: ReturnType<typeof useImageSlideshow>;
   findings: ComplianceViolation[];
+  sourceRegions?: ImageFindingRegion[];
 }
 
 function SlideThumbnail({ file, index, selected, onSelect }: {
@@ -26,7 +27,7 @@ function SlideThumbnail({ file, index, selected, onSelect }: {
 }
 
 /** Every image in the post, with highlights scoped to the currently displayed file. */
-export default function MarkedUpImageSlideshow({ slideshow, findings }: Props) {
+export default function MarkedUpImageSlideshow({ slideshow, findings, sourceRegions }: Props) {
   const { slides, active, activeIndex, select, move, imageOpen, setImageOpen } = slideshow;
   if (!active) return null;
   const multiple = slides.length > 1;
@@ -56,12 +57,12 @@ export default function MarkedUpImageSlideshow({ slideshow, findings }: Props) {
         <button type="button" onClick={() => setImageOpen(true)} title="Open full-size image" className="block w-full cursor-zoom-in">
           <div className="relative mx-auto w-fit max-w-full">
             <img src={authedFileUrl(active.url)} alt={`${counter}: ${active.original_name}`} className="block max-h-[420px] max-w-full rounded-xl" />
-            <MediaFindingOverlay findings={findings} fileId={active.id} />
+            <MediaFindingOverlay findings={findings} sourceRegions={sourceRegions} fileId={active.id} />
           </div>
         </button>
       </div>
       {multiple && <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Choose an image">{thumbnails}</div>}
-      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} />
+      <ZoomableImageDialog key={active.id} fileId={active.id} open={imageOpen} onOpenChange={setImageOpen} src={authedFileUrl(active.url)} findings={findings} sourceRegions={sourceRegions} />
     </div>
   );
 }

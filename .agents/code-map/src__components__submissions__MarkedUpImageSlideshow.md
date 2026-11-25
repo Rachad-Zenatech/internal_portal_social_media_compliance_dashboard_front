@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/MarkedUpImageSlideshow.tsx (68 lines) - marked up image slideshow (components submissions)
+## src/components/submissions/MarkedUpImageSlideshow.tsx (69 lines) - marked up image slideshow (components submissions)
 - `Props` (interface) L11
-- `SlideThumbnail` (function) L16
-- `MarkedUpImageSlideshow` (export function) L29 - Every image in the post, with highlights scoped to the currently displayed file.
+- `SlideThumbnail` (function) L17
+- `MarkedUpImageSlideshow` (export function) L30 - Every image in the post, with highlights scoped to the currently displayed file.

@@ -2,13 +2,14 @@ import { useState, type WheelEvent } from "react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import MediaFindingOverlay from "@/components/submissions/MediaFindingOverlay";
-import type { ComplianceViolation } from "@/services/complianceService";
+import type { ComplianceViolation, ImageFindingRegion } from "@/services/complianceService";
 
 interface Props {
   open: boolean;
   src: string;
   fileId?: string;
   findings: ComplianceViolation[];
+  sourceRegions?: ImageFindingRegion[];
   onOpenChange: (open: boolean) => void;
 }
 
@@ -17,7 +18,7 @@ const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.2;
 
 /** Full-size image preview that zooms toward the point under the mouse wheel. */
-export default function ZoomableImageDialog({ open, src, fileId, findings, onOpenChange }: Props) {
+export default function ZoomableImageDialog({ open, src, fileId, findings, sourceRegions, onOpenChange }: Props) {
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [origin, setOrigin] = useState("50% 50%");
 
@@ -42,7 +43,7 @@ export default function ZoomableImageDialog({ open, src, fileId, findings, onOpe
         <button type="button" onClick={close} onWheel={zoomAtPointer} aria-label="Close full-size image" title="Scroll to zoom; click to close" className="inline-block cursor-zoom-out overflow-hidden">
           <div className="relative inline-block transition-transform duration-100" style={{ transform: `scale(${zoom})`, transformOrigin: origin }}>
             <img src={src} alt="Full-size post" className="block max-h-[82dvh] max-w-[calc(90vw-0.5rem)] object-contain" />
-            <MediaFindingOverlay findings={findings} fileId={fileId} showRuleTooltip />
+            <MediaFindingOverlay findings={findings} sourceRegions={sourceRegions} fileId={fileId} showRuleTooltip />
           </div>
         </button>
       </DialogContent>

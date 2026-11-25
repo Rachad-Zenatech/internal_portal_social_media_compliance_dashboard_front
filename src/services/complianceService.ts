@@ -205,6 +205,8 @@ export interface ComplianceCheckResponse {
   added_rule_sets?: { rule_set: string; because: string[] }[];
   /** The sources the post cites (links, "Source:" lines, attached documents) and what each showed about its claims. */
   source_checks?: SourceCheck[];
+  /** Printed source-attribution boxes detected in post images. */
+  source_regions?: ImageFindingRegion[];
 }
 
 /**
