@@ -104,12 +104,6 @@ export interface SentimentResult {
       follows: VoiceLine[];
       drifts: VoiceLine[];
     };
-    facts: {
-      verdict: "CHECKS_OUT" | "NEEDS_FIX" | "UNVERIFIED" | "NO_CLAIMS";
-      summary: string;
-      claims: (EntryRef & { claim: string; result: "MATCHES" | "CONFLICTS" | "NO_FACT"; note: string; improvement?: string | null })[];
-      fix?: string | null;
-    };
     platform_norms: {
       verdict: "FITS" | "MOSTLY_FITS" | "NEEDS_WORK" | "NO_NORMS";
       summary: string;

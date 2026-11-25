@@ -117,7 +117,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
-- src/components/submissions/ContextReportView.tsx (59 lines) - context report view (components submissions)
+- src/components/submissions/ContextReportView.tsx (57 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
 - src/components/submissions/DelegateReview.tsx (157 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
@@ -175,7 +175,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
 - src/components/submissions/ScoreBreakdown.tsx (95 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
-- src/components/submissions/SentimentPanel.tsx (1260 lines) - sentiment panel (components submissions)
+- src/components/submissions/SentimentPanel.tsx (1259 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (66 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
 - src/components/submissions/SourceChecks.tsx (294 lines) - source checks (components submissions)
 - src/components/submissions/SourceLinksField.tsx (389 lines) - source links field (components submissions)
@@ -277,7 +277,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
 - src/lib/contentCalendar.ts (436 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
-- src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
+- src/lib/contextFeedback.ts (49 lines) - context feedback (lib)
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
@@ -294,7 +294,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/postSteps.ts (106 lines) - post steps (lib)
 - src/lib/replaceQuote.ts (71 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
-- src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
+- src/lib/reviewerSentiment.ts (47 lines) - Preserve the creator's findings and put the most serious points first.
 - src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
 - src/lib/ruleSetPolicy.ts (30 lines) - Required rule sets follow the selected brand and target audience.
 - src/lib/sanitizeHtml.ts (59 lines) - Caption HTML sanitizer for the rich-text editor: keeps only the formatting the editor produces and drops everything else (scripts, event ...
@@ -412,7 +412,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/scriptDoc.ts (198 lines) - script doc (types)
 - src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - src/types/scriptQueue.ts (4 lines) - script queue (types)
-- src/types/sentiment.ts (225 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
+- src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - src/types/sourceLink.ts (64 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
 - src/types/submission.ts (561 lines) - submission (types)

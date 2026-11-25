@@ -1,4 +1,3 @@
-import type { SourceCheck } from "@/services/complianceService";
 import type { ReactNode } from "react";
 import { ChevronDown, ImageIcon, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -26,17 +25,16 @@ function CaptionVisualComparison({ visual }: { visual?: SentimentResult["visual_
   );
 }
 
-/** Keep the post beside four actionable context checks, with supporting material below. */
-export default function ContextReportView({ report, entries, post, findings = [], details, visual, sourceChecks = [] }: {
+/** Keep the post beside three actionable context checks, with supporting material below. */
+export default function ContextReportView({ report, entries, post, findings = [], details, visual }: {
   report?: Report | null;
   entries: ContextUse[];
   post?: ReactNode;
   findings?: SentimentFinding[];
   details?: ReactNode;
   visual?: SentimentResult["visual_alignment"];
-  sourceChecks?: SourceCheck[];
 }) {
-  const cards = report ? contextFeedbackCards(report, findings, sourceChecks) : [];
+  const cards = report ? contextFeedbackCards(report, findings) : [];
   const layout = post ? "flex flex-col items-start gap-4 xl:flex-row" : "space-y-4";
   return (
     <section className="space-y-4" aria-label="Messaging context feedback">

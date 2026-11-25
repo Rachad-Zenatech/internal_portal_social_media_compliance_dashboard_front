@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ContextReportView.tsx (59 lines) - context report view (components submissions)
-- `Report` (type) L10
-- `CaptionVisualComparison` (function) L12
-- `ContextReportView` (export function) L30 - Keep the post beside four actionable context checks, with supporting material below.
+## src/components/submissions/ContextReportView.tsx (57 lines) - context report view (components submissions)
+- `Report` (type) L9
+- `CaptionVisualComparison` (function) L11
+- `ContextReportView` (export function) L29 - Keep the post beside three actionable context checks, with supporting material below.

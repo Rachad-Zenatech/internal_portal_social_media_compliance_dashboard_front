@@ -190,7 +190,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/types/scriptQueue.ts (4 lines) - script queue (types)
 - `ScriptQueueSummary` (export type) L3
 
-## src/types/sentiment.ts (225 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
+## src/types/sentiment.ts (219 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - `SentimentLevel` (export type) L3
 - `SentimentAssessment` (export type) L4
 - `SentimentStatus` (export type) L6 - SCHEDULED: stopped by Gemini's daily limit, set to run again once it resets (retry_at).
@@ -202,12 +202,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `VoiceLine` (export interface) L59
 - `ContextUse` (export interface) L67 - A Messaging Context entry and what the analysis did with it (the transparency table).
 - `SentimentResult` (export interface) L79
-- `SentimentAnalysis` (export interface) L144
-- `SentimentComparison` (export interface) L176
-- `FindingFeedback` (export interface) L190
-- `SentimentEvalCase` (export interface) L198 - A reviewer-saved test case (re-run by scripts/sentiment_eval.py after prompt or model changes).
-- `AiFeatureUsage` (export interface) L212 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
-- `AiUsage` (export type) L224
+- `SentimentAnalysis` (export interface) L138
+- `SentimentComparison` (export interface) L170
+- `FindingFeedback` (export interface) L184
+- `SentimentEvalCase` (export interface) L192 - A reviewer-saved test case (re-run by scripts/sentiment_eval.py after prompt or model changes).
+- `AiFeatureUsage` (export interface) L206 - AI usage left in the rolling 24-hour window (GET /api/submissions/ai-usage).
+- `AiUsage` (export type) L218
 
 ## src/types/sourceLink.ts (64 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - `SubmissionSourceFields` (export interface) L1

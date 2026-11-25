@@ -27,7 +27,6 @@ export function sentimentContext(result: SentimentResult): { label: string; text
   const report = result.context_report;
   const context = [
     { label: "Brand voice", text: report?.brand_voice.summary ?? result.brand_alignment.explanation },
-    { label: "Claims and facts", text: report?.facts.summary },
     { label: "Platform fit", text: report?.platform_norms.summary },
     { label: "Audience fit", text: report?.audiences.summary },
     { label: "Visuals and caption", text: result.visual_alignment?.explanation },
@@ -43,6 +42,5 @@ export function sentimentWatchouts(result: SentimentResult): { label: string; te
     .map((audience) => ({ label: audience.audience, text: audience.likely_reading }));
   if (result.visual_alignment?.verdict === "MISMATCH") items.push({ label: "Visuals and caption", text: result.visual_alignment.explanation });
   if (result.audio?.fits_message === false) items.push({ label: "Audio", text: result.audio.explanation || "Check whether the audio fits the message." });
-  if (result.context_report?.facts.verdict === "NEEDS_FIX") items.push({ label: "Claims and facts", text: result.context_report.facts.fix || result.context_report.facts.summary });
   return items;
 }

@@ -18,7 +18,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/submissions/SentimentPanel.tsx": {
-      "max_lines": 1259,
+      "max_lines": 1258,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/components/video/VideoUploadQueueDrawer.tsx": {

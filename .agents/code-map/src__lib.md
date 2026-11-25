@@ -91,16 +91,15 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `recordSproutSend` (export function) L426
 - `clearSproutSends` (export function) L433
 
-## src/lib/contextFeedback.ts (67 lines) - context feedback (lib)
-- `MessagingReport` (export type) L5
-- `ContextFeedback` (export type) L6
-- `ContextCard` (export type) L7
-- `suggestedEdit` (function) L9
-- `brandCard` (function) L15
-- `factsCard` (function) L25
-- `platformCard` (function) L41
-- `audienceCard` (function) L52
-- `contextFeedbackCards` (export function) L63 - Each card leads with an observed issue and its fix, rather than a generic assessment.
+## src/lib/contextFeedback.ts (49 lines) - context feedback (lib)
+- `MessagingReport` (export type) L3
+- `ContextFeedback` (export type) L4
+- `ContextCard` (export type) L5
+- `suggestedEdit` (function) L7
+- `brandCard` (function) L13
+- `platformCard` (function) L23
+- `audienceCard` (function) L34
+- `contextFeedbackCards` (export function) L45 - Each card leads with an observed issue and its fix, rather than a generic assessment.
 
 ## src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - `claimKey` (export function) L5
@@ -210,13 +209,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
 - `reviewSendScore` (export function) L5 - A routing threshold only: pending requests never change the actual approval score.
 
-## src/lib/reviewerSentiment.ts (49 lines) - Preserve the creator's findings and put the most serious points first.
+## src/lib/reviewerSentiment.ts (47 lines) - Preserve the creator's findings and put the most serious points first.
 - `REVIEW_ASSESSMENTS` (export const) L3
 - `readableSentiment` (export function) L8
 - `prioritiseSentiment` (export function) L14 - Preserve the creator's findings and put the most serious points first.
 - `sentimentBrandFit` (export function) L19
 - `sentimentContext` (export function) L26 - Brief supporting context, using the same saved result the creator sees.
-- `sentimentWatchouts` (export function) L41 - Keep important audience and media caveats visible without expanding the full report.
+- `sentimentWatchouts` (export function) L40 - Keep important audience and media caveats visible without expanding the full report.
 
 ## src/lib/revisionSteps.ts (16 lines) - revision steps (lib)
 - `CreatorStepKey` (export type) L4

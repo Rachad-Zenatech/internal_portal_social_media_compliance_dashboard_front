@@ -1,5 +1,3 @@
-import type { SourceCheck } from "@/services/complianceService";
-import { claimKey, contextSourceFacts } from "@/lib/contextSourceFacts";
 import type { SentimentFinding, SentimentResult } from "@/types/sentiment";
 
 export type MessagingReport = NonNullable<SentimentResult["context_report"]>;
@@ -20,22 +18,6 @@ function brandCard(report: MessagingReport, findings: SentimentFinding[]): Conte
   const positive = voice.follows.map((line) => ({ title: "Works well", evidence: line.quote, reason: line.why, reference: line.title, attention: false }));
   const missing = voice.verdict === "NO_GUIDE";
   return { key: "brand", title: "Brand voice", status: missing ? "missing" : drifts.length ? "attention" : "good", label: missing ? "No voice guide" : drifts.length ? "Needs attention" : "Fits your voice", items: [...drifts, ...positive], empty: missing ? "No brand voice guide was available for this check. Add your guide to assess this post against it." : voice.summary };
-}
-
-function factsCard(report: MessagingReport, checks: SourceCheck[]): ContextCard {
-  const facts = report.facts;
-  const sourceItems = contextSourceFacts(checks);
-  const supported = new Set(sourceItems.filter((item) => !item.attention).map((item) => claimKey(item.evidence ?? "")));
-  const contextItems: ContextFeedback[] = facts.claims.filter((claim) => !(claim.result === "NO_FACT" && supported.has(claimKey(claim.claim)))).map((claim) => ({
-    title: claim.result === "CONFLICTS" ? "Conflicts with facts on file" : claim.result === "NO_FACT" ? "Needs a source" : "Supported by your facts",
-    evidence: claim.claim, reason: claim.note, reference: claim.title,
-    improvement: claim.result === "MATCHES" ? undefined : claim.improvement || (claim.result === "CONFLICTS" ? facts.fix : "Add a source that supports the quoted claim."),
-    attention: claim.result !== "MATCHES",
-  }));
-  const sourceKeys = new Set(sourceItems.map((item) => claimKey(item.evidence ?? "")));
-  const items = [...sourceItems, ...contextItems.filter((item) => item.attention || !sourceKeys.has(claimKey(item.evidence ?? "")))];
-  const attention = items.some((item) => item.attention);
-  return { key: "facts", title: "Facts", status: attention ? "attention" : items.length ? "good" : "neutral", label: attention ? "Check these claims" : items.length ? "Claims supported" : "No claim results saved", items, empty: "This sentiment run saved no claim-by-claim results. Run the compliance check to compare claims with newsroom material and your cited sources." };
 }
 
 function platformCard(report: MessagingReport, findings: SentimentFinding[]): ContextCard {
@@ -60,7 +42,7 @@ function audienceCard(report: MessagingReport, findings: SentimentFinding[]): Co
 }
 
 /** Each card leads with an observed issue and its fix, rather than a generic assessment. */
-export function contextFeedbackCards(report: MessagingReport, findings: SentimentFinding[] = [], sourceChecks: SourceCheck[] = []): ContextCard[] {
-  const cards = [brandCard(report, findings), factsCard(report, sourceChecks), platformCard(report, findings), audienceCard(report, findings)];
+export function contextFeedbackCards(report: MessagingReport, findings: SentimentFinding[] = []): ContextCard[] {
+  const cards = [brandCard(report, findings), platformCard(report, findings), audienceCard(report, findings)];
   return cards.map((card) => ({ ...card, items: [...card.items].sort((a, b) => Number(b.attention) - Number(a.attention)) }));
 }

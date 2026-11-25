@@ -844,7 +844,6 @@ export default function SentimentPanel({
   beforeAnalyse,
   showTopicTrends = true,
   design = false,
-  sourceChecks = [],
   post,
   className = "",
 }: {
@@ -1085,7 +1084,7 @@ export default function SentimentPanel({
             {statusChain}
           </section>
           {result ? (
-            <ContextReportView report={result.context_report} visual={result.visual_alignment} sourceChecks={sourceChecks} entries={analysis?.context_entries ?? []} post={post} findings={result.findings}
+            <ContextReportView report={result.context_report} visual={result.visual_alignment} entries={analysis?.context_entries ?? []} post={post} findings={result.findings}
               details={<><DesignRest r={result} /><DesignAside analysis={analysis} result={result} /></>} />
           ) : post}
         </div>
