@@ -48,6 +48,7 @@ export default function CaptionSuggester({
   ensureSubmissionId,
   maxChars,
   hasCaption,
+  contentLabel = "caption",
   onUse,
   onClose,
 }: {
@@ -56,6 +57,7 @@ export default function CaptionSuggester({
   ensureSubmissionId: () => Promise<string | null>;
   maxChars: number;
   hasCaption: boolean;
+  contentLabel?: "post" | "caption";
   onUse: (caption: string) => void;
   onClose: () => void;
 }) {
@@ -74,14 +76,13 @@ export default function CaptionSuggester({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-            <Sparkles className="w-4 h-4 text-violet-500" /> Suggest a caption
+            <Sparkles className="w-4 h-4 text-violet-500" /> Suggest a {contentLabel}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Written from your post's images, video and title, in the brand's voice, and checked against the rulebook. Only
-            says what the post shows, so add any facts it leaves out.
+            Written in your brand's voice and checked against the rulebook. Review all facts before using a suggestion.
           </p>
         </div>
-        <button type="button" onClick={onClose} className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Close caption suggestions">
+        <button type="button" onClick={onClose} className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Close ${contentLabel} suggestions`}>
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -97,18 +98,18 @@ export default function CaptionSuggester({
         />
         <Button size="sm" className="h-8 text-xs gap-1.5 shrink-0" disabled={suggest.isPending || outOfRuns} onClick={run}>
           {suggest.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-          {result ? "Suggest again" : "Suggest captions"}
+          {result ? "Suggest again" : `Suggest ${contentLabel === "post" ? "post drafts" : "captions"}`}
         </Button>
       </div>
       {usage?.remaining != null && (
         <p className={`text-[10px] tabular-nums ${outOfRuns ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}`}>
-          {outOfRuns ? "Daily limit for caption suggestions reached" : `${usage.remaining} suggestion runs left today`}
+          {outOfRuns ? `Daily limit for ${contentLabel} suggestions reached` : `${usage.remaining} suggestion runs left today`}
         </p>
       )}
 
       {suggest.isPending && (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Watching your post and drafting captions. Videos can take up to a minute...
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {contentLabel === "post" ? "Drafting post suggestions..." : "Watching your post and drafting captions. Videos can take up to a minute..."}
         </p>
       )}
 
@@ -127,7 +128,7 @@ export default function CaptionSuggester({
                 key={i}
                 s={s}
                 onUse={() => {
-                  if (hasCaption && !window.confirm("Replace the caption you've written with this one?")) return;
+                  if (hasCaption && !window.confirm(`Replace the ${contentLabel} you've written with this one?`)) return;
                   onUse(s.hashtags.length ? `${s.text}\n\n${s.hashtags.join(" ")}` : s.text);
                 }}
               />

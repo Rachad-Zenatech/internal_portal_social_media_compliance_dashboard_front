@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/CaptionSuggester.tsx (144 lines) - caption suggester (components submissions)
+## src/components/submissions/CaptionSuggester.tsx (145 lines) - caption suggester (components submissions)
 - `SuggestionCard` (function) L15
 - `CaptionSuggester` (export function) L46 - Suggest a caption": three captions drafted from the post itself (images, video transcript, title), in the  brand's voice and already run ...

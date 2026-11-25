@@ -9,7 +9,7 @@ test("Text Post is available and needs no media", () => {
 
 test("Text Post rejects images, video, scripts, and supporting documents", () => {
   for (const [name, type] of [["photo.jpg", "image/jpeg"], ["clip.mp4", "video/mp4"], ["script.txt", "text/plain"], ["source.pdf", "application/pdf"]]) {
-    assert.deepEqual(classifyFile({ name, type }, "TEXT_POST", false), { error: "Text posts use only a caption and source links." });
+    assert.deepEqual(classifyFile({ name, type }, "TEXT_POST", false), { error: "Text posts use only post text and source links." });
   }
 });
 
@@ -19,4 +19,13 @@ test("Existing social, carousel, and video upload classification remains unchang
   assert.deepEqual(classifyFile(image, "CAROUSEL", true), { kind: "MAIN" });
   assert.deepEqual(classifyFile({ name: "clip.mp4", type: "video/mp4" }, "VIDEO", false), { kind: "MAIN" });
   assert.deepEqual(classifyFile({ name: "source.pdf", type: "application/pdf" }, "SOCIAL_POST", false), { kind: "SUPPORTING" });
+});
+
+
+test("script documents are scripts only for video posts", () => {
+  const script = { name: "launch-script.docx", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
+  assert.deepEqual(classifyFile(script, "VIDEO", false), { kind: "SCRIPT" });
+  for (const type of ["IMAGE", "CAROUSEL", "SOCIAL_POST", "AD"]) {
+    assert.deepEqual(classifyFile(script, type, false), { kind: "SUPPORTING" });
+  }
 });

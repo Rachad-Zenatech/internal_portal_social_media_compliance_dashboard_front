@@ -20,11 +20,12 @@ interface PostTypePickerProps {
 }
 
 export default function PostTypePicker({ value, options, description, disabled, onChange, scriptMode }: PostTypePickerProps) {
+  const selectedValue = value === "SOCIAL_POST" && options.some(option => option.value === "IMAGE") ? "IMAGE" : value;
   return (
     <div className="space-y-2">
       <Label className="text-[13px] font-semibold text-foreground">What kind of post is it?</Label>
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Content type">
-        {options.map((option) => <PostTypeButton key={option.value} option={option} selected={value === option.value} disabled={disabled} onChange={onChange} />)}
+        {options.map((option) => <PostTypeButton key={option.value} option={option} selected={selectedValue === option.value} disabled={disabled} onChange={onChange} />)}
       </div>
       <p className="text-xs text-muted-foreground">{description}</p>
       {value === "VIDEO" && scriptMode && <VideoScriptModeCheckbox {...scriptMode} disabled={disabled || scriptMode.disabled} />}

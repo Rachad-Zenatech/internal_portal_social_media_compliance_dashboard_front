@@ -13,6 +13,7 @@ export default function PlatformCaptions({
   mainCaption,
   limitFor,
   readOnly = false,
+  contentLabel = "caption",
   onChange,
 }: {
   platforms: string[];
@@ -21,6 +22,7 @@ export default function PlatformCaptions({
   mainCaption: string;
   limitFor: (platform: string) => number | undefined;
   readOnly?: boolean;
+  contentLabel?: "post" | "caption";
   onChange: (next: Record<string, string>) => void;
 }) {
   const own = platforms.filter((p) => p in captions);
@@ -34,11 +36,11 @@ export default function PlatformCaptions({
   return (
     <div className="mt-4 rounded-lg border border-border/80">
       <div className="border-b border-border/70 bg-muted/30 px-3.5 py-2.5">
-        <p className="text-sm font-semibold text-foreground">A different caption for each platform</p>
+        <p className="text-sm font-semibold text-foreground">A different {contentLabel} for each platform</p>
         <p className="text-xs text-muted-foreground">
           {own.length
-            ? `${own.length} of ${platforms.length} platforms have their own caption; the rest use the one above.`
-            : "Every platform uses the caption above. Write one for a platform if it needs its own wording or length."}
+            ? `${own.length} of ${platforms.length} platforms have their own ${contentLabel}; the rest use the one above.`
+            : `Every platform uses the ${contentLabel} above. Write one for a platform if it needs its own wording or length.`}
         </p>
       </div>
       <ul className="divide-y divide-border/70">
@@ -56,13 +58,13 @@ export default function PlatformCaptions({
                   <PlatformIcon platform={p as SocialPlatform} className="h-4 w-4 shrink-0" />
                   <span className="text-sm font-medium text-foreground">{label}</span>
                   <span className={`text-xs ${custom ? "font-semibold text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}>
-                    {custom ? "Its own caption" : "Uses the main caption"}
+                    {custom ? `Its own ${contentLabel}` : `Uses the main ${contentLabel}`}
                   </span>
                 </div>
                 {!readOnly &&
                   (custom ? (
                     <Button type="button" variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => drop(p)}>
-                      <Undo2 className="h-3.5 w-3.5" /> Use the main caption
+                      <Undo2 className="h-3.5 w-3.5" /> Use the main {contentLabel}
                     </Button>
                   ) : (
                     <Button type="button" variant="outline" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => set(p, mainCaption.trim())}>
@@ -75,8 +77,8 @@ export default function PlatformCaptions({
                   value={text}
                   readOnly={readOnly}
                   onChange={(e) => set(p, e.target.value)}
-                  placeholder={`The caption for ${label}`}
-                  aria-label={`Caption for ${label}`}
+                  placeholder={`The ${contentLabel} for ${label}`}
+                  aria-label={`${contentLabel} for ${label}`}
                   rows={4}
                   className={`mt-2 w-full resize-y rounded-md border bg-card px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
                     tooLong || !text.trim() ? "border-red-500" : "border-input"
@@ -89,7 +91,7 @@ export default function PlatformCaptions({
                 </p>
               )}
               {custom && !text.trim() && (
-                <p className="mt-1 text-[11px] text-red-600">Write the caption, or switch back to the main one.</p>
+                <p className="mt-1 text-[11px] text-red-600">Write the {contentLabel}, or switch back to the main one.</p>
               )}
             </li>
           );

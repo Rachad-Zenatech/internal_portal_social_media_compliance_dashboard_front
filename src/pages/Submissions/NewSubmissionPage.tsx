@@ -1,4 +1,4 @@
-import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
+import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, EDITOR_COPY, UPLOAD_FORMAT_HINTS, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
 import SubmissionReviewUpdates from "@/components/submissions/SubmissionReviewUpdates";
 import { SUBMISSION_REQUIRED_LABELS as MISSING_LABEL } from "@/lib/submissionRequiredFields";
 import { resolveRuleSets, ruleSetOptions } from "@/lib/ruleSetPolicy";
@@ -367,6 +367,8 @@ export default function NewSubmissionPage() {
   const brandName = brands.map((c) => options?.brands.find((b) => b.code === c)?.name ?? c).join(", ") || undefined;
   const audienceLabel = audienceNames(audiences, options?.audiences) ?? undefined;
   const mainUpload = MAIN_UPLOAD[contentType];
+  const editorCopy = EDITOR_COPY[contentType === "TEXT_POST" ? "TEXT_POST" : "DEFAULT"];
+  const requiredLabels: Record<string, string> = { ...MISSING_LABEL, caption: editorCopy.title };
   const ContentTypeIcon = CONTENT_TYPES.find((c) => c.value === contentType)!.icon;
 
   const scriptFirst = contentType === "VIDEO" && scriptRequired;
@@ -848,7 +850,7 @@ export default function NewSubmissionPage() {
   const SENDING_FIELDS = ["reviewer_ids", "approval_needed_by", "publish_at"];
   const detailsMissing = (Object.entries(clientMissing) as [keyof typeof clientMissing, boolean][])
     .filter(([key, missing]) => missing && !SENDING_FIELDS.includes(key))
-    .map(([key]) => MISSING_LABEL[key] ?? key);
+    .map(([key]) => requiredLabels[key] ?? key);
   const detailsComplete = detailsMissing.length === 0;
   const gated = !onDetails && !videoLocked && !detailsComplete;
   const toolView = (step: PostStepKey) => stepView === step && !gated;
@@ -915,7 +917,7 @@ export default function NewSubmissionPage() {
       return;
     }
     if (!title.trim() && !caption.trim()) {
-      toast.error("Add a title or caption before running the compliance check.");
+      toast.error(`Add a title or ${editorCopy.noun} before running the compliance check.`);
       return;
     }
     const started = Date.now();
@@ -1014,7 +1016,7 @@ export default function NewSubmissionPage() {
     if (missingNow.length) {
       setShowErrors(true);
       setShowAllDetails(true);
-      toast.error(`Please add: ${missingNow.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
+      toast.error(`Please add: ${missingNow.map((m) => (m === "caption" ? editorCopy.title : MISSING_LABELS[m] || m)).join(", ")}.`);
       return;
     }
     if (videoLocked) {
@@ -1120,7 +1122,7 @@ export default function NewSubmissionPage() {
         setServerMissing(missing);
         setShowErrors(true);
         setShowAllDetails(true);
-        toast.error(`Please add: ${missing.map((m) => MISSING_LABELS[m] || m).join(", ")}.`);
+        toast.error(`Please add: ${missing.map((m) => (m === "caption" ? editorCopy.title : MISSING_LABELS[m] || m)).join(", ")}.`);
       } else if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // The saved post repeats one already sent (the list on the page may have been a save behind).
         const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
@@ -1667,7 +1669,7 @@ export default function NewSubmissionPage() {
                   description={
                     videoLocked
                       ? "Video posts start with the script. Upload it and send it for review; the video and Canva upload open once it's approved."
-                      : "Upload your image or video, and any documents that back up your claims."
+                      : `Upload ${mainUpload.main} and any documents that back up your claims.`
                   }
                 >
                   {videoLocked && <VideoScriptTemplate />}
@@ -1749,7 +1751,7 @@ export default function NewSubmissionPage() {
                         </span>
                         {!needScriptFirst && (
                           <span className="text-[11px] text-muted-foreground mt-1">
-                            Video (MP4, MOV, AVI, WEBM up to 2 GB) · Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)
+                            {UPLOAD_FORMAT_HINTS[contentType]}
                           </span>
                         )}
                       </div>
@@ -1771,24 +1773,6 @@ export default function NewSubmissionPage() {
                         <span className="text-xs text-muted-foreground">Pick a design from your Canva account. It's reviewed like any upload.</span>
                         <span className={`mt-1 inline-flex items-center rounded-md px-3 py-1.5 text-xs font-semibold ${CANVA_PURPLE}`}>Choose a design</span>
                       </button>
-                    </div>
-                  )}
-                  {contentType !== "VIDEO" && (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 gap-1.5 text-xs"
-                        onClick={() => scriptInputRef.current?.click()}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        {files.some((f) => f.kind === "SCRIPT") ? "Replace the script" : "Add a script"}
-                      </Button>
-                      <span>
-                        PDF, Word (.docx), .txt or .md. Its text is checked against the rulebook with the rest of the post. Files
-                        with "script" in the name are picked up as the script automatically.
-                      </span>
                     </div>
                   )}
                   {isMissing("main_file") && (
@@ -1868,8 +1852,8 @@ export default function NewSubmissionPage() {
             <div ref={captionSectionRef} className={`scroll-mt-4 ${onDetails ? "" : "hidden"}`}>
               <Section
                 step={4}
-                title="Caption"
-                description="Required. Write or paste your caption, script, or copy, or have one suggested from your post."
+                title={editorCopy.title}
+                description={editorCopy.description}
               >
                 <div className={`rounded-lg border ${isMissing("caption") ? "border-red-500" : "border-input"} overflow-hidden`}>
                   <div className="flex flex-wrap items-center gap-0.5 border-b border-border/70 bg-muted/30 px-2 py-1.5">
@@ -1920,7 +1904,7 @@ export default function NewSubmissionPage() {
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setSuggesterOpen(true)}
                     >
-                      <Sparkles className="w-3.5 h-3.5" /> Suggest a caption
+                      <Sparkles className="w-3.5 h-3.5" /> {editorCopy.suggest}
                     </Button>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -1956,8 +1940,8 @@ export default function NewSubmissionPage() {
                     suppressContentEditableWarning
                     role="textbox"
                     aria-multiline="true"
-                    aria-label="Caption or copy"
-                    data-placeholder="Write your caption, script, or copy here..."
+                    aria-label={editorCopy.title}
+                    data-placeholder={editorCopy.placeholder}
                     onInput={(e) => {
                       setCaption(e.currentTarget.innerText);
                       markEdited();
@@ -1996,8 +1980,7 @@ export default function NewSubmissionPage() {
                 />
                 {isMissing("caption") && (
                   <p className="text-[11px] text-red-600">
-                    Add a caption. It's what the compliance score and sentiment analysis read first; you can have one suggested from
-                    your post.
+                    {editorCopy.missing}
                   </p>
                 )}
                 {suggesterOpen && (
@@ -2005,7 +1988,7 @@ export default function NewSubmissionPage() {
                     submissionId={submissionId}
                     ensureSubmissionId={() => save({ force: true })}
                     maxChars={charLimit}
-                    hasCaption={Boolean(caption.trim())}
+                    hasCaption={Boolean(caption.trim())} contentLabel={editorCopy.noun}
                     onUse={applySuggestedCaption}
                     onClose={() => setSuggesterOpen(false)}
                   />
@@ -2281,7 +2264,7 @@ export default function NewSubmissionPage() {
                 </p>
               </div>
               <ul className="space-y-1.5 px-5 pb-5">
-                {Object.entries(MISSING_LABEL)
+                {Object.entries(requiredLabels)
                   .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "ai_generated_images" || hasPostImages(files)) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
                   .map(([key, label]) => {
                     const missing = (clientMissing as Record<string, boolean>)[key];

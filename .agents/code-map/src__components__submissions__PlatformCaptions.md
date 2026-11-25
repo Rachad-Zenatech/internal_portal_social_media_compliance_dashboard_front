@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PlatformCaptions.tsx (101 lines) - Platform → its own caption (plain text).
+## src/components/submissions/PlatformCaptions.tsx (103 lines) - Platform → its own caption (plain text).
 - `PlatformCaptions` (export function) L10 - A post going to more than one platform: each platform uses the main caption unless the creator writes it its own  (shorter for X, more fo...

@@ -175,18 +175,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `postSuggestionState` (export function) L5
 - `suggestionTimeLabel` (export function) L14
 
-## src/lib/postContentTypes.ts (91 lines) - Static presentation config (allowed values themselves come from the API)
+## src/lib/postContentTypes.ts (115 lines) - Static presentation config (allowed values themselves come from the API)
 - `CONTENT_TYPES` (export const) L5 - Static presentation config (allowed values themselves come from the API)
 - `VISIBLE_CONTENT_TYPES` (export const) L14
 - `MAIN_UPLOAD` (export const) L16
 - `MAIN_REQUIRED` (export const) L26 - Types whose main file is required: there's nothing to review without it.
 - `ADS_RULE_SET` (export const) L28 - Selected automatically with the Paid Ad type.
-- `ACCEPT_ALL` (export const) L30
-- `SCRIPT_RE` (export const) L36 - Files the check can read as a script.
-- `ACCEPT_SCRIPT` (export const) L37
-- `classifyFile` (export function) L43 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
-- `CONTENT_TYPE_BADGES` (export const) L74
-- `CONTENT_TYPE_LABELS` (export const) L84
+- `UPLOAD_FORMAT_HINTS` (export const) L32
+- `ACCEPT_ALL` (export const) L38
+- `SCRIPT_RE` (export const) L44 - Files the check can read as a script.
+- `ACCEPT_SCRIPT` (export const) L45
+- `classifyFile` (export function) L51 - Decide what each dropped file is: the main content asset, an extra image, or a supporting document.
+- `CONTENT_TYPE_BADGES` (export const) L82
+- `CONTENT_TYPE_LABELS` (export const) L92
+- `EDITOR_COPY` (export const) L101
 
 ## src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
 - `unique` (function) L10
@@ -227,6 +229,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CreatorStepKey` (export type) L4
 - `REVISION_STEPS` (export const) L5
 - `creatorPreparationSteps` (export function) L13
+
+## src/lib/rule18Presentation.ts (27 lines) - Group evidence findings without changing the stored claims or their penalties.
+- `isRule18` (export function) L3
+- `groupRule18` (export function) L8 - Group evidence findings without changing the stored claims or their penalties.
+- `rule18Penalty` (export function) L19
+- `previewFindings` (export function) L24 - Evidence regions appear only while that individual claim is selected.
 
 ## src/lib/ruleSetPolicy.ts (30 lines) - Required rule sets follow the selected brand and target audience.
 - `PUBLIC_DISCLOSURE` (export const) L2 - Required rule sets follow the selected brand and target audience.
@@ -284,13 +292,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
 - `holdTextHighlight` (export function) L4 - Highlight selected comment wording until its owner explicitly clears it.
 
-## src/lib/sourceCheckVisibility.ts (12 lines) - Automatic newsroom summaries only surface corroboration or an explicit conflict.
-- `visibleSourceChecks` (export function) L4 - Automatic newsroom summaries only surface corroboration or an explicit conflict.
+## src/lib/sourceCheckVisibility.ts (12 lines) - Show verified newsroom evidence and full-article read failures.
+- `visibleSourceChecks` (export function) L4 - Show verified newsroom evidence and full-article read failures.
+
+## src/lib/sourceClaimGroups.ts (33 lines) - An omission in an unrelated article is not a finding about that article.
+- `UnmatchedSourceClaim` (export type) L5
+- `assertionKey` (const) L6
+- `sourceClaimGroups` (export function) L9 - An omission in an unrelated article is not a finding about that article.
 
 ## src/lib/sourceCoverage.ts (35 lines) - Match the backend assertion comparison: ignore spacing and list separators,
 - `CoveredSourceClaim` (export type) L3
 - `CoveredSourceCheck` (export type) L4
-- `key` (const) L5
+- `sourceClaimKey` (export const) L5
 - `sourceCoverageCounts` (export function) L12
 - `withSourceCoverage` (export function) L22 - Keep each source's verdict truthful while showing when another attachment covers the claim.
 

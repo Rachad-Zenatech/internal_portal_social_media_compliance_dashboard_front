@@ -29,6 +29,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__CaptionExtras.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CaptionSignalsBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CaptionSuggester.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__CheckAttemptList.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CheckCoverage.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CheckProgress.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ClaimVsSource.md | 1 | 1 KB |
@@ -51,6 +52,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__FlaggedVideo.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FormFields.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FormattedCaptionPreview.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__GroupedComplianceFindings.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__HashtagPicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageAnnotator.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImagePersonField.md | 1 | 1 KB |
@@ -93,6 +95,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__RevisionPublishActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionTimelinePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionWorkspace.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__Rule18ScoreRow.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RuleNumberBadge.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ScanImageButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ScoreBreakdown.md | 1 | 1 KB |
@@ -111,10 +114,12 @@ to find the right file.
 | .agents/code-map/src__components__submissions__TextPostRevisionWorkspace.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__UnavailableCompliance.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__UnmatchedSourceClaims.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoScriptModeCheckbox.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoScriptTemplate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoTranscript.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ZoomableImageDialog.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__checkProgressPresentation.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__commentParts.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__sourceConfirmationsContext.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__submissionUi.md | 1 | 3 KB |
@@ -123,7 +128,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 42 | 13 KB |
-| .agents/code-map/src__lib.md | 50 | 22 KB |
+| .agents/code-map/src__lib.md | 52 | 23 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -138,4 +143,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
 | .agents/code-map/src__services.md | 19 | 7 KB |
-| .agents/code-map/src__types.md | 31 | 17 KB |
+| .agents/code-map/src__types.md | 32 | 17 KB |

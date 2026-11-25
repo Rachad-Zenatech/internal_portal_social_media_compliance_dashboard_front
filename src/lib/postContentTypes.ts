@@ -3,15 +3,15 @@ import type { ContentType, SubmissionFileKind } from "@/types/submission";
 
 // Static presentation config (allowed values themselves come from the API)
 export const CONTENT_TYPES: { value: ContentType; label: string; description: string; icon: LucideIcon }[] = [
+  { value: "IMAGE", label: "Image", description: "Single image with a caption and sources", icon: ImageIcon },
   { value: "VIDEO", label: "Video", description: "TikTok, YouTube, LinkedIn, etc.", icon: Video },
   { value: "SOCIAL_POST", label: "Social Post", description: "Single image social post", icon: MessageSquareText },
-  { value: "TEXT_POST", label: "Text Post", description: "Caption and sources, without images or video", icon: FileText },
+  { value: "TEXT_POST", label: "Text Post", description: "Post text and source links, without images or video", icon: FileText },
   { value: "CAROUSEL", label: "Carousel", description: "Multi-image post", icon: GalleryHorizontalEnd },
-  { value: "IMAGE", label: "Image", description: "Single image asset", icon: ImageIcon },
   { value: "BLOG", label: "Blog / Article", description: "Long-form content", icon: FileText },
   { value: "AD", label: "Paid Ad", description: "Sponsored post or ad creative", icon: Megaphone },
 ];
-export const VISIBLE_CONTENT_TYPES = CONTENT_TYPES.filter(({ value }) => value !== "BLOG" && value !== "AD");
+export const VISIBLE_CONTENT_TYPES = CONTENT_TYPES.filter(({ value }) => value !== "SOCIAL_POST" && value !== "BLOG" && value !== "AD");
 
 export const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
   VIDEO: { main: "your video" },
@@ -26,6 +26,14 @@ export const MAIN_UPLOAD: Record<ContentType, { main: string }> = {
 export const MAIN_REQUIRED: ContentType[] = ["VIDEO", "IMAGE", "CAROUSEL", "AD"];
 /** Selected automatically with the Paid Ad type. */
 export const ADS_RULE_SET = "Paid Social Ads";
+
+const IMAGE_UPLOAD_FORMATS = "Images (JPG, PNG, WebP) · Documents (PDF, DOC, TXT, XLSX, ZIP)";
+const VIDEO_UPLOAD_FORMATS = "Video (MP4, MOV, AVI, WEBM up to 2 GB) · " + IMAGE_UPLOAD_FORMATS;
+export const UPLOAD_FORMAT_HINTS: Record<ContentType, string> = {
+  IMAGE: IMAGE_UPLOAD_FORMATS, CAROUSEL: IMAGE_UPLOAD_FORMATS,
+  VIDEO: VIDEO_UPLOAD_FORMATS, SOCIAL_POST: VIDEO_UPLOAD_FORMATS, AD: VIDEO_UPLOAD_FORMATS,
+  BLOG: "Documents (PDF, DOC, DOCX, TXT, MD)", TEXT_POST: "Post text and source links",
+};
 
 export const ACCEPT_ALL = "video/*,image/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.pdf,.doc,.docx,.txt,.md,.xls,.xlsx,.csv,.zip,.ppt,.pptx";
 const VIDEO_RE = /\.(mp4|mov|avi|webm|mkv|m4v)$/i;
@@ -46,7 +54,7 @@ export function classifyFile(
   mainTaken: boolean,
   scriptTaken = false
 ): { kind: SubmissionFileKind } | { error: string } {
-  if (type === "TEXT_POST") return { error: "Text posts use only a caption and source links." };
+  if (type === "TEXT_POST") return { error: "Text posts use only post text and source links." };
   const name = file.name;
   const isVideo = VIDEO_RE.test(name) || file.type.startsWith("video/");
   const isImage = IMAGE_RE.test(name) || file.type.startsWith("image/");
@@ -61,12 +69,12 @@ export function classifyFile(
     return {
       error: mainTaken && (type === "VIDEO" || type === "SOCIAL_POST" || type === "AD")
         ? "only one video per submission. Remove the current one to replace it."
-        : "videos can only be added to Video, Social Post or Paid Ad submissions.",
+        : "Choose Video to upload a video.",
     };
   }
   if (isImage) return { kind: "IMAGE" };
-  // A document named as a script is the script (read into the compliance check); other documents are supporting.
-  if (SCRIPT_RE.test(name) && !scriptTaken && /script/i.test(name)) return { kind: "SCRIPT" };
+  // Only video posts use scripts; documents on other post types are supporting evidence.
+  if (type === "VIDEO" && SCRIPT_RE.test(name) && !scriptTaken && /script/i.test(name)) return { kind: "SCRIPT" };
   if (DOC_RE.test(name)) return { kind: "SUPPORTING" };
   return { error: "this file type isn't supported." };
 }
@@ -88,3 +96,19 @@ export const CONTENT_TYPE_LABELS: Record<string, string> = {
   IMAGE: "Image",
   BLOG: "Article",
 };
+
+
+export const EDITOR_COPY = {
+  TEXT_POST: {
+    title: "Post", noun: "post",
+    description: "Required. Write or paste your post, or have a draft suggested for you.",
+    placeholder: "Write your post here...", suggest: "Suggest a post",
+    missing: "Add your post. Compliance and sentiment analysis use this text.",
+  },
+  DEFAULT: {
+    title: "Caption", noun: "caption",
+    description: "Required. Write or paste your caption, or have one suggested for your post.",
+    placeholder: "Write your caption here...", suggest: "Suggest a caption",
+    missing: "Add a caption. Compliance and sentiment analysis use this text.",
+  },
+} as const;
