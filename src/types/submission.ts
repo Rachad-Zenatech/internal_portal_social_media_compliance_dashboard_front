@@ -1,3 +1,4 @@
+import type { CheckAttempt } from "@/types/checkAttempt";
 import type { PostApprovalSuggestionFields } from "./postApprovalSuggestions";
 import type { ReviewScoreFields } from "@/types/reviewScore";
 import type { ImageProvenance } from "@/types/imageProvenance";
@@ -261,12 +262,12 @@ export interface SubmissionSummary extends PostApprovalSuggestionFields, ReviewS
   due_at?: string | null;
   due_kind?: DueKind | null;
   latest_traffic_light?: "RED" | "YELLOW" | "GREEN" | null;
-  /** Null while the post is still being analysed (analysis_pending). */
+  /** Saved score, including provisional checks; null while initial analysis is pending or no score exists. */
   latest_score?: number | null;
   /** How many rulebook issues the latest check found; null while it's still being analysed. */
   issue_count?: number | null;
   analysis_pending?: boolean;
-  /** The AI review couldn't run for this post: no score, a message instead. */
+  /** Some AI checks did not finish; a saved provisional score may still be available. */
   ai_unavailable?: boolean;
   /** A sent script still being read and scored (PROCESSING), or one that couldn't be sent (FAILED, with why). */
   script_send_status?: "PROCESSING" | "FAILED" | null;
@@ -488,19 +489,7 @@ export interface SubmitResult {
 }
 
 /** One AI model call during a compliance check, as it starts and ends (a failed one is followed by a fallback). */
-export interface CheckAttempt {
-  id: string;
-  status: "RUNNING" | "OK" | "FAILED";
-  model: string;
-  /** Which step of the check made the call, e.g. COMPLIANCE_CHECK or CONTEXT_EVAL. */
-  feature: string;
-  attempt?: number | null;
-  tier?: string | null;
-  /** Why it failed: MODEL (retired or unknown), BUSY, QUOTA, KEY or OTHER. */
-  error_kind?: string | null;
-  error?: string | null;
-  duration_ms?: number;
-}
+export type { CheckAttempt };
 
 /** One Submission Details dropdown compared with an earlier post that has the same content and caption. */
 export interface DuplicateDetail {
