@@ -73,6 +73,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__PostTextChanges.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTextPreview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTextReview.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PostTextVersions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PostTypePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PrePublishMood.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ProcessLog.md | 1 | 1 KB |

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { usePostTextReview } from "@/hooks/usePostTextReview";
 import PostTextHistory, { PostTextChanges } from "./PostTextChanges";
+import PostTextVersions from "./PostTextVersions";
 
 export default function PostTextReview({ submissionId, allowEdit = false }: { submissionId: string; allowEdit?: boolean }) {
   const review = usePostTextReview(submissionId);
@@ -12,11 +13,12 @@ export default function PostTextReview({ submissionId, allowEdit = false }: { su
   return (
     <section className="space-y-3 rounded-xl border border-border p-4" aria-label="Post text edits">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Post text changes</h3>
+        <h3 className="text-sm font-semibold">Post text and version history</h3>
         {canEdit && !draft && <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={checking} onClick={edit}>Edit post text</Button><Button size="sm" variant="outline" disabled={checking} onClick={() => void recheck()}>{checking ? "Checking…" : "Run compliance check"}</Button></div>}
       </div>
       {draft && <TextReviewEditor text={text} base={draft.base.text} latest={query.data.text} conflict={conflict} disabled={saving || !canEdit} onChange={setText} />}
       {draft && <div className="flex gap-2"><Button size="sm" disabled={saving || !canEdit || !changed || !text.trim() || conflict} onClick={() => void save()}>{saving ? "Saving…" : "Save text changes"}</Button><Button size="sm" variant="outline" disabled={saving} onClick={cancel}>{conflict ? "Discard draft and load latest" : "Cancel"}</Button></div>}
+      <PostTextVersions text={query.data.text} edits={query.data.edits} />
       <PostTextHistory edits={query.data.edits} />
     </section>
   );

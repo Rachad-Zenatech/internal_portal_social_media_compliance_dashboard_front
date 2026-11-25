@@ -38,8 +38,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/compliance/context/KindTabs.tsx (65 lines) - The four kinds of context as tabs, each with how many entries it has.
 - src/components/compliance/context/RemoveEntryDialog.tsx (38 lines) - Asks before removing an entry, and points to turning it off instead.
 - src/components/compliance/context/kinds.ts (71 lines) - A value and its display name, as used by the brand, audience and platform pickers.
-- src/components/compliance/screener/CaptionChangeDialog.tsx (19 lines) - caption change dialog (components compliance screener)
-- src/components/compliance/screener/CaptionComparison.tsx (30 lines) - caption comparison (components compliance screener)
+- src/components/compliance/screener/CaptionChangeDialog.tsx (20 lines) - caption change dialog (components compliance screener)
+- src/components/compliance/screener/CaptionComparison.tsx (32 lines) - caption comparison (components compliance screener)
 - src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
 - src/components/compliance/screener/CaptionEditor.tsx (24 lines) - caption editor (components compliance screener)
 - src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
@@ -148,9 +148,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (102 lines) - lg: the dots grow on wide screens (the My posts rows).
-- src/components/submissions/PostTextChanges.tsx (34 lines) - post text changes (components submissions)
+- src/components/submissions/PostTextChanges.tsx (37 lines) - post text changes (components submissions)
 - src/components/submissions/PostTextPreview.tsx (24 lines) - A formatted script document, or the post's caption with its flagged words marked.
-- src/components/submissions/PostTextReview.tsx (36 lines) - post text review (components submissions)
+- src/components/submissions/PostTextReview.tsx (38 lines) - post text review (components submissions)
+- src/components/submissions/PostTextVersions.tsx (29 lines) - post text versions (components submissions)
 - src/components/submissions/PostTypePicker.tsx (54 lines) - post type picker (components submissions)
 - src/components/submissions/PrePublishMood.tsx (33 lines) - Optional final timing check for approved content immediately before publication.
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).

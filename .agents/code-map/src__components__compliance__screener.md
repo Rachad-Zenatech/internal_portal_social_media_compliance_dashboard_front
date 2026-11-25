@@ -4,10 +4,10 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/compliance/screener/CaptionChangeDialog.tsx (19 lines) - caption change dialog (components compliance screener)
+## src/components/compliance/screener/CaptionChangeDialog.tsx (20 lines) - caption change dialog (components compliance screener)
 - `CaptionChangeDialog` (export function) L5
 
-## src/components/compliance/screener/CaptionComparison.tsx (30 lines) - caption comparison (components compliance screener)
+## src/components/compliance/screener/CaptionComparison.tsx (32 lines) - caption comparison (components compliance screener)
 - `ComparisonText` (function) L3
 - `CaptionComparison` (export function) L12
 
