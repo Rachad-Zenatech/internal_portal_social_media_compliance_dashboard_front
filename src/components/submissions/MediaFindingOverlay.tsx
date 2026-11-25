@@ -43,12 +43,12 @@ export default function MediaFindingOverlay({ findings, sourceRegions = [], disc
   const badges = [
     ...filterRegions(sourceRegions).map((region, idx) => ({
       key: `source-${idx}`, label: "Source", title: "Detected source citation",
-      boxCls: "border-sky-500 bg-sky-400/20 shadow-[0_0_0_1px_rgba(3,105,161,0.55)]",
+      boxCls: "border-sky-500 bg-sky-400/10",
       tagCls: "bg-sky-500 text-white", region,
     })),
     ...filterRegions(disclaimerRegions).map((region, idx) => ({
       key: `disclaimer-${idx}`, label: "Disclaimer", title: "Detected disclaimer",
-      boxCls: "border-emerald-500 bg-emerald-400/20 shadow-[0_0_0_1px_rgba(4,120,87,0.55)]",
+      boxCls: "border-emerald-500 bg-emerald-400/10",
       tagCls: "bg-emerald-600 text-white", region,
     })),
   ];
@@ -56,16 +56,16 @@ export default function MediaFindingOverlay({ findings, sourceRegions = [], disc
     <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
       {badges.map(({ key, label, title, boxCls, tagCls, region }) => (
         <div key={key} title={title} onClick={(event) => event.stopPropagation()}
-          className={`absolute rounded-none border-2 ${boxCls}`}
+          className={`absolute rounded-none border ${boxCls}`}
           style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.w * 100}%`, height: `${region.h * 100}%` }}>
-          <span className={`absolute bottom-full left-0 whitespace-nowrap rounded-none px-1 py-0.5 text-[10px] font-bold ${tagCls}`}>
+          <span className={`absolute bottom-full left-0 whitespace-nowrap rounded-none px-1 py-px text-[9px] font-semibold leading-tight ${tagCls}`}>
             {label}
           </span>
         </div>
       ))}
       {boxes.map(({ region, finding, ruleLabel, description, key }) => (
         <div key={key} title={showRuleTooltip ? undefined : `${ruleLabel}: ${finding.title}`} onClick={(event) => event.stopPropagation()}
-          className={`absolute rounded-none border-2 border-yellow-400 bg-yellow-300/25 shadow-[0_0_0_1px_rgba(113,63,18,0.65)] ${showRuleTooltip ? "pointer-events-auto group cursor-help" : ""}`}
+          className={`absolute rounded-none border border-yellow-400 bg-yellow-300/15 ${showRuleTooltip ? "pointer-events-auto group cursor-help" : ""}`}
           style={{ left: `${region.x! * 100}%`, top: `${region.y! * 100}%`, width: `${region.w! * 100}%`, height: `${region.h! * 100}%` }}>
           <span className="absolute bottom-full left-0 whitespace-nowrap rounded bg-yellow-400 px-1 py-0.5 text-[10px] font-bold text-yellow-950">
             {ruleLabel}
