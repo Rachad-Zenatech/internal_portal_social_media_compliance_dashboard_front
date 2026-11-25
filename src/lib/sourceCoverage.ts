@@ -2,7 +2,7 @@ import type { SourceCheck, SourceClaim } from "@/services/complianceService";
 
 export type CoveredSourceClaim = SourceClaim & { covered_by?: string };
 export type CoveredSourceCheck = Omit<SourceCheck, "claims"> & { claims: CoveredSourceClaim[] };
-const key = (claim: SourceClaim) => {
+export const sourceClaimKey = (claim: SourceClaim) => {
   // Match the backend assertion comparison: ignore spacing and list separators,
   // while retaining location, punctuation, numbers, negation and qualifications.
   const tokens = claim.claim.toLowerCase().replace(/\u2019/g, "'").match(/\d+(?:[.,]\d+)*|[\p{L}\p{M}]+(?:'[\p{L}\p{M}]+)*|[^\s]/gu) ?? [];
@@ -24,11 +24,11 @@ export function withSourceCoverage(checks: SourceCheck[]): CoveredSourceCheck[] 
   for (const source of checks) {
     if (source.status !== "READ") continue;
     for (const claim of source.claims) {
-      if (claim.verdict === "SUPPORTED") supported.set(key(claim), source.title || source.reference);
+      if (claim.verdict === "SUPPORTED") supported.set(sourceClaimKey(claim), source.title || source.reference);
     }
   }
   return checks.map((source) => ({ ...source, claims: source.claims.map((claim): CoveredSourceClaim => ({
     ...claim,
-    covered_by: ["NOT_FOUND", "UNCLEAR"].includes(claim.verdict) ? supported.get(key(claim)) : undefined,
+    covered_by: ["NOT_FOUND", "UNCLEAR"].includes(claim.verdict) ? supported.get(sourceClaimKey(claim)) : undefined,
   })) }));
 }

@@ -4,6 +4,11 @@ export interface SubmissionSourceFields {
 }
 
 export interface SourceLinkClaim {
+  claim_id?: string | null;
+  post_start?: number | null;
+  post_end?: number | null;
+  image_index?: number | null;
+  context?: string | null;
   claim: string;
   /** As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides. */
   verdict: "SUPPORTED" | "CONTRADICTED" | "NOT_FOUND" | "UNCLEAR";

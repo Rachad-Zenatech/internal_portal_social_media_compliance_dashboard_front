@@ -214,6 +214,11 @@ export interface ComplianceCheckResponse {
 export type SourceVerdict = 'SUPPORTED' | 'CONTRADICTED' | 'NOT_FOUND' | 'UNCLEAR';
 
 export interface SourceClaim {
+  claim_id?: string | null;
+  post_start?: number | null;
+  post_end?: number | null;
+  image_index?: number | null;
+  context?: string | null;
   /** The claim as the post states it. */
   claim: string;
   verdict: SourceVerdict;
