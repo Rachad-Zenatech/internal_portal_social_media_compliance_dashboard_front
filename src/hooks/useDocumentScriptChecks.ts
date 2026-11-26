@@ -21,11 +21,12 @@ export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promi
       return saved.latest_check ? { ...saved.latest_check, script_check_stale: saved.compliance_stale } : null;
     }, staleTime: 30_000,
   })) });
-  const run = async () => {
-    if (preparing || pendingScriptChecks(`document:${key}`).length) return;
+  const run = async (prepareDetails?: () => Promise<void>) => {
+    if (preparing || pendingScriptChecks(`document:${key}`).length) return false;
     setPreparing(true);
     try {
       await beforeCheck();
+      await prepareDetails?.();
       const running = runDocumentScriptCompliance(key, doc.pages.map((page) => page.id), (id, check) => {
         queryClient.setQueryData(["script-doc-check", id], check);
         void queryClient.invalidateQueries({ queryKey: ["script-doc", id] });
@@ -36,8 +37,10 @@ export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promi
         doneMessage: "Script compliance checks finished",
       });
       void running.catch((error: unknown) => toast.error(error instanceof Error ? error.message : "Couldn't finish all script checks"));
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't save the current script");
+      return false;
     } finally { setPreparing(false); }
   };
   return { run, busy: preparing || pending.length > 0, pending, results };

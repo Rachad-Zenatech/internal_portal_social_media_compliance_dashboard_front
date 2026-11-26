@@ -71,6 +71,7 @@ export interface DocDetail {
   sources_text: string;
   latest_check?: StoredCheck | null;
   compliance_stale?: boolean;
+  shared_details?: boolean;
   details: DocDetails;
   send_note: string | null;
   decision_note: string | null;

@@ -35,7 +35,7 @@ function useDocDetails(doc: DocDetail, onDoc: (d: DocDetail) => void) {
   const change = (next: BatchDetails) => {
     setDetails(next);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => save.mutate(next), SAVE_DELAY_MS);
+    timer.current = setTimeout(() => { timer.current = null; save.mutate(next); }, SAVE_DELAY_MS);
   };
 
   const makePosts = useMutation({
@@ -43,6 +43,11 @@ function useDocDetails(doc: DocDetail, onDoc: (d: DocDetail) => void) {
     onSuccess: onDoc,
     onError: (e: unknown) => toast.error((e as { message?: string })?.message ?? "Couldn't make the post"),
   });
+
+  useEffect(() => {
+    if (!timer.current && !save.isPending) setDetails(doc.details ?? {});
+    setMissing(doc.missing_details);
+  }, [doc.id, doc.details, doc.missing_details, save.isPending]);
 
   return { editable, details, missing, saving: save.isPending, change, makePosts };
 }
@@ -158,7 +163,7 @@ export function DocDetailsAccordion({
         <span>Details for the posts</span>
         <DocDetailsStatusBadges editable={editable} missingCount={missing.length} saving={saving} />
         <span className="ml-auto hidden text-xs font-normal text-muted-foreground sm:inline">
-          Shared by {scripts} script{scripts === 1 ? "" : "s"} · {open ? "Hide" : "Show"}
+          {doc.shared_details === false ? "For this script" : `Shared by ${scripts} script${scripts === 1 ? "" : "s"}`} · {open ? "Hide" : "Show"}
         </span>
       </button>
       {open && (
@@ -198,7 +203,7 @@ export default function DocDetailsDialog({
             <DocDetailsStatusBadges editable={editable} missingCount={missing.length} saving={saving} />
           </DialogTitle>
           <DialogDescription>
-            Shared by the {scripts} script{scripts === 1 ? "" : "s"} in this document. Each approved script becomes a post with these
+            {doc.shared_details === false ? "For this script." : `Shared by the ${scripts} scripts in this document.`} Each approved script becomes a post with these
             details. You pick the reviewers when you send it.{!editable && " They can't be changed after the script has been sent for review."}
           </DialogDescription>
         </DialogHeader>

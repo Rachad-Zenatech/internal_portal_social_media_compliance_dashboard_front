@@ -36,7 +36,7 @@ export const scriptDocService = {
   saveSources: (id: string, sources_text: string, expected_sources_text: string) =>
     apiClient.put<DocDetail>(`/api/script-docs/${id}/sources`, { sources_text, expected_sources_text }, quiet),
   download: (id: string, filename: string) => apiClient.downloadFile(`/api/script-docs/${id}/export`, filename),
-  update: (id: string, data: { title?: string; details?: DocDetails }) => apiClient.patch<DocDetail>(`/api/script-docs/${id}`, data, quiet),
+  update: (id: string, data: { title?: string; details?: DocDetails; shared_details?: boolean }) => apiClient.patch<DocDetail>(`/api/script-docs/${id}`, data, quiet),
   createPosts: (id: string) => apiClient.post<DocDetail>(`/api/script-docs/${id}/posts`, undefined, quiet),
   removeSet: (id: string) => apiClient.delete<void>(`/api/script-docs/sets/${id}`, quiet),
   remove: (id: string) => apiClient.delete<void>(`/api/script-docs/${id}`, quiet),

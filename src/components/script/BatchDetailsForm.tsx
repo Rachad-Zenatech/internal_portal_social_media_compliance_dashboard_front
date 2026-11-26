@@ -29,6 +29,7 @@ export default function BatchDetailsForm({
   missing,
   disabled,
   hideReviewers,
+  idPrefix = "batch",
   onChange,
 }: {
   details: BatchDetails;
@@ -37,6 +38,7 @@ export default function BatchDetailsForm({
   disabled?: boolean;
   /** Leave out the reviewers: the caller picks them when it sends. */
   hideReviewers?: boolean;
+  idPrefix?: string;
   onChange: (next: BatchDetails) => void;
 }) {
   const optionsQuery = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 60_000 });
@@ -126,7 +128,7 @@ export default function BatchDetailsForm({
       {!hideReviewers && <BatchReviewerFields details={details} missing={missing} onChange={onChange} />}
       <Field label="Need approval by" required error={error("Need approval by", "Pick a date in the future")}>
         <DateTimePicker
-          id="batch-needed-by"
+          id={`${idPrefix}-needed-by`}
           withTime
           disablePast
           disabled={disabled}
