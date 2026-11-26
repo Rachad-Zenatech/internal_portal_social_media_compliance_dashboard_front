@@ -143,12 +143,14 @@ export function DocDetailsAccordion({
   onToggle,
   onDoc,
   onPrepare,
+  onWorkspaceHost,
 }: {
   doc: DocDetail;
   open: boolean;
   onToggle: () => void;
   onDoc: (d: DocDetail) => void;
   onPrepare?: (prepare: (() => Promise<void>) | null) => void;
+  onWorkspaceHost?: (host: HTMLDivElement | null) => void;
 }) {
   const { editable, details, missing, saving, change, makePosts } = useDocDetails(doc, onDoc);
   const scripts = Math.max(doc.pages.length, 1);
@@ -169,8 +171,8 @@ export function DocDetailsAccordion({
           {doc.shared_details === false ? "For this script" : `Shared by ${scripts} script${scripts === 1 ? "" : "s"}`} · {open ? "Hide" : "Show"}
         </span>
       </button>
-      <div hidden={!open} className="max-h-[42vh] space-y-3 overflow-y-auto border-t bg-background/80 px-4 py-3">
-        {scripts > 1 ? <BulkScriptDetailsPanel doc={doc} onPrepare={onPrepare} /> : <DocDetailsBody doc={doc} editable={editable} details={details} missing={missing} onChange={change} makePosts={makePosts} />}
+      <div hidden={!open} className={cn("space-y-3 border-t bg-background/80 px-4 py-3", scripts === 1 && "max-h-[42vh] overflow-y-auto")}>
+        {scripts > 1 ? <BulkScriptDetailsPanel doc={doc} onPrepare={onPrepare} onWorkspaceHost={onWorkspaceHost} /> : <DocDetailsBody doc={doc} editable={editable} details={details} missing={missing} onChange={change} makePosts={makePosts} />}
       </div>
     </section>
   );
