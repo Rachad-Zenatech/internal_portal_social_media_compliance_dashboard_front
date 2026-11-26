@@ -101,7 +101,7 @@ export default function SharedEditorFrame({
     const parent = encodeURIComponent(window.location.origin);
     return `${session.url}?mode=editor${initialReadOnly ? "&readonly=1" : ""}&parent=${parent}#token=${session.token}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.share_document_id, frameKey]);
+  }, [session?.share_document_id, session?.url, frameKey]);
 
   // Until the editor's page has loaded the frame is a blank page of this portal's own origin, which a message meant for the
   // editor's origin can't be sent to. The first token is already in the address, so only refreshes after load are sent.
