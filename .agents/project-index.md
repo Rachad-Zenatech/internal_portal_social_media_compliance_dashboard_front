@@ -119,7 +119,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - src/components/submissions/CompliancePreviewActions.tsx (22 lines) - Text-only posts expose text editing without image, video or script replacement controls.
 - src/components/submissions/ComplianceScoreSummary.tsx (42 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
-- src/components/submissions/ComplianceStep.tsx (471 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceStep.tsx (472 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
