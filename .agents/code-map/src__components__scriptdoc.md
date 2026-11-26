@@ -46,20 +46,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (438 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+## src/components/scriptdoc/DocSidePanel.tsx (442 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `PanelTab` (export type) L23
 - `NoteComposer` (function) L26 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `NotesTab` (function) L88 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
 - `ChecksTab` (function) L190 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L237
-- `ReviewersTab` (function) L273
-- `DocSidePanel` (export function) L315 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L334
-    - `queryClient` (fn) L339
-    - `sources` (fn) L340
-    - `runCheck` (fn) L343
-    - `historyQuery` (fn) L351
-    - `openNotes` (fn) L356
+- `HistoryTab` (function) L241
+- `ReviewersTab` (function) L277
+- `DocSidePanel` (export function) L319 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L338
+    - `queryClient` (fn) L343
+    - `sources` (fn) L344
+    - `runCheck` (fn) L347
+    - `historyQuery` (fn) L355
+    - `openNotes` (fn) L360
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
