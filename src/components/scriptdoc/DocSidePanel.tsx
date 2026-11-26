@@ -18,8 +18,11 @@ import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocHistory, DocNote } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
+import ScriptSourcesPanel from "@/components/scriptdoc/ScriptSourcesPanel";
+import { useScriptDocSources } from "@/hooks/useScriptDocSources";
+import { scriptSourceEntries, scriptSourcesMatch } from "@/lib/scriptSources";
 
-export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers";
+export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers" | "sources";
 
 /** Unified Highlight & Comment composer on the selected wording (comment text is optional). */
 function NoteComposer({
@@ -230,6 +233,7 @@ const EVENT_LABEL: Record<string, string> = {
   CHANGES_REQUESTED: "asked for changes",
   CHANGE: "edited the script",
   NOTE: "added or changed notes",
+  SOURCES: "updated the script sources",
 };
 
 function HistoryTab({ data, isLoading }: { data?: DocHistory; isLoading: boolean }) {
@@ -335,9 +339,14 @@ export default function DocSidePanel(props: {
   };
 
   const queryClient = useQueryClient();
-  const { data: check = null } = useQuery<StoredCheck | null>({ queryKey: ["script-doc-check", doc.id], queryFn: async () => null, enabled: false });
+  const sources = useScriptDocSources(doc);
+  const { data: savedCheck = null } = useQuery<StoredCheck | null>({ queryKey: ["script-doc-check", doc.id], queryFn: async () => null, enabled: false });
+  const check = savedCheck && scriptSourcesMatch(savedCheck.checked_script_sources, doc.sources_text ?? "") ? savedCheck : null;
   const runCheck = useMutation({
-    mutationFn: () => scriptDocService.check(doc.id, props.editor.current?.getText()),
+    mutationFn: () => {
+      if (sources.dirty) throw new Error("Save sources before running compliance.");
+      return scriptDocService.check(doc.id, props.editor.current?.getText());
+    },
     onSuccess: (result) => queryClient.setQueryData(["script-doc-check", doc.id], result),
     onError: (e: any) => toast.error(e?.message ?? "The check couldn't run"),
   });
@@ -366,6 +375,12 @@ export default function DocSidePanel(props: {
   const versionCount = historyQuery.data?.versions.length ?? 0;
 
   const tiles: GlanceTile[] = [
+    {
+      key: "sources", label: "Sources",
+      value: `${scriptSourceEntries(doc.sources_text ?? "").length} attached`,
+      sub: sources.dirty ? "Unsaved changes" : "Evidence for this script",
+      tone: sources.dirty ? "warn" : "muted", seen: seen.has("sources"),
+    },
     {
       key: "checks",
       label: "Flags",
@@ -409,6 +424,7 @@ export default function DocSidePanel(props: {
         extra={[{ key: "reviewers", label: doc.status === "IN_REVIEW" && waiting > 0 ? `Review (${waiting} waiting)` : "Review & people" }]}
       />
       <div className="min-h-0 flex-1 overflow-auto">
+        {tab === "sources" && <ScriptSourcesPanel doc={doc} {...sources} onChange={sources.setDraft} onSave={sources.save} onReset={sources.reset} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} />}
         {tab === "notes" && (
           <NotesTab
             notes={props.notes}

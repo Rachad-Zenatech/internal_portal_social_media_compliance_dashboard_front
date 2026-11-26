@@ -33,6 +33,9 @@ export const scriptDocService = {
   list: (scope: "mine" | "review" | "all") => apiClient.get<DocSummary[]>(`/api/script-docs?scope=${scope}`, quiet),
   create: (title: string, template_key: string) => apiClient.post<DocDetail>("/api/script-docs", { title, template_key }, quiet),
   get: (id: string) => apiClient.get<DocDetail>(`/api/script-docs/${id}`, quiet),
+  saveSources: (id: string, sources_text: string, expected_sources_text: string) =>
+    apiClient.put<DocDetail>(`/api/script-docs/${id}/sources`, { sources_text, expected_sources_text }, quiet),
+  download: (id: string, filename: string) => apiClient.downloadFile(`/api/script-docs/${id}/export`, filename),
   update: (id: string, data: { title?: string; details?: DocDetails }) => apiClient.patch<DocDetail>(`/api/script-docs/${id}`, data, quiet),
   createPosts: (id: string) => apiClient.post<DocDetail>(`/api/script-docs/${id}/posts`, undefined, quiet),
   removeSet: (id: string) => apiClient.delete<void>(`/api/script-docs/sets/${id}`, quiet),

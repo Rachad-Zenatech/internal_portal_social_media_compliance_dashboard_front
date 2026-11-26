@@ -67,6 +67,7 @@ export interface DocDetail {
   creator_color: string;
   body_html: string;
   body_text: string;
+  sources_text: string;
   details: DocDetails;
   send_note: string | null;
   decision_note: string | null;
@@ -148,6 +149,7 @@ export interface DocEvent {
 }
 
 export interface DocVersion {
+  sources_text?: string | null;
   id: number;
   round: number;
   label: string;

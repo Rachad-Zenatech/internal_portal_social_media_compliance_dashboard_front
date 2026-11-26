@@ -138,6 +138,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
 
+## src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
+- `useScriptDocSources` (export function) L7
+
 ## src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - `useScriptReviewQueue` (export function) L5
 

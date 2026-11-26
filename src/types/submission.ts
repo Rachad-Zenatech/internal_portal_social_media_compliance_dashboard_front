@@ -96,6 +96,8 @@ export type { ScriptMatch } from "@/types/scriptMatch";
 
 /** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
+  /** Evidence saved for this script when its compliance check ran. */
+  checked_script_sources?: string;
   checked_at?: string;
   checked_media_edited_at?: string | null;
   /** Which AI models answered during this check, and how long it took. Missing on checks saved before this was kept. */

@@ -83,17 +83,24 @@ const paragraph = (text: string): JSONContent => {
 };
 
 function tableFrom(rows: string[]): JSONContent {
+  const parsed = rows.map((line) => line.trim().slice(1, -1).split("|").map((cell) => cell.trim()));
+  const sourcesRow = (cells: string[]) => /^sources\s+used(?:\s*\(optional\))?$/i.test(cells[0]?.replace(/\*\*/g, "") ?? "");
+  const width = Math.max(2, ...parsed.filter((cells) => !sourcesRow(cells)).map((cells) => cells.length));
   return {
     type: "table",
-    content: rows.map((line, r) => ({
-      type: "tableRow",
-      content: line
-        .trim()
-        .replace(/^\|/, "")
-        .replace(/\|$/, "")
-        .split("|")
-        .map((cell) => ({ type: r === 0 ? "tableHeader" : "tableCell", content: [paragraph(cell.trim())] })),
-    })),
+    content: parsed.map((cells, r) => {
+      if (sourcesRow(cells)) {
+        const labelSpan = Math.floor(width / 2);
+        const entries = cells.slice(1).flatMap((cell) => cell.split(/;\s+/)).filter(Boolean);
+        return { type: "tableRow", content: [
+          { type: "tableCell", attrs: { colspan: labelSpan }, content: [paragraph(cells[0])] },
+          { type: "tableCell", attrs: { colspan: width - labelSpan }, content: entries.length ? entries.map(paragraph) : [paragraph("")] },
+        ] };
+      }
+      return { type: "tableRow", content: cells.map((cell) => ({
+        type: r === 0 ? "tableHeader" : "tableCell", content: [paragraph(cell)],
+      })) };
+    }),
   };
 }
 
@@ -178,8 +185,8 @@ function writeRuns(runs: Run[]): string {
 const plain = (nodes: JSONContent[] | undefined) => runsOf(nodes).map((r) => r.text).join("");
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
 
-function cellText(cell: JSONContent): string {
-  const text = (cell.content ?? []).map((p) => writeRuns(runsOf(p.content))).join(" ");
+function cellText(cell: JSONContent, separator = " "): string {
+  const text = (cell.content ?? []).map((p) => writeRuns(runsOf(p.content))).join(separator);
   return oneLine(text).replace(/\|/g, "/");
 }
 
@@ -207,7 +214,11 @@ export function docToText(doc: JSONContent): string {
       }
       case "table":
         // Empty cells leave a double space, which the stored text keeps as one.
-        for (const row of b.content ?? []) lines.push(`| ${(row.content ?? []).map(cellText).join(" | ")} |`.replace(/ {2,}/g, " "));
+        for (const row of b.content ?? []) {
+          const cells = row.content ?? [];
+          const sources = /^sources\s+used(?:\s*\(optional\))?$/i.test(cellText(cells[0] ?? {}).replace(/\*\*/g, ""));
+          lines.push(`| ${cells.map((cell) => cellText(cell, sources ? "; " : " ")).join(" | ")} |`.replace(/ {2,}/g, " "));
+        }
         break;
       default:
         lines.push(writeRuns(runsOf(b.content)));

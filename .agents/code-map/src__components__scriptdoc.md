@@ -46,19 +46,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (451 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `PanelTab` (export type) L22
-- `NoteComposer` (function) L25 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `NotesTab` (function) L87 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L189 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L235
-- `ReviewersTab` (function) L271
-- `DocSidePanel` (export function) L313 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L332
-    - `queryClient` (fn) L337
-    - `runCheck` (fn) L339
-    - `historyQuery` (fn) L344
-    - `openNotes` (fn) L351
+## src/components/scriptdoc/DocSidePanel.tsx (467 lines) - doc side panel (components scriptdoc)
+- `PanelTab` (export type) L25
+- `NoteComposer` (function) L28 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `NotesTab` (function) L90 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L192 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L239
+- `ReviewersTab` (function) L275
+- `DocSidePanel` (export function) L317 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L336
+    - `queryClient` (fn) L341
+    - `sources` (fn) L342
+    - `runCheck` (fn) L345
+    - `historyQuery` (fn) L353
+    - `openNotes` (fn) L360
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
@@ -104,6 +105,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
+
+## src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
+- `SourceEntry` (function) L12
+- `ScriptSourcesPanel` (export function) L21
 
 ## src/components/scriptdoc/SharedEditorFrame.tsx (229 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
