@@ -78,7 +78,7 @@ export const submissionService = {
     return apiClient.get<SubmissionSummary[]>(`/api/submissions${qs ? `?${qs}` : ""}`);
   },
 
-  get: (id: string) => apiClient.get<Submission>(`/api/submissions/${id}`),
+  get: (id: string, signal?: AbortSignal) => apiClient.get<Submission>(`/api/submissions/${id}`, { signal, cache: "no-store", skipGlobalLoading: true }),
 
   create: (title: string, contentType: ContentType, scriptRequired?: boolean) =>
     apiClient.post<Submission>("/api/submissions", { title, content_type: contentType, script_required: scriptRequired }, quiet),

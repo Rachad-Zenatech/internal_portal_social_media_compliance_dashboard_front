@@ -1,3 +1,4 @@
+import { reviewOutcomeStatus } from "./reviewOutcome";
 import type { SproutRecord } from "@/lib/contentCalendar";
 import type { QueueTab, ReviewQueueItem } from "@/types/submission";
 
@@ -8,10 +9,10 @@ export function splitApprovedQueue(posts: ReviewQueueItem[], sent: Record<string
   const approved: ReviewQueueItem[] = [];
   const scheduled: ReviewQueueItem[] = [];
   for (const post of posts) {
-    if (post.status !== "APPROVED") continue;
+    if (reviewOutcomeStatus(post) !== "APPROVED") continue;
     const record = sent[`sub-${post.id}`];
     const when = record?.scheduled_for ?? post.publish_at;
-    const isScheduled = Boolean(record && when && Number.isFinite(Date.parse(when)));
+    const isScheduled = Boolean(post.status === "APPROVED" && record && when && Number.isFinite(Date.parse(when)));
     if (isScheduled) scheduled.push({ ...post, publish_at: when });
     else approved.push(post);
   }

@@ -4,20 +4,20 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ComplianceStep.tsx (476 lines) - compliance step (components submissions)
-- `escapeRe` (const) L37
-- `Finding` (interface) L39
-- `timecode` (function) L52
-- `videoEvidence` (function) L56
-- `ComplianceStep` (export function) L67 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
-    - `slideshow` (fn) L115
-    - `reviewRoutingScore` (fn) L118
-    - `isManuallyChecked` (fn) L119
-    - `seek` (fn) L160
-    - `pick` (fn) L168
-    - `terms` (fn) L177
-    - `captionParts` (fn) L178
-    - `header` (fn) L189
-    - `pendingScore` (fn) L243
-    - `count` (fn) L257
-    - `scoreSummary` (fn) L272
+## src/components/submissions/ComplianceStep.tsx (472 lines) - compliance step (components submissions)
+- `escapeRe` (const) L38
+- `Finding` (interface) L40
+- `timecode` (function) L53
+- `videoEvidence` (function) L57
+- `ComplianceStep` (export function) L68 - The creator's compliance step, laid out like the design: the score and what cost points on the left, with the  findings you can click, an...
+    - `slideshow` (fn) L118
+    - `reviewRoutingScore` (fn) L121
+    - `isManuallyChecked` (fn) L122
+    - `seek` (fn) L163
+    - `pick` (fn) L171
+    - `terms` (fn) L180
+    - `captionParts` (fn) L181
+    - `header` (fn) L192
+    - `pendingScore` (fn) L246
+    - `count` (fn) L260
+    - `scoreSummary` (fn) L275

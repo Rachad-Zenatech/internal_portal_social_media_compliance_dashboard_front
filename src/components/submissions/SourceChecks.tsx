@@ -88,14 +88,14 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
         onClick={() => setOpen((v) => !v)}
         disabled={!hasDetail}
         aria-expanded={hasDetail ? open : undefined}
-        className="flex w-full items-start gap-1.5 text-left"
+        className="flex min-w-0 flex-1 items-start gap-1.5 text-left"
       >
         <Icon className={`mt-px h-3.5 w-3.5 shrink-0 ${tone}`} />
         <span className="min-w-0 flex-1">
-          <span className={creator ? "break-words font-semibold text-foreground" : "block truncate font-semibold text-foreground"} title={source.reference}>
+          <span className={creator ? "break-words [overflow-wrap:anywhere] font-semibold text-foreground" : "block truncate font-semibold text-foreground"} title={source.reference}>
             {name}
           </span>
-          <span className="block text-[10px] text-muted-foreground">
+          <span className="block break-words [overflow-wrap:anywhere] text-[10px] text-muted-foreground">
             {[
               (source.origins ?? [source.where]).map((where) => WHERE[where]).join(", "),
               source.authority ? AUTHORITY[source.authority] : null,

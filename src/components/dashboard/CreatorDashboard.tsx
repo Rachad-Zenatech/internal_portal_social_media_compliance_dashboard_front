@@ -1,3 +1,4 @@
+import { approvedForFinalEdits, reviewOutcomeStatus } from "@/lib/reviewOutcome";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -24,7 +25,7 @@ import CreatorStats, { type PostFilter } from "@/components/dashboard/CreatorSta
 import DayAgenda from "@/components/dashboard/DayAgenda";
 import ReviewSlideshow from "@/components/dashboard/ReviewSlideshow";
 import PostSteps from "@/components/submissions/PostSteps";
-import { POST_STEPS, ranOnce, stepPath } from "@/lib/postSteps";
+import { POST_STEPS, postPreparationSteps, ranOnce, stepPath } from "@/lib/postSteps";
 import { refetchWhileAnalysing } from "@/components/submissions/submissionUi";
 import { useAuth } from "@/lib/AuthContext";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
@@ -60,7 +61,7 @@ const FILTERS: { v: PostFilter; label: string }[] = [
 
 /** One thing waiting on the creator: what it is, what's wrong, when it's due, and one button. */
 /** A reviewer asked for changes to the post, or sent its script back (with or without edits). */
-const needsChanges = (s: SubmissionSummary) => s.status === "CHANGES_REQUESTED" || scriptNeedsChanges(s);
+const needsChanges = (s: SubmissionSummary) => (s.status === "CHANGES_REQUESTED" && !approvedForFinalEdits(s)) || scriptNeedsChanges(s);
 /** The script is approved and the video is the creator's next step. */
 const awaitingVideo = (s: SubmissionSummary) => s.status === "DRAFT" && s.script_status === "APPROVED";
 
@@ -74,29 +75,31 @@ const sentAt = (s: SubmissionSummary) => new Date((s.submitted_at ?? s.updated_a
  * along its steps are, and one button. Overdue changes have a red edge; everything else is plain. */
 function NextStepCard({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen: () => void; onOpenStep: (step: string) => void }) {
   const scriptChanges = scriptNeedsChanges(s);
+  const finalEdits = s.status === "CHANGES_REQUESTED" && approvedForFinalEdits(s);
   const changes = s.status === "CHANGES_REQUESTED" || scriptChanges;
   const video = !changes && s.script_status === "APPROVED";
   // Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
-  const due = (changes && s.due_kind === "REVISION") || (video && s.due_kind === "VIDEO") ? dueLabel(s.due_at) : null;
-  const overdue = Boolean(due?.urgent && changes);
-  const kind = scriptChanges
+  const due = !finalEdits && ((changes && s.due_kind === "REVISION") || (video && s.due_kind === "VIDEO")) ? dueLabel(s.due_at) : null;
+  const overdue = Boolean(due?.urgent && changes && !finalEdits);
+  const kind = finalEdits ? "Approved: final touches" : scriptChanges
     ? s.script_status === "EDITS_PROPOSED"
       ? "Script edited by your reviewer"
       : "Script changes requested"
     : changes
-    ? "Changes requested"
+    ? "Needs changes"
     : video
     ? "Script approved · film next"
     : "Draft in progress";
-  const details = scriptChanges
+  const details = finalEdits ? "Review suggestions, update your post and rerun checks before publishing." : scriptChanges
     ? "Read the reviewer's changes and accept or edit them."
     : changes
     ? issuesText(s.issue_count) ?? "A reviewer asked for changes."
     : video
     ? "Upload the video; it's checked against the approved script."
-    : [!s.caption_text ? "No caption yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`].filter(Boolean).join(" · ");
-  const steps = s.steps && !scriptChanges ? ranOnce(s.steps) : null;
-  const stepsDone = steps ? POST_STEPS.filter((p) => steps[p.key] === "done").length : 0;
+    : [!s.caption_text ? "No text yet" : null, `Last edited ${format(new Date(s.updated_at), "MMM d")}`].filter(Boolean).join(" · ");
+  const steps = s.steps && !scriptChanges ? ranOnce(s.steps, s.content_type === "TEXT_POST") : null;
+  const preparation = postPreparationSteps(s.content_type === "TEXT_POST");
+  const stepsDone = steps ? preparation.filter((p) => steps[p.key] === "done").length : 0;
   const act = changes || video;
   return (
     <article
@@ -126,9 +129,9 @@ function NextStepCard({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen:
         </div>
         {steps && !steps.locked && (
           <div className="flex items-center gap-2">
-            <PostSteps steps={steps} onOpen={onOpenStep} />
+            <PostSteps contentType={s.content_type} steps={steps} onOpen={onOpenStep} />
             <span className="text-[11px] text-muted-foreground">
-              {stepsDone} of {POST_STEPS.length}
+              {stepsDone} of {preparation.length}
             </span>
           </div>
         )}
@@ -138,7 +141,7 @@ function NextStepCard({ s, onOpen, onOpenStep }: { s: SubmissionSummary; onOpen:
             variant={act ? "default" : "outline"}
             className={`h-8 w-full rounded-lg text-xs font-semibold ${act ? "bg-blue-700 text-white hover:bg-blue-800" : ""}`}
           >
-            {scriptChanges ? "Review changes" : changes ? "Fix issues" : video ? "Upload video" : "Continue draft"}
+            {finalEdits ? "Check suggestions" : scriptChanges ? "Review changes" : changes ? "Fix issues" : video ? "Upload video" : "Continue draft"}
           </Button>
         </div>
       </div>
@@ -239,7 +242,7 @@ export default function CreatorDashboard() {
   const nextSteps = useMemo(() => {
     const due = (s: SubmissionSummary) => (s.due_at ? new Date(s.due_at).getTime() : Infinity);
     return [
-      ...mine.filter((s) => needsChanges(s) || awaitingVideo(s)).sort((a, b) => due(a) - due(b)),
+      ...mine.filter((s) => needsChanges(s) || awaitingVideo(s) || (s.status === "CHANGES_REQUESTED" && approvedForFinalEdits(s))).sort((a, b) => due(a) - due(b)),
       // A draft whose script is already with a reviewer is waiting on them, not on the creator.
       ...mine.filter((s) => s.status === "DRAFT" && s.script_status !== "IN_REVIEW" && !awaitingVideo(s)).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     ];
@@ -249,7 +252,7 @@ export default function CreatorDashboard() {
   const changes = mine.filter(needsChanges);
   // What to act on now: changes to make, and approved scripts waiting for their video. Soonest due first.
   const actions = mine
-    .filter((s) => needsChanges(s) || awaitingVideo(s))
+    .filter((s) => needsChanges(s) || awaitingVideo(s) || (s.status === "CHANGES_REQUESTED" && approvedForFinalEdits(s)))
     .sort((a, b) => (a.due_at ? new Date(a.due_at).getTime() : Infinity) - (b.due_at ? new Date(b.due_at).getTime() : Infinity));
   // With a reviewer: the post, or a script sent for review (a draft until it's approved).
   const inReview = mine.filter((s) => s.status === "IN_REVIEW" || (s.status === "DRAFT" && s.script_status === "IN_REVIEW"));
@@ -270,7 +273,7 @@ export default function CreatorDashboard() {
       mine
         .filter((s) => (s.status !== "DRAFT" && s.submitted_at) || scriptSent(s))
         // A script with a reviewer counts as in review; an approved script isn't an approved post.
-        .filter((s) => filter === "all" || s.status === filter || (filter === "IN_REVIEW" && s.script_status === "IN_REVIEW" && scriptSent(s)))
+        .filter((s) => filter === "all" || reviewOutcomeStatus(s) === filter || (filter === "IN_REVIEW" && s.script_status === "IN_REVIEW" && scriptSent(s)))
         .sort((a, b) => sentAt(b).getTime() - sentAt(a).getTime()),
     [mine, filter]
   );

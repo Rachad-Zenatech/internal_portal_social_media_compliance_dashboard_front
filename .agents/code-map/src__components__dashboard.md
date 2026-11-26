@@ -4,27 +4,26 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/dashboard/CreatorDashboard.tsx (444 lines) - creator dashboard (components dashboard)
-- `dueLabel` (function) L39 - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
-- `needsChanges` (const) L63 - A reviewer asked for changes to the post, or sent its script back (with or without edits).
-- `awaitingVideo` (const) L65 - The script is approved and the video is the creator's next step.
-- `scriptSent` (const) L68 - A post that's still a draft, but whose script has been sent to a reviewer.
-- `sentAt` (const) L71 - When it went to a reviewer: the post's submission, or (for a script) when it was last worked on.
-- `NextStepCard` (function) L75 - One thing waiting on the creator, as a slide: its picture with the deadline on it, what to do and why, how far  along its steps are, and ...
-    - `due` (fn) L80 - Changes to make (a post or its script) or an approved script waiting for its video: when it's due.
-- `PostRow` (function) L149
-- `CreatorActions` (function) L196 - The creator's shortcuts in the page heading: upload scripts, the calendar, a new post.
-- `CreatorDashboard` (export function) L222 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
-    - `navigate` (fn) L224
-    - `now` (fn) L225
-    - `submissions` (fn) L228
-    - `summary` (fn) L234
-    - `mine` (fn) L236
-    - `nextSteps` (fn) L239 - Changes to make (soonest due first), then drafts (latest first).
-    - `due` (fn) L240
-    - `openPost` (fn) L267
-    - `sent` (fn) L268
-    - `activity` (fn) L279 - Include the creator's sends and resubmissions alongside reviewer decisions.
+## src/components/dashboard/CreatorDashboard.tsx (447 lines) - creator dashboard (components dashboard)
+- `dueLabel` (function) L40 - Due Fri, Oct 30" style text for a resubmission deadline, and whether it's urgent.
+- `needsChanges` (const) L64 - A reviewer asked for changes to the post, or sent its script back (with or without edits).
+- `awaitingVideo` (const) L66 - The script is approved and the video is the creator's next step.
+- `scriptSent` (const) L69 - A post that's still a draft, but whose script has been sent to a reviewer.
+- `sentAt` (const) L72 - When it went to a reviewer: the post's submission, or (for a script) when it was last worked on.
+- `NextStepCard` (function) L76 - One thing waiting on the creator, as a slide: its picture with the deadline on it, what to do and why, how far  along its steps are, and ...
+- `PostRow` (function) L152
+- `CreatorActions` (function) L199 - The creator's shortcuts in the page heading: upload scripts, the calendar, a new post.
+- `CreatorDashboard` (export function) L225 - The content creator's dashboard: what needs them, how their posts are doing, what's coming up, and what reviewers did.
+    - `navigate` (fn) L227
+    - `now` (fn) L228
+    - `submissions` (fn) L231
+    - `summary` (fn) L237
+    - `mine` (fn) L239
+    - `nextSteps` (fn) L242 - Changes to make (soonest due first), then drafts (latest first).
+    - `due` (fn) L243
+    - `openPost` (fn) L270
+    - `sent` (fn) L271
+    - `activity` (fn) L282 - Include the creator's sends and resubmissions alongside reviewer decisions.
 
 ## src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
 - `PostFilter` (export type) L7
@@ -50,34 +49,34 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Progress` (function) L22 - What they have done on an item so far, as a short chip.
 - `SuggesterDashboard` (export function) L43 - A suggesting reviewer's dashboard: what was sent to them by name and is still in review, and what they have done on it.
 
-## src/components/dashboard/dashboardParts.tsx (448 lines) - Pieces shared by the reviewer and creator dashboards.
-- `UPCOMING_DAYS` (export const) L35
-- `greeting` (export function) L37
-- `issuesText` (export const) L42
-- `StatCard` (export function) L45 - One number at the top of a dashboard, with a short note under it.
-    - `body` (fn) L70
-- `scrollToSection` (export const) L95 - Scroll a section of the dashboard into view once the list under it has changed.
-- `ActivityList` (export function) L99 - Who did what to which post, newest first (from GET /api/submissions/dashboard).
-- `QUICK_CREATE` (export const) L141 - Shortcuts that open the upload form with a content type already picked.
-- `STATUS_PILL` (export const) L151 - The same status colours as the Content Portal.
-- `scriptNeedsChanges` (export const) L169 - A draft whose script a reviewer sent back (asking for changes, or with edits): the next step is on the script page.
-- `scriptPillOf` (export function) L173 - A video draft whose script has been sent or reviewed says so instead of plain "Draft".
-- `statusPillOf` (export const) L185 - The status pill for a submission: its script's state while it's a draft in the script stage, else its status.
-- `statusOf` (export const) L189 - Approved content with a publish time still ahead counts as scheduled.
-- `initials` (export const) L192
-- `avatarTone` (export const) L200
-- `Score` (export function) L203 - A compliance score the way the Content Screener shows it.
-- `Thumb` (export function) L239
-- `Platforms` (export function) L247
-- `Section` (export function) L259 - A titled panel, like the Content Portal's: heading with a muted count, then a bordered card.
-- `Empty` (export function) L296
-- `Loading` (export function) L300
-- `viewAll` (export const) L308
-- `RowMenu` (export function) L314
-- `Deadline` (export function) L333
-- `DeadlinePill` (export function) L357 - The deadline on one line, as a pill: red when late, amber when due today, plain otherwise.
-- `TONE` (export const) L377 - Soft icon backgrounds, one per colour.
-- `Tone` (export type) L385
-- `SectionIcon` (export function) L388 - The small coloured icon before a section title.
-- `ACTIVITY_STYLE` (export const) L398 - Each kind of update on a post, with its own icon and colour (same on both dashboards).
-- `ScoreRing` (export function) L411 - An average rulebook score as a ring.
+## src/components/dashboard/dashboardParts.tsx (449 lines) - Pieces shared by the reviewer and creator dashboards.
+- `UPCOMING_DAYS` (export const) L36
+- `greeting` (export function) L38
+- `issuesText` (export const) L43
+- `StatCard` (export function) L46 - One number at the top of a dashboard, with a short note under it.
+    - `body` (fn) L71
+- `scrollToSection` (export const) L96 - Scroll a section of the dashboard into view once the list under it has changed.
+- `ActivityList` (export function) L100 - Who did what to which post, newest first (from GET /api/submissions/dashboard).
+- `QUICK_CREATE` (export const) L142 - Shortcuts that open the upload form with a content type already picked.
+- `STATUS_PILL` (export const) L152 - The same status colours as the Content Portal.
+- `scriptNeedsChanges` (export const) L170 - A draft whose script a reviewer sent back (asking for changes, or with edits): the next step is on the script page.
+- `scriptPillOf` (export function) L174 - A video draft whose script has been sent or reviewed says so instead of plain "Draft".
+- `statusPillOf` (export const) L186 - The status pill for a submission: its script's state while it's a draft in the script stage, else its status.
+- `statusOf` (export const) L190 - Approved content with a publish time still ahead counts as scheduled.
+- `initials` (export const) L193
+- `avatarTone` (export const) L201
+- `Score` (export function) L204 - A compliance score the way the Content Screener shows it.
+- `Thumb` (export function) L240
+- `Platforms` (export function) L248
+- `Section` (export function) L260 - A titled panel, like the Content Portal's: heading with a muted count, then a bordered card.
+- `Empty` (export function) L297
+- `Loading` (export function) L301
+- `viewAll` (export const) L309
+- `RowMenu` (export function) L315
+- `Deadline` (export function) L334
+- `DeadlinePill` (export function) L358 - The deadline on one line, as a pill: red when late, amber when due today, plain otherwise.
+- `TONE` (export const) L378 - Soft icon backgrounds, one per colour.
+- `Tone` (export type) L386
+- `SectionIcon` (export function) L389 - The small coloured icon before a section title.
+- `ACTIVITY_STYLE` (export const) L399 - Each kind of update on a post, with its own icon and colour (same on both dashboards).
+- `ScoreRing` (export function) L412 - An average rulebook score as a ring.

@@ -15,8 +15,7 @@ export default function ReviewerPostText({ post, canComment, captionProps }: {
   return (
     <>
       {post.content_type === "TEXT_POST" ? <>
-        {renderCaption(post.caption_text ?? "", null, true)}
-        <PostTextReview key={post.id} submissionId={post.id} allowEdit={canComment} />
+        <PostTextReview reviewerView missingCheck={!post.latest_check} key={post.id} submissionId={post.id} allowEdit={canComment} renderText={(text, html) => renderCaption(text, html, text === (post.caption_text ?? ""))} />
       </> : <ReviewerCaption key={`${post.id}:${post.current_version}`} submissionId={post.id} canComment={canComment} captionText={post.caption_text ?? ""}>{renderCaption}</ReviewerCaption>}
       <PlatformCaptionsView platforms={post.platforms} captions={post.platform_captions} mainCaption={post.caption_text} />
     </>

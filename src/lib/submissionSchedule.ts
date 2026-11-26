@@ -1,3 +1,4 @@
+import { reviewOutcomeStatus } from "@/lib/reviewOutcome";
 import { recordSproutSend, type SproutRecord } from "@/lib/contentCalendar";
 import type { Submission, SubmissionSummary } from "@/types/submission";
 import type { CalendarSubmission, SubmissionStage } from "@/types/submissionSchedule";
@@ -10,9 +11,9 @@ export function applySubmissionSchedule(submission: SubmissionSummary, record?: 
   return { ...submission, publish_at: scheduledFor, calendar_scheduled_for: scheduledFor };
 }
 
-export function stageOf(submission: { status: string; calendar_scheduled_for?: string }): SubmissionStage {
+export function stageOf(submission: { status: string; publish_after_changes?: boolean; calendar_scheduled_for?: string }): SubmissionStage {
   return submission.status === "APPROVED" && submission.calendar_scheduled_for
-    ? "SCHEDULED" : submission.status as SubmissionStage;
+    ? "SCHEDULED" : reviewOutcomeStatus(submission) as SubmissionStage;
 }
 
 /** Schedule a corrected post only after its submission has passed server checks. */

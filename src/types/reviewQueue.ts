@@ -10,6 +10,7 @@ export interface ReviewQueueItem extends ReviewScoreFields, PostApprovalSuggesti
   reference_code: string;
   title: string;
   status: SubmissionStatus;
+  publish_after_changes?: boolean;
   platforms: string[];
   account?: AccountOption | null;
   caption_text?: string | null;

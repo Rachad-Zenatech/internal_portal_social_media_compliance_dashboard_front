@@ -56,7 +56,7 @@ test("Rule 18 AI findings require at least 70 percent while other rules retain t
       assert.equal(presentation.isVisibleFinding({ ...finding, status, evaluation: { source: "AI", confidence } }), visible);
     }
   }
-  assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 25", status: "NEEDS_REVIEW", evaluation: { source: "AI", confidence: 0.6 } }), true);
+  assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 29", status: "NEEDS_REVIEW", evaluation: { source: "AI", confidence: 0.6 } }), true);
   assert.equal(presentation.isVisibleFinding(finding), true);
   assert.equal(presentation.isVisibleFinding({ ...finding, status: "CLEARED", evaluation: { source: "AI", confidence: 0.2 } }), true);
 });
@@ -106,4 +106,17 @@ test("dismissal request and decision show clean separators while preserving name
     assert.match(html, /The source supports this/);
     assert.doesNotMatch(html, /[\u00c2\u00c3]/);
   }
+});
+
+test("Rule 25 only displays AI findings at or above 70 percent", () => {
+  for (const source of ["AI", "ADJUSTED"]) {
+    for (const status of ["VIOLATION", "NEEDS_REVIEW", "EVIDENCE_REQUIRED"]) {
+      for (const [confidence, visible] of [[0.6, false], [0.699, false], [0.7, true], [0.9, true]]) {
+        assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 25", status, evaluation: { source, confidence } }), visible);
+      }
+    }
+  }
+  assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 25", evaluation: undefined }), false);
+  assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 25", evaluation: { source: "UNAVAILABLE", confidence: 1 } }), false);
+  assert.equal(presentation.isVisibleFinding({ ...finding, rule_number: "Rule 25", status: "CLEARED", evaluation: { source: "AI", confidence: 0.2 } }), true);
 });

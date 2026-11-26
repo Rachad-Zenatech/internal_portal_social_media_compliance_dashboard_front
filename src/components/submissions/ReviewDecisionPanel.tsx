@@ -1,11 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useReviewComments, useReviewDecision } from "@/hooks/useReview";
@@ -32,15 +31,15 @@ export interface ReviewTarget {
   /** False when final approval is with someone else (see approver_names). Defaults to allowed. */
   can_approve?: boolean;
   approver_names?: string[];
-  /** Critical flags nobody has dismissed: approving waits until they're fixed or dismissed. */
+  /** Critical flags nobody has dismissed, shown as guidance during review. */
   open_critical_flags?: number;
-  /** The score counting only flags nobody has dismissed; approving waits until it reaches min_approval_score. */
+  /** The score counting only flags nobody has dismissed, for reviewer reference. */
   approval_score?: number | null;
   min_approval_score?: number;
   score?: number | null;
-  /** Rules the automated check can't test from text; the reviewer confirms each one when approving. */
+  /** Rules the automated check can't test from text; listed as reminders for the reviewer. */
   manual_rules?: { rule_number: string; title: string }[];
-  /** The AI review couldn't run, so there's no score: approving waits until the check is re-run (it is, automatically). */
+  /** The AI review could not finish; checking is optional during human review. */
   ai_unavailable?: boolean;
   /** The post is still being read, so there's no score yet. */
   analysis_pending?: boolean;
@@ -53,29 +52,20 @@ export interface ReviewTarget {
   created_by?: string | null;
 }
 
-type Mode = "schedule" | "changes" | "changes_publish" | null;
+type Mode = "schedule" | "changes" | null;
 
 function ReviewDecisionHeader({ mode, reference }: { mode: Mode; reference: string }) {
-  const title = mode === "changes" || mode === "changes_publish"
+  const title = mode === "changes"
     ? `Send ${reference} back for changes` : `Approve ${reference} for creator to publish`;
-  const description = mode === "changes_publish"
-    ? "The post stays with reviewers until the Get approval by deadline. Then the creator receives all feedback and can publish after making the changes without another review round."
-    : mode === "changes"
-      ? "The decision is recorded now. Suggestions stay open until the Get approval by deadline; then the creator receives the feedback and can make changes and resubmit."
-      : "The approval is recorded now. The post stays with reviewers for suggestions until the Get approval by deadline, then becomes available to its creator.";
+  const description = mode === "changes"
+    ? "Request another review round. The creator receives the feedback after the suggestion deadline."
+    : "Approve the content and send all suggestions to the creator after the suggestion deadline. They can edit text and media, rerun compliance and sentiment, then publish without another review round.";
   return (
     <DialogHeader>
       <DialogTitle className="text-base">{title}</DialogTitle>
       <DialogDescription className="text-xs">{description}</DialogDescription>
     </DialogHeader>
   );
-}
-
-const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
-
-/** Default schedule time: the creator's planned time if it's still ahead, otherwise this time tomorrow. */
-function defaultPublishTime(planned: Date | null) {
-  return planned && !isPast(planned) ? planned : new Date(Date.now() + 24 * 3600 * 1000);
 }
 
 /**
@@ -98,45 +88,29 @@ export default function ReviewDecisionPanel({
   const approvalScore = target.approval_score ?? null;
   // Shown once critical flags are dealt with, since those come first (and cap the score anyway).
   const scoreTooLow = openCritical === 0 && approvalScore != null && approvalScore < minScore;
-  // A check that wasn't read in full has no score to hold to the minimum, so nothing is approved on it.
+  // Checks inform the reviewer; final-content validation remains with creator publishing.
   const checkNotReady = Boolean(target.ai_unavailable || target.analysis_pending);
-  const mayApprove = target.can_approve !== false && openCritical === 0 && !scoreTooLow && !checkNotReady;
+  const mayApprove = target.can_approve !== false;
   const decide = useReviewDecision(target.id, target.reference_code);
   const { creatorView } = useAuth();
   const { comments } = useReviewComments(target.id);
   const openComments = comments.filter((c) => !c.resolved_at && c.version_number === target.current_version).length;
   const [mode, setMode] = useState<Mode>(null);
   const [notes, setNotes] = useState("");
-  const [when, setWhen] = useState("");
-  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [timeline, setTimeline] = useState<Timeline>(DEFAULT_TIMELINE);
 
   // Not a reviewer here, or a super admin viewing the app as a creator.
   if (!target.can_review || creatorView) return null;
 
   const manualRules = target.manual_rules ?? [];
-  const allConfirmed = manualRules.every((r) => confirmed.has(r.rule_number));
   const planned = target.publish_at ? new Date(target.publish_at) : null;
   const start = (m: Mode) => {
     setNotes("");
-    setWhen(toLocalInput(defaultPublishTime(planned)));
-    setConfirmed(new Set());
     setTimeline(DEFAULT_TIMELINE);
     setMode(m);
   };
-  const toggleConfirmed = (ruleNumber: string) =>
-    setConfirmed((prev) => {
-      const next = new Set(prev);
-      if (next.has(ruleNumber)) next.delete(ruleNumber);
-      else next.add(ruleNumber);
-      return next;
-    });
-  const whenDate = when ? new Date(when) : null;
-  const whenInPast = Boolean(whenDate && isPast(whenDate));
-  const confirmedRules = manualRules.map((r) => r.rule_number).filter((n) => confirmed.has(n));
-
   const confirm = () => {
-    if (mode === "changes" || mode === "changes_publish") {
+    if (mode === "changes") {
       const due = timelineFields(timeline);
       decide.mutate(
         {
@@ -144,13 +118,13 @@ export default function ReviewDecisionPanel({
           notes: notes.trim() || undefined,
           revision_days: due.days,
           revision_due_at: due.at,
-          publish_after_changes: mode === "changes_publish",
+          publish_after_changes: false,
         },
         { onSuccess: () => setMode(null) }
       );
-    } else if (mode === "schedule" && whenDate) {
+    } else if (mode === "schedule") {
       decide.mutate(
-        { decision: "APPROVE", notes: notes.trim() || undefined, publish_at: whenDate.toISOString(), confirmed_rules: confirmedRules },
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_after_changes: true },
         { onSuccess: () => setMode(null) }
       );
     }
@@ -175,7 +149,7 @@ export default function ReviewDecisionPanel({
           {target.due_kind === "REVIEW" && <DueBadge dueAt={target.due_at} kind="REVIEW" className="mt-1.5" />}
         </div>
       )}
-      <ApprovalBlockers
+      <ComplianceReviewNotes
         checkNotReady={checkNotReady}
         analysisPending={Boolean(target.analysis_pending)}
         openCritical={openCritical}
@@ -195,9 +169,6 @@ export default function ReviewDecisionPanel({
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => start("changes")}>
             <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
           </Button>
-           <Button variant="outline" size="sm" className="h-9 gap-1.5 border-amber-300 text-xs font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => start("changes_publish")}>
-             <FilePen className="w-3.5 h-3.5" /> Make changes & publish
-           </Button>
 
           <Button
             size="sm"
@@ -220,9 +191,7 @@ export default function ReviewDecisionPanel({
         <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => start("changes")}>
           <MessageSquareWarning className="w-3.5 h-3.5" /> Request changes
         </Button>
-        <Button size="sm" variant="outline" className="text-xs gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/10" onClick={() => start("changes_publish")}>
-          <FilePen className="w-3.5 h-3.5" /> Make changes & publish
-        </Button>
+
       </div>
       )}
       {target.can_delegate && layout !== "bar" && (
@@ -236,23 +205,15 @@ export default function ReviewDecisionPanel({
           <ReviewDecisionHeader mode={mode} reference={target.reference_code} />
 
           <div className="space-y-3">
-            {mode === "schedule" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="review-when" className="text-xs font-semibold">Publish on</Label>
-                <DateTimePicker id="review-when" withTime disablePast value={when} onChange={setWhen} />
-                {planned && <p className="text-[11px] text-muted-foreground">Planned by the creator for {format(planned, "EEE MMM d, h:mm a")}.</p>}
-                {whenInPast && <p className="text-[11px] text-red-600">Pick a planned time in the future. The creator handles publishing.</p>}
-              </div>
-            )}
-            {mode !== "changes" && mode !== "changes_publish" && <ManualRulesChecklist rules={manualRules} confirmed={confirmed} onToggle={toggleConfirmed} />}
-            {(mode === "changes" || mode === "changes_publish") && openComments > 0 && (
+            {mode !== "changes" && <ManualRulesList rules={manualRules} />}
+            {(mode === "changes") && openComments > 0 && (
               <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Your {openComments} open comment{openComments === 1 ? " is" : "s are"} sent along with this.
               </p>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="review-notes" className="text-xs font-semibold">
-                {mode === "changes" || mode === "changes_publish" ? (openComments ? "Summary (optional)" : "What needs to change") : "Note to the creator (optional)"}
+                {mode === "changes" ? (openComments ? "Summary (optional)" : "What needs to change") : "Note to the creator (optional)"}
               </Label>
               <Textarea
                 id="review-notes"
@@ -260,10 +221,10 @@ export default function ReviewDecisionPanel({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-xs"
-                placeholder={mode === "changes" || mode === "changes_publish" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Approved. Ready for you to publish."}
+                placeholder={mode === "changes" ? "e.g. The product is still in testing; rephrase the availability claim." : "e.g. Approved. Ready for you to publish."}
               />
             </div>
-            {(mode === "changes" || mode === "changes_publish") && (
+            {(mode === "changes") && (
               <RevisionTimelinePicker value={timeline} onChange={setTimeline} publishAt={target.publish_at} />
             )}
           </div>
@@ -277,15 +238,13 @@ export default function ReviewDecisionPanel({
               className={`text-xs gap-1.5 ${mode === "changes" ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-700 hover:bg-blue-800 text-white"}`}
               disabled={
                 decide.isPending ||
-                ((mode === "changes" || mode === "changes_publish") && !notes.trim() && openComments === 0) ||
-                ((mode === "changes" || mode === "changes_publish") && !timelineValid(timeline)) ||
-                (mode === "schedule" && (!whenDate || whenInPast)) ||
-                (mode === "schedule" && !allConfirmed)
+                ((mode === "changes") && !notes.trim() && openComments === 0) ||
+                ((mode === "changes") && !timelineValid(timeline))
               }
               onClick={confirm}
             >
               {decide.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {mode === "changes" ? "Record requested changes" : mode === "changes_publish" ? "Record changes & publishing permission" : "Record approval"}
+              {mode === "changes" ? "Record requested changes" : "Approve content"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -296,8 +255,8 @@ export default function ReviewDecisionPanel({
 
 const WARN_AMBER = "rounded-md bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-900 dark:text-amber-100";
 
-/** Why it can't be approved yet: the check hasn't finished, critical flags are open, or the score is too low. */
-function ApprovalBlockers({
+/** Compliance findings inform the human decision without requiring the reviewer to run AI. */
+function ComplianceReviewNotes({
   checkNotReady,
   analysisPending,
   openCritical,
@@ -318,57 +277,40 @@ function ApprovalBlockers({
       {checkNotReady && (
         <p className={WARN_AMBER}>
           {analysisPending
-            ? "The post is still being read, so it has no compliance score yet. You can approve it once the check has finished."
-            : "The AI review couldn't run, so this has no compliance score and can't be approved yet. It's re-checked automatically once the AI is back. You can still request changes."}
+            ? "Compliance is still running. You can record your review decision now; the creator must check the final content before publishing."
+            : "No completed AI result is available. Rechecking is optional for reviewers; the creator must check the final content before publishing."}
         </p>
       )}
       {openCritical > 0 && (
         <p className="rounded-md bg-red-50 px-2 py-1.5 text-[11px] text-red-700 dark:bg-red-500/10 dark:text-red-300">
-          {openCritical} critical flag{one ? " is" : "s are"} still open. Request changes to fix {one ? "it" : "them"}, or dismiss{" "}
-          {one ? "it" : "them"} as a false alarm in the flags list, before approving.
+          {openCritical} critical flag{one ? " is" : "s are"} still open. Review {one ? "it" : "them"} and leave guidance for the creator, or dismiss{" "}
+          {one ? "it" : "them"} as a false alarm in the flags list.
         </p>
       )}
       {scoreTooLow && (
         <p className={WARN_AMBER}>
-          The rulebook score is {approvalScore}/100; approval needs at least {minScore}. Request changes to fix the
-          flagged wording, or dismiss flags that are false alarms in the flags list (each gives its points back).
+          The saved rulebook score is {approvalScore}/100 (publishing target: {minScore}). Review the
+          flagged wording and leave guidance for the creator, or dismiss flags that are false alarms. This does not block your review decision.
         </p>
       )}
     </>
   );
 }
 
-/** Rules the automated check can't test from text: the reviewer ticks each one off when approving. */
-function ManualRulesChecklist({
-  rules,
-  confirmed,
-  onToggle,
-}: {
-  rules: { rule_number: string; title: string }[];
-  confirmed: Set<string>;
-  onToggle: (ruleNumber: string) => void;
-}) {
+/** Review reminders are informational and do not require individual confirmation. */
+function ManualRulesList({ rules }: { rules: { rule_number: string; title: string }[] }) {
   if (rules.length === 0) return null;
+  const items = rules.map(rule => (
+    <li key={rule.rule_number} className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2.5 text-xs leading-relaxed">
+      <span className="shrink-0"><RuleNumberBadge v={rule} /></span><span>{rule.title}</span>
+    </li>
+  ));
   return (
-    <fieldset className="space-y-1.5 rounded-md border border-border/70 p-2.5">
-      <legend className="px-1 text-xs font-semibold text-foreground">Checked by you</legend>
-      <p className="text-[11px] text-muted-foreground">
-        The automated check can't test these from the text. Confirm you've checked each one; it's recorded with your approval.
-      </p>
-      {rules.map((r) => (
-        <label key={r.rule_number} className="flex items-start gap-2 text-xs text-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-3.5 w-3.5 accent-blue-600"
-            checked={confirmed.has(r.rule_number)}
-            onChange={() => onToggle(r.rule_number)}
-          />
-          <span>
-            <RuleNumberBadge v={r} /> {r.title}
-          </span>
-        </label>
-      ))}
-    </fieldset>
+    <section aria-label="Review reminders" className="space-y-3 rounded-xl border border-border/70 p-3">
+      <div><h3 className="text-xs font-semibold">Keep in mind</h3>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">These rules need human judgment beyond the automated check. They're listed here for your reference.</p></div>
+      <ul className="space-y-1.5">{items}</ul>
+    </section>
   );
 }
 

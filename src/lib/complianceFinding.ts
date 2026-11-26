@@ -3,7 +3,11 @@ import type { ComplianceViolation } from "@/services/complianceService";
 /** Unavailable and rule-based checks have no model confidence estimate. */
 export function isVisibleFinding(v: Pick<ComplianceViolation, "status" | "evaluation"> & Partial<Pick<ComplianceViolation, "rule_number">>): boolean {
   const e = v.evaluation;
-  const rule18 = v.rule_number?.replace(/^rule\s*/i, "").trim() === "18";
+  const number = v.rule_number?.replace(/^rule\s*/i, "").trim();
+  if (number === "25" && ["VIOLATION", "NEEDS_REVIEW", "EVIDENCE_REQUIRED"].includes(v.status ?? "VIOLATION")) {
+    return Boolean(e && (e.source === "AI" || e.source === "ADJUSTED") && e.confidence >= 0.7);
+  }
+  const rule18 = number === "18";
   if (rule18 && ["VIOLATION", "NEEDS_REVIEW", "EVIDENCE_REQUIRED"].includes(v.status ?? "VIOLATION")
       && e && (e.source === "AI" || e.source === "ADJUSTED")) return e.confidence >= 0.7;
   return !(v.status === "NEEDS_REVIEW" && e && e.source !== "UNAVAILABLE" && e.confidence < 0.5);

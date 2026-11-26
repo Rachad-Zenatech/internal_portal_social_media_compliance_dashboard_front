@@ -25,8 +25,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 - `useCaptionCommentSelection` (export function) L7 - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 
-## src/hooks/useCaptionEdit.ts (38 lines) - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
-- `useCaptionEdit` (export function) L7 - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
+## src/hooks/useCaptionEdit.ts (41 lines) - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
+- `useCaptionEdit` (export function) L8 - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
 
 ## src/hooks/useCaptionNote.ts (45 lines) - A reviewer note on selected caption wording, saved through the shared comment API.
 - `useCaptionNote` (export function) L7 - A reviewer note on selected caption wording, saved through the shared comment API.
@@ -36,6 +36,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - `useComplianceRules` (export function) L6 - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
+
+## src/hooks/useCreatorReviewUpdates.ts (12 lines) - use creator review updates (hooks)
+- `useCreatorReviewUpdates` (export function) L6
 
 ## src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - `useDashboardSummary` (export function) L5 - Returning from a workflow action must show its activity; polling catches other sessions too.
@@ -74,6 +77,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/usePaged.ts (28 lines) - Opens the page an item is on (e.g.
 - `usePaged` (export function) L7 - One page of a list shown in the browser.
 
+## src/hooks/usePendingComplianceRefresh.ts (22 lines) - use pending compliance refresh (hooks)
+- `usePendingComplianceRefresh` (export function) L7
+
 ## src/hooks/usePerformance.ts (16 lines) - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 - `usePerformance` (export function) L7 - Live posts' numbers and health for the filters; numbers refresh on the server every few hours.
 
@@ -81,8 +87,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `usePostApprovalSuggestions` (export function) L6
 - `useApprovedPostAccess` (export function) L18
 
-## src/hooks/usePostTextReview.ts (60 lines) - use post text review (hooks)
-- `usePostTextReview` (export function) L9
+## src/hooks/usePostTextReview.ts (58 lines) - use post text review (hooks)
+- `usePostTextReview` (export function) L10
 
 ## src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
 - `PostTypeChangeOptions` (interface) L7
@@ -103,8 +109,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useReviewDecision` (export function) L166
 - `useApprovalActions` (export function) L187 - Approved content: a reviewer reschedules it or reopens it for changes.
 
+## src/hooks/useReviewRichTextEditor.ts (44 lines) - Seed once without emitting a change; typing never replaces the DOM or resets the caret.
+- `useReviewRichTextEditor` (export function) L6 - Seed once without emitting a change; typing never replaces the DOM or resets the caret.
+
 ## src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
 - `useReviewSendScore` (export function) L7 - Share the creator-request cache so sending updates immediately after a request is saved.
+
+## src/hooks/useReviewerComplianceCheck.ts (28 lines) - Share the request state between reviewer text and compliance actions.
+- `useReviewerComplianceCheck` (export function) L6 - Share the request state between reviewer text and compliance actions.
 
 ## src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
 - `useRevisionPublishing` (export function) L6 - Confirm timing before the corrected post is checked and submitted.
@@ -112,8 +124,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
 
-## src/hooks/useScreenerMediaNavigation.ts (29 lines) - Rule selection also navigates the carousel, including repeated clicks on the same rule.
-- `useScreenerMediaNavigation` (export function) L8 - Rule selection also navigates the carousel, including repeated clicks on the same rule.
+## src/hooks/useScreenerMediaNavigation.ts (33 lines) - Selecting a finding navigates its image; selecting it again clears the highlight.
+- `useScreenerMediaNavigation` (export function) L9 - Selecting a finding navigates its image; selecting it again clears the highlight.
 
 ## src/hooks/useScreenerQueue.ts (46 lines) - Keep the screener aligned with the creator's existing calendar scheduling workflow.
 - `useScreenerQueue` (export function) L9 - Keep the screener aligned with the creator's existing calendar scheduling workflow.

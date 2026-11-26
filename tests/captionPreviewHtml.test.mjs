@@ -47,6 +47,14 @@ test("caption rich text, wrapping, highlights and sanitization in a real browser
       check(unsafe!==null&&!/onclick|onerror|javascript:|<script|<img/.test(unsafe),'untrusted HTML sanitized before highlighting');
       check(format('<p>Old words</p>',[part('New words')])===null,'stale saved HTML cannot replace newer caption');
       check(format('',[part('First'+String.fromCharCode(10)+'Second')])===null,'plain text keeps its existing fallback');
+      const legacyHtml='<p>First <strong>paragraph</strong>.</p><p>Visit <a href="https://example.com/report">site</a>.</p>';
+      const legacyParts=[part('First '),part('paragraph','flag'),part('.Visit site.')];
+      check(format(legacyHtml,legacyParts)===null,'draft previews still reject mismatched paragraph boundaries');
+      preview.innerHTML=format(legacyHtml,legacyParts,{allowLegacyTextContent:true});
+      check(preview.querySelectorAll('p').length===2,'legacy saved paragraphs are restored in reviewer preview');
+      check(preview.querySelector('strong mark')?.textContent==='paragraph','legacy caption retains clickable word highlights');
+      check(preview.querySelector('a').getAttribute('href')==='https://example.com/report','legacy caption retains its link');
+      check(format(legacyHtml,[part('First paragraph.New wording.')],{allowLegacyTextContent:true})===null,'legacy support never replaces changed words with old HTML');
       const escaped=format('<p>Cost is $5 (estimate).</p>',[part('Cost is '),part('$5 (estimate).','flag')]);
       preview.innerHTML=escaped;
       check(preview.querySelector('mark')?.textContent==='$5 (estimate).','literal punctuation highlights correctly');
@@ -74,7 +82,7 @@ test("caption rich text, wrapping, highlights and sanitization in a real browser
       "--disable-background-networking", `--user-data-dir=${join(folder, "profile")}`, "--dump-dom",
       pathToFileURL(join(folder, "index.html")).href], { encoding: "utf8", windowsHide: true, timeout: 30_000 });
     assert.equal(result.status, 0, result.error?.message || result.stderr);
-    assert.match(result.stdout, /CAPTION_TEST_PASS:17/, result.stdout);
+    assert.match(result.stdout, /CAPTION_TEST_PASS:22/, result.stdout);
   } finally {
     assert.equal(resolve(dirname(folder)), resolve(tmpdir()));
     assert.ok(basename(folder).startsWith("caption-dom-test-"));

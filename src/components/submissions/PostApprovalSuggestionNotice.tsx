@@ -3,19 +3,23 @@ import { format } from "date-fns";
 import { suggestionTimeLabel, type postSuggestionState } from "@/lib/postApprovalSuggestions";
 
 export default function PostApprovalSuggestionNotice({ access }: { access: ReturnType<typeof postSuggestionState> }) {
-  if ((!access.approved && !access.pending) || !Number.isFinite(access.deadline)) return null;
-  const until = format(new Date(access.deadline), "EEE, MMM d · h:mm a");
-  const message = access.pending
-    ? access.open ? "A review decision is saved. Reviewers can suggest changes until " + until + ". The post returns to the creator after this deadline."
-      : "The suggestion deadline has passed. The saved review decision is being handed back to the creator."
-    : access.open
-    ? "Approved. Other reviewers can leave suggestions until " + until + ". Publishing opens after this deadline."
-    : "Suggestion window closed. Other reviewers' notes are read-only. The creator can now choose the final publish date.";
+  if (!Number.isFinite(access.deadline)) return null;
+  const until = format(new Date(access.deadline), "EEE, MMM d ? h:mm a");
+  const title = access.reviewing ? "Approval deadline" : access.open ? "Suggestions open" : "Suggestions closed";
+  const countdown = access.reviewing && access.overdueMs > 0 ? `Overdue by ${suggestionTimeLabel(access.overdueMs)}`
+    : access.remainingMs > 0 ? `${suggestionTimeLabel(access.remainingMs)} remaining` : "Deadline reached";
+  const message = access.reviewing ? `Review and leave feedback by ${until}.`
+    : access.pending ? access.open ? `Suggestions close ${until}. The creator receives the decision afterward.`
+      : "The saved decision is being handed back to the creator."
+    : access.open ? `Suggestions close ${until}. Publishing opens afterward.`
+      : "The creator can now choose the final publish date.";
   return (
-    <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-sm" role="status">
-      <p className="flex items-center gap-2 font-medium"><Clock3 className="h-4 w-4" />{access.open ? "Suggestions open" : "Suggestions closed"}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{message}</p>
-      {access.open && <p className="mt-1 font-mono text-sm" aria-label="Time remaining for suggestions">{suggestionTimeLabel(access.remainingMs)} remaining</p>}
+    <div className="shrink-0 rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2" role="status">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <p className="flex items-center gap-1.5 text-xs font-medium"><Clock3 className="size-3.5" />{title}</p>
+        <span className="font-mono text-[11px] tabular-nums" aria-label="Deadline countdown">{countdown}</span>
+      </div>
+      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{message}</p>
     </div>
   );
 }

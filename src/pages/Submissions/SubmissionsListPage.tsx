@@ -1,3 +1,5 @@
+import ReviewChecksHeader from "@/components/submissions/ReviewChecksHeader";
+import { approvedForFinalEdits } from "@/lib/reviewOutcome";
 import { CONTENT_TYPE_LABELS } from "@/lib/postContentTypes";
 import ScriptInReviewDetails from "@/components/script/ScriptInReviewDetails";
 import ApprovedPostPublishing from "@/components/submissions/ApprovedPostPublishing";
@@ -106,7 +108,7 @@ import { useScheduledSubmissions } from "@/hooks/useScheduledSubmissions";
  * approved it's with "In review", and sent back it's under "Changes requested". Only a script not yet sent, or one
  * that failed to send, stays a draft.
  */
-function tabOf(s: Pick<SubmissionSummary, "status" | "script_status" | "script_send_status" | "calendar_scheduled_for">): Stage {
+function tabOf(s: Pick<SubmissionSummary, "status" | "publish_after_changes" | "script_status" | "script_send_status" | "calendar_scheduled_for">): Stage {
   const stage = stageOf(s);
   if (stage !== "DRAFT") return stage;
   if (s.script_send_status === "PROCESSING" || s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") return "IN_REVIEW";
@@ -117,7 +119,7 @@ function tabOf(s: Pick<SubmissionSummary, "status" | "script_status" | "script_s
 const STAGES: Record<Stage, { label: string; pill: string }> = {
   DRAFT: { label: "Draft", pill: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300" },
   IN_REVIEW: { label: "In review", pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" },
-  CHANGES_REQUESTED: { label: "Changes requested", pill: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" },
+  CHANGES_REQUESTED: { label: "Needs changes", pill: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300" },
   APPROVED: { label: "Approved", pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" },
   SCHEDULED: { label: "Scheduled", pill: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" },
   REJECTED: { label: "Rejected", pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300" },
@@ -127,7 +129,7 @@ const STAGES: Record<Stage, { label: string; pill: string }> = {
 const STAGE_FILTERS: { value: "" | Stage; label: string }[] = [
   { value: "", label: "All" },
   { value: "DRAFT", label: "Drafts" },
-  { value: "CHANGES_REQUESTED", label: "Changes requested" },
+  { value: "CHANGES_REQUESTED", label: "Needs changes" },
   { value: "IN_REVIEW", label: "In review" },
   { value: "APPROVED", label: "Approved" },
   { value: "SCHEDULED", label: "Scheduled" },
@@ -380,6 +382,7 @@ function statusLine(s: SubmissionSummary): { text: string; tone: string } {
     return { text: `Waiting on reviewer · sent ${format(new Date(s.submitted_at ?? s.updated_at), "MMM d")}`, tone: muted };
   }
   if (stage === "SCHEDULED") return { text: `Scheduled · goes out ${friendlyDate(s.publish_at!)}`, tone: muted };
+  if (approvedForFinalEdits(s)) return { text: s.status === "IN_REVIEW" ? "Approved - Suggestions are still open" : "Approved - Review suggestions, then publish", tone: muted };
   if (stage === "APPROVED")
     return { text: s.publish_at ? `Approved \u00b7 planned for ${friendlyDate(s.publish_at)}` : "Approved", tone: muted };
   return { text: STAGES[stage]?.label ?? s.status, tone: muted };
@@ -399,16 +402,16 @@ function PlatformBadges({ platforms }: { platforms: string[] }) {
   );
 }
 
-/** What a post's thumbnail shows while it has no picture or video yet: a plain tile saying what's missing. */
+/** Text posts have their own tile; media posts show which upload is still missing. */
 function EmptyTile({ contentType }: { contentType: string }) {
   const video = contentType === "VIDEO";
   const article = contentType === "BLOG";
-  const Icon = video ? Film : article ? FileText : ImagePlus;
+  const Icon = video ? Film : article || contentType === "TEXT_POST" ? FileText : ImagePlus;
   return (
     <span className="grid h-full w-full place-items-center bg-[#DCE9FF] text-[#0F2A66] dark:bg-blue-500/15 dark:text-blue-200">
       <span className="flex flex-col items-center gap-1">
         <Icon className="h-5 w-5 opacity-70" />
-        <span className="text-[10px] font-semibold leading-none">{video ? "No video yet" : article ? "No article yet" : "No image yet"}</span>
+        <span className="text-[10px] font-semibold leading-none">{contentType === "TEXT_POST" ? "Text post" : video ? "No video yet" : article ? "No article yet" : "No image yet"}</span>
       </span>
     </span>
   );
@@ -466,7 +469,7 @@ function PostRow({
   const stage = stageOf(s);
   const line = statusLine(s);
   const locked = Boolean(s.steps?.locked);
-  const fix = stage === "CHANGES_REQUESTED";
+  const fix = stage === "CHANGES_REQUESTED", finalEdits = approvedForFinalEdits(s);
   const brand = labels.brands(brandCodes(s));
   const audience = labels.audience(audienceCodes(s));
   const pill = scriptPillOf({ status: stage, script_status: s.script_status }) ?? STAGES[stage] ?? { label: stage, pill: "bg-muted text-muted-foreground" };
@@ -500,16 +503,14 @@ function PostRow({
           </span>
           <span className="truncate text-[13px] text-muted-foreground 2xl:text-[15px]">{[brand, audience].filter(Boolean).join(" · ") || CONTENT_TYPE_LABELS[s.content_type] || "No brand yet"}</span>
           <span className={`text-xs 2xl:text-sm ${line.tone}`}>{line.text}</span>
-          {/* On a wide screen there's room to show how the caption starts */}
-          {s.caption_text?.trim() && <span className="hidden max-w-2xl truncate text-sm text-muted-foreground/80 2xl:block">{s.caption_text.trim()}</span>}
+              {s.caption_text?.trim() && <span className="hidden max-w-2xl truncate text-sm text-muted-foreground/80 2xl:block">{s.caption_text.trim()}</span>}
         </span>
       </button>
 
-      {/* How far it has got: hover a step for what it's for, click it to open it */}
       {s.steps && (
         <div className="flex min-w-[168px] flex-[1_1_180px] flex-col gap-1.5">
-          <PostSteps scriptOnly={isScriptPreparation(s)} size="lg" steps={s.steps} onOpen={(step) => onOpenStep(s, step)} />
-          <span className="text-xs font-medium text-muted-foreground 2xl:text-sm">{progressText(s, stage)}</span>
+          <PostSteps contentType={s.content_type} scriptOnly={isScriptPreparation(s)} size="lg" steps={s.steps} onOpen={(step) => onOpenStep(s, step)} />
+          <span className="text-xs font-medium text-muted-foreground 2xl:text-sm">{finalEdits && !locked ? (s.steps?.ready_to_send ? "Ready to publish" : "Final checks before publishing") : progressText(s, stage)}</span>
         </div>
       )}
 
@@ -519,9 +520,9 @@ function PostRow({
           {pill.label}
         </span>
         {s.steps && !locked && s.steps.next && !s.steps.ready_to_send && (
-          <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Next: {creatorPreparationSteps(isScriptPreparation(s), s.steps.revision).find((p) => p.key === s.steps!.next)?.label}</span>
+          <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Next: {finalEdits && s.steps.next === "send" ? "Publish" : creatorPreparationSteps(isScriptPreparation(s), s.steps.revision).find((p) => p.key === s.steps!.next)?.label}</span>
         )}
-        {fix && <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">Unlocked: edit and re-run</span>}
+        {(fix || finalEdits) && <span className="text-xs leading-snug text-muted-foreground 2xl:text-sm">{finalEdits ? "Review suggestions, edit and publish" : "Unlocked: edit and re-run"}</span>}
       </div>
 
       <ScoreRing score={s.latest_score} pending={s.analysis_pending || s.script_send_status === "PROCESSING"} />
@@ -543,7 +544,7 @@ function PostRow({
           </Button>
         ) : (
           <Button className="h-10 rounded-[10px] bg-blue-700 px-4 text-[13px] font-semibold text-white hover:bg-blue-800 2xl:h-11 2xl:px-6 2xl:text-sm" onClick={() => onOpen(s)}>
-            {fix ? "Make changes" : s.script_status === "APPROVED" && isScriptPreparation(s) ? "Review script & continue" : "Continue"}
+            {finalEdits ? "Check suggestions" : fix ? "Make changes" : s.script_status === "APPROVED" && isScriptPreparation(s) ? "Review script & continue" : "Continue"}
           </Button>
         )}
         {/* A draft that hasn't gone to a reviewer can be thrown away, of any type. */}
@@ -594,7 +595,7 @@ function ReviewCard({
     // Check back quickly while the post is still being read, so the score shows up soon after it's ready.
     refetchInterval: (q) => (isAnalysing(q.state.data?.latest_check) ? ANALYSING_REFETCH_MS : false),
   });
-  const { analysis } = useSentiment(summary.content_type === "VIDEO" && !sub?.files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/")) ? null : summary.id);
+  const { analysis } = useSentiment(summary.content_type === "TEXT_POST" || summary.content_type === "VIDEO" && !sub?.files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/")) ? null : summary.id);
   const runCheck = useMutation({
     mutationFn: () => submissionService.runCheck(summary.id),
     onSuccess: (updated) => {
@@ -717,7 +718,7 @@ function ReviewCard({
       : "Send it for review when it's ready.";
     actions = (
       <div className="flex flex-col items-end gap-2">
-        {steps && <PostSteps scriptOnly={summary.content_type === "VIDEO" && !mediaIsVideo} steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
+        {steps && <PostSteps contentType={summary.content_type} scriptOnly={summary.content_type === "VIDEO" && !mediaIsVideo} steps={steps} onOpen={(step) => navigate(stepPath(summary.id, step))} />}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs font-semibold" onClick={() => navigate(summary.status === "CHANGES_REQUESTED" ? `/submissions/new?id=${summary.id}` : resumePath(summary.id, steps))}>
             <FilePen className="w-3.5 h-3.5" /> {summary.status === "CHANGES_REQUESTED" ? "Make changes" : "Continue"}
@@ -861,10 +862,7 @@ function ReviewCard({
       {/* Review checks */}
       {summary.status === "APPROVED" ? <ApprovedPostPublishing submissionId={summary.id} canPublish={mine} platform={summary.platforms[0]} intended={sub ? sub.publish_at : summary.publish_at} /> : (
       <section className="border-t border-border/70 px-5 py-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-foreground">Review checks</h3>
-          <p className="text-[11px] text-muted-foreground">Analysis does not approve or publish content.</p>
-        </div>
+        <ReviewChecksHeader />
         <div className="mt-3 grid gap-3 @xl:grid-cols-2">
           <CheckCard
             icon={ShieldCheck}
@@ -900,7 +898,7 @@ function ReviewCard({
             busy={runCheck.isPending}
             onAction={() => (check ? setOpenCheck((o) => (o === "compliance" ? null : "compliance")) : runCheck.mutate())}
           />
-          {!(summary.content_type === "VIDEO" && !mediaIsVideo) && <CheckCard
+          {(summary.content_type !== "TEXT_POST" && !(summary.content_type === "VIDEO" && !mediaIsVideo)) && <CheckCard
             icon={BarChart3}
             title="Sentiment Analysis"
             status={sentimentDone ? "Results ready" : sentimentRunning ? "Running..." : locked ? "Not run before it was sent" : "No results yet"}
@@ -918,7 +916,7 @@ function ReviewCard({
             <ComplianceView sub={sub} />
           </div>
         )}
-        {openCheck === "sentiment" && !(summary.content_type === "VIDEO" && !mediaIsVideo) && (
+        {openCheck === "sentiment" && (summary.content_type !== "TEXT_POST" && !(summary.content_type === "VIDEO" && !mediaIsVideo)) && (
           <div className="mt-3 rounded-xl border border-border/70 p-4">
             <SentimentPanel submissionId={summary.id} onSeek={seek} canRun={!locked} />
           </div>

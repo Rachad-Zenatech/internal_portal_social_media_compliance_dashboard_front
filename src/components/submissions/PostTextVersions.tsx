@@ -1,13 +1,15 @@
+import FormattedCaptionPreview from "@/components/submissions/FormattedCaptionPreview";
 import { useId, useState } from "react";
 import type { PostTextEdit } from "@/types/postTextReview";
 
-export default function PostTextVersions({ text, edits }: { text: string; edits: PostTextEdit[] }) {
+export default function PostTextVersions({ text, html, edits }: { text: string; html?: string | null; edits: PostTextEdit[] }) {
   const id = useId();
   const [selected, setSelected] = useState("current");
   const edit = edits.find((item) => item.id === selected);
   const beforeFirstEdit = selected === "before" && edits.length > 0;
   const value = edit ? edit.id : beforeFirstEdit ? "before" : "current";
   const savedText = edit ? edit.after_text : beforeFirstEdit ? edits[0].before_text : text;
+  const savedHtml = edit ? edit.after_html : beforeFirstEdit ? edits[0].before_html : html;
   const description = edit ? `Saved by ${edit.reviewer_name} on ${new Date(edit.created_at).toLocaleString()}. Review round ${edit.version}.`
     : beforeFirstEdit ? "The saved post text before the first reviewer edit." : "The current saved post text.";
   const options = edits.map((item, index) => (
@@ -22,7 +24,7 @@ export default function PostTextVersions({ text, edits }: { text: string; edits:
         {edits.length > 0 && <option value="before">Before first reviewer edit</option>}
       </select>
       <p className="text-xs text-muted-foreground">{description}</p>
-      <div aria-label="Saved post text" className="max-h-96 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/20 p-3 text-sm leading-relaxed">{savedText || "No post text saved yet."}</div>
+      <div aria-label="Saved post text" className="max-h-96 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/20 p-3 text-sm leading-relaxed"><FormattedCaptionPreview html={savedHtml ?? undefined} parts={[{ text: savedText || "No post text saved yet.", tone: "" }]} /></div>
     </div>
   );
 }

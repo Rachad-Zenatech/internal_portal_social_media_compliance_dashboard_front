@@ -1,3 +1,8 @@
+import { approvedForFinalEdits } from "@/lib/reviewOutcome";
+import ReviewerComplianceSources from "@/components/compliance/screener/ReviewerComplianceSources";
+import { orderScreenerQueue } from "@/lib/screenerQueueOrder";
+import Thumb from "@/components/compliance/screener/QueueThumbnail";
+import { initialQueueCollapsed } from "@/lib/screenerQueueLayout";
 import { CONTENT_TYPE_BADGES } from "@/lib/postContentTypes";
 import ReviewerFindingDetails from "@/components/submissions/ReviewerFindingDetails";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
@@ -7,7 +12,7 @@ import ScriptReviewNotice from "@/components/compliance/screener/ScriptReviewNot
 import ReviewerPostText from "@/components/compliance/screener/ReviewerPostText";
 import { useCaptionCommentSelection } from "@/hooks/useCaptionCommentSelection";
 import { useScreenerMediaNavigation } from "@/hooks/useScreenerMediaNavigation";
-import type { MarkedCaptionTerm as MarkedTerm } from "@/types/captionReview";
+import { reviewerFindingSelection } from "@/lib/reviewerFindingSelection";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +41,7 @@ import {
 } from "@/components/compliance/screener/QueueFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
+import ReviewerPostMeta from "@/components/compliance/screener/ReviewerPostMeta";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
 import { useSentiment } from "@/hooks/useSentiment";
 import ReviewerSentimentPanel from "@/components/submissions/ReviewerSentimentPanel";
@@ -51,7 +56,6 @@ import ReviewDecisionPanel from "@/components/submissions/ReviewDecisionPanel";
 import ApprovalActions from "@/components/submissions/ApprovalActions";
 import FlagReviewControl from "@/components/submissions/FlagReviewControl";
 import RuleNumberBadge from "@/components/submissions/RuleNumberBadge";
-import SourceChecks from "@/components/submissions/SourceChecks";
 import {
   FINDING_META,
   FINDING_ORDER,
@@ -89,7 +93,7 @@ import type { ScreenerTab } from "@/lib/screenerApprovalQueue";
 
 const TABS: { value: ScreenerTab; label: string }[] = [
   { value: "review", label: "To review" },
-  { value: "sent_back", label: "Sent back" },
+  { value: "sent_back", label: "Needs changes" },
   { value: "approved", label: "Approved" },
   { value: "done", label: "Scheduled" },
 ];
@@ -168,26 +172,6 @@ function ScoreBadge({ s }: { s: ReviewQueueItem }) {
   );
 }
 
-function Thumb({ s }: { s: ReviewQueueItem }) {
-  const image = s.images?.[0];
-  const [unavailable, setUnavailable] = useState(false);
-  return (
-    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-      {unavailable ? (
-        <span className="grid h-full w-full place-items-center px-1 text-center text-[9px] leading-tight text-muted-foreground">
-          Media unavailable
-        </span>
-      ) : s.video ? (
-        // A frame a second in: many videos open on black.
-        <video src={`${authedFileUrl(s.video.url)}#t=1`} preload="metadata" muted onError={() => setUnavailable(true)} className="h-full w-full object-cover" />
-      ) : image ? (
-        <img src={authedFileUrl(image.url)} alt="" onError={() => setUnavailable(true)} className="h-full w-full object-cover" />
-      ) : (
-        <span className="grid h-full w-full place-items-center text-[10px] text-muted-foreground">Text</span>
-      )}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Flags: where each rulebook finding is, and when in the video
@@ -388,7 +372,7 @@ function PostView({
   now,
   duration,
   playing,
-  picked, imageIndex, onImageIndex,
+  picked, pickedFinding, imageIndex, onImageIndex,
   onFlag,
   onComment,
   onTime,
@@ -409,6 +393,7 @@ function PostView({
   duration: number;
   playing: boolean;
   picked: string | null;
+  pickedFinding?: ComplianceViolation | null;
   imageIndex: number; onImageIndex: (index: number) => void;
   onFlag: (ruleId: string) => void;
   onComment: () => void;
@@ -432,7 +417,6 @@ function PostView({
   const shape = ratio ?? (s.platforms.some((p) => VERTICAL_PLATFORMS.includes(p)) ? 9 / 16 : 16 / 9);
   // Portrait and square videos are sized by height so they don't fill the screen; landscape ones by width.
   const tall = shape < 1.25;
-  const timed = flags.filter((f) => f.at != null);
   const parts = timelineOf(s, duration);
   const toggle = () => {
     const v = videoRef.current;
@@ -441,25 +425,20 @@ function PostView({
     else v.pause();
   };
   const step = (by: number) => seek(Math.min(Math.max(0, now + by), duration || now + by));
-  const terms: MarkedTerm[] = flags.flatMap((f) =>
-    findingEvidence(f.v).map((term) => ({ term, ruleId: f.v.rule_id, dismissed: dismissed.has(f.v.rule_id) }))
-  );
+  const { selectedFlags, terms } = reviewerFindingSelection(flags, picked, pickedFinding, dismissed);
   // The most serious open flag at this moment, shown over the video.
-  const atFlag = timed
+  const atFlag = selectedFlags.filter(f => f.at != null)
     .filter((f) => Math.abs(now - f.at!) < 0.75 && !dismissed.has(f.v.rule_id))
     .sort((a, b) => Number(b.critical) - Number(a.critical))[0];
 
-  const chip = "rounded-md bg-muted px-2 py-0.5 text-xs text-foreground/80";
+  const metaPlatforms = s.platforms.map(code => ({ code, label: platformName(code) }));
   return (
     <div className="flex min-w-0 flex-col">
       <header className="flex flex-col gap-2 border-b border-border/70 px-5 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold leading-snug text-foreground">{s.title}</h2>
-            <p className="text-sm text-muted-foreground">
-              {s.reference_code} · Version {s.current_version}
-              {s.creator_name && ` · by ${s.creator_name}`}
-            </p>
+            {s.creator_name && <p className="text-sm font-normal text-foreground">Creator: {s.creator_name}</p>}
           </div>
           <div className="flex items-center gap-2">
             {onUploadScript && (
@@ -482,28 +461,7 @@ function PostView({
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {s.platforms.map((p) => (
-            <span key={p} className={`${chip} inline-flex items-center gap-1`}>
-              <PlatformIcon platform={p as SocialPlatform} className="w-3 h-3" /> {platformName(p)}
-              {p === s.platforms[0] && account?.handle ? ` · @${account.handle.replace(/^@/, "")}` : ""}
-            </span>
-          ))}
-          {labels.brands(brandCodes(s)) && <span className={chip}>{labels.brands(brandCodes(s))}</span>}
-          {labels.audience(audienceCodes(s)) && <span className={chip}>{labels.audience(audienceCodes(s))}</span>}
-          {needBy && (
-            <span
-              className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                isPast(needBy) && s.status === "IN_REVIEW"
-                  ? "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-                  : "bg-blue-50 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300"
-              }`}
-            >
-              Approval needed by {format(needBy, "EEE, MMM d · h:mm a")}
-              {isPast(needBy) && s.status === "IN_REVIEW" && ` · overdue ${formatDistanceToNow(needBy)}`}
-            </span>
-          )}
-        </div>
+        <ReviewerPostMeta platforms={metaPlatforms} handle={account?.handle} brand={labels.brands(brandCodes(s))} audience={labels.audience(audienceCodes(s))} deadline={needBy} inReview={s.status === "IN_REVIEW"} />
       </header>
       <div className="mx-auto flex w-full max-w-[720px] flex-col gap-4 p-5 min-[112.5rem]:max-w-[1000px]">
         {s.video ? (
@@ -535,7 +493,7 @@ function PostView({
                   {atFlag.critical ? "Critical" : "Needs review"} · {atFlag.v.rule_number} · {atFlag.v.title}
                 </span>
               )}
-              <MediaFindingOverlay findings={flags.map((flag) => flag.v)} fileId={s.video.id} currentTime={now} showRuleTooltip />
+              <MediaFindingOverlay findings={selectedFlags.map((flag) => flag.v)} fileId={s.video.id} currentTime={now} showRuleTooltip />
             </div>
             <FlaggedMoments parts={parts} now={now} duration={duration} playing={playing} onToggle={toggle} onStep={step} seek={seek} />
           </>
@@ -633,14 +591,16 @@ function ReviewPanel({
   setActiveComment: (id: string | null) => void;
 }) {
   const { comments, selectComment } = useCaptionCommentSelection(s.id, activeComment, setActiveComment);
-  const { analysis: sentiment } = useSentiment(s.content_type === "VIDEO" && !hasVideo ? null : s.id);
+  const showSentiment = s.content_type !== "TEXT_POST" && (s.content_type !== "VIDEO" || hasVideo);
+  const { analysis: sentiment } = useSentiment(showSentiment ? s.id : null);
   // A suggesting reviewer comments but doesn't decide.
   const { isSuggester } = useAuth(); const [sourceView, setSourceView] = useState<"checks" | "review">("review");
   const suggestions = usePostApprovalSuggestions(s, canReview || isSuggester), canComment = suggestions.canComment;
   // A flag picked on the post scrolls into view in the panel.
   useEffect(() => {
+    if (!showSentiment && tab === "sentiment") setTab("compliance");
     if (picked && tab === "compliance") document.getElementById(`flag-${picked}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [picked, tab]);
+  }, [picked, tab, showSentiment, setTab]);
   const check = s.latest_check; const showingCompliance = tab === "compliance" && sourceView === "review";
   const score = scoreOf(s);
   // Open: still needs attention. Cleared triggers don't; violations cost points, the rest are warnings.
@@ -716,19 +676,19 @@ function ReviewPanel({
       highlight: canComment,
     },
   ];
-  const toLookAt = tiles.filter((tile) => tile.key !== "sentiment" || s.content_type !== "VIDEO" || hasVideo).filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
+  const toLookAt = tiles.filter((tile) => tile.key !== "sentiment" || showSentiment).filter((t) => !t.seen && t.key !== "comments").map((t) => t.label);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ReviewGlance
-        tiles={tiles.filter((tile) => tile.key !== "sentiment" || s.content_type !== "VIDEO" || hasVideo)}
+        tiles={tiles.filter((tile) => tile.key !== "sentiment" || showSentiment)}
         active={tab}
         onPick={(key) => setTab(key as PanelTab)}
       />
 
       {/* Tab content */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-4">
-        {tab === "compliance" && <SourceChecks checks={check?.source_checks} submissionId={s.id} onViewChange={setSourceView} />}
+        {tab === "compliance" && <ReviewerComplianceSources post={s} canReview={canReview} onViewChange={setSourceView} />}
         {showingCompliance && (
         <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-4">
           <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border-[6px] ${verdict.ring}`}>
@@ -829,7 +789,7 @@ function ReviewPanel({
               {FINDING_ORDER.map((status) => (
                 <FindingGroup key={status} status={status} count={grouped[status].length}>
               {grouped[status].map((f, index) => {
-                const selected = (pickedFinding ? pickedFinding === f.v : picked === f.v.rule_id) || (f.at != null && Math.abs(now - f.at) < 0.75);
+                const selected = (pickedFinding ? pickedFinding === f.v : picked === f.v.rule_id);
                 const jump = () => {
                   setPicked(f.v.rule_id, f.v);
                   if (f.at != null) seek(f.at);
@@ -902,7 +862,7 @@ function ReviewPanel({
           </div>
         )}
 
-        {tab === "sentiment" && (s.content_type !== "VIDEO" || hasVideo) && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
+        {tab === "sentiment" && showSentiment && <ReviewerSentimentPanel key={s.id} submissionId={s.id} canRun={canReview} onSeek={seek} showTopicTrends={false} />}
 
         {tab === "comments" && canComment && (
           <div className="rounded-xl border-2 border-blue-600 bg-blue-50/40 p-3 dark:border-blue-400 dark:bg-blue-500/10">
@@ -935,9 +895,8 @@ function ReviewPanel({
       </div>
 
       <PostApprovalSuggestionNotice access={suggestions} />
-      {/* Decision: always in view */}
       <div className="shrink-0 border-t border-border/70 bg-card px-4 py-3">
-        {s.status === "IN_REVIEW" && canReview && (
+        {s.status === "IN_REVIEW" && canReview && !s.review_decision_pending && (
           <p className="mb-3 text-xs text-muted-foreground" aria-live="polite">
             {toLookAt.length ? `Still to review: ${toLookAt.join(", ")}` : "All sections opened. Ready for your decision."}
           </p>
@@ -984,7 +943,7 @@ function ReviewPanel({
           <ApprovalActions target={s} isCreator={false} />
         ) : (
           <p className="text-sm text-muted-foreground">
-            {s.status === "CHANGES_REQUESTED" ? "Sent back to the creator for changes." : s.status === "APPROVED" ? "Approved." : "Decided."}
+            {approvedForFinalEdits(s) ? "Approved. The creator can review suggestions and finish the post before publishing." : s.status === "CHANGES_REQUESTED" ? "Sent back to the creator for changes." : s.status === "APPROVED" ? "Approved." : "Decided."}
           </p>
         )}
       </div>
@@ -1048,7 +1007,7 @@ function Workspace({
           now={now}
           duration={duration || Math.max(0, ...(s.latest_check?.segment_flags ?? []).map((f) => f.end_sec))}
           playing={playing}
-          picked={picked} imageIndex={imageIndex} onImageIndex={setImageIndex}
+          picked={picked} pickedFinding={pickedFinding} imageIndex={imageIndex} onImageIndex={setImageIndex}
           onFlag={(ruleId) => {
             setPicked(ruleId);
             setTab("compliance");
@@ -1172,7 +1131,7 @@ export default function ContentScreenerPage() {
   const postTab: ScreenerTab = tab;
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [sort, setSort] = useState<SortOrder>("newest");
+  const [sort, setSort] = useState<SortOrder>("deadline");
   // Opened from elsewhere: ?id=..., or the post another page picked for the screener.
   const [selectedId, setSelectedId] = useState<string | null>(
     () => params.get("id") ?? (activeVideoId?.startsWith("sub-") ? activeVideoId.slice(4) : null)
@@ -1192,15 +1151,7 @@ export default function ContentScreenerPage() {
   const items = useMemo(() => queue.data ?? [], [queue.data]);
   const q = search.trim().toLowerCase();
   const visible = useMemo(() => items.filter((s) => matches(s, filters, q)), [items, filters, q]);
-  // Posts by when each was sent for review, newest or oldest first; posts without a date go last.
-  const rows = useMemo(() => {
-    const time = (d?: string | null) => (d ? new Date(d).getTime() : null);
-    const sign = sort === "newest" ? -1 : 1;
-    return visible
-      .map((s) => ({ s, at: time(s.submitted_at) }))
-      .sort((x, y) => Number(x.at === null) - Number(y.at === null) || (x.at === null || y.at === null ? 0 : sign * (x.at - y.at)))
-      .map((r) => r.s);
-  }, [visible, sort]);
+  const rows = useMemo(() => orderScreenerQueue(visible, sort), [visible, sort]);
   // 20 to a page; a new tab, search, filter or order starts from the first page.
   const paged = usePaged(rows, 20, [postTab, scope, q, filters, sort]);
   // A post opened from a link (?id=...) shows on its page once the queue has loaded.
@@ -1257,14 +1208,8 @@ export default function ContentScreenerPage() {
   const platforms = useMemo(() => [...new Set(items.flatMap((s) => s.platforms))].sort(), [items]);
   const brandLabel = (b: string) => labels.brand(b) ?? b;
 
-  // The queue folds to a strip of thumbnails (remembered on this browser); until set it starts folded under 1536px wide.
-  const [queueCollapsed, setQueueCollapsed] = useState(() => {
-    try {
-      const saved = localStorage.getItem(COLLAPSE_KEY);
-      if (saved != null) return saved === "1";
-    } catch { /* storage unavailable: fall back to the screen size */ }
-    return typeof window !== "undefined" && window.innerWidth < 1536;
-  });
+  // Start collapsed on laptops; the toggle can reopen it for this visit.
+  const [queueCollapsed, setQueueCollapsed] = useState(() => initialQueueCollapsed(COLLAPSE_KEY));
   const setCollapsed = (v: boolean) => {
     setQueueCollapsed(v);
     try {
@@ -1369,9 +1314,7 @@ export default function ContentScreenerPage() {
         <p className="px-4 pb-1 pt-2.5 text-xs text-muted-foreground">
           {queue.isLoading
             ? "Loading..."
-            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" || tab === "approved" ? " · last 30 days" : ""} · sent ${
-                sort === "newest" ? "newest" : "oldest"
-              } first`}
+            : `${listCount} item${listCount === 1 ? "" : "s"}${tab === "done" || tab === "approved" ? " · last 30 days" : ""} · ${sort === "deadline" ? "earliest deadline first" : `sent ${sort} first`}`}
         </p>
         <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           {paged.pageItems.map(renderPostRow)}

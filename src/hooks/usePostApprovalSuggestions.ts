@@ -6,7 +6,7 @@ import { postSuggestionState, type SuggestionPost } from "@/lib/postApprovalSugg
 export function usePostApprovalSuggestions(post: SuggestionPost | null | undefined, mayCommentInReview = false) {
   const [now, setNow] = useState(Date.now);
   const state = postSuggestionState(post, now);
-  const running = state.open;
+  const running = state.open || (state.reviewing && Number.isFinite(state.deadline));
   useEffect(() => {
     if (!running) return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);

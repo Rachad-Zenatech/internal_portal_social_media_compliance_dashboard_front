@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/RevisionPublishActions.tsx (54 lines) - revision publish actions (components submissions)
-- `RevisionPublishActions` (export function) L9
+## src/components/submissions/RevisionPublishActions.tsx (58 lines) - revision publish actions (components submissions)
+- `RevisionPublishActions` (export function) L10
