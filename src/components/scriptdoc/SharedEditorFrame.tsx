@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { scriptDocService } from "@/services/scriptDocService";
-import type { DocNote } from "@/types/scriptDoc";
+import type { DocNote, ScriptFocusRequest } from "@/types/scriptDoc";
 
 // Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 const FALLBACK_REFRESH_MS = 10 * 60 * 1000;
@@ -25,6 +26,7 @@ export default function SharedEditorFrame({
   notes = [],
   activeNoteId = null,
   goToNote = null,
+  focusRequest,
   toolbarExtra,
   onSelectionChange,
   onSelectNote,
@@ -34,6 +36,7 @@ export default function SharedEditorFrame({
   notes?: DocNote[];
   activeNoteId?: string | null;
   goToNote?: { id: string; seq: number } | null;
+  focusRequest?: ScriptFocusRequest;
   toolbarExtra?: React.ReactNode;
   onSelectionChange?: (sel: { quote: string; start: number } | null) => void;
   onSelectNote?: (id: string) => void;
@@ -117,7 +120,7 @@ export default function SharedEditorFrame({
     if (!session) return;
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== session.origin || e.source !== frame.current?.contentWindow) return;
-      const data = e.data as { type?: string; quote?: string; start?: number; id?: string } | null;
+      const data = e.data as { type?: string; quote?: string; start?: number; id?: string; requestId?: number; found?: boolean } | null;
       const type = data?.type ?? "";
       if (type === AUTH_REQUIRED) {
         void refetch();
@@ -127,6 +130,11 @@ export default function SharedEditorFrame({
         frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
         frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
         if (goToNote) frame.current.contentWindow.postMessage({ type: "script-embed:go-to-note", id: goToNote.id }, session.origin);
+        if (focusRequest) frame.current.contentWindow.postMessage({ type: "script-embed:focus-passage", ...focusRequest }, session.origin);
+        return;
+      }
+      if (type === "script-embed:focus-result" && data?.requestId === focusRequest?.requestId) {
+        if (data?.found === false) toast.info("No matching passage in the current script. The flag may describe missing content or wording that has changed.");
         return;
       }
       if (type === "script-embed:selection" && typeof data?.quote === "string") {
@@ -144,7 +152,13 @@ export default function SharedEditorFrame({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [session?.origin, qc, docId, refetch, readOnly, notes, activeNoteId, goToNote, onSelectionChange, onSelectNote]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.origin, qc, docId, refetch, readOnly, notes, activeNoteId, goToNote, focusRequest, onSelectionChange, onSelectNote]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (focusRequest && session && loaded.current && frame.current?.contentWindow) {
+      frame.current.contentWindow.postMessage({ type: "script-embed:focus-passage", ...focusRequest }, session.origin);
+    }
+  }, [focusRequest, session]);
 
   useEffect(() => {
     if (session && loaded.current && frame.current?.contentWindow) {

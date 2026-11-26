@@ -88,7 +88,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
-- src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
+- src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
 - src/components/scriptdoc/DocSidePanel.tsx (447 lines) - doc side panel (components scriptdoc)
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
@@ -97,7 +97,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
-- src/components/scriptdoc/SharedEditorFrame.tsx (230 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+- src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/AnalysisRunControls.tsx (29 lines) - Consistent run and stop actions for the post's analysis panels.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
@@ -269,7 +269,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
-- src/hooks/useScriptFlagFocus.ts (40 lines) - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
+- src/hooks/useScriptFlagFocus.ts (21 lines) - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
 - src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - src/hooks/useScriptReviewerLabel.ts (34 lines) - Older script responses omit names; resolve the post's actual review assignment.
 - src/hooks/useSentiment.ts (138 lines) - Latest sentiment analysis for a submission, checking back every few seconds while one is running.
@@ -429,7 +429,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/reviewScore.ts (6 lines) - Effective score after dismissed flags, and the minimum required for approval.
 - src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
-- src/types/scriptDoc.ts (200 lines) - script doc (types)
+- src/types/scriptDoc.ts (206 lines) - script doc (types)
 - src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - src/types/scriptQueue.ts (4 lines) - script queue (types)
 - src/types/sentiment.ts (220 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).

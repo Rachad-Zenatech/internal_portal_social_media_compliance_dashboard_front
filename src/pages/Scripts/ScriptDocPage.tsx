@@ -141,7 +141,7 @@ export default function ScriptDocPage() {
   }, [provider]);
 
   const notes = useNotes(provider);
-  const flagFocus = useScriptFlagFocus(doc, editor, notes);
+  const flagFocus = useScriptFlagFocus(doc, editor);
   const [tab, setTab] = useState<PanelTab>("notes");
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [composer, setComposer] = useState<{ quote: string; start: number; color?: string } | null>(null);
@@ -347,14 +347,15 @@ export default function ScriptDocPage() {
           editable={doc.access.can_edit}
           canNote={doc.access.can_note}
           seedHtml={seed ? doc.body_html : null}
-          notes={flagFocus.notes}
-          activeNoteId={flagFocus.activeId ?? activeNote}
+          notes={notes}
+          activeNoteId={activeNote}
           onChange={onEdited}
-          onSelectNote={(nid) => { if (flagFocus.isFocus(nid)) return; flagFocus.clear(); setGoToNote(null); setActiveNote(nid); setTab("notes"); }}
+          onSelectNote={(nid) => { setActiveNote(nid); setTab("notes"); }}
           onStartNote={startNote}
           sharedDocId={shared ? id : null}
           sharedReadOnly={sharedReadOnly}
-          goToNote={flagFocus.navigation ?? goToNote}
+          goToNote={goToNote}
+          focusRequest={flagFocus.request}
           onEmbedSelection={setEmbedSelection}
           mirrorHtml={null}
           bar={
@@ -383,7 +384,6 @@ export default function ScriptDocPage() {
           activeId={activeNote}
           composer={composer}
           onPick={(n) => {
-            flagFocus.clear();
             setActiveNote(n.id);
             if (shared) {
               if (inEditor) setWriterView("marks");

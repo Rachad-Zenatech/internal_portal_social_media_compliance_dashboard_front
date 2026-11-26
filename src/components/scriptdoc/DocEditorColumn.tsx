@@ -127,6 +127,7 @@ export default function DocEditorColumn({
   sharedDocId,
   sharedReadOnly,
   goToNote,
+  focusRequest,
   onEmbedSelection,
   mirrorHtml,
   bar,
@@ -147,6 +148,7 @@ export default function DocEditorColumn({
   sharedDocId?: string | null;
   sharedReadOnly?: boolean;
   goToNote?: { id: string; seq: number } | null;
+  focusRequest?: import("@/types/scriptDoc").ScriptFocusRequest;
   onEmbedSelection?: (sel: { quote: string; start: number } | null) => void;
   /** For a reviewer of a script written in the Share Document portal: its text, shown read-only to highlight and comment on. */
   mirrorHtml?: string | null;
@@ -163,6 +165,7 @@ export default function DocEditorColumn({
           notes={notes}
           activeNoteId={activeNoteId}
           goToNote={goToNote}
+          focusRequest={focusRequest}
           onSelectionChange={onEmbedSelection}
           onSelectNote={onSelectNote}
           toolbarExtra={canNote ? <NoteButtons onStart={onStartNote} /> : undefined}

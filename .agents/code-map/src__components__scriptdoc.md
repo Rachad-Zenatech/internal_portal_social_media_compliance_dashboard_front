@@ -32,7 +32,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
+## src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
 - `HIGHLIGHT_COLORS` (export const) L12
 - `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
 - `NoteButtons` (function) L94 - Combined Highlight & Comment control in the editor's toolbar.
@@ -110,8 +110,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourceEntry` (function) L12
 - `ScriptSourcesPanel` (export function) L21
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (230 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
-- `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
+## src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+- `SharedEditorFrame` (export function) L23 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
 ## src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - `LatestProps` (export class) L10 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
