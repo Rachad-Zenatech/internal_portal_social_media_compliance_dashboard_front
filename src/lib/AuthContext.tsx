@@ -190,7 +190,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!active || Date.now() - lastBeat < HEARTBEAT_EVERY_MS) return;
       active = false;
       lastBeat = Date.now();
-      apiClient.post('/api/auth/heartbeat', undefined, { skipGlobalLoading: true }).catch(() => undefined);
+      const previousToken = sessionStorage.getItem('token');
+      apiClient.post<{ token?: string }>('/api/auth/heartbeat', undefined, { skipGlobalLoading: true })
+        .then((result) => {
+          if (result.token && signedInRef.current && sessionStorage.getItem('token') === previousToken) {
+            sessionStorage.setItem('token', result.token);
+          }
+        }).catch(() => undefined);
     }, 30_000);
     return () => {
       window.clearInterval(refresh);
