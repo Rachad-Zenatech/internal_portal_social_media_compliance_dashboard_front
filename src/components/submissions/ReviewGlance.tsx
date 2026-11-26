@@ -38,10 +38,10 @@ export default function ReviewGlance({ tiles, active, onPick, extra }: {
   tiles: GlanceTile[];
   active: string;
   onPick: (key: string) => void;
-  extra?: { key: string; label: string }[];
+  extra?: { key: string; label: string; value?: ReactNode; sub?: string }[];
 }) {
   const seenCount = tiles.filter((tile) => tile.seen).length;
-  const extraTiles: GlanceTile[] = (extra ?? []).map((item) => ({ ...item, value: "Open transcript", sub: "Read the video's wording", tone: "muted", seen: item.key === active }));
+  const extraTiles: GlanceTile[] = (extra ?? []).map((item) => ({ ...item, value: item.value ?? "Open transcript", sub: item.sub ?? "Read the video's wording", tone: "muted", seen: item.key === active }));
   const sections = [...tiles, ...extraTiles];
   return (
     <div className="shrink-0 border-b border-border/70 bg-card p-4">
