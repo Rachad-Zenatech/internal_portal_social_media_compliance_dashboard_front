@@ -119,7 +119,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - src/components/submissions/CompliancePreviewActions.tsx (22 lines) - Text-only posts expose text editing without image, video or script replacement controls.
 - src/components/submissions/ComplianceScoreSummary.tsx (42 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
-- src/components/submissions/ComplianceStep.tsx (472 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceStep.tsx (471 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
@@ -191,8 +191,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
 - src/components/submissions/SentimentPanel.tsx (1259 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (79 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
-- src/components/submissions/SourceChecks.tsx (274 lines) - source checks (components submissions)
-- src/components/submissions/SourceLinksField.tsx (389 lines) - source links field (components submissions)
+- src/components/submissions/SourceChecks.tsx (280 lines) - source checks (components submissions)
+- src/components/submissions/SourceFallback.tsx (107 lines) - source fallback (components submissions)
+- src/components/submissions/SourceLinksField.tsx (407 lines) - source links field (components submissions)
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/StaleComplianceNotice.tsx (8 lines) - stale compliance notice (components submissions)
@@ -285,6 +286,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useSharedEventSource.ts (96 lines) - The latest handlers, so changing them doesn't reconnect.
 - src/hooks/useSourceComplianceRefresh.ts (19 lines) - Recheck once per changed source set after the creator opens Compliance; cancellation does not restart it.
 - src/hooks/useSourceConfirmations.ts (60 lines) - A site as source trust keys it: lower case, without "www.".
+- src/hooks/useSourceDocumentStatus.ts (38 lines) - use source document status (hooks)
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
