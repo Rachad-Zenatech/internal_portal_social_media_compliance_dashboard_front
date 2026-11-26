@@ -21,7 +21,7 @@ import ScoreBreakdown from "@/components/submissions/ScoreBreakdown";
 import UnavailableCompliance, { IncompleteFindingsNotice } from "@/components/submissions/UnavailableCompliance";
 import SyntheticMediaFixNote from "@/components/submissions/SyntheticMediaFixNote";
 import VideoTranscript from "@/components/submissions/VideoTranscript";
-import { SourceCheckingNotice, SourcesCheckedSection } from "@/components/submissions/SourceChecks";
+import { SourceCheckingNotice } from "@/components/submissions/SourceChecks";
 import { authedFileUrl, isAnalysing } from "@/components/submissions/submissionUi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
@@ -410,7 +410,6 @@ export default function ComplianceStep({
           )}
         </section>
 
-        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} editable={editable} className={`${card} flex flex-col gap-3`} />
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 xl:sticky xl:top-4">
