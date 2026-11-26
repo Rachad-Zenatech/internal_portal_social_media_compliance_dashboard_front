@@ -195,6 +195,7 @@ function ChecksTab({
   running,
   onRun,
   onFind,
+  disabledReason,
 }: {
   doc: DocDetail;
   editor: React.RefObject<CollabEditorHandle | null>;
@@ -202,18 +203,21 @@ function ChecksTab({
   running: boolean;
   onRun: () => void;
   onFind: (terms: string[]) => void;
+  disabledReason?: string;
 }) {
   const flags = activeFlagCount(check);
   return (
     <div className="flex flex-col gap-3 p-3">
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={onRun} disabled={running}>
+        <Button size="sm" onClick={onRun} disabled={running || Boolean(disabledReason)}>
           {running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-          {check ? "Check again" : "Check against the rulebook"}
+          {running ? "Checking compliance…" : "Check compliance"}
         </Button>
         {check && <span className="text-xs text-muted-foreground">{flags} to look at</span>}
       </div>
-      {check && <ScriptCompliance check={check} onFind={onFind} />}
+      <p className="text-xs text-muted-foreground">Checks this script against the rules and its saved sources.</p>
+      {disabledReason && <p className="text-xs text-amber-700 dark:text-amber-300">{disabledReason}</p>}
+      {check && <div className="space-y-2"><h3 className="text-sm font-semibold">Compliance score</h3><ScriptCompliance check={check} onFind={onFind} /></div>}
       {check && (
         <ScriptFindings
           check={check}
@@ -347,7 +351,7 @@ export default function DocSidePanel(props: {
   const check = savedCheck && scriptSourcesMatch(savedCheck.checked_script_sources, doc.sources_text ?? "") ? savedCheck : null;
   const runCheck = useMutation({
     mutationFn: () => {
-      if (sources.dirty) throw new Error("Save sources before running compliance.");
+      if (sources.dirty || sources.saving) throw new Error("Save sources before running compliance.");
       return scriptDocService.check(doc.id, props.editor.current?.getText());
     },
     onSuccess: (result) => queryClient.setQueryData(["script-doc-check", doc.id], result),
@@ -384,7 +388,7 @@ export default function DocSidePanel(props: {
       key: "checks",
       label: "Flags",
       value: check?.ai_unavailable ? "No check" : check ? (flags > 0 ? `${flags} open` : "Nothing open") : "Not run",
-      sub: check?.ai_unavailable ? "The check couldn't run" : check ? flagWords.join(" · ") || "No flags on the script" : "Run rulebook check",
+      sub: check?.ai_unavailable ? "The check couldn't run" : check ? flagWords.join(" · ") || "No flags on the script" : "Check rules and sources",
       tone: check?.ai_unavailable ? "muted" : criticalCount > 0 ? "bad" : flags > 0 ? "warn" : check ? "ok" : "muted",
       seen: seen.has("checks"),
     },
@@ -415,7 +419,7 @@ export default function DocSidePanel(props: {
         extra={[{ key: "reviewers", label: doc.status === "IN_REVIEW" && waiting > 0 ? `Review (${waiting} waiting)` : "Review & people" }]}
       />
       <div className="min-h-0 flex-1 overflow-auto">
-        {tab === "sources" && <ScriptSourcesPanel doc={doc} {...sources} onChange={sources.setDraft} onSave={sources.save} onReset={sources.reset} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} />}
+        {tab === "sources" && <ScriptSourcesPanel doc={doc} {...sources} onChange={sources.setDraft} onSave={sources.save} onReset={sources.reset} check={check} />}
         {tab === "notes" && (
           <NotesTab
             notes={props.notes}
@@ -432,7 +436,7 @@ export default function DocSidePanel(props: {
           />
         )}
         {tab === "checks" && (
-          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} />
+          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} disabledReason={sources.saving ? "Saving sources…" : sources.dirty ? "Save your source changes in Sources before checking compliance." : undefined} />
         )}
         {tab === "reviewers" && <ReviewersTab doc={doc} online={props.online} />}
         {tab === "history" && <HistoryTab data={historyQuery.data} isLoading={historyQuery.isLoading} />}

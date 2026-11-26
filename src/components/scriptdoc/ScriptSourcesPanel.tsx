@@ -18,10 +18,10 @@ function SourceEntry({ entry }: { entry: ReturnType<typeof scriptSourceEntries>[
   );
 }
 
-export default function ScriptSourcesPanel({ doc, draft, dirty, saving, onChange, onSave, onReset, check, running, onRun }: {
+export default function ScriptSourcesPanel({ doc, draft, dirty, saving, onChange, onSave, onReset, check }: {
   doc: DocDetail; draft: string; dirty: boolean; saving: boolean;
   onChange: (value: string) => void; onSave: () => void; onReset: () => void;
-  check: StoredCheck | null; running: boolean; onRun: () => void;
+  check: StoredCheck | null;
 }) {
   const [downloading, setDownloading] = useState(false);
   const entries = scriptSourceEntries(doc.sources_text ?? "");
@@ -42,7 +42,7 @@ export default function ScriptSourcesPanel({ doc, draft, dirty, saving, onChange
       </div>}
       {entries.length ? <ul className="space-y-2">{entries.map((entry, index) => <SourceEntry key={index} entry={entry} />)}</ul> : <p className="text-xs text-muted-foreground">No sources attached to this script yet.</p>}
       {dirty && <p className="text-xs text-amber-700 dark:text-amber-300">Save sources before running compliance or downloading.</p>}
-      <Button size="sm" className="w-full" disabled={dirty || saving || running} onClick={onRun}>{running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Check script against sources</Button>
+      <p className="text-xs text-muted-foreground">Run Check compliance in Flags to check both the rules and these sources.</p>
       <p className="text-xs text-muted-foreground">Checks verify support for claims. An attached link alone does not verify a claim; unavailable sources remain unresolved.</p>
       {check?.source_checks?.length ? <SourceChecks checks={check.source_checks} creator={doc.access.role === "CREATOR"} /> : <p className="text-xs text-muted-foreground">Source verification results appear here after the compliance check.</p>}
       <Button size="sm" variant="outline" disabled={dirty || saving || downloading} onClick={() => void download()}><Download className="mr-1.5 h-3.5 w-3.5" />Download script with sources</Button>
