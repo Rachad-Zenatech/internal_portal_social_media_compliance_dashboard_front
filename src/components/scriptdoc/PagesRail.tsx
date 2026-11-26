@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FilePlus2, FileText, Loader2, Send, UploadCloud } from "lucide-react";
+import { FilePlus2, Loader2, Send } from "lucide-react";
 
+import ScriptUploadDropzone from "@/components/scriptdoc/ScriptUploadDropzone";
 import BulkScriptCompliance from "@/components/scriptdoc/BulkScriptCompliance";
 import DeleteScriptMenu from "@/components/scriptdoc/DeleteScriptMenu";
 import { Button } from "@/components/ui/button";
@@ -26,9 +27,6 @@ const LABEL: Record<DocStatus, string> = {
 
 export const sendable = (p: DocPage) => p.status === "DRAFT" || p.status === "CHANGES_REQUESTED";
 
-const ACCEPT = ".pdf,.docx,.doc,.txt,.md";
-const MAX_MB = 10;
-
 /** Upload a file with one script or several: it is split into scripts, each added as its own page. */
 export function UploadPagesDialog({
   open,
@@ -39,7 +37,6 @@ export function UploadPagesDialog({
   onOpenChange: (open: boolean) => void;
   onUpload: (file: File) => Promise<void>;
 }) {
-  const input = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,31 +71,7 @@ export function UploadPagesDialog({
             added as its own page, with its table, to edit and send for review on its own.
           </DialogDescription>
         </DialogHeader>
-        <button
-          type="button"
-          onClick={() => input.current?.click()}
-          className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center hover:bg-muted/40"
-        >
-          {file ? <FileText className="h-7 w-7 text-blue-700" /> : <UploadCloud className="h-7 w-7 text-muted-foreground" />}
-          <span className="text-sm font-medium">{file ? file.name : "Choose a file"}</span>
-          <span className="text-xs text-muted-foreground">PDF, Word or text, up to {MAX_MB} MB</span>
-        </button>
-        <input
-          ref={input}
-          type="file"
-          accept={ACCEPT}
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (!f) return;
-            if (f.size > MAX_MB * 1024 * 1024) setError(`That file is too large (${MAX_MB} MB at most).`);
-            else {
-              setError(null);
-              setFile(f);
-            }
-          }}
-        />
+        <ScriptUploadDropzone file={file} busy={busy} onFile={setFile} onError={setError} />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>

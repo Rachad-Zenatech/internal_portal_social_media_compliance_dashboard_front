@@ -64,10 +64,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
 
-## src/components/scriptdoc/PagesRail.tsx (202 lines) - pages rail (components scriptdoc)
-- `sendable` (export const) L27
-- `UploadPagesDialog` (export function) L33 - Upload a file with one script or several: it is split into scripts, each added as its own page.
-- `PagesRail` (export function) L121 - The pages of the creator's document: every script on its own page.
+## src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
+- `sendable` (export const) L28
+- `UploadPagesDialog` (export function) L31 - Upload a file with one script or several: it is split into scripts, each added as its own page.
+- `PagesRail` (export function) L94 - The pages of the creator's document: every script on its own page.
 
 ## src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - `Dot` (export function) L14
@@ -109,6 +109,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
 - `SourceEntry` (function) L12
 - `ScriptSourcesPanel` (export function) L21
+
+## src/components/scriptdoc/ScriptUploadDropzone.tsx (77 lines) - script upload dropzone (components scriptdoc)
+- `ScriptUploadDropzone` (export function) L8
 
 ## src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L23 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
