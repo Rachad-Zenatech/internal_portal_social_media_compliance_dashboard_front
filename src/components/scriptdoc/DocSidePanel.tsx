@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocHistory, DocNote } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
+import { findingEvidence } from "@/lib/findingEvidence";
 
 export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers";
 
@@ -192,12 +193,14 @@ function ChecksTab({
   check,
   running,
   onRun,
+  onFind,
 }: {
   doc: DocDetail;
   editor: React.RefObject<CollabEditorHandle | null>;
   check: StoredCheck | null;
   running: boolean;
   onRun: () => void;
+  onFind: (terms: string[]) => void;
 }) {
   const flags = activeFlagCount(check);
   return (
@@ -209,11 +212,12 @@ function ChecksTab({
         </Button>
         {check && <span className="text-xs text-muted-foreground">{flags} to look at</span>}
       </div>
-      {check && <ScriptCompliance check={check} />}
+      {check && <ScriptCompliance check={check} onFind={onFind} />}
       {check && (
         <ScriptFindings
           check={check}
-          onFind={(t) => editor.current?.find(t)}
+          onFind={(t) => onFind([t])}
+          onGo={(finding) => onFind(findingEvidence(finding))}
           onReplace={doc.access.can_edit ? (q, r) => editor.current?.replace(q, r) ?? false : undefined}
         />
       )}
@@ -326,6 +330,7 @@ export default function DocSidePanel(props: {
   onDelete: (id: string) => void;
   onCompose: (text: string, color: string) => void;
   onCancelCompose: () => void;
+  onFind: (terms: string[]) => void;
 }) {
   const { doc, tab, onTab } = props;
   const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set([tab]));
@@ -424,7 +429,7 @@ export default function DocSidePanel(props: {
           />
         )}
         {tab === "checks" && (
-          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} />
+          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} />
         )}
         {tab === "sentiment" && (
           <div className="p-3">

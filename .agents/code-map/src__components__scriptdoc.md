@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (213 lines) - Highlight color palette (preset swatches + custom color picker).
+## src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
 - `HIGHLIGHT_COLORS` (export const) L12
 - `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
 - `NoteButtons` (function) L94 - Combined Highlight & Comment control in the editor's toolbar.
@@ -43,18 +43,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (450 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `PanelTab` (export type) L22
-- `NoteComposer` (function) L25 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `NotesTab` (function) L87 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L189 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L235
-- `ReviewersTab` (function) L271
-- `DocSidePanel` (export function) L313 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L332
-    - `runCheck` (fn) L338
-    - `historyQuery` (fn) L343
-    - `openNotes` (fn) L350
+## src/components/scriptdoc/DocSidePanel.tsx (455 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `PanelTab` (export type) L23
+- `NoteComposer` (function) L26 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `NotesTab` (function) L88 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L190 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L239
+- `ReviewersTab` (function) L275
+- `DocSidePanel` (export function) L317 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L337
+    - `runCheck` (fn) L343
+    - `historyQuery` (fn) L348
+    - `openNotes` (fn) L355
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
@@ -101,17 +101,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (229 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
-- `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
+## src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+- `SharedEditorFrame` (export function) L23 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
-## src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
-- `LatestProps` (export class) L9 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
-- `notesKey` (export const) L25
-- `TextSlice` (interface) L27
-- `collectBlocks` (function) L35
-- `strOffsetToDocPos` (function) L50
-- `readSelection` (export function) L63 - Read the current selection (even across multiple table cells or paragraphs) as { quote, start }.
-- `locate` (export function) L73 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
-- `NoteOptions` (interface) L104
-- `NoteMarks` (export const) L110 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
-- `findAndSelect` (export function) L154 - Select the first occurrence of `term` (any case) and scroll to it.
+## src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `LatestProps` (export class) L10 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `notesKey` (export const) L26
+- `TextSlice` (interface) L28
+- `collectBlocks` (function) L36
+- `strOffsetToDocPos` (function) L51
+- `readSelection` (export function) L64 - Read the current selection (even across multiple table cells or paragraphs) as { quote, start }.
+- `locate` (export function) L74 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
+- `NoteOptions` (interface) L105
+- `NoteMarks` (export const) L111 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
+- `findAndSelect` (export function) L155 - Select the first occurrence of `term` (any case) and scroll to it.

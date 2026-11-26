@@ -165,7 +165,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ItemResult` (export interface) L85
 - `BatchReviewResult` (export interface) L94
 
-## src/types/scriptDoc.ts (198 lines) - script doc (types)
+## src/types/scriptDoc.ts (204 lines) - script doc (types)
 - `DocStatus` (export type) L3
 - `Capacity` (export type) L4
 - `Vote` (export type) L5
@@ -176,16 +176,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocDetails` (export type) L47
 - `DocPost` (export interface) L50 - A post made from one script of an approved document.
 - `DocDetail` (export interface) L57
-- `DocPage` (export interface) L92 - One script (page) of a creator's document.
-- `DocSetSummary` (export interface) L103 - A creator's document in the hub.
-- `BulkResult` (export interface) L116
-- `DocSummary` (export interface) L121
-- `DocEvent` (export interface) L141
-- `DocVersion` (export interface) L150
-- `DocHistory` (export interface) L160
-- `ReviewerOption` (export interface) L165
-- `DocLiveState` (export interface) L174 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
-- `DocNote` (export interface) L184 - A highlight or comment on a stretch of the script, shared live through the notes document.
+- `ScriptFocusRequest` (export interface) L92 - A navigation request sent to the embedded script editor.
+- `DocPage` (export interface) L98 - One script (page) of a creator's document.
+- `DocSetSummary` (export interface) L109 - A creator's document in the hub.
+- `BulkResult` (export interface) L122
+- `DocSummary` (export interface) L127
+- `DocEvent` (export interface) L147
+- `DocVersion` (export interface) L156
+- `DocHistory` (export interface) L166
+- `ReviewerOption` (export interface) L171
+- `DocLiveState` (export interface) L180 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
+- `DocNote` (export interface) L190 - A highlight or comment on a stretch of the script, shared live through the notes document.
 
 ## src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - `ScriptMatch` (export type) L2 - Result of comparing a video with its retained approved script.

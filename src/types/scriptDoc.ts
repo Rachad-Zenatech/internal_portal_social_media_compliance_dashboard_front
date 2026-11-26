@@ -88,6 +88,12 @@ export interface DocDetail {
   created_at: string;
 }
 
+/** A navigation request sent to the embedded script editor. */
+export interface ScriptFocusRequest {
+  requestId: number;
+  terms: string[];
+}
+
 /** One script (page) of a creator's document. */
 export interface DocPage {
   id: string;

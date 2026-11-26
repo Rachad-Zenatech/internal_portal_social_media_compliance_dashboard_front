@@ -16,6 +16,7 @@ import { scriptReviewDocument } from "@/lib/scriptReviewAccess";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocNote, Vote } from "@/types/scriptDoc";
+import { useScriptFlagFocus } from "@/hooks/useScriptFlagFocus";
 
 const errText = (e: unknown) => (e as { message?: string })?.message ?? "Something went wrong";
 const SNAPSHOT_DELAY_MS = 2500;
@@ -140,6 +141,7 @@ export default function ScriptDocPage() {
   }, [provider]);
 
   const notes = useNotes(provider);
+  const flagFocus = useScriptFlagFocus(doc, editor);
   const [tab, setTab] = useState<PanelTab>("notes");
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [composer, setComposer] = useState<{ quote: string; start: number; color?: string } | null>(null);
@@ -353,6 +355,7 @@ export default function ScriptDocPage() {
           sharedDocId={shared ? id : null}
           sharedReadOnly={sharedReadOnly}
           goToNote={goToNote}
+          focusRequest={flagFocus.request}
           onEmbedSelection={setEmbedSelection}
           mirrorHtml={null}
           bar={
@@ -376,6 +379,7 @@ export default function ScriptDocPage() {
           notes={notes}
           online={onlineIds}
           editor={editor}
+          onFind={flagFocus.find}
           me={me}
           activeId={activeNote}
           composer={composer}

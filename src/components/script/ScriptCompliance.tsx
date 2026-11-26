@@ -5,6 +5,7 @@ import { FlagCard } from "@/components/script/ScriptReviewWorkspace";
 import { FINDING_ORDER, FindingGroup, groupFindings, statusOf } from "@/components/submissions/FindingStatus";
 import { scriptVerdict } from "@/lib/scriptStage";
 import type { StoredCheck } from "@/types/submission";
+import { findingEvidence } from "@/lib/findingEvidence";
 
 /** How many of a script's flags still need attention: cleared triggers aren't counted. */
 export function activeFlagCount(check?: StoredCheck | null): number {
@@ -15,7 +16,7 @@ export function activeFlagCount(check?: StoredCheck | null): number {
  * A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it
  * broke, the wording that triggered it and how to fix it. The same flags the reviewer sees, to read (not to act on).
  */
-export default function ScriptCompliance({ check }: { check?: StoredCheck | null }) {
+export default function ScriptCompliance({ check, onFind }: { check?: StoredCheck | null; onFind?: (terms: string[]) => void }) {
   const verdict = scriptVerdict(check);
   const violations = check?.violations ?? [];
   const grouped = groupFindings(violations, statusOf);
@@ -62,7 +63,7 @@ export default function ScriptCompliance({ check }: { check?: StoredCheck | null
         FINDING_ORDER.map((status) => (
           <FindingGroup key={status} status={status} count={grouped[status].length}>
             {grouped[status].map((v) => (
-              <FlagCard key={`${v.rule_id}-${v.flagged_terms.join("|")}`} v={v} canEdit={false} />
+              <FlagCard key={`${v.rule_id}-${v.flagged_terms.join("|")}`} v={v} canEdit={false} onGo={onFind ? (term) => onFind(term ? [term] : findingEvidence(v)) : undefined} />
             ))}
           </FindingGroup>
         ))

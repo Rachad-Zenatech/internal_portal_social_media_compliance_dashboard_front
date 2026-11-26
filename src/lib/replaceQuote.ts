@@ -25,6 +25,12 @@ function locate(text: string, quote: string, revision: string): [number, number]
   return [start, end];
 }
 
+/** The original wording of a quote, preserving its case, punctuation and whitespace. */
+export function matchingQuote(text: string, quote: string): string | null {
+  const at = locate(text, quote, "");
+  return at ? text.slice(at[0], at[1]) : null;
+}
+
 /** The text with the quoted wording replaced, or null when it isn't there. */
 export function replaceInText(text: string, quote: string, revision: string): string | null {
   const at = locate(text, quote, revision);
