@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/lib/AuthContext.tsx (351 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
+## src/lib/AuthContext.tsx (357 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `SIGNED_OUT_KEY` (export const) L8 - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - `clearStoredSession` (const) L18
 - `User` (export interface) L26
@@ -14,7 +14,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ViewMode` (export type) L78
 - `AuthContext` (const) L94
 - `AuthProvider` (export function) L96
-- `useAuth` (export function) L344
+- `useAuth` (export function) L350
 
 ## src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - `JobType` (export type) L5 - check": a compliance, sentiment or public mood check, which can take from seconds to minutes.
@@ -292,7 +292,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `dateValue` (function) L8
 - `orderScreenerQueue` (export function) L14 - Earliest deadlines first by default; missing dates always follow dated posts.
 
-## src/lib/scriptDoc.ts (218 lines) - script doc (lib)
+## src/lib/scriptDoc.ts (229 lines) - script doc (lib)
 - `Mark` (type) L19
 - `displayText` (export function) L25 - A piece of a script for showing in a list (what changed): the wording alone, without the page, heading, bold, italic,  list or table marks.
 - `ITALIC` (export const) L48 - Italic runs: _word_ where the underscores sit at the edges of words, so snake_case_names are left alone.
@@ -301,14 +301,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `parseInline` (export function) L70
 - `paragraph` (const) L80
 - `tableFrom` (function) L85
-- `textToDoc` (export function) L101 - The editor's content for a script's text.
-- `Run` (interface) L138
-- `runsOf` (function) L144
-- `writeRuns` (function) L158 - Runs as marked text: each bold or italic stretch wrapped, with the spacing around it left outside the marks.
-- `plain` (const) L178
-- `oneLine` (const) L179
-- `cellText` (function) L181
-- `docToText` (export function) L187 - A script's text for the editor's content.
+- `textToDoc` (export function) L108 - The editor's content for a script's text.
+- `Run` (interface) L145
+- `runsOf` (function) L151
+- `writeRuns` (function) L165 - Runs as marked text: each bold or italic stretch wrapped, with the spacing around it left outside the marks.
+- `plain` (const) L185
+- `oneLine` (const) L186
+- `cellText` (function) L188
+- `docToText` (export function) L194 - A script's text for the editor's content.
 
 ## src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
 - `LiveStatus` (export type) L7
@@ -325,6 +325,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SCRIPT_REVIEW_TABS` (export const) L5
 - `visibleScripts` (export function) L12 - A script stays visible on its own when its batch belongs to another tab.
 - `scriptReviewCounts` (export function) L17
+
+## src/lib/scriptSources.ts (12 lines) - Source text is evidence for one script, kept separate from its spoken and visual content.
+- `scriptSourceEntries` (export function) L2 - Source text is evidence for one script, kept separate from its spoken and visual content.
+- `scriptSourcesMatch` (export function) L9
 
 ## src/lib/scriptStage.ts (24 lines) - Score ring colours and the verdict line for a script check.
 - `SOURCE_LABELS` (export const) L4

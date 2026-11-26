@@ -98,6 +98,8 @@ export type { ScriptMatch } from "@/types/scriptMatch";
 
 /** The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images. */
 export type StoredCheck = ComplianceCheckResponse & {
+  /** Evidence saved for this script when its compliance check ran. */
+  checked_script_sources?: string;
   checked_at?: string;
   manual_requested_at?: string;
   checked_media_edited_at?: string | null;

@@ -150,6 +150,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
 
+## src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
+- `useScriptDocSources` (export function) L7
+
 ## src/hooks/useScriptFlagFocus.ts (21 lines) - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
 - `useScriptFlagFocus` (export function) L7 - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
 
