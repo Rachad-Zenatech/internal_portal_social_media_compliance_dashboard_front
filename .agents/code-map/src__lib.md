@@ -221,11 +221,12 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/preparationFreshness.ts (15 lines) - preparation freshness (lib)
 - `preparationCheckState` (export function) L4
 
-## src/lib/replaceQuote.ts (71 lines) - Put a suggested revision in place of the wording a finding quotes.
+## src/lib/replaceQuote.ts (77 lines) - Put a suggested revision in place of the wording a finding quotes.
 - `quotePattern` (function) L9
 - `locate` (function) L17 - Where the quote is in text: [start, end), taking in a closing punctuation mark the revision already ends with.
-- `replaceInText` (export function) L29 - The text with the quoted wording replaced, or null when it isn't there.
-- `replaceInEditable` (export function) L38 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
+- `matchingQuote` (export function) L29 - The original wording of a quote, preserving its case, punctuation and whitespace.
+- `replaceInText` (export function) L35 - The text with the quoted wording replaced, or null when it isn't there.
+- `replaceInEditable` (export function) L44 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
 
 ## src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
 - `reviewSendScore` (export function) L5 - A routing threshold only: pending requests never change the actual approval score.

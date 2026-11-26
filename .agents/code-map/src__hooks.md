@@ -141,6 +141,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
 - `useScriptDocSources` (export function) L7
 
+## src/hooks/useScriptFlagFocus.ts (40 lines) - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
+- `useScriptFlagFocus` (export function) L10 - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
+
 ## src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
 - `useScriptReviewQueue` (export function) L5
 

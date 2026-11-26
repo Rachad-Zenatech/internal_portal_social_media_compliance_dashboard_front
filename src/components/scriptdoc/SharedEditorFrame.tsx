@@ -126,6 +126,7 @@ export default function SharedEditorFrame({
       if (type === "script-embed:ready" && frame.current?.contentWindow) {
         frame.current.contentWindow.postMessage({ type: "script-embed:set-readonly", readOnly }, session.origin);
         frame.current.contentWindow.postMessage({ type: "script-embed:notes", notes, activeNoteId }, session.origin);
+        if (goToNote) frame.current.contentWindow.postMessage({ type: "script-embed:go-to-note", id: goToNote.id }, session.origin);
         return;
       }
       if (type === "script-embed:selection" && typeof data?.quote === "string") {
@@ -143,7 +144,7 @@ export default function SharedEditorFrame({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [session?.origin, qc, docId, refetch, readOnly, notes, activeNoteId, onSelectionChange, onSelectNote]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.origin, qc, docId, refetch, readOnly, notes, activeNoteId, goToNote, onSelectionChange, onSelectNote]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (session && loaded.current && frame.current?.contentWindow) {

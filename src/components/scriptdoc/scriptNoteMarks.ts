@@ -4,6 +4,7 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import type { Node as PMNode } from "@tiptap/pm/model";
 
 import type { DocNote } from "@/types/scriptDoc";
+import { matchingQuote } from "../../lib/replaceQuote.ts";
 
 /** What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor. */
 export class LatestProps {
@@ -152,14 +153,9 @@ export const NoteMarks = Extension.create<NoteOptions>({
 
 /** Select the first occurrence of `term` (any case) and scroll to it. */
 export function findAndSelect(editor: Editor, term: string): boolean {
-  const needle = term.toLowerCase();
-  let found: { from: number; to: number } | null = null;
-  editor.state.doc.descendants((node, pos) => {
-    if (found || !node.isText || !node.text) return !found;
-    const at = node.text.toLowerCase().indexOf(needle);
-    if (at >= 0) found = { from: pos + at, to: pos + at + term.length };
-    return !found;
-  });
+  const { joined } = collectBlocks(editor.state.doc);
+  const quote = matchingQuote(joined, term);
+  const found = quote ? locate(editor.state.doc, { quote, start: 0 } as DocNote) : null;
   if (!found) return false;
   editor.chain().focus().setTextSelection(found).scrollIntoView().run();
   return true;

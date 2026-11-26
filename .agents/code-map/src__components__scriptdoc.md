@@ -46,20 +46,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (442 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `PanelTab` (export type) L23
-- `NoteComposer` (function) L26 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `NotesTab` (function) L88 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L190 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L241
-- `ReviewersTab` (function) L277
-- `DocSidePanel` (export function) L319 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L338
-    - `queryClient` (fn) L343
-    - `sources` (fn) L344
-    - `runCheck` (fn) L347
-    - `historyQuery` (fn) L355
-    - `openNotes` (fn) L360
+## src/components/scriptdoc/DocSidePanel.tsx (447 lines) - doc side panel (components scriptdoc)
+- `PanelTab` (export type) L24
+- `NoteComposer` (function) L27 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `NotesTab` (function) L89 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L191 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L245
+- `ReviewersTab` (function) L281
+- `DocSidePanel` (export function) L323 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L343
+    - `queryClient` (fn) L348
+    - `sources` (fn) L349
+    - `runCheck` (fn) L352
+    - `historyQuery` (fn) L360
+    - `openNotes` (fn) L365
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
@@ -110,17 +110,17 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourceEntry` (function) L12
 - `ScriptSourcesPanel` (export function) L21
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (229 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+## src/components/scriptdoc/SharedEditorFrame.tsx (230 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L22 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
-## src/components/scriptdoc/scriptNoteMarks.ts (167 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
-- `LatestProps` (export class) L9 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
-- `notesKey` (export const) L25
-- `TextSlice` (interface) L27
-- `collectBlocks` (function) L35
-- `strOffsetToDocPos` (function) L50
-- `readSelection` (export function) L63 - Read the current selection (even across multiple table cells or paragraphs) as { quote, start }.
-- `locate` (export function) L73 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
-- `NoteOptions` (interface) L104
-- `NoteMarks` (export const) L110 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
-- `findAndSelect` (export function) L154 - Select the first occurrence of `term` (any case) and scroll to it.
+## src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `LatestProps` (export class) L10 - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
+- `notesKey` (export const) L26
+- `TextSlice` (interface) L28
+- `collectBlocks` (function) L36
+- `strOffsetToDocPos` (function) L51
+- `readSelection` (export function) L64 - Read the current selection (even across multiple table cells or paragraphs) as { quote, start }.
+- `locate` (export function) L74 - Where a note's wording is now: the occurrence nearest to where it started (the text moves as people edit).
+- `NoteOptions` (interface) L105
+- `NoteMarks` (export const) L111 - Draws every highlight and comment on the wording it belongs to, in the colour of the person who made it.
+- `findAndSelect` (export function) L155 - Select the first occurrence of `term` (any case) and scroll to it.

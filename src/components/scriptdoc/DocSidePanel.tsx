@@ -19,6 +19,7 @@ import type { StoredCheck } from "@/types/submission";
 import ScriptSourcesPanel from "@/components/scriptdoc/ScriptSourcesPanel";
 import { useScriptDocSources } from "@/hooks/useScriptDocSources";
 import { scriptSourceEntries, scriptSourcesMatch } from "@/lib/scriptSources";
+import { findingEvidence } from "@/lib/findingEvidence";
 
 export type PanelTab = "notes" | "checks" | "history" | "reviewers" | "sources";
 
@@ -194,6 +195,7 @@ function ChecksTab({
   running,
   onRun,
   disabledReason,
+  onFind,
 }: {
   doc: DocDetail;
   editor: React.RefObject<CollabEditorHandle | null>;
@@ -201,6 +203,7 @@ function ChecksTab({
   running: boolean;
   onRun: () => void;
   disabledReason?: string;
+  onFind: (terms: string[]) => void;
 }) {
   const flags = activeFlagCount(check);
   return (
@@ -214,11 +217,12 @@ function ChecksTab({
       </div>
       <p className="text-xs text-muted-foreground">Checks this script against the rules and its saved sources.</p>
       {disabledReason && <p className="text-xs text-amber-700 dark:text-amber-300">{disabledReason}</p>}
-      {check && <div className="space-y-2"><h3 className="text-sm font-semibold">Compliance score</h3><ScriptCompliance check={check} /></div>}
+      {check && <div className="space-y-2"><h3 className="text-sm font-semibold">Compliance score</h3><ScriptCompliance check={check} onFind={onFind} /></div>}
       {check && (
         <ScriptFindings
           check={check}
-          onFind={(t) => editor.current?.find(t)}
+          onFind={(t) => onFind([t])}
+          onGo={(finding) => onFind(findingEvidence(finding))}
           onReplace={doc.access.can_edit ? (q, r) => editor.current?.replace(q, r) ?? false : undefined}
         />
       )}
@@ -332,6 +336,7 @@ export default function DocSidePanel(props: {
   onDelete: (id: string) => void;
   onCompose: (text: string, color: string) => void;
   onCancelCompose: () => void;
+  onFind: (terms: string[]) => void;
 }) {
   const { doc, tab, onTab } = props;
   const [seen, setSeen] = useState<Set<PanelTab>>(() => new Set([tab]));
@@ -431,7 +436,7 @@ export default function DocSidePanel(props: {
           />
         )}
         {tab === "checks" && (
-          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} disabledReason={sources.saving ? "Saving sources…" : sources.dirty ? "Save your source changes in Sources before checking compliance." : undefined} />
+          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} disabledReason={sources.saving ? "Saving sources…" : sources.dirty ? "Save your source changes in Sources before checking compliance." : undefined} />
         )}
         {tab === "reviewers" && <ReviewersTab doc={doc} online={props.online} />}
         {tab === "history" && <HistoryTab data={historyQuery.data} isLoading={historyQuery.isLoading} />}

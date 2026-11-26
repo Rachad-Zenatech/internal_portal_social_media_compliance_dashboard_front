@@ -24,6 +24,7 @@ export default function ScriptFindings({
   onFind,
   onReplace,
   onAppend,
+  onGo,
 }: {
   check?: StoredCheck | null;
   /** Select the wording in the script. */
@@ -32,6 +33,7 @@ export default function ScriptFindings({
   onReplace?: (quote: string, rewrite: string) => boolean;
   /** Add text (a disclaimer) to the end of the script. */
   onAppend?: (text: string) => void;
+  onGo?: (finding: ComplianceViolation) => void;
 }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [fixes, setFixes] = useState<Record<string, Fix>>({});
@@ -114,7 +116,8 @@ export default function ScriptFindings({
               aria-expanded={on}
               onClick={() => {
                 setPicked(on ? null : key);
-                if (!on && !missing && v.flagged_terms[0]) onFind?.(v.flagged_terms[0]);
+                if (onGo) onGo(v);
+                else if (!on && !missing && v.flagged_terms[0]) onFind?.(v.flagged_terms[0]);
               }}
               className="flex w-full gap-3 p-3 text-left"
             >

@@ -16,6 +16,7 @@ import { scriptReviewDocument } from "@/lib/scriptReviewAccess";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocNote, Vote } from "@/types/scriptDoc";
+import { useScriptFlagFocus } from "@/hooks/useScriptFlagFocus";
 
 const errText = (e: unknown) => (e as { message?: string })?.message ?? "Something went wrong";
 const SNAPSHOT_DELAY_MS = 2500;
@@ -140,6 +141,7 @@ export default function ScriptDocPage() {
   }, [provider]);
 
   const notes = useNotes(provider);
+  const flagFocus = useScriptFlagFocus(doc, editor, notes);
   const [tab, setTab] = useState<PanelTab>("notes");
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [composer, setComposer] = useState<{ quote: string; start: number; color?: string } | null>(null);
@@ -345,14 +347,14 @@ export default function ScriptDocPage() {
           editable={doc.access.can_edit}
           canNote={doc.access.can_note}
           seedHtml={seed ? doc.body_html : null}
-          notes={notes}
-          activeNoteId={activeNote}
+          notes={flagFocus.notes}
+          activeNoteId={flagFocus.activeId ?? activeNote}
           onChange={onEdited}
-          onSelectNote={(nid) => { setActiveNote(nid); setTab("notes"); }}
+          onSelectNote={(nid) => { if (flagFocus.isFocus(nid)) return; flagFocus.clear(); setGoToNote(null); setActiveNote(nid); setTab("notes"); }}
           onStartNote={startNote}
           sharedDocId={shared ? id : null}
           sharedReadOnly={sharedReadOnly}
-          goToNote={goToNote}
+          goToNote={flagFocus.navigation ?? goToNote}
           onEmbedSelection={setEmbedSelection}
           mirrorHtml={null}
           bar={
@@ -376,10 +378,12 @@ export default function ScriptDocPage() {
           notes={notes}
           online={onlineIds}
           editor={editor}
+          onFind={flagFocus.find}
           me={me}
           activeId={activeNote}
           composer={composer}
           onPick={(n) => {
+            flagFocus.clear();
             setActiveNote(n.id);
             if (shared) {
               if (inEditor) setWriterView("marks");

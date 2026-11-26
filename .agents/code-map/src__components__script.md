@@ -69,9 +69,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ScriptBatchBar.tsx (80 lines) - Reviewers open scripts in the Content screener; the creator on the post's script page.
 - `ScriptBatchBar` (export function) L12 - The strip across the top of a script that came in a batch: which batch and which script this is, and a way to step to  the previous or ne...
 
-## src/components/script/ScriptCompliance.tsx (73 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
-- `activeFlagCount` (export function) L10 - How many of a script's flags still need attention: cleared triggers aren't counted.
-- `ScriptCompliance` (export function) L18 - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
+## src/components/script/ScriptCompliance.tsx (74 lines) - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `activeFlagCount` (export function) L11 - How many of a script's flags still need attention: cleared triggers aren't counted.
+- `ScriptCompliance` (export function) L19 - A script's compliance check as the creator sees it: the score and what it means, then each flag with the rule it  broke, the wording that...
 
 ## src/components/script/ScriptDiff.tsx (489 lines) - Text with the given phrases marked (flagged wording).
 - `escapeRe` (const) L7
@@ -112,7 +112,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Toolbar` (function) L111
 - `ScriptEditor` (export function) L193 - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptFindings.tsx (229 lines) - script findings (components script)
+## src/components/script/ScriptFindings.tsx (232 lines) - script findings (components script)
 - `Fix` (type) L15
 - `ScriptFindings` (export function) L22 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
 
