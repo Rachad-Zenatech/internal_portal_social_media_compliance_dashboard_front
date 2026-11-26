@@ -410,7 +410,7 @@ export default function ComplianceStep({
           )}
         </section>
 
-        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} className={`${card} flex flex-col gap-3`} />
+        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} editable={editable} className={`${card} flex flex-col gap-3`} />
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 xl:sticky xl:top-4">

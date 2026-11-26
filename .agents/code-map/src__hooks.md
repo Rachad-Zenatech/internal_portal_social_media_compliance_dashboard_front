@@ -159,6 +159,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourceConfirmationsApi` (export interface) L21
 - `useSourceConfirmations` (export function) L33 - Everyone's calls on a post's sources and each source's standing with reviewers, and a way to add one's own.
 
+## src/hooks/useSourceDocumentStatus.ts (38 lines) - use source document status (hooks)
+- `Status` (type) L4
+- `useSourceDocumentStatus` (export function) L6
+
 ## src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
 - `useSubmissionReviewState` (export function) L6 - Refresh review permissions without replacing the creator's unsaved form fields.
 

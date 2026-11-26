@@ -104,6 +104,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SentimentPanel.md | 1 | 3 KB |
 | .agents/code-map/src__components__submissions__SourceCheckResult.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceChecks.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SourceFallback.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceLinksField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
@@ -128,7 +129,7 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 42 | 13 KB |
+| .agents/code-map/src__hooks.md | 43 | 13 KB |
 | .agents/code-map/src__lib.md | 55 | 24 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
