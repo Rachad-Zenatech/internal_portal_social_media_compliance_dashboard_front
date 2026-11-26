@@ -411,7 +411,7 @@ export default function DocSidePanel(props: {
         tiles={tiles}
         active={tab}
         onPick={(key) => pickTab(key as PanelTab)}
-        extra={[{ key: "reviewers", label: doc.status === "IN_REVIEW" && waiting > 0 ? `Review (${waiting} waiting)` : "Review & people" }]}
+        extra={[{ key: "reviewers", label: doc.status === "IN_REVIEW" && waiting > 0 ? `Review (${waiting} waiting)` : "Review & people", value: "Reviewers & approvals", sub: "See who’s reviewing this script." }]}
       />
       <div className="min-h-0 flex-1 overflow-auto">
         {tab === "sources" && <ScriptSourcesPanel doc={doc} {...sources} onChange={sources.setDraft} onSave={sources.save} onReset={sources.reset} check={check} />}
