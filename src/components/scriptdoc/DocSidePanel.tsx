@@ -10,10 +10,8 @@ import { CheckInList, Dot } from "@/components/scriptdoc/ReviewDialogs";
 import ScriptCompliance, { activeFlagCount } from "@/components/script/ScriptCompliance";
 import ScriptFindings from "@/components/script/ScriptFindings";
 import ReviewGlance, { type GlanceTile } from "@/components/submissions/ReviewGlance";
-import SentimentPanel from "@/components/submissions/SentimentPanel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useSentiment } from "@/hooks/useSentiment";
 import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocHistory, DocNote } from "@/types/scriptDoc";
@@ -23,7 +21,7 @@ import ScriptSourcesPanel from "@/components/scriptdoc/ScriptSourcesPanel";
 import { useScriptDocSources } from "@/hooks/useScriptDocSources";
 import { scriptSourceEntries, scriptSourcesMatch } from "@/lib/scriptSources";
 
-export type PanelTab = "notes" | "checks" | "sentiment" | "history" | "reviewers" | "sources";
+export type PanelTab = "notes" | "checks" | "history" | "reviewers" | "sources";
 
 /** Unified Highlight & Comment composer on the selected wording (comment text is optional). */
 function NoteComposer({
@@ -359,8 +357,6 @@ export default function DocSidePanel(props: {
     queryKey: ["script-doc-history", doc.id, doc.status, doc.round],
     queryFn: () => scriptDocService.history(doc.id),
   });
-  const submissionId = doc.posts[0]?.submission_id ?? "";
-  const { analysis: sentiment } = useSentiment(submissionId);
 
   const openNotes = useMemo(() => props.notes.filter((n) => !n.resolved).length, [props.notes]);
   const waiting = doc.reviewers.filter((r) => r.capacity === "EDIT" && !r.checked_in).length;
@@ -375,8 +371,6 @@ export default function DocSidePanel(props: {
     evidenceCount > 0 ? `${evidenceCount} need${evidenceCount === 1 ? "s" : ""} a source` : "",
   ].filter(Boolean);
 
-  const sentimentBusy = sentiment ? ["PENDING", "PROCESSING", "WAITING_TRANSCRIPT", "SCHEDULED"].includes(sentiment.status) : false;
-  const sentimentDone = sentiment?.status === "COMPLETED" && sentiment.result;
   const versionCount = historyQuery.data?.versions.length ?? 0;
 
   const tiles: GlanceTile[] = [
@@ -401,14 +395,6 @@ export default function DocSidePanel(props: {
       sub: openNotes > 0 ? "Places marked for changes" : "Select text in the script to mark it",
       tone: openNotes > 0 ? "warn" : "muted",
       seen: seen.has("notes"),
-    },
-    {
-      key: "sentiment",
-      label: "Sentiment",
-      value: sentimentDone ? sentiment.result!.overall_assessment.replace(/_/g, " ") : sentimentBusy ? "Running" : "Not run",
-      sub: sentimentDone ? "Read on the script" : sentimentBusy ? "Will appear here" : submissionId ? "Run it from here" : "Available on post",
-      tone: "muted",
-      seen: seen.has("sentiment"),
     },
     {
       key: "history",
@@ -447,21 +433,6 @@ export default function DocSidePanel(props: {
         )}
         {tab === "checks" && (
           <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} />
-        )}
-        {tab === "sentiment" && (
-          <div className="p-3">
-            {submissionId ? (
-              <SentimentPanel
-                key={submissionId}
-                submissionId={submissionId}
-                canRun={doc.access.role !== "VIEWER"}
-              />
-            ) : (
-              <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                Sentiment and public mood read a post, so they become available when this script is attached to a post.
-              </p>
-            )}
-          </div>
         )}
         {tab === "reviewers" && <ReviewersTab doc={doc} online={props.online} />}
         {tab === "history" && <HistoryTab data={historyQuery.data} isLoading={historyQuery.isLoading} />}

@@ -46,20 +46,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (472 lines) - doc side panel (components scriptdoc)
-- `PanelTab` (export type) L26
-- `NoteComposer` (function) L29 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
-- `NotesTab` (function) L91 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
-- `ChecksTab` (function) L193 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L243
-- `ReviewersTab` (function) L279
-- `DocSidePanel` (export function) L321 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L341
-    - `queryClient` (fn) L346
-    - `sources` (fn) L347
-    - `runCheck` (fn) L350
-    - `historyQuery` (fn) L358
-    - `openNotes` (fn) L365
+## src/components/scriptdoc/DocSidePanel.tsx (443 lines) - doc side panel (components scriptdoc)
+- `PanelTab` (export type) L24
+- `NoteComposer` (function) L27 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- `NotesTab` (function) L89 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
+- `ChecksTab` (function) L191 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
+- `HistoryTab` (function) L241
+- `ReviewersTab` (function) L277
+- `DocSidePanel` (export function) L319 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L339
+    - `queryClient` (fn) L344
+    - `sources` (fn) L345
+    - `runCheck` (fn) L348
+    - `historyQuery` (fn) L356
+    - `openNotes` (fn) L361
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
