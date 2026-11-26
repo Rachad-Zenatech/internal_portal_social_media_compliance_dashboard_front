@@ -337,7 +337,7 @@ export default function ScriptDocPage() {
 
       <div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
         {doc.pages.length > 0 && showPages && (
-          <PagesRail doc={doc} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
+          <PagesRail doc={doc} onBeforeCheck={flush} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}
         <DocEditorColumn
           provider={provider}

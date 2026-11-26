@@ -88,6 +88,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/SharedScriptReviewEntry.tsx (37 lines) - Opening a submitted upload explicitly adopts it into the shared review workflow.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/script/scriptPreview.ts (10 lines) - Prefer the attached script's extracted text, with the latest reviewed version as fallback.
+- src/components/scriptdoc/BulkScriptCompliance.tsx (31 lines) - bulk script compliance (components scriptdoc)
 - src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
@@ -95,9 +96,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
-- src/components/scriptdoc/DocSidePanel.tsx (455 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+- src/components/scriptdoc/DocSidePanel.tsx (456 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
-- src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
+- src/components/scriptdoc/PagesRail.tsx (202 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
@@ -256,6 +257,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useCreatorReviewUpdates.ts (12 lines) - use creator review updates (hooks)
 - src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
+- src/hooks/useDocumentScriptChecks.ts (40 lines) - use document script checks (hooks)
 - src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
@@ -414,6 +416,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/captionReviewService.ts (10 lines) - caption review service (services)
 - src/services/complianceService.ts (396 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
+- src/services/documentScriptChecks.ts (21 lines) - Check each page independently; continue after a failure and keep running across navigation.
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.

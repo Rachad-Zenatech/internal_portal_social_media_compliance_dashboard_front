@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -339,10 +339,11 @@ export default function DocSidePanel(props: {
     onTab(t);
   };
 
-  const [check, setCheck] = useState<StoredCheck | null>(null);
+  const queryClient = useQueryClient();
+  const { data: check = null } = useQuery<StoredCheck | null>({ queryKey: ["script-doc-check", doc.id], queryFn: async () => null, enabled: false });
   const runCheck = useMutation({
     mutationFn: () => scriptDocService.check(doc.id, props.editor.current?.getText()),
-    onSuccess: setCheck,
+    onSuccess: (result) => queryClient.setQueryData(["script-doc-check", doc.id], result),
     onError: (e: any) => toast.error(e?.message ?? "The check couldn't run"),
   });
   const historyQuery = useQuery({
