@@ -164,6 +164,8 @@ export default function ScriptDocPage() {
 
   // Save the script as it reads (for lists, flags and history) a moment after someone stops typing.
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preparePostDetails = useRef<(() => Promise<void>) | null>(null);
+  const registerPostDetails = useCallback((prepare: (() => Promise<void>) | null) => { preparePostDetails.current = prepare; }, []);
   const canEdit = Boolean(doc?.access.can_edit) && !shared; // a shared script is saved from its own editor
   const onEdited = useCallback(() => {
     if (!canEdit) return;
@@ -235,6 +237,7 @@ export default function ScriptDocPage() {
     const h = editor.current;
     if (h && doc?.access.can_edit && !shared) await scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
   };
+  const beforeBulkCheck = async () => { await flush(); await preparePostDetails.current?.(); };
   const addPage = async () => {
     setPageBusy(true);
     try {
@@ -331,14 +334,14 @@ export default function ScriptDocPage() {
       <DocHeader doc={doc} live={status} people={presence} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
       <DocStatusStrip doc={doc} myCheckIn={myCheckIn} changedBy={changedBy} />
       {isCreator ? (
-        <DocDetailsAccordion key={doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} />
+        <DocDetailsAccordion key={doc.set_id ?? doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} onPrepare={registerPostDetails} />
       ) : (
         <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
       )}
 
       <div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
         {doc.pages.length > 0 && showPages && (
-          <PagesRail doc={doc} onBeforeCheck={flush} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
+          <PagesRail doc={doc} onBeforeCheck={beforeBulkCheck} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}
         <DocEditorColumn
           provider={provider}

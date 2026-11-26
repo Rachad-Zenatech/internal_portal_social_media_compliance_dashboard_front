@@ -1,7 +1,6 @@
 import BatchDetailsForm from "@/components/script/BatchDetailsForm";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useBulkScriptDetails } from "@/hooks/useBulkScriptDetails";
 import type { BatchDetails } from "@/types/scriptBatch";
 import type { DocDetail } from "@/types/scriptDoc";
@@ -19,36 +18,36 @@ function ScriptDetails({ script, details, missing, busy, onChange }: {
   );
 }
 
-export default function BulkScriptDetailsDialog({ doc, busy, onClose, onRun }: {
-  doc: DocDetail; busy: boolean; onClose: () => void; onRun: (prepare: () => Promise<void>) => Promise<boolean>;
+export default function BulkScriptDetailsPanel({ doc, onPrepare }: {
+  doc: DocDetail; onPrepare?: (prepare: (() => Promise<void>) | null) => void;
 }) {
   const state = useBulkScriptDetails(doc);
-  const run = async () => { if (await onRun(state.save)) onClose(); };
+  const { mutate, mutateAsync, isPending: busy, error } = useMutation({ mutationFn: state.save });
+  useEffect(() => {
+    onPrepare?.(() => mutateAsync());
+    return () => onPrepare?.(null);
+  }, [mutateAsync, onPrepare]);
   const sharedMissing = [...new Set(Object.values(state.missing).flat())];
   const unavailable = state.loading || state.failed;
   return (
-    <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
-      <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden sm:max-w-6xl" onInteractOutside={(event) => { if (busy) event.preventDefault(); }}>
-        <DialogHeader>
-          <DialogTitle>Post details and bulk compliance</DialogTitle>
-          <DialogDescription>Fill in post details, then check all {doc.pages.length} scripts. Each script is checked against its own sources.</DialogDescription>
-        </DialogHeader>
+    <div className="space-y-3" aria-label="Post details for all scripts">
         <label className="flex items-center gap-2 rounded-lg border p-3 text-sm font-medium">
           <Checkbox checked={state.sameForAll} disabled={busy || unavailable || !state.canEdit} onCheckedChange={(checked) => state.setSameForAll(checked === true)} />
           Post details are the same for all scripts
         </label>
         {state.scripts.some((script) => !script.access.can_submit) && <p className="text-xs text-muted-foreground">Scripts already sent for review keep their saved post details.</p>}
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        <p className="text-xs text-muted-foreground">{state.sameForAll ? "Enter post details once for all scripts." : "Enter post details for each script below."}</p>
+        <div className="space-y-3">
           {state.loading && <p className="text-sm text-muted-foreground">Loading script details...</p>}
           {state.failed && <p role="alert" className="text-sm text-destructive">Couldn't load every script. Close this dialog and try again.</p>}
           {!unavailable && state.sameForAll && <BatchDetailsForm details={state.shared} missing={sharedMissing} disabled={busy || !state.canEdit} hideReviewers idPrefix="bulk-shared" onChange={state.setShared} />}
           {!unavailable && !state.sameForAll && state.scripts.map((script) => <ScriptDetails key={script.id} script={script} details={state.drafts[script.id] ?? script.details} missing={state.missing[script.id] ?? []} busy={busy} onChange={(value) => state.changeScript(script.id, value)} />)}
         </div>
-        <div className="flex justify-end gap-2 border-t pt-3">
-          <Button variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || unavailable} onClick={() => void run()}>{busy ? "Preparing compliance..." : "Save details and check all scripts"}</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        {error && <p role="alert" className="text-sm text-destructive">{error.message}</p>}
+        <p className="text-xs text-muted-foreground">Details are saved when you save below or run compliance for all scripts.</p>
+        <Button size="sm" disabled={busy || unavailable || !state.canEdit} onClick={() => mutate()}>{busy ? "Saving post details..." : "Save post details"}</Button>
+    </div>
   );
 }
+import { useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
