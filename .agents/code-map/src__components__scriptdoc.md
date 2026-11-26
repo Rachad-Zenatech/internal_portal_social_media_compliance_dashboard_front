@@ -4,6 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
+## src/components/scriptdoc/BulkScriptCompliance.tsx (31 lines) - bulk script compliance (components scriptdoc)
+- `BulkScriptCompliance` (export function) L7
+
 ## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - `CollabEditorHandle` (export interface) L20
 - `Tool` (function) L34
@@ -43,7 +46,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (450 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
+## src/components/scriptdoc/DocSidePanel.tsx (451 lines) - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `PanelTab` (export type) L22
 - `NoteComposer` (function) L25 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `NotesTab` (function) L87 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
@@ -52,17 +55,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ReviewersTab` (function) L271
 - `DocSidePanel` (export function) L313 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
     - `pickTab` (fn) L332
-    - `runCheck` (fn) L338
-    - `historyQuery` (fn) L343
-    - `openNotes` (fn) L350
+    - `queryClient` (fn) L337
+    - `runCheck` (fn) L339
+    - `historyQuery` (fn) L344
+    - `openNotes` (fn) L351
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
 
-## src/components/scriptdoc/PagesRail.tsx (198 lines) - pages rail (components scriptdoc)
-- `sendable` (export const) L26
-- `UploadPagesDialog` (export function) L32 - Upload a file with one script or several: it is split into scripts, each added as its own page.
-- `PagesRail` (export function) L120 - The pages of the creator's document: every script on its own page.
+## src/components/scriptdoc/PagesRail.tsx (202 lines) - pages rail (components scriptdoc)
+- `sendable` (export const) L27
+- `UploadPagesDialog` (export function) L33 - Upload a file with one script or several: it is split into scripts, each added as its own page.
+- `PagesRail` (export function) L121 - The pages of the creator's document: every script on its own page.
 
 ## src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - `Dot` (export function) L14

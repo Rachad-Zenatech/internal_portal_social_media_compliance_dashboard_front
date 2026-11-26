@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FilePlus2, FileText, Loader2, Send, UploadCloud } from "lucide-react";
 
+import BulkScriptCompliance from "@/components/scriptdoc/BulkScriptCompliance";
 import DeleteScriptMenu from "@/components/scriptdoc/DeleteScriptMenu";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -122,6 +123,7 @@ export default function PagesRail({
   busy,
   onAdd,
   onSendAll,
+  onBeforeCheck,
   onDeletePage,
   sendDisabledReason,
 }: {
@@ -129,6 +131,7 @@ export default function PagesRail({
   busy: boolean;
   onAdd: () => void;
   onSendAll: () => void;
+  onBeforeCheck: () => Promise<void>;
   onDeletePage: (page: DocPage) => Promise<void>;
   /** Set while sending is off (the details aren't filled in): why. */
   sendDisabledReason?: string;
@@ -179,7 +182,8 @@ export default function PagesRail({
         ))}
       </ol>
       {mine && (
-        <div className="border-t p-2">
+        <div className="space-y-2 border-t p-2">
+          <BulkScriptCompliance doc={doc} disabled={busy} beforeCheck={onBeforeCheck} />
           <Button
             size="sm"
             className="w-full"

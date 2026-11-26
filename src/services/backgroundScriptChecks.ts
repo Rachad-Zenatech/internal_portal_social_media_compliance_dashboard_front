@@ -19,7 +19,7 @@ export function pendingScriptChecks(key: string): readonly string[] {
 }
 
 /** Own the promise outside React: unmounting a page only unsubscribes its display. */
-function track<T>(key: string, ids: string[], run: (complete: (id: string) => void) => Promise<T>): Promise<T> {
+export function track<T>(key: string, ids: string[], run: (complete: (id: string) => void) => Promise<T>): Promise<T> {
   const existing = tasks.get(key);
   if (existing) return existing.promise as Promise<T>;
   const complete = (id: string) => {

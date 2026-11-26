@@ -23,7 +23,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `notify` (const) L10
 - `subscribeScriptChecks` (export function) L12
 - `pendingScriptChecks` (export function) L17
-- `track` (function) L22 - Own the promise outside React: unmounting a page only unsubscribes its display.
+- `track` (export function) L22 - Own the promise outside React: unmounting a page only unsubscribes its display.
 - `runScriptCompliance` (export function) L35
 - `runBatchScriptCompliance` (export function) L46 - Keep the entire queue alive after navigation; one failed script does not stop the rest.
 
@@ -60,6 +60,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L13
+
+## src/services/documentScriptChecks.ts (21 lines) - Check each page independently; continue after a failure and keep running across navigation.
+- `runDocumentScriptCompliance` (export function) L6 - Check each page independently; continue after a failure and keep running across navigation.
 
 ## src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - `syncEmailTimezone` (export function) L7 - Save the signed-in person's browser time zone; the API identifies the user from their session.
