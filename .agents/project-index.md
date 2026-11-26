@@ -92,11 +92,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
 - src/components/scriptdoc/DocSidePanel.tsx (447 lines) - doc side panel (components scriptdoc)
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
-- src/components/scriptdoc/PagesRail.tsx (202 lines) - pages rail (components scriptdoc)
+- src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
+- src/components/scriptdoc/ScriptUploadDropzone.tsx (77 lines) - script upload dropzone (components scriptdoc)
 - src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/AnalysisRunControls.tsx (29 lines) - Consistent run and stop actions for the post's analysis panels.
