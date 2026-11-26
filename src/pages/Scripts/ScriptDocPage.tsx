@@ -167,12 +167,13 @@ export default function ScriptDocPage() {
   const canEdit = Boolean(doc?.access.can_edit) && !shared; // a shared script is saved from its own editor
   const onEdited = useCallback(() => {
     if (!canEdit) return;
+    qc.setQueryData<DocDetail>(["script-doc", id], (previous) => previous?.latest_check ? { ...previous, compliance_stale: true } : previous);
     if (snapTimer.current) clearTimeout(snapTimer.current);
     snapTimer.current = setTimeout(() => {
       const h = editor.current;
-      if (h) void scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
+      if (h) void scriptDocService.snapshot(id, h.getHtml(), h.getText()).then(() => qc.invalidateQueries({ queryKey: ["script-doc", id] })).catch(() => undefined);
     }, SNAPSHOT_DELAY_MS);
-  }, [canEdit, id]);
+  }, [canEdit, id, qc]);
   useEffect(() => () => { if (snapTimer.current) clearTimeout(snapTimer.current); }, []);
 
   // Notes live in the shared notes document.

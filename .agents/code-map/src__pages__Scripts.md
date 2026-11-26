@@ -10,7 +10,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptBatchPage` (export function) L44 - A batch of scripts.
 - `BatchView` (function) L60
 
-## src/pages/Scripts/ScriptDocPage.tsx (407 lines) - The notes document as a list, kept up to date as anyone changes it.
+## src/pages/Scripts/ScriptDocPage.tsx (408 lines) - The notes document as a list, kept up to date as anyone changes it.
 - `errText` (const) L21
 - `useNotes` (function) L26 - The notes document as a list, kept up to date as anyone changes it.
     - `read` (fn) L31
@@ -24,21 +24,21 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `notes` (fn) L143
     - `flagFocus` (fn) L144
     - `onEdited` (fn) L168
-    - `putNote` (fn) L182
-    - `addNote` (fn) L183
-    - `startNote` (fn) L200
-    - `mutateNote` (fn) L214
-    - `navigate` (fn) L221 - The creator's pages: every script is its own page with its own review.
-    - `toggle` (fn) L227
-    - `flush` (fn) L233 - Keep what is on screen: the page being edited is saved before leaving it or sending.
-    - `addPage` (fn) L237
-    - `deletePage` (fn) L251 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
-    - `rest` (fn) L255
-    - `sendAll` (fn) L259
-    - `run` (fn) L276
-    - `presence` (fn) L282
-    - `onlineIds` (fn) L283
-    - `onOpen` (fn) L300
+    - `putNote` (fn) L183
+    - `addNote` (fn) L184
+    - `startNote` (fn) L201
+    - `mutateNote` (fn) L215
+    - `navigate` (fn) L222 - The creator's pages: every script is its own page with its own review.
+    - `toggle` (fn) L228
+    - `flush` (fn) L234 - Keep what is on screen: the page being edited is saved before leaving it or sending.
+    - `addPage` (fn) L238
+    - `deletePage` (fn) L252 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
+    - `rest` (fn) L256
+    - `sendAll` (fn) L260
+    - `run` (fn) L277
+    - `presence` (fn) L283
+    - `onlineIds` (fn) L284
+    - `onOpen` (fn) L301
 
 ## src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - `ScriptReviewPage` (export function) L7 - Script review: start a blank script or attach one from a file, and filter scripts by scope and status.

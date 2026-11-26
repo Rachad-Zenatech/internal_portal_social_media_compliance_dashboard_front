@@ -43,8 +43,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - `useDashboardSummary` (export function) L5 - Returning from a workflow action must show its activity; polling catches other sessions too.
 
-## src/hooks/useDocumentScriptChecks.ts (40 lines) - use document script checks (hooks)
-- `useDocumentScriptChecks` (export function) L11
+## src/hooks/useDocumentScriptChecks.ts (45 lines) - use document script checks (hooks)
+- `useDocumentScriptChecks` (export function) L12
 
 ## src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - `useEmailTimezone` (export function) L6 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
@@ -149,6 +149,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
+
+## src/hooks/useScriptDocCompliance.ts (36 lines) - use script doc compliance (hooks)
+- `useScriptDocCompliance` (export function) L10
 
 ## src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
 - `useScriptDocSources` (export function) L7

@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/scriptdoc/BulkScriptCompliance.tsx (31 lines) - bulk script compliance (components scriptdoc)
+## src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
 - `BulkScriptCompliance` (export function) L7
 
 ## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
@@ -46,20 +46,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (447 lines) - doc side panel (components scriptdoc)
+## src/components/scriptdoc/DocSidePanel.tsx (440 lines) - doc side panel (components scriptdoc)
 - `PanelTab` (export type) L24
 - `NoteComposer` (function) L27 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `NotesTab` (function) L89 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
 - `ChecksTab` (function) L191 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L245
-- `ReviewersTab` (function) L281
-- `DocSidePanel` (export function) L323 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L343
-    - `queryClient` (fn) L348
-    - `sources` (fn) L349
-    - `runCheck` (fn) L352
-    - `historyQuery` (fn) L360
-    - `openNotes` (fn) L365
+- `HistoryTab` (function) L248
+- `ReviewersTab` (function) L284
+- `DocSidePanel` (export function) L326 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L346
+    - `sources` (fn) L351
+    - `historyQuery` (fn) L353
+    - `openNotes` (fn) L358
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...

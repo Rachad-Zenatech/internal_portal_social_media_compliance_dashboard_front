@@ -100,6 +100,7 @@ export type { ScriptMatch } from "@/types/scriptMatch";
 export type StoredCheck = ComplianceCheckResponse & {
   /** Evidence saved for this script when its compliance check ran. */
   checked_script_sources?: string;
+  script_check_stale?: boolean;
   checked_at?: string;
   manual_requested_at?: string;
   checked_media_edited_at?: string | null;

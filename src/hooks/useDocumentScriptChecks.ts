@@ -7,6 +7,7 @@ import { pendingScriptChecks } from "@/services/backgroundScriptChecks";
 import { runDocumentScriptCompliance } from "@/services/documentScriptChecks";
 import type { DocDetail } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
+import { scriptDocService } from "@/services/scriptDocService";
 
 export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promise<void>) {
   const queryClient = useQueryClient();
@@ -15,7 +16,10 @@ export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promi
   const key = doc.set_id ?? doc.id;
   const pending = useScriptCheckStatus("document", key);
   const results = useQueries({ queries: doc.pages.map((page) => ({
-    queryKey: ["script-doc-check", page.id], queryFn: async (): Promise<StoredCheck | null> => null, enabled: false,
+    queryKey: ["script-doc-check", page.id], queryFn: async (): Promise<StoredCheck | null> => {
+      const saved = await scriptDocService.get(page.id);
+      return saved.latest_check ? { ...saved.latest_check, script_check_stale: saved.compliance_stale } : null;
+    }, staleTime: 30_000,
   })) });
   const run = async () => {
     if (preparing || pendingScriptChecks(`document:${key}`).length) return;
@@ -24,6 +28,7 @@ export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promi
       await beforeCheck();
       const running = runDocumentScriptCompliance(key, doc.pages.map((page) => page.id), (id, check) => {
         queryClient.setQueryData(["script-doc-check", id], check);
+        void queryClient.invalidateQueries({ queryKey: ["script-doc", id] });
       });
       addJob("Checking script compliance", running, {
         key: `document-compliance:${key}`, type: "check", link_url: `/script-docs/${doc.id}`,
