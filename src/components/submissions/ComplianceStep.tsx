@@ -1,5 +1,6 @@
 import GroupedComplianceFindings from "@/components/submissions/GroupedComplianceFindings";
 import { previewFindings } from "@/lib/rule18Presentation";
+import { pendingCheckProgress } from "@/lib/pendingCheckProgress";
 import ComplianceScoreSummary from "@/components/submissions/ComplianceScoreSummary";
 import StaleComplianceNotice from "@/components/submissions/StaleComplianceNotice";
 import { useMemo, useRef, useState, type ReactNode } from "react";
@@ -238,19 +239,15 @@ export default function ComplianceStep({
   }
 
   const analysing = isAnalysing(check);
-  const imagesPending = (check.images_pending ?? 0) > 0;
-  const processingLabel = check.transcript_pending && imagesPending ? "Processing video and images"
-    : check.transcript_pending ? "Processing video"
-    : imagesPending ? "Processing images"
-    : "Processing your post";
+  const processing = pendingCheckProgress(check, sub?.files ?? files ?? []);
   const pendingScore = (
     <div role="status" className="flex flex-wrap items-center gap-5 rounded-2xl border border-border/60 bg-muted/30 p-4 sm:gap-6 sm:p-5">
       <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full border-8 border-muted bg-card" aria-hidden="true">
         <Loader2 className="h-8 w-8 text-primary motion-safe:animate-spin" />
       </span>
       <div className="min-w-0 flex-1 basis-64 space-y-2">
-        <p className="text-base font-bold text-foreground">{processingLabel}</p>
-        <p className="text-[13px] leading-relaxed text-muted-foreground">Your compliance score will appear when processing finishes.</p>
+        <p className="text-base font-bold text-foreground">{processing.label}</p>
+        <p className="text-[13px] leading-relaxed text-muted-foreground">{processing.description}</p>
       </div>
     </div>
   );
@@ -337,9 +334,6 @@ export default function ComplianceStep({
                 <FindingExplanation v={f.v} />
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
-                    <p className="text-[13px] leading-relaxed text-foreground/80">
-                      <strong className="font-semibold">{st === "NEEDS_REVIEW" ? "If this concern is confirmed:" : "What to do:"}</strong> {f.v.remediation_guidance || f.v.explanation}
-                    </p>
                     <SyntheticMediaFixNote finding={f.v} />
                     {editable && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>

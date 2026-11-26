@@ -4,8 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/FindingExplanation.tsx (34 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
-- `FindingExplanation` (export function) L4 - Keep the saved evidence and reason visible, including when the finding has no trigger words.
-- `EvidenceConsidered` (function) L20
-- `Reasoning` (function) L25
-- `ReviewNote` (function) L30
+## src/components/submissions/FindingExplanation.tsx (32 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
+- `FindingExplanation` (export function) L5 - Keep the saved evidence and reason visible, including when the finding has no trigger words.
+- `EvidenceConsidered` (function) L18
+- `Reasoning` (function) L23
+- `ReviewNote` (function) L28

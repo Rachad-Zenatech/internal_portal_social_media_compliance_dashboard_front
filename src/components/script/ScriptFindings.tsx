@@ -1,3 +1,4 @@
+import { FindingExplanation } from "@/components/submissions/FindingExplanation";
 import { useState } from "react";
 import { Check, ChevronDown, Loader2, Search, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
@@ -152,15 +153,7 @@ export default function ScriptFindings({
                     ))}
                   </div>
                 )}
-                {v.passage && !missing && <p className="rounded-lg border border-border/70 bg-card px-2.5 py-2 text-[13px] italic text-muted-foreground">{v.passage}</p>}
-                <p className="text-[13px] leading-relaxed text-foreground/85">
-                  <strong className="font-semibold">What to do:</strong> {v.remediation_guidance || v.explanation}
-                </p>
-                {v.evaluation?.reasoning && (
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    <strong className="font-semibold text-foreground/80">Why it was flagged:</strong> {v.evaluation.reasoning}
-                  </p>
-                )}
+                <FindingExplanation v={v} className="space-y-2 text-[13px] leading-relaxed" />
 
                 {/* A missing disclaimer: add it in one click. */}
                 {missing && onAppend && (v.missing_disclaimers?.length ?? 0) > 0 && (

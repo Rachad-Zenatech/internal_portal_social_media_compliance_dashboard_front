@@ -53,9 +53,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `recoverChunkLoad` (export function) L7
 - `installChunkRecovery` (export function) L24
 
-## src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
+## src/lib/complianceFinding.ts (27 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - `isVisibleFinding` (export function) L4 - Unavailable and rule-based checks have no model confidence estimate.
-- `findingConfidence` (export function) L9
+- `findingConfidence` (export function) L12
+- `evidenceRequestExplanation` (export function) L20 - Explain an unresolved evidence request without implying that no source was attached.
 
 ## src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - `sourceLinksKey` (export function) L3
@@ -109,6 +110,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
+
+## src/lib/findingCopy.ts (40 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
+- `readableFindingReason` (export function) L5 - Simplify saved boilerplate without changing the evidence, decision or confidence.
+- `findingCopy` (export function) L13 - Creators and reviewers get the same evidence, explanation and practical next step.
+- `nextStep` (function) L26
 
 ## src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
 - `normalized` (const) L3
@@ -169,6 +175,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `identity` (function) L22
 - `uniqueClaims` (function) L26
 - `mergeSourceChecks` (export function) L39 - Full compliance results take precedence over older quick checks for the same article.
+
+## src/lib/pendingCheckProgress.ts (21 lines) - Saved pending counts describe the earlier check; current file states describe the work still running.
+- `finished` (const) L3
+- `pendingCheckProgress` (export function) L6 - Saved pending counts describe the earlier check; current file states describe the work still running.
 
 ## src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
 - `SuggestionPost` (export type) L3

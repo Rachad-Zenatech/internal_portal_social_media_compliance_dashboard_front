@@ -4,13 +4,13 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/FindingStatus.tsx (227 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
-- `statusOf` (export const) L9 - What a finding amounts to; checks saved before statuses existed only had violations.
-- `isWarning` (export const) L11
-- `Meta` (interface) L16
-- `FINDING_META` (export const) L25
-- `FINDING_ORDER` (export const) L56
-- `groupFindings` (export function) L59 - The findings split by status, each group in the order given.
-- `ConfidenceBadge` (export function) L65
-- `StatusPill` (export function) L71
-- `ContextNote` (export function) L85 - How the AI read a finding in context: what it's about, why, and how sure it was.
+## src/components/submissions/FindingStatus.tsx (222 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+- `statusOf` (export const) L10 - What a finding amounts to; checks saved before statuses existed only had violations.
+- `isWarning` (export const) L12
+- `Meta` (interface) L17
+- `FINDING_META` (export const) L26
+- `FINDING_ORDER` (export const) L57
+- `groupFindings` (export function) L60 - The findings split by status, each group in the order given.
+- `ConfidenceBadge` (export function) L66
+- `StatusPill` (export function) L72
+- `ContextNote` (export function) L86 - How the AI read a finding in context: what it's about, why, and how sure it was.

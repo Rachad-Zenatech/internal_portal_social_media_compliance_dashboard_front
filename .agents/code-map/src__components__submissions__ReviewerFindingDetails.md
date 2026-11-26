@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewerFindingDetails.tsx (39 lines) - Reviewers and creators read the same saved evidence and explanation.
+## src/components/submissions/ReviewerFindingDetails.tsx (36 lines) - Reviewers and creators read the same saved evidence and explanation.
 - `ReviewerFindingDetails` (export function) L6 - Reviewers and creators read the same saved evidence and explanation.
-- `RequiredDisclaimer` (function) L28
+- `RequiredDisclaimer` (function) L25

@@ -1,3 +1,4 @@
+import FlagDismissalSummary from "@/components/submissions/FlagDismissalSummary";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, RotateCcw, ShieldOff, ThumbsUp } from "lucide-react";
@@ -29,10 +30,7 @@ function CreatorDismissalRequest({ request, canApprove, approving, rejecting, on
   return (
     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
       <ShieldOff className="w-3.5 h-3.5" />
-      <span>
-        <span className="font-semibold">Creator asked to dismiss</span> by {request.requested_by_name ?? "the creator"} Â· {request.reason_label}
-        {request.note ? `: "${request.note}"` : ""}
-      </span>
+      <FlagDismissalSummary kind="requested" name={request.requested_by_name ?? "the creator"} reason={request.reason_label} note={request.note} />
       {canApprove && (
         <button type="button" className="inline-flex items-center gap-1 font-semibold text-blue-700 hover:underline disabled:opacity-60 dark:text-blue-300" disabled={approving || rejecting} onClick={onApprove}>
           {approving && <Loader2 className="w-3 h-3 animate-spin" />} Allow claim
@@ -101,11 +99,7 @@ export default function FlagReviewControl({
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-muted/60 px-2 py-1.5 text-[11px] text-muted-foreground" onClick={(e) => e.stopPropagation()}>
         <ShieldOff className="w-3.5 h-3.5" />
-        <span>
-          <span className="font-semibold text-foreground">Dismissed</span> by {review.decided_by_name ?? "a reviewer"} ·{" "}
-          {review.reason_label}
-          {review.note ? `: "${review.note}"` : ""} · {formatDistanceToNow(new Date(review.decided_at), { addSuffix: true })}
-        </span>
+        <FlagDismissalSummary kind="dismissed" name={review.decided_by_name ?? "a reviewer"} reason={review.reason_label} note={review.note} age={formatDistanceToNow(new Date(review.decided_at), { addSuffix: true })} />
         {canDismiss && (
           <button
             type="button"

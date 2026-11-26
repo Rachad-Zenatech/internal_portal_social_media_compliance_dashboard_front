@@ -1,3 +1,4 @@
+import { isVisibleFinding } from "@/lib/complianceFinding";
 import Rule18ScoreRow from "@/components/submissions/Rule18ScoreRow";
 import { groupRule18, isRule18 } from "@/lib/rule18Presentation";
 import { Ban } from "lucide-react";
@@ -22,6 +23,7 @@ export default function ScoreBreakdown({
 }) {
   // Violations always list here; a warning only when it cost points. Cleared triggers never do.
   const scored = check.violations.filter((v) => {
+    if (!isVisibleFinding(v)) return false;
     const status = v.status ?? "VIOLATION";
     if (v.penalty == null || status === "CLEARED") return false;
     return status === "VIOLATION" || v.penalty > 0 || !!v.counted_with;

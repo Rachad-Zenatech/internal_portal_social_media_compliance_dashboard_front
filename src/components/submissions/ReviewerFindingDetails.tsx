@@ -9,8 +9,6 @@ export default function ReviewerFindingDetails({ finding }: { finding: Complianc
   const penalty = finding.penalty;
   const points = penalty == null ? null : penalty > 0 ? `−${penalty} points` : "No points deducted";
   const showPoints = !cleared && points != null;
-  const guidance = !cleared ? finding.remediation_guidance?.trim() : null;
-  const guidanceLabel = status === "NEEDS_REVIEW" ? "If this concern is confirmed:" : "What to do:";
   const disclaimers = !cleared && finding.kind === "MISSING_DISCLAIMER" ? finding.missing_disclaimers ?? [] : [];
   return (
     <div className="space-y-3 text-[13px] leading-relaxed text-foreground/85">
@@ -20,7 +18,6 @@ export default function ReviewerFindingDetails({ finding }: { finding: Complianc
       </div>
       <FindingExplanation v={finding} className="space-y-2" />
       <RequiredDisclaimer options={disclaimers} />
-      {guidance && <p><strong>{guidanceLabel}</strong> {guidance}</p>}
     </div>
   );
 }

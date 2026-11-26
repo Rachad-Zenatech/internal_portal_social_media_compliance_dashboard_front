@@ -70,7 +70,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/ScriptDiff.tsx (489 lines) - Text with the given phrases marked (flagged wording).
 - src/components/script/ScriptDocumentPreview.tsx (18 lines) - Read-only script preview using the same document renderer as the reviewer workspace.
 - src/components/script/ScriptEditor.tsx (250 lines) - A page break, drawn as a labelled divider (the page number is counted in CSS).
-- src/components/script/ScriptFindings.tsx (236 lines) - script findings (components script)
+- src/components/script/ScriptFindings.tsx (229 lines) - script findings (components script)
 - src/components/script/ScriptInReviewDetails.tsx (45 lines) - The exact submitted script and saved check, without draft/video editing controls.
 - src/components/script/ScriptPrecheck.tsx (121 lines) - script precheck (components script)
 - src/components/script/ScriptReviewWorkspace.tsx (931 lines) - script review workspace (components script)
@@ -113,7 +113,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/CommentCard.tsx (201 lines) - Above a comment box while replying: who and what is being replied to, with a way to stop replying.
 - src/components/submissions/CommentThread.tsx (50 lines) - A thread longer than this shows only its latest replies until it is opened.
 - src/components/submissions/ComplianceScoreSummary.tsx (42 lines) - Keep the saved score prominent and show the separate pending-request calculation beneath it.
-- src/components/submissions/ComplianceStep.tsx (482 lines) - compliance step (components submissions)
+- src/components/submissions/ComplianceStep.tsx (476 lines) - compliance step (components submissions)
 - src/components/submissions/ComplianceView.tsx (107 lines) - A post's rulebook check: score, coverage, what it flagged, and (for reviewers) a call on each flag.
 - src/components/submissions/ContextFeedbackCards.tsx (59 lines) - context feedback cards (components submissions)
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
@@ -123,9 +123,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
 - src/components/submissions/FinalPublishDate.tsx (21 lines) - final publish date (components submissions)
-- src/components/submissions/FindingExplanation.tsx (34 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
-- src/components/submissions/FindingStatus.tsx (227 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
-- src/components/submissions/FlagReviewControl.tsx (223 lines) - flag review control (components submissions)
+- src/components/submissions/FindingExplanation.tsx (32 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
+- src/components/submissions/FindingStatus.tsx (222 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
+- src/components/submissions/FlagDismissalSummary.tsx (19 lines) - Keep dismissal metadata readable without encoding-dependent punctuation.
+- src/components/submissions/FlagReviewControl.tsx (217 lines) - flag review control (components submissions)
 - src/components/submissions/FlaggedVideo.tsx (44 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/FormattedCaptionPreview.tsx (15 lines) - Preserve editor paragraphs, emphasis and links without treating HTML source wrapping as line breaks.
@@ -163,7 +164,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ReviewDecisionBar.tsx (46 lines) - review decision bar (components submissions)
 - src/components/submissions/ReviewDecisionPanel.tsx (411 lines) - The submission fields the review controls need (works for a full Submission or a queue item).
 - src/components/submissions/ReviewGlance.tsx (58 lines) - The one thing to know at a glance: a score, a verdict, a count.
-- src/components/submissions/ReviewerFindingDetails.tsx (39 lines) - Reviewers and creators read the same saved evidence and explanation.
+- src/components/submissions/ReviewerFindingDetails.tsx (36 lines) - Reviewers and creators read the same saved evidence and explanation.
 - src/components/submissions/ReviewerImageViewer.tsx (55 lines) - Reviewer image with comment annotations and an unobstructed full-size view.
 - src/components/submissions/ReviewerPicker.tsx (106 lines) - Already on the post, and staying on it.
 - src/components/submissions/ReviewerSentimentConcerns.tsx (71 lines) - reviewer sentiment concerns (components submissions)
@@ -176,7 +177,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/Rule18ScoreRow.tsx (14 lines) - rule18 score row (components submissions)
 - src/components/submissions/RuleNumberBadge.tsx (36 lines) - rule number badge (components submissions)
 - src/components/submissions/ScanImageButton.tsx (115 lines) - scan image button (components submissions)
-- src/components/submissions/ScoreBreakdown.tsx (100 lines) - Violations always list here; a warning only when it cost points.
+- src/components/submissions/ScoreBreakdown.tsx (102 lines) - Violations always list here; a warning only when it cost points.
 - src/components/submissions/ScriptComparisonNotice.tsx (94 lines) - script comparison notice (components submissions)
 - src/components/submissions/SentimentPanel.tsx (1259 lines) - sentiment panel (components submissions)
 - src/components/submissions/SourceCheckResult.tsx (79 lines) - The verdicts the server's source check gives (see the backend's source_check_service).
@@ -278,13 +279,14 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/captionNote.ts (33 lines) - Only accept a selection wholly inside the caption, including selections across flagged spans.
 - src/lib/captionPreviewHtml.ts (65 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
 - src/lib/chunkRecovery.ts (30 lines) - Recover an open tab whose lazy-loaded page belongs to an older deployment.
-- src/lib/complianceFinding.ts (14 lines) - Unavailable and rule-based checks have no model confidence estimate.
+- src/lib/complianceFinding.ts (27 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - src/lib/compressUploadImage.ts (48 lines) - Reduce large image uploads before they leave the browser.
 - src/lib/contentCalendar.ts (436 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/contextFeedback.ts (49 lines) - context feedback (lib)
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
+- src/lib/findingCopy.ts (40 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
 - src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
 - src/lib/findingImage.ts (38 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
@@ -294,6 +296,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/locateOnPage.ts (170 lines) - Find wording anywhere on the page, scroll to it and flash it: the "Read in context" jump for screens without a script viewer of their own.
 - src/lib/mediaFreshness.ts (26 lines) - Supporting documents and extraction updates do not replace the post's media.
 - src/lib/mergeSourceChecks.ts (66 lines) - Normalize known aliases without conflating different pages or meaningful query parameters.
+- src/lib/pendingCheckProgress.ts (21 lines) - Saved pending counts describe the earlier check; current file states describe the work still running.
 - src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
 - src/lib/postContentTypes.ts (115 lines) - Static presentation config (allowed values themselves come from the API)
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.

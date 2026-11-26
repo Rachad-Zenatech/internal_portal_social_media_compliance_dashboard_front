@@ -112,9 +112,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Toolbar` (function) L111
 - `ScriptEditor` (export function) L193 - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptFindings.tsx (236 lines) - script findings (components script)
-- `Fix` (type) L14
-- `ScriptFindings` (export function) L21 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
+## src/components/script/ScriptFindings.tsx (229 lines) - script findings (components script)
+- `Fix` (type) L15
+- `ScriptFindings` (export function) L22 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
 
 ## src/components/script/ScriptInReviewDetails.tsx (45 lines) - The exact submitted script and saved check, without draft/video editing controls.
 - `ScriptInReviewDetails` (export function) L13 - The exact submitted script and saved check, without draft/video editing controls.

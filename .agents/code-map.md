@@ -47,6 +47,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__FinalPublishDate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FindingExplanation.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FindingStatus.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__FlagDismissalSummary.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlagReviewControl.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FlaggedVideo.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__FormFields.md | 1 | 1 KB |
@@ -128,7 +129,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 42 | 13 KB |
-| .agents/code-map/src__lib.md | 53 | 23 KB |
+| .agents/code-map/src__lib.md | 55 | 24 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
