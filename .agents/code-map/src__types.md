@@ -92,7 +92,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `FlagVerdict` (export interface) L24 - A reviewer's call on a flag, kept as an example for the check: it was right, or a false alarm.
 - `RuleFlagStats` (export interface) L37 - Per rule: how many submitted versions it flagged and how many of those flags reviewers dismissed.
 
-## src/types/imageProvenance.ts (12 lines) - Saved answer to the post's required AI-image disclosure question.
+## src/types/imageProvenance.ts (14 lines) - Saved answer to the post's required AI-image disclosure question.
 - `ImageProvenance` (export interface) L2 - Saved answer to the post's required AI-image disclosure question.
 
 ## src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.

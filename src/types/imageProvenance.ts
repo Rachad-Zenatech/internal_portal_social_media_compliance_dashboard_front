@@ -8,4 +8,6 @@ export interface ImageProvenance {
   employee_in_images?: boolean;
   employee_in_images_confirmed?: boolean;
   face_employee_flags?: Record<string, boolean>;
+  face_auto_matched?: Record<string, number>;
+  face_same_person?: Record<string, string[]>;
 }

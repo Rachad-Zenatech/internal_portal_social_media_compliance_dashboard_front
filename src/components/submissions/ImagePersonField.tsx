@@ -39,11 +39,13 @@ function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[];
   return <canvas ref={canvasRef} width={size} height={size} aria-label="Detected face preview" className="size-full" />;
 }
 
-export default function ImagePersonField({ files, value: _value, employeeValue, faceFlags, detected, disabled, submissionId, onRefresh, onChange: _onChange, onEmployeeChange, onFaceFlagChange }: {
+export default function ImagePersonField({ files, value: _value, employeeValue, faceFlags, faceAutoMatched, faceSamePerson, detected, disabled, submissionId, onRefresh, onChange: _onChange, onEmployeeChange, onFaceFlagChange }: {
   files: SubmissionFile[];
   value?: boolean | null;
   employeeValue: boolean | null;
   faceFlags?: Record<string, boolean>;
+  faceAutoMatched?: Record<string, number>;
+  faceSamePerson?: Record<string, string[]>;
   detected?: boolean | null;
   disabled: boolean;
   submissionId: string | null;
@@ -74,6 +76,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
     } finally { setRetrying(false); }
   };
   const scanning = retrying || pending;
+  const doneCount = imageFiles.filter((file) => !retrying && file.image_text_status != null && file.image_text_status !== "PROCESSING" && (file.face_detection_version || 0) >= 1).length;
   const statusText = !scanning && failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : !scanning && faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
   return (
     <fieldset disabled={disabled} className="mt-4 space-y-2 rounded-xl border border-border/70 px-4 pb-3 pt-2.5">
@@ -82,10 +85,14 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
         <div className="space-y-1.5" aria-live="polite">
           <div className="flex items-center gap-2 text-xs font-medium text-primary">
             <Loader2 className="size-3.5 shrink-0 animate-spin" />
-            <span>{retrying ? "Restarting face detection scan…" : "Scanning uploaded image(s) for faces…"}</span>
+            <span>
+              {retrying
+                ? "Restarting face detection scan…"
+                : `Scanning uploaded image(s) for faces (${doneCount}/${imageFiles.length} complete)…`}
+            </span>
           </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-primary/15">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-primary/60" />
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
+            <div className="absolute inset-y-0 rounded-full bg-primary animate-[indeterminate_1.4s_ease-in-out_infinite]" />
           </div>
         </div>
       ) : statusText ? <p className="text-xs text-muted-foreground">{statusText}</p> : null}
@@ -99,6 +106,16 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
                 <button type="button" onClick={() => setZoomedFace({ file, box, faceIndex })} title="Click to enlarge face" className="size-16 shrink-0 cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></button>
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
+                  {faceAutoMatched?.[key] != null && (
+                    <span className="inline-block rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                      Matched saved employee
+                    </span>
+                  )}
+                  {(faceSamePerson?.[key]?.length ?? 0) > 0 && (
+                    <span className="inline-block rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
+                      Same person in: {faceSamePerson![key].join(", ")}
+                    </span>
+                  )}
                   <p className="text-[11px] text-muted-foreground">Employee?</p>
                   <div className="flex gap-1.5">{[true, false].map((answer) => <label key={`${key}-${String(answer)}`} className="flex min-h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-emp-${key}`} checked={faceFlags?.[key] === answer} onChange={() => onFaceFlagChange?.(key, answer)} className="size-3 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div>
                 </div>

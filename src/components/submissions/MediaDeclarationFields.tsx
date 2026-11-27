@@ -28,7 +28,7 @@ export default function MediaDeclarationFields({ files, image, video, post, disa
   return (
     <>
       <ImageProvenanceField files={files} {...image} disabled={disabled} />
-      {image.value !== true && <ImagePersonField files={files} value={post?.people_in_images_confirmed ? Boolean(post.people_in_images) : null} employeeValue={post?.employee_in_images_confirmed ? Boolean(post.employee_in_images) : null} faceFlags={post?.face_employee_flags} detected={post?.people_in_images_detected} disabled={disabled} submissionId={submissionId} onRefresh={onRefresh} onChange={onPeople} onEmployeeChange={onEmployee} onFaceFlagChange={onFace} />}
+      {image.value !== true && <ImagePersonField files={files} value={post?.people_in_images_confirmed ? Boolean(post.people_in_images) : null} employeeValue={post?.employee_in_images_confirmed ? Boolean(post.employee_in_images) : null} faceFlags={post?.face_employee_flags} faceAutoMatched={post?.face_auto_matched} faceSamePerson={post?.face_same_person} detected={post?.people_in_images_detected} disabled={disabled} submissionId={submissionId} onRefresh={onRefresh} onChange={onPeople} onEmployeeChange={onEmployee} onFaceFlagChange={onFace} />}
       <VideoFootageField {...video} disabled={disabled} />
     </>
   );

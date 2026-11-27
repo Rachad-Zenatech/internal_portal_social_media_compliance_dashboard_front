@@ -152,7 +152,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/GroupedComplianceFindings.tsx (37 lines) - grouped compliance findings (components submissions)
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
-- src/components/submissions/ImagePersonField.tsx (124 lines) - image person field (components submissions)
+- src/components/submissions/ImagePersonField.tsx (141 lines) - image person field (components submissions)
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
@@ -472,7 +472,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)
 - src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
-- src/types/imageProvenance.ts (12 lines) - Saved answer to the post's required AI-image disclosure question.
+- src/types/imageProvenance.ts (14 lines) - Saved answer to the post's required AI-image disclosure question.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.
 - src/types/postApprovalSuggestions.ts (12 lines) - post approval suggestions (types)
 - src/types/postTextReview.ts (28 lines) - post text review (types)
