@@ -213,7 +213,7 @@ export interface Submission extends PostApprovalSuggestionFields, SubmissionSour
   /** Approved, and the viewer is a reviewer who may reschedule it or reopen it for changes. */
   can_manage_approval?: boolean;
   /** Video posts: the script is approved before the video goes in. Null when the post has no script stage. */
-  script_required?: boolean;
+  script_required?: boolean; video_third_party_footage?: boolean | null;
   script_status?: ScriptStatus | null;
   created_by?: string | null;
   /** Only filled in when someone other than the creator is viewing. */

@@ -17,7 +17,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { addBusinessDays, format, isFuture, isSameDay, isValid } from "date-fns";
+import { addBusinessDays, format, isFuture, isSameDay, isValid, zonedDate, withWallTime as withTime } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
 import SubmissionStartAnotherButton from "@/components/submissions/SubmissionStartAnotherButton";
 import { scheduleCorrectedPost } from "@/lib/submissionSchedule";
@@ -75,7 +76,9 @@ import {
   SubmissionStatusBadge,
 } from "@/components/submissions/submissionUi";
 import ComplianceStep from "@/components/submissions/ComplianceStep";
-import ImageProvenanceField from "@/components/submissions/ImageProvenanceField"; import ImagePersonField from "@/components/submissions/ImagePersonField";
+import MediaDeclarationFields from "@/components/submissions/MediaDeclarationFields";
+import Section from "@/components/submissions/SubmissionSection";
+import { useVideoFootageDeclaration } from "@/hooks/useVideoFootageDeclaration";
 import { scriptTextOf } from "@/components/script/scriptPreview";
 import ComplianceView from "@/components/submissions/ComplianceView";
 import DuplicateNotice from "@/components/submissions/DuplicateNotice";
@@ -162,14 +165,6 @@ function timeLabel(time: string) {
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 
-/** A copy of the date at the given "HH:mm" time. */
-function withTime(date: Date, time: string) {
-  const [h, m] = time.split(":").map(Number);
-  const d = new Date(date);
-  d.setHours(Number.isFinite(h) ? h : 17, Number.isFinite(m) ? m : 0, 0, 0);
-  return d;
-}
-
 // ---------------------------------------------------------------------------
 // Small building blocks
 // ---------------------------------------------------------------------------
@@ -198,18 +193,6 @@ function SentBackHeader({ reviewer, note, dueAt }: { reviewer?: string | null; n
   );
 }
 
-function Section({ title, description, children, id }: { step?: number; title: string; description?: string; children: ReactNode; id?: string }) {
-  return (
-    <Card id={id} className="py-0 gap-0 rounded-2xl border-border/70 shadow-xs scroll-mt-4">
-      <div className="px-5 sm:px-6 pt-5 pb-3">
-        <h2 className="text-lg font-bold tracking-tight text-foreground leading-tight">{title}</h2>
-        {description && <p className="mt-1 text-[13px] text-muted-foreground">{description}</p>}
-      </div>
-      <div className="px-5 sm:px-6 pb-6">{children}</div>
-    </Card>
-  );
-}
-
 function SummaryRow({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[18px_118px_1fr] items-start gap-2 py-2 text-sm">
@@ -223,6 +206,7 @@ function SummaryRow({ icon: Icon, label, children }: { icon: LucideIcon; label: 
 // Page
 
 export default function NewSubmissionPage() {
+  const { time_zone } = useUserTimezone();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const routeId = searchParams.get("id");
@@ -378,6 +362,7 @@ export default function NewSubmissionPage() {
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
   const scriptOnly = scriptFirst && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
   const checkedSub = scriptOnly && videoLocked && storedSub && scriptStage.data?.precheck ? { ...storedSub, latest_check: scriptStage.data.precheck } : storedSub;
+  const videoFootage = useVideoFootageDeclaration(storedSub, files);
   const skipSentiment = !usesSentiment(contentType, scriptOnly);
   const preparationSteps = postPreparationSteps(skipSentiment);
   // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
@@ -397,7 +382,12 @@ export default function NewSubmissionPage() {
   const scriptMode = {
     required: scriptRequired,
     disabled: postTypeBusy || status !== "DRAFT" || Boolean(storedSub?.current_version) || Boolean(scriptStage.data?.processing) || Boolean(scriptStage.data?.status && scriptStage.data.status !== "DRAFT"),
-    onChange: (required: boolean) => { setScriptRequired(required); markEdited(); },
+    onChange: (required: boolean) => {
+      setScriptRequired(required); markEdited();
+      // Persist the selected value directly: React state is not updated until the next render.
+      void save({ force: true, scriptRequired: required }).catch((err: Error) =>
+        toast.error(`Couldn't save the script review preference: ${err.message}`));
+    },
   };
   const { changingPostType, changePostType } = usePostTypeChange({
     contentType, files, idRef, saveChain, busy: postTypeBusy, refreshScript,
@@ -556,6 +546,7 @@ export default function NewSubmissionPage() {
       platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
       source_links: sourceLinks,
       ...imageProvenancePayload(aiGeneratedImages),
+      ...videoFootage.payload,
       // The analysis picks its Messaging Context on its own (any choice saved by an earlier version is cleared).
       context_picks: {},
       rule_sets: resolveRuleSets(brands, audiences, ruleSets),
@@ -564,11 +555,10 @@ export default function NewSubmissionPage() {
       clear_fields: clear,
     };
   };
-
   /** Create the draft if needed, then save the current fields. Calls are queued so they never overlap. */
-  const save = (opts: { force?: boolean } = {}): Promise<string | null> => {
+  const save = (opts: { force?: boolean; scriptRequired?: boolean } = {}): Promise<string | null> => {
     if (readOnly) return Promise.resolve(idRef.current);
-    const payload = buildPayload();
+    const payload = { ...buildPayload(), ...(opts.scriptRequired !== undefined ? { script_required: opts.scriptRequired } : {}) };
     const hasAnything = Boolean(title.trim() || payload.caption_text || brands.length || platforms.length || accountIds.length);
     saveChain.current = saveChain.current
       .catch(() => null)
@@ -596,7 +586,6 @@ export default function NewSubmissionPage() {
       });
     return saveChain.current;
   };
-
   // Autosave 1.5 s after the last edit.
   useEffect(() => {
     if (editCounter === 0 || readOnly) return;
@@ -606,7 +595,6 @@ export default function NewSubmissionPage() {
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editCounter]);
-
   // Warn before leaving with unsaved edits.
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -615,7 +603,6 @@ export default function NewSubmissionPage() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [saveState, uploading.length]);
-
   const saveNow = async () => {
     try {
       const id = await save({ force: true });
@@ -624,7 +611,6 @@ export default function NewSubmissionPage() {
       toast.error(`Couldn't save the draft: ${(err as Error).message}`);
     }
   };
-
   // ----- Routing suggestions, applied when the user changes brand/audience/account -----
   const ruleSetChoices = ruleSetOptions(options?.rule_sets ?? [], brands, audiences);
   const suggestRouting = (next: { brands?: string[]; audiences?: string[]; accounts?: AccountOption[] }) => {
@@ -807,7 +793,7 @@ export default function NewSubmissionPage() {
   };
 
   // "Need approval by": the picked day at the chosen time, never after the publish time.
-  const atApprovalTime = (d: Date) => withTime(d, approvalTime);
+  const atApprovalTime = (d: Date) => withTime(d, approvalBy ? format(approvalBy, "HH:mm") : approvalTime);
   const pickApproval = (d: Date | undefined) => {
     setApprovalBy(d && publishDate && d > publishDate ? new Date(publishDate) : d);
     markEdited();
@@ -817,6 +803,7 @@ export default function NewSubmissionPage() {
   const clientMissing = {
     title: !title.trim(),
     ai_generated_images: hasPostImages(files) && aiGeneratedImages == null,
+    video_third_party_footage: videoFootage.missing,
     brand_code: brands.length === 0,
     account_id: accountIds.length === 0,
     audience: audiences.length === 0,
@@ -976,7 +963,7 @@ export default function NewSubmissionPage() {
   const sourceChecking = useBackgroundSourceChecks(submissionId, stepView === "compliance", localSourceChecking);
 
   const hasCheck = Boolean(checkedSub?.latest_check);
-  const localMediaChanged = mediaChanged(files, checkedSub);
+  const localMediaChanged = mediaChanged(files, checkedSub) || videoFootage.changed;
   const sourceInputsChanged = complianceSourcesChanged(checkedSub?.latest_check, sourceLinks);
   useSourceComplianceRefresh({ enabled: hasCheck && sourceInputsChanged && stepView === "compliance" && !readOnly && detailsComplete && !(scriptOnly && videoLocked), busy: checking || continuing || sourceChecking.length > 0, revision: `${submissionId}|${sourceLinksKey(sourceLinks)}`, onRefresh: runComplianceCheck });
   const inputCheckStale = hasCheck && (sourceInputsChanged || localMediaChanged || (scriptOnly && videoLocked
@@ -1511,7 +1498,7 @@ export default function NewSubmissionPage() {
                               setPublishDate(d);
                               markEdited();
                             }}
-                            disabled={{ before: new Date() }}
+                            disabled={{ before: zonedDate() }}
                           />
                         </PopoverContent>
                       </Popover>
@@ -1559,7 +1546,7 @@ export default function NewSubmissionPage() {
                               { days: 3, label: "In 3 days" },
                               { days: 5, label: "In 1 week" },
                             ].map(({ days, label }) => {
-                              const d = atApprovalTime(addBusinessDays(new Date(), days));
+                              const d = atApprovalTime(addBusinessDays(zonedDate(), days));
                               const tooLate = Boolean(publishDate && d > publishDate);
                               const picked = Boolean(approvalBy && isSameDay(approvalBy, d));
                               return (
@@ -1583,16 +1570,16 @@ export default function NewSubmissionPage() {
                             <Calendar
                               mode="single"
                               selected={approvalBy}
-                              defaultMonth={approvalBy ?? new Date()}
+                              defaultMonth={approvalBy ?? zonedDate()}
                               onSelect={(d) => pickApproval(d ? atApprovalTime(d) : undefined)}
-                              disabled={publishDate ? [{ before: new Date() }, { after: publishDate }] : { before: new Date() }}
+                              disabled={publishDate ? [{ before: zonedDate() }, { after: publishDate }] : { before: zonedDate() }}
                             />
                             <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
                               <Label htmlFor="approval-time" className="text-xs font-medium text-muted-foreground">
-                                Time
+                                Time ({time_zone})
                               </Label>
                               <Select
-                                value={approvalTime}
+                                value={approvalBy ? format(approvalBy, "HH:mm") : approvalTime}
                                 onValueChange={(t) => {
                                   setApprovalTime(t);
                                   if (approvalBy) pickApproval(withTime(approvalBy, t));
@@ -1755,7 +1742,7 @@ export default function NewSubmissionPage() {
                       </div>
                     </div>
                   )}
-                  <ImageProvenanceField files={files} value={aiGeneratedImages} disabled={readOnly || checking} invalid={Boolean(errorFor("ai_generated_images"))} onChange={(answer) => { setAiGeneratedImages(answer); markEdited(); }} />{aiGeneratedImages !== true && <ImagePersonField files={files} value={checkedSub?.people_in_images_confirmed ? Boolean(checkedSub.people_in_images) : null} employeeValue={checkedSub?.employee_in_images_confirmed ? Boolean(checkedSub.employee_in_images) : null} faceFlags={checkedSub?.face_employee_flags} detected={checkedSub?.people_in_images_detected} disabled={readOnly || checking} submissionId={submissionId} onRefresh={applyServer} onChange={(answer) => { if (submissionId) void submissionService.update(submissionId, { people_in_images: answer }).then(applyServer).catch((err: Error) => toast.error(`Couldn't save the answer: ${err.message}`)); }} onEmployeeChange={(answer) => { if (submissionId) void submissionService.update(submissionId, { employee_in_images: answer }).then(applyServer).catch((err: Error) => toast.error(`Couldn't save the employee answer: ${err.message}`)); }} onFaceFlagChange={(key, answer) => { if (submissionId) void submissionService.update(submissionId, { face_employee_flags: { ...(checkedSub?.face_employee_flags || {}), [key]: answer } }).then(applyServer).catch((err: Error) => toast.error(`Couldn't save the employee answer: ${err.message}`)); }} />}
+                  <MediaDeclarationFields files={files} image={{ value: aiGeneratedImages, invalid: Boolean(errorFor("ai_generated_images")), onChange: answer => { setAiGeneratedImages(answer); markEdited(); } }} video={{ ...videoFootage, invalid: Boolean(errorFor("video_third_party_footage")) }} post={checkedSub} disabled={readOnly || checking} submissionId={submissionId} onRefresh={applyServer} />
                   {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
                       <p className="text-xs text-foreground">
@@ -2209,7 +2196,7 @@ export default function NewSubmissionPage() {
               </div>
               <ul className="space-y-1.5 px-5 pb-5">
                 {Object.entries(requiredLabels)
-                  .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "ai_generated_images" || hasPostImages(files)) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
+                  .filter(([key]) => key in clientMissing && (key !== "script" || scriptFirst) && (key !== "ai_generated_images" || hasPostImages(files)) && (key !== "video_third_party_footage" || videoFootage.enabled) && (key !== "main_file" || MAIN_REQUIRED.includes(contentType)))
                   .map(([key, label]) => {
                     const missing = (clientMissing as Record<string, boolean>)[key];
                     return (

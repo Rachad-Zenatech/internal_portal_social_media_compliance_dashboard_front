@@ -96,6 +96,7 @@ const FIELD_WORDS: Record<string, string> = {
   caption: "text",
   main_file: "media",
   ai_generated_images: "answer to the AI image question",
+  video_third_party_footage: "answer to the video footage question",
   script_approval: "an approved script",
 };
 
