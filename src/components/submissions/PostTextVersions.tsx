@@ -1,8 +1,11 @@
 import FormattedCaptionPreview from "@/components/submissions/FormattedCaptionPreview";
 import { useId, useState } from "react";
+import { format } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import type { PostTextEdit } from "@/types/postTextReview";
 
 export default function PostTextVersions({ text, html, edits }: { text: string; html?: string | null; edits: PostTextEdit[] }) {
+  useUserTimezone();
   const id = useId();
   const [selected, setSelected] = useState("current");
   const edit = edits.find((item) => item.id === selected);
@@ -10,7 +13,7 @@ export default function PostTextVersions({ text, html, edits }: { text: string; 
   const value = edit ? edit.id : beforeFirstEdit ? "before" : "current";
   const savedText = edit ? edit.after_text : beforeFirstEdit ? edits[0].before_text : text;
   const savedHtml = edit ? edit.after_html : beforeFirstEdit ? edits[0].before_html : html;
-  const description = edit ? `Saved by ${edit.reviewer_name} on ${new Date(edit.created_at).toLocaleString()}. Review round ${edit.version}.`
+  const description = edit ? `Saved by ${edit.reviewer_name} on ${format(new Date(edit.created_at), "MMM d, yyyy, h:mm a zzz")}. Review round ${edit.version}.`
     : beforeFirstEdit ? "The saved post text before the first reviewer edit." : "The current saved post text.";
   const options = edits.map((item, index) => (
     <option key={item.id} value={item.id}>Reviewer revision {index + 1} · {item.reviewer_name} · Review round {item.version}</option>

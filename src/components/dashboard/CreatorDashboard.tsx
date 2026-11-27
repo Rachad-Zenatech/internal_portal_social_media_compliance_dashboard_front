@@ -2,7 +2,7 @@ import { approvedForFinalEdits, reviewOutcomeStatus } from "@/lib/reviewOutcome"
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
+import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "@/lib/userDates";
 import { CalendarDays, CheckCircle2, FileStack, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

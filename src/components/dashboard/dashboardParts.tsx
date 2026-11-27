@@ -1,7 +1,7 @@
 import { reviewOutcomeStatus } from "@/lib/reviewOutcome";
 /** Pieces shared by the reviewer and creator dashboards. */
 import { Link } from "react-router-dom";
-import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
+import { format, formatDistanceToNow, isPast, isToday } from "@/lib/userDates";
 import {
   AlertTriangle,
   Bell,
@@ -240,7 +240,8 @@ export function Score({
 export function Thumb({ s, className = "" }: { s: SubmissionSummary; className?: string }) {
   return (
     <div className={`relative shrink-0 overflow-hidden rounded-md bg-muted ${className}`}>
-      <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />
+      {s.content_type === "TEXT_POST" ? <span role="img" aria-label="Text post" className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground"><FileText aria-hidden="true" className="size-5" strokeWidth={1.5} /><span aria-hidden="true" className="whitespace-nowrap text-[9px] font-medium leading-none">Text post</span></span>
+        : <CoverThumb cover={s.cover} contentType={s.content_type} caption={s.caption_text} script={s.script_excerpt} showPlay={false} />}
     </div>
   );
 }

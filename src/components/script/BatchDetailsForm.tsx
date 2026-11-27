@@ -1,3 +1,5 @@
+import { zonedDate } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -13,7 +15,7 @@ import type { BatchDetails } from "@/types/scriptBatch";
 /** An ISO time as the value of a datetime-local input (the viewer's own time zone), and back. */
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return "";
-  const d = new Date(iso);
+  const d = zonedDate(iso);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -41,6 +43,7 @@ export default function BatchDetailsForm({
   idPrefix?: string;
   onChange: (next: BatchDetails) => void;
 }) {
+  useUserTimezone();
   const optionsQuery = useQuery({ queryKey: ["submission-options"], queryFn: submissionService.getOptions, staleTime: 60_000 });
   const options = optionsQuery.data;
   const brands = useMemo(() => details.brand_codes ?? [], [details.brand_codes]);
@@ -133,7 +136,7 @@ export default function BatchDetailsForm({
           disablePast
           disabled={disabled}
           value={toLocalInput(details.approval_needed_by)}
-          onChange={(v) => onChange({ ...details, approval_needed_by: v ? new Date(v).toISOString() : null })}
+          onChange={(v) => onChange({ ...details, approval_needed_by: v ? zonedDate(v).toISOString() : null })}
           className={`h-11 rounded-xl ${isMissing("Need approval by") ? "border-red-500" : ""}`}
         />
       </Field>

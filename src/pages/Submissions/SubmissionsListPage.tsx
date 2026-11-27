@@ -10,7 +10,8 @@ import StageTabs from "@/components/submissions/StageTabs";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "date-fns";
+import { addMonths, differenceInCalendarDays, format, formatDistanceToNow, isPast, isSameMonth, isToday, isTomorrow, startOfMonth } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import {
   BarChart3,
   ChevronLeft,
@@ -983,6 +984,7 @@ function ReviewCard({
 // ---------------------------------------------------------------------------
 
 export default function SubmissionsListPage() {
+  const { time_zone } = useUserTimezone();
   const [stage, setStage] = useState<"" | Stage>("");
   // Several video scripts in one document, split and sent for review together.
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -1064,7 +1066,7 @@ export default function SubmissionsListPage() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const onCurrentMonth = isSameMonth(month, new Date());
   const monthless = stage === "DRAFT" || stage === "CHANGES_REQUESTED" || stage === "SCHEDULED";
-  const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month]);
+  const inMonth = useMemo(() => data.filter((s) => isSameMonth(new Date(s.created_at), month)), [data, month, time_zone]);
   const inView = gallery && !monthless ? inMonth : data;
 
   const stageCounts = useMemo(() => {

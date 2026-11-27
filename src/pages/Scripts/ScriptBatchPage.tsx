@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
+import { format } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { ArrowLeft, ArrowRight, CheckCheck, CheckCircle2, Loader2, Plus, Send, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +43,7 @@ function Banner({ tone, children }: { tone: "info" | "warn" | "ok"; children: Re
  * a reviewer decides on all of its scripts on this one page. Each approved script becomes a post for the creator to film.
  */
 export default function ScriptBatchPage() {
+  useUserTimezone();
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { data: batch, isLoading, error } = useScriptBatch(id);

@@ -5,7 +5,7 @@ import { useFinalPublishDate } from "@/hooks/useFinalPublishDate";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, isFuture, isValid } from "date-fns";
+import { format, isFuture, isValid } from "@/lib/userDates";
 import {
   ArrowLeft,
   ArrowRight,

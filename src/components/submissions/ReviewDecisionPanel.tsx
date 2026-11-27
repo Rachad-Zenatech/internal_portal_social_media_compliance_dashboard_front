@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "@/lib/userDates";
 import { AlertTriangle, CalendarPlus, Check, FilePen, Loader2, MessageSquareWarning, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { format } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { diffWords, type DiffPart } from "@/lib/wordDiff";
 import type { PostTextEdit } from "@/types/postTextReview";
 import CaptionChangeDialog from "@/components/compliance/screener/CaptionChangeDialog";
@@ -25,7 +27,8 @@ export default function PostTextHistory({ edits }: { edits: PostTextEdit[] }) {
 }
 
 function PostTextHistoryEntry({ edit, revision }: { edit: PostTextEdit; revision: number }) {
-  const time = new Date(edit.created_at).toLocaleString();
+  useUserTimezone();
+  const time = format(new Date(edit.created_at), "MMM d, yyyy, h:mm a zzz");
   const description = `Reviewer revision ${revision}, saved by ${edit.reviewer_name} on ${time}. Review round ${edit.version}.`;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">

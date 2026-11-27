@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
-import { format, formatDistanceToNowStrict, isPast } from "date-fns";
+import { format, formatDistanceToNowStrict, isPast } from "@/lib/userDates";
 import { withLinkToken } from "@/lib/linkToken";
 import { useVideoThumbnail } from "@/lib/videoThumbnail";
 import type { DueKind } from "@/types/submission";

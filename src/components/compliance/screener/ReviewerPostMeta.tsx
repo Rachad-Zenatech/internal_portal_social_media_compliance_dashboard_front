@@ -1,6 +1,7 @@
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import type { ReactNode } from "react";
 import { Clock3 } from "lucide-react";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { format, formatDistanceToNow, isPast } from "@/lib/userDates";
 import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
 
 interface Props {
@@ -43,16 +44,17 @@ function MetaField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 function ApprovalDeadline({ date, inReview }: { date: Date; inReview: boolean }) {
+  const { time_zone } = useUserTimezone();
   const overdue = inReview && isPast(date);
   const tone = overdue ? "text-red-700 dark:text-red-300"
     : "text-foreground";
   const dateLabel = format(date, "MMM d, h:mm a");
-  const fullDate = format(date, "EEEE, MMMM d, yyyy 'at' h:mm a");
+  const fullDate = format(date, "EEEE, MMMM d, yyyy 'at' h:mm a") + ` (${time_zone})`;
   return (
     <div className={`flex min-w-0 items-start gap-1.5 ${tone}`}>
       <Clock3 className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
       <div className="flex min-w-0 flex-col gap-0.5 text-xs leading-relaxed">
-        <time dateTime={date.toISOString()} title={fullDate} className="whitespace-nowrap font-semibold">{dateLabel}</time>
+        <time dateTime={date.toISOString()} title={fullDate} className="whitespace-nowrap font-semibold">{dateLabel} {format(date, "zzz")}</time>
         {overdue && <span className="text-[11px]">Overdue by {formatDistanceToNow(date)}</span>}
       </div>
     </div>

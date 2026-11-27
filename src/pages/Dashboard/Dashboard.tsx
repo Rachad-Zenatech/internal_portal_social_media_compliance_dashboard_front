@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { format, formatDistanceToNow, isPast } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { CalendarDays, CheckCircle2, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import type { SubmissionSummary } from "@/types/submission";
 
 /** Suggesting reviewers get their own; reviewers get the reviewer's dashboard; creators (and super admins viewing the app as a creator) their own. */
 export default function Dashboard() {
+  useUserTimezone();
   const { hasPermission, isSuggester } = useAuth();
   if (isSuggester) return <SuggesterDashboard />;
   return hasPermission("CONTENT_REVIEW_VIEW") ? <ReviewerDashboard /> : <CreatorDashboard />;
@@ -135,8 +137,8 @@ function ReviewerDashboard() {
       >
         <button type="button" onClick={() => openRow(row)} aria-label={`Review ${row.s.title}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-muted">
           {row.kind === "script" ? (
-            <span className="grid h-full w-full place-items-center bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
-              <FileText className="h-10 w-10" strokeWidth={1.5} />
+            <span className="flex h-full w-full flex-col items-center justify-center gap-2 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+              <FileText aria-hidden="true" className="h-10 w-10" strokeWidth={1.5} /><span className="text-xs font-medium">Script</span>
             </span>
           ) : (
             <Thumb s={row.s} className="h-full w-full rounded-none transition-transform duration-300 group-hover:scale-[1.03]" />
@@ -302,7 +304,7 @@ function ReviewerDashboard() {
                           late ? "border-red-300 dark:border-red-500/50" : "border-border/70"
                         }`}
                       >
-                        <Thumb s={x} className="h-14 w-20 rounded-lg" />
+                        <Thumb s={x} className="h-14 w-14 rounded-lg" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-foreground" title={x.title}>
                             {x.title}
@@ -311,7 +313,7 @@ function ReviewerDashboard() {
                             With {x.created_by_name ?? "the creator"}
                             {x.current_version > 1 && ` · v${x.current_version}`}
                           </p>
-                          <p className="truncate text-[11px] text-muted-foreground">
+                          <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
                             {issuesText(x.issue_count) ?? "Changes requested"} · updated {formatDistanceToNow(new Date(x.updated_at), { addSuffix: true })}
                           </p>
                         </div>

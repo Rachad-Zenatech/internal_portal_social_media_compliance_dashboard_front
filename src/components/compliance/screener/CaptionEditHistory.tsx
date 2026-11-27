@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { format } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CaptionRevision } from "@/types/captionEdit";
@@ -6,7 +8,8 @@ import { captionDiff } from "@/lib/captionChanges";
 import CaptionChangeDialog from "./CaptionChangeDialog";
 
 function CaptionRevisionEntry({ revision }: { revision: CaptionRevision }) {
-  const when = new Date(revision.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  useUserTimezone();
+  const when = format(new Date(revision.created_at), "MMM d, yyyy, h:mm a zzz");
   const target = revision.platform ? revision.platform.toLowerCase().replaceAll("_", " ") : "default text";
   const { formattingOnly } = captionDiff(revision.before, revision.after);
   const change = formattingOnly ? "Formatting or spacing updated" : "Wording updated";
@@ -15,7 +18,7 @@ function CaptionRevisionEntry({ revision }: { revision: CaptionRevision }) {
     <li className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b py-3 last:border-b-0">
       <div className="min-w-0 flex-1">
         <p className="break-words text-sm font-medium">{revision.actor_name}</p>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground"><time dateTime={revision.created_at} title={new Date(revision.created_at).toLocaleString()}>{when}</time><span aria-hidden="true"> &middot; </span>{target}<span aria-hidden="true"> &middot; </span>{change}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground"><time dateTime={revision.created_at} title={when}>{when}</time><span aria-hidden="true"> &middot; </span>{target}<span aria-hidden="true"> &middot; </span>{change}</p>
       </div>
       <CaptionChangeDialog before={revision.before} after={revision.after} description={description} />
     </li>

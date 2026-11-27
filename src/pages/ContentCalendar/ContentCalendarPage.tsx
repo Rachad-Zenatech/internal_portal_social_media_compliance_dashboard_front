@@ -16,7 +16,8 @@ import {
   isToday,
   startOfMonth,
   startOfWeek,
-} from "date-fns";
+} from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { ChevronLeft, ChevronRight, Crown, ExternalLink, FlaskConical, Plus, RotateCcw, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,7 @@ const BAR_FILTER =
 // ---------------------------------------------------------------------------
 
 export default function ContentCalendarPage() {
+  const { time_zone } = useUserTimezone();
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_VIEW");
@@ -172,7 +174,6 @@ export default function ContentCalendarPage() {
   const sent = useSentToSprout();
   const published = usePublished();
   const now = new Date();
-
   const { data: submissions = [] } = useQuery({
     queryKey: ["submissions", scope],
     queryFn: () => submissionService.list(undefined, scope),
@@ -185,9 +186,8 @@ export default function ContentCalendarPage() {
   const items = useMemo(() => {
     const real = submissions.map((s) => fromSubmission({ ...s, publish_at: sent[`sub-${s.id}`]?.scheduled_for ?? s.publish_at })).filter((i): i is CalendarItem => Boolean(i));
     return [...real, ...sampleItems()].sort((a, b) => a.scheduled_for.localeCompare(b.scheduled_for));
-  }, [submissions, sent]);
+  }, [submissions, sent, time_zone]);
   const hasSamples = items.some((i) => i.is_sample);
-
   const profiles = useMemo(() => {
     const seen = new Map<string, string>();
     for (const i of items) if (i.account && !seen.has(profileKey(i))) seen.set(profileKey(i), profileLabel(i));

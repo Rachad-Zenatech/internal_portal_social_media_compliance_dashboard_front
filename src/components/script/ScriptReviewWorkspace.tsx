@@ -5,7 +5,7 @@ import { SharedScriptReviewLink } from "@/components/script/SharedScriptReviewEn
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { locateOnPage } from "@/lib/locateOnPage";
 import ApprovedScriptNextStep from "@/components/script/ApprovedScriptNextStep";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "@/lib/userDates";
 import { CheckCircle2, Eye, FileText, Loader2, PencilLine, RotateCcw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NoteField from "@/components/script/NoteField";

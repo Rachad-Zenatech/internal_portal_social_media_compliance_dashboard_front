@@ -1,10 +1,12 @@
 import { Clock3 } from "lucide-react";
-import { format } from "date-fns";
+import { format } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { suggestionTimeLabel, type postSuggestionState } from "@/lib/postApprovalSuggestions";
 
 export default function PostApprovalSuggestionNotice({ access }: { access: ReturnType<typeof postSuggestionState> }) {
+  const { time_zone } = useUserTimezone();
   if (!Number.isFinite(access.deadline)) return null;
-  const until = format(new Date(access.deadline), "EEE, MMM d ? h:mm a");
+  const until = format(new Date(access.deadline), "EEE, MMM d 'at' h:mm a") + ` (${time_zone})`;
   const title = access.reviewing ? "Approval deadline" : access.open ? "Suggestions open" : "Suggestions closed";
   const countdown = access.reviewing && access.overdueMs > 0 ? `Overdue by ${suggestionTimeLabel(access.overdueMs)}`
     : access.remainingMs > 0 ? `${suggestionTimeLabel(access.remainingMs)} remaining` : "Deadline reached";

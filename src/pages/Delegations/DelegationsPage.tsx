@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "@/lib/userDates";
 import { ArrowRight, Forward, Loader2, Search } from "lucide-react";
 
 import HelpIcon from "@/components/ui/HelpIcon";

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { addDays, format, isSameDay, isToday, isTomorrow, isYesterday, startOfDay } from "date-fns";
+import { addDays, format, isSameDay, isToday, isTomorrow, isYesterday, startOfDay } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ export default function DayAgenda({
   loading: boolean;
   title?: string;
 }) {
+  useUserTimezone();
   const [day, setDay] = useState(() => startOfDay(new Date()));
 
   const dated = useMemo(
