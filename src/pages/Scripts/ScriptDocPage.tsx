@@ -342,7 +342,7 @@ export default function ScriptDocPage() {
       )}
 
       <ScriptWorkspacePlacement host={isCreator && detailsAccordionOpen ? workspaceHost : null}><div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
-        {doc.pages.length > 0 && showPages && (
+        {doc.pages.length > 0 && showPages && !workspaceHost && (
           <PagesRail doc={doc} onBeforeCheck={beforeBulkCheck} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}
         <DocEditorColumn
