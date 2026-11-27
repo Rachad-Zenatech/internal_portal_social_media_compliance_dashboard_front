@@ -7,9 +7,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
 - `ApprovedScriptNextStep` (export function) L5
 
-## src/components/script/BatchDetailsForm.tsx (143 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `toLocalInput` (const) L14 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
-- `BatchDetailsForm` (export function) L27 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
+## src/components/script/BatchDetailsForm.tsx (146 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `toLocalInput` (const) L16 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- `BatchDetailsForm` (export function) L29 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
 ## src/components/script/BatchItemCard.tsx (333 lines) - batch item card (components script)
 - `Decision` (export interface) L20

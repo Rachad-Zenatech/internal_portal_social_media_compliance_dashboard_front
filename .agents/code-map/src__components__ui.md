@@ -38,9 +38,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/ui/button.tsx (68 lines) - button (components ui)
 - `Button` (function) L44
 
-## src/components/ui/calendar.tsx (223 lines) - calendar (components ui)
-- `Calendar` (function) L15
-- `CalendarDayButton` (function) L183
+## src/components/ui/calendar.tsx (225 lines) - calendar (components ui)
+- `Calendar` (function) L16
+- `CalendarDayButton` (function) L185
 
 ## src/components/ui/card.tsx (104 lines) - card (components ui)
 - `Card` (function) L5
@@ -58,10 +58,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DataTablePaginationProps` (interface) L18
 - `DataTablePagination` (export function) L23
 
-## src/components/ui/date-time-picker.tsx (177 lines) - Every half hour, 6 AM to 10 PM; a time picked elsewhere (e.g.
-- `parseValue` (function) L19
-- `timeLabel` (const) L25
-- `DateTimePicker` (export function) L32 - The portal's date picker, in place of the browser's: a calendar (and, with `withTime`, a column of times) in a  popover.
+## src/components/ui/date-time-picker.tsx (187 lines) - Every half hour, 6 AM to 10 PM; a time picked elsewhere (e.g.
+- `parseValue` (function) L21
+- `timeLabel` (const) L27
+- `PickerTimezone` (function) L29
+- `TimeChoices` (function) L33
+- `TimeChoice` (function) L44
+- `DateTimePicker` (export function) L60 - The portal's date picker, in place of the browser's: a calendar (and, with `withTime`, a column of times) in a  popover.
 
 ## src/components/ui/dialog.tsx (172 lines) - dialog (components ui)
 - `Dialog` (function) L10

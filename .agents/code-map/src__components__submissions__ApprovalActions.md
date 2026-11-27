@@ -5,7 +5,6 @@
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
 ## src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
-- `ApprovalTarget` (export interface) L15 - The submission fields these actions need (a full Submission or a Content Portal summary).
-- `Mode` (type) L25
-- `toLocalInput` (const) L27
-- `ApprovalActions` (export function) L34 - What can still happen to approved content before it goes out: a reviewer reschedules it or reopens it for changes.
+- `ApprovalTarget` (export interface) L16 - The submission fields these actions need (a full Submission or a Content Portal summary).
+- `Mode` (type) L26
+- `ApprovalActions` (export function) L33 - What can still happen to approved content before it goes out: a reviewer reschedules it or reopens it for changes.

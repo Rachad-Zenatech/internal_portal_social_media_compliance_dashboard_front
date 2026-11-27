@@ -4,8 +4,8 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostTextChanges.tsx (37 lines) - post text changes (components submissions)
-- `PostTextChanges` (export function) L6
-- `TextChangePart` (function) L11
-- `PostTextHistory` (export function) L16
-- `PostTextHistoryEntry` (function) L27
+## src/components/submissions/PostTextChanges.tsx (40 lines) - post text changes (components submissions)
+- `PostTextChanges` (export function) L8
+- `TextChangePart` (function) L13
+- `PostTextHistory` (export function) L18
+- `PostTextHistoryEntry` (function) L29

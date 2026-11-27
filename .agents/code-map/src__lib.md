@@ -116,7 +116,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
 
-## src/lib/findingCopy.ts (40 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
+## src/lib/findingCopy.ts (41 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
 - `readableFindingReason` (export function) L5 - Simplify saved boilerplate without changing the evidence, decision or confidence.
 - `findingCopy` (export function) L13 - Creators and reviewers get the same evidence, explanation and practical next step.
 - `nextStep` (function) L26
@@ -179,7 +179,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `sourceIdentity` (export function) L5 - Normalize known aliases without conflating different pages or meaningful query parameters.
 - `identity` (function) L22
 - `uniqueClaims` (function) L26
-- `mergeSourceChecks` (export function) L39 - Full compliance results take precedence over older quick checks for the same article.
+- `mergeSourceChecks` (export function) L39 - A completed check owns its source list, including an empty list; quick checks are a pre-check fallback.
 
 ## src/lib/pendingCheckProgress.ts (21 lines) - Saved pending counts describe the earlier check; current file states describe the work still running.
 - `finished` (const) L3
@@ -211,7 +211,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `readSignals` (export function) L26
 - `hasTag` (export function) L35 - Whether the caption already has this tag (case doesn't matter, "#ZenaTech" doesn't match "#ZenaTechLife").
 
-## src/lib/postSteps.ts (106 lines) - post steps (lib)
+## src/lib/postSteps.ts (107 lines) - post steps (lib)
 - `RAN_STEP_STATES` (export const) L3
 - `POST_STEPS` (export const) L9 - The four steps a creator works through, in order.
 - `RECHECK_AFTER_EDITS` (export const) L33 - The server marks checks stale only after media changes.
@@ -221,7 +221,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `resumePath` (export function) L51 - Where a click on the post itself goes: the step it was left on, or (once sent) the read-only post.
 - `ranOnce` (export function) L57 - Normalize progress without hiding stale media checks.
 - `stepStatusText` (export function) L65 - What a step is up to, as a sentence for the hover.
-- `missingText` (export function) L102
+- `missingText` (export function) L103
 
 ## src/lib/preparationFreshness.ts (18 lines) - preparation freshness (lib)
 - `preparationCheckState` (export function) L4
@@ -363,7 +363,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `creatorSubmissionSteps` (export function) L10 - Use one state for the dots, count and resume link, including script-only requirements.
 - `creatorProgressText` (export function) L32
 
-## src/lib/submissionRequiredFields.ts (15 lines) - Required post-detail fields, as shown in the creator checklist.
+## src/lib/submissionRequiredFields.ts (16 lines) - Required post-detail fields, as shown in the creator checklist.
 - `SUBMISSION_REQUIRED_LABELS` (export const) L2 - Required post-detail fields, as shown in the creator checklist.
 
 ## src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
@@ -426,6 +426,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/lib/utils.ts (7 lines) - utils (lib)
 - `cn` (export function) L4
+
+## src/lib/videoCheckTimeline.ts (31 lines) - Keep point observations as points; never extend a sampled clear result across unseen footage.
+- `TimelinePart` (export interface) L3
+- `timelineOf` (export function) L10 - Keep point observations as points; never extend a sampled clear result across unseen footage.
+- `markerStyle` (export function) L23 - A zero-length observation still needs a visible marker, including at the right edge.
 
 ## src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - `VideoThumbnail` (export interface) L3

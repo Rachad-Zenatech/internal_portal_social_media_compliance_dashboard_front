@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/FinalPublishDate.tsx (21 lines) - final publish date (components submissions)
-- `FinalPublishDate` (export function) L4
+## src/components/submissions/FinalPublishDate.tsx (23 lines) - final publish date (components submissions)
+- `FinalPublishDate` (export function) L5

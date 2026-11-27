@@ -12,21 +12,8 @@ export type { SubmissionUpdate } from "@/types/submissionUpdate";
 import type { ContentType, SubmissionFileKind, SubmissionStatus } from "./submissionContent";
 export type { ContentType, SubmissionFileKind, SubmissionStatus } from "./submissionContent";
 
-export interface BrandOption {
-  code: string;
-  name: string;
-}
-export interface AccountOption {
-  id: string;
-  label: string;
-  account_name: string;
-  provider: string;
-  platform: string;
-  handle?: string | null;
-  brand_code?: string | null;
-  is_ceo: boolean;
-  is_demo: boolean;
-}
+import type { BrandOption, AccountOption } from "./submissionOptions";
+export type { BrandOption, AccountOption } from "./submissionOptions";
 
 export interface SubmissionOptions {
   brands: BrandOption[];

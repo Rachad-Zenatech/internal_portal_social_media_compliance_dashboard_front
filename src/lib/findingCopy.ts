@@ -26,6 +26,7 @@ export function findingCopy(v: ComplianceViolation) {
 function nextStep(v: ComplianceViolation, status: string): string | null {
   if (status === "CLEARED") return null;
   const guidance = readableFindingReason(v.evaluation?.recommended_action?.trim() || v.remediation_guidance?.trim() || "");
+  if (v.category === "Video disclosure" && guidance) return guidance;
   const visual = Boolean(v.image_regions?.length || v.image_file_ids?.length) || v.evaluation?.subject === "Visible asset content";
   if (status === "NEEDS_REVIEW" && visual && guidance) {
     return `Check the flagged area in the original image or video first. If you confirm the issue: ${guidance}`;

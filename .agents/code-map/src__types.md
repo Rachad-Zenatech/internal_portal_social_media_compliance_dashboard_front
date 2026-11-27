@@ -229,45 +229,47 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `SourceConfirmationsResponse` (export interface) L25
 - `SourceConfirmationRequest` (export interface) L35 - One call: with a claim, does it match the page (null takes it back); without, is the page a good source.
 
-## src/types/submission.ts (533 lines) - submission (types)
-- `BrandOption` (export interface) L15
-- `AccountOption` (export interface) L19
-- `SubmissionOptions` (export interface) L31
-- `ReviewerOption` (export interface) L42 - Someone a creator can send content to for review: a reviewer or a super admin.
-- `DueKind` (export type) L52 - Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION).
-- `TranscriptStatus` (export type) L54
-- `TranscriptSegment` (export interface) L56
-- `SubmissionFile` (export interface) L64
-- `SegmentFlag` (export interface) L89 - Which transcript segments contain flagged wording (same matcher as the check).
-- `StoredCheck` (export type) L100 - The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images.
-- `AnalysisStep` (export interface) L134 - One part of the post still being read before the rulebook check can score it.
-- `AnalysisProgress` (export interface) L146 - While the check is still reading the post: what's left and when the score is expected.
-- `Submission` (export interface) L156
-- `SubmissionSummary` (export interface) L228
-- `SubmissionVersion` (export interface) L298
-- `ReviewJob` (export interface) L320
-- `ReviewDecisionType` (export type) L338
-- `ReviewDecisionRequest` (export interface) L340
-- `ReviewCommentCategory` (export type) L358
-- `ReviewComment` (export interface) L360
-- `ReviewCommentCreate` (export interface) L388
-- `SubmissionEvent` (export interface) L403
-- `SubmissionHistory` (export interface) L412
-- `VersionView` (export interface) L421 - One submitted version as it was: what was sent, its video, its automated check and its decision.
-- `QueueTab` (export type) L441 - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
-- `ReviewQueueCounts` (export type) L444 - Posts in each Screener tab, plus scripts waiting for a reviewer.
-- `DashboardSummary` (export interface) L447 - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
-- `SubmitResult` (export interface) L469
-- `DuplicateDetail` (export interface) L478 - One Submission Details dropdown compared with an earlier post that has the same content and caption.
-- `DuplicateMatch` (export interface) L488 - A post already sent for approval with the same content and caption.
-- `DuplicateReport` (export interface) L503 - blocked: a match overlaps on every detail and the publish date.
-- `DelegationDirection` (export type) L510
-- `Delegation` (export interface) L513 - One hand-off of a post in review, with where the post stands now.
+## src/types/submission.ts (520 lines) - submission (types)
+- `SubmissionOptions` (export interface) L18
+- `ReviewerOption` (export interface) L29 - Someone a creator can send content to for review: a reviewer or a super admin.
+- `DueKind` (export type) L39 - Who has to act next: the reviewer (REVIEW) or the creator after changes were requested (REVISION).
+- `TranscriptStatus` (export type) L41
+- `TranscriptSegment` (export interface) L43
+- `SubmissionFile` (export interface) L51
+- `SegmentFlag` (export interface) L76 - Which transcript segments contain flagged wording (same matcher as the check).
+- `StoredCheck` (export type) L87 - The server's rulebook check: title, caption, and (once ready) the video transcript and the text in its images.
+- `AnalysisStep` (export interface) L121 - One part of the post still being read before the rulebook check can score it.
+- `AnalysisProgress` (export interface) L133 - While the check is still reading the post: what's left and when the score is expected.
+- `Submission` (export interface) L143
+- `SubmissionSummary` (export interface) L215
+- `SubmissionVersion` (export interface) L285
+- `ReviewJob` (export interface) L307
+- `ReviewDecisionType` (export type) L325
+- `ReviewDecisionRequest` (export interface) L327
+- `ReviewCommentCategory` (export type) L345
+- `ReviewComment` (export interface) L347
+- `ReviewCommentCreate` (export interface) L375
+- `SubmissionEvent` (export interface) L390
+- `SubmissionHistory` (export interface) L399
+- `VersionView` (export interface) L408 - One submitted version as it was: what was sent, its video, its automated check and its decision.
+- `QueueTab` (export type) L428 - The Content Screener's tabs: waiting on a reviewer, waiting on the creator, decided (last 30 days).
+- `ReviewQueueCounts` (export type) L431 - Posts in each Screener tab, plus scripts waiting for a reviewer.
+- `DashboardSummary` (export interface) L434 - The dashboard's activity feed and last-30-days insights (GET /api/submissions/dashboard).
+- `SubmitResult` (export interface) L456
+- `DuplicateDetail` (export interface) L465 - One Submission Details dropdown compared with an earlier post that has the same content and caption.
+- `DuplicateMatch` (export interface) L475 - A post already sent for approval with the same content and caption.
+- `DuplicateReport` (export interface) L490 - blocked: a match overlaps on every detail and the publish date.
+- `DelegationDirection` (export type) L497
+- `Delegation` (export interface) L500 - One hand-off of a post in review, with where the post stands now.
 
 ## src/types/submissionContent.ts (5 lines) - AD: paid social ad.
 - `ContentType` (export type) L2 - AD: paid social ad.
 - `SubmissionFileKind` (export type) L3
 - `SubmissionStatus` (export type) L4
+
+## src/types/submissionOptions.ts (18 lines) - Brand and publishing account choices used by submission forms.
+- `BrandOption` (export interface) L2 - Brand and publishing account choices used by submission forms.
+- `AccountOption` (export interface) L6
 
 ## src/types/submissionSchedule.ts (7 lines) - Calendar timing displayed alongside the server's review status.
 - `SubmissionStage` (export type) L3
@@ -278,7 +280,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PostStepState` (export type) L5 - done; stale (run before the post was last edited, so run it again); running; todo (not done yet).
 - `SubmissionSteps` (export interface) L8 - How far a post has got through its steps (see the server's post_steps_service).
 
-## src/types/submissionUpdate.ts (29 lines) - Every brand and audience, primary first.
+## src/types/submissionUpdate.ts (30 lines) - Every brand and audience, primary first.
 - `SubmissionUpdate` (export interface) L5
 
 ## src/types/videoScript.ts (5 lines) - Whether this video needs the platform's script review before upload.

@@ -136,7 +136,7 @@ export default function ComplianceStep({
           .filter((r) => r.file_id === mainFile?.id && r.start_sec != null && r.end_sec != null)
           .map((r) => `${r.start_sec}-${r.end_sec}`)).size;
         const terms = findingEvidence(v).map((t) => t.toLowerCase());
-        const where: Finding["where"] = terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
+        const where: Finding["where"] = v.category === "Video disclosure" ? "Video" : terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
           ? "Text"
           : seg
           ? "Video"

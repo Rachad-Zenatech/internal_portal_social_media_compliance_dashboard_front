@@ -11,9 +11,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ComparisonText` (function) L3
 - `CaptionComparison` (export function) L12
 
-## src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
-- `CaptionRevisionEntry` (function) L8
-- `CaptionEditHistory` (export function) L25
+## src/components/compliance/screener/CaptionEditHistory.tsx (40 lines) - caption edit history (components compliance screener)
+- `CaptionRevisionEntry` (function) L10
+- `CaptionEditHistory` (export function) L28
 
 ## src/components/compliance/screener/CaptionEditor.tsx (25 lines) - caption editor (components compliance screener)
 - `CaptionEditor` (export function) L7
@@ -59,11 +59,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/compliance/screener/ReviewerComplianceSources.tsx (18 lines) - Source comparisons and the manual text-post retry belong to the compliance tab.
 - `ReviewerComplianceSources` (export function) L6 - Source comparisons and the manual text-post retry belong to the compliance tab.
 
-## src/components/compliance/screener/ReviewerPostMeta.tsx (61 lines) - Separate publishing details from the approval deadline so both are easy to scan.
-- `Props` (interface) L6
-- `ReviewerPostMeta` (export function) L16 - Separate publishing details from the approval deadline so both are easy to scan.
-- `MetaField` (function) L36
-- `ApprovalDeadline` (function) L45
+## src/components/compliance/screener/ReviewerPostMeta.tsx (63 lines) - Separate publishing details from the approval deadline so both are easy to scan.
+- `Props` (interface) L7
+- `ReviewerPostMeta` (export function) L17 - Separate publishing details from the approval deadline so both are easy to scan.
+- `MetaField` (function) L37
+- `ApprovalDeadline` (function) L46
 
 ## src/components/compliance/screener/ReviewerPostText.tsx (24 lines) - reviewer post text (components compliance screener)
 - `ReviewerPostText` (export function) L8

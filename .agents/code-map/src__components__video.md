@@ -12,6 +12,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `PLATFORM_LABELS` (export const) L6
 - `PlatformIcon` (export function) L19 - Small brand mark for a platform (lucide ships no brand icons).
 
+## src/components/video/VideoCheckTimeline.tsx (82 lines) - Shared creator/reviewer timeline; observations and unchecked gaps stay distinct.
+- `Props` (interface) L5
+- `timeLabel` (const) L20
+- `FlaggedMoments` (export function) L23 - Shared creator/reviewer timeline; observations and unchecked gaps stay distinct.
+- `TimelineLegend` (function) L37
+- `LegendItem` (function) L45
+- `TimelineTrack` (function) L50
+- `TimelineMarker` (function) L64
+- `PlaybackControls` (function) L70
+
 ## src/components/video/VideoUploadQueueDrawer.tsx (515 lines) - video upload queue drawer (components video)
 - `VideoUploadQueueDrawer` (export function) L31
     - `navigate` (fn) L43

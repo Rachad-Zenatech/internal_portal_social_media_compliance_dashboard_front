@@ -32,9 +32,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 - `DashboardHeader` (export function) L2 - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
 
-## src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
-- `dayName` (const) L11
-- `DayAgenda` (export function) L15 - One day of posts at a time, in time order, with arrows to step through days.
+## src/components/dashboard/DayAgenda.tsx (114 lines) - One day of posts at a time, in time order, with arrows to step through days.
+- `dayName` (const) L12
+- `DayAgenda` (export function) L16 - One day of posts at a time, in time order, with arrows to step through days.
 
 ## src/components/dashboard/ReviewSlideshow.tsx (132 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
 - `ReviewSlideshow` (export function) L10 - Cards in a row that slides: arrows move a screenful at a time, the dots show where you are and jump there, and the  row can be swiped or ...
@@ -49,7 +49,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Progress` (function) L22 - What they have done on an item so far, as a short chip.
 - `SuggesterDashboard` (export function) L43 - A suggesting reviewer's dashboard: what was sent to them by name and is still in review, and what they have done on it.
 
-## src/components/dashboard/dashboardParts.tsx (449 lines) - Pieces shared by the reviewer and creator dashboards.
+## src/components/dashboard/dashboardParts.tsx (450 lines) - Pieces shared by the reviewer and creator dashboards.
 - `UPCOMING_DAYS` (export const) L36
 - `greeting` (export function) L38
 - `issuesText` (export const) L43
@@ -67,16 +67,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `avatarTone` (export const) L201
 - `Score` (export function) L204 - A compliance score the way the Content Screener shows it.
 - `Thumb` (export function) L240
-- `Platforms` (export function) L248
-- `Section` (export function) L260 - A titled panel, like the Content Portal's: heading with a muted count, then a bordered card.
-- `Empty` (export function) L297
-- `Loading` (export function) L301
-- `viewAll` (export const) L309
-- `RowMenu` (export function) L315
-- `Deadline` (export function) L334
-- `DeadlinePill` (export function) L358 - The deadline on one line, as a pill: red when late, amber when due today, plain otherwise.
-- `TONE` (export const) L378 - Soft icon backgrounds, one per colour.
-- `Tone` (export type) L386
-- `SectionIcon` (export function) L389 - The small coloured icon before a section title.
-- `ACTIVITY_STYLE` (export const) L399 - Each kind of update on a post, with its own icon and colour (same on both dashboards).
-- `ScoreRing` (export function) L412 - An average rulebook score as a ring.
+- `Platforms` (export function) L249
+- `Section` (export function) L261 - A titled panel, like the Content Portal's: heading with a muted count, then a bordered card.
+- `Empty` (export function) L298
+- `Loading` (export function) L302
+- `viewAll` (export const) L310
+- `RowMenu` (export function) L316
+- `Deadline` (export function) L335
+- `DeadlinePill` (export function) L359 - The deadline on one line, as a pill: red when late, amber when due today, plain otherwise.
+- `TONE` (export const) L379 - Soft icon backgrounds, one per colour.
+- `Tone` (export type) L387
+- `SectionIcon` (export function) L390 - The small coloured icon before a section title.
+- `ACTIVITY_STYLE` (export const) L400 - Each kind of update on a post, with its own icon and colour (same on both dashboards).
+- `ScoreRing` (export function) L413 - An average rulebook score as a ring.

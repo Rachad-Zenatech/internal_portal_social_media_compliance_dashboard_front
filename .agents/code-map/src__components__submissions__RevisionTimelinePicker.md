@@ -5,11 +5,11 @@
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
 ## src/components/submissions/RevisionTimelinePicker.tsx (167 lines) - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
-- `RevisionDays` (export type) L8
-- `Timeline` (export type) L11 - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
-- `DEFAULT_TIMELINE` (export const) L13
-- `timelineValid` (export const) L16 - Whether the choice can be sent: a picked date has to be set and still ahead.
-- `timelineFields` (export const) L19 - The choice as the fields the server takes: `days` or `at` (an ISO time), or neither for no deadline.
-- `revisionDueDate` (export function) L34 - The resubmit-by time the server will set: this many working days from now (weekends skipped), pulled in if the  planned publish time is c...
-- `pill` (const) L47
-- `RevisionTimelinePicker` (export function) L57 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.
+- `RevisionDays` (export type) L9
+- `Timeline` (export type) L12 - What the reviewer chose: a few working days, an exact date and time, or (where it's optional) no deadline.
+- `DEFAULT_TIMELINE` (export const) L14
+- `timelineValid` (export const) L17 - Whether the choice can be sent: a picked date has to be set and still ahead.
+- `timelineFields` (export const) L20 - The choice as the fields the server takes: `days` or `at` (an ISO time), or neither for no deadline.
+- `revisionDueDate` (export function) L35 - The resubmit-by time the server will set: this many working days from now (weekends skipped), pulled in if the  planned publish time is c...
+- `pill` (const) L48
+- `RevisionTimelinePicker` (export function) L58 - How long the creator has to do the next thing: a few quick choices in working days, or a date and time picked by  hand.

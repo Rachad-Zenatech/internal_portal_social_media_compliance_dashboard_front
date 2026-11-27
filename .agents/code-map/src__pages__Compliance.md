@@ -29,7 +29,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `handleSubmitForm` (fn) L460
     - `handleRunScanner` (fn) L532
 
-## src/pages/Compliance/ContentScreenerPage.tsx (1367 lines) - content screener page (pages  compliance)
+## src/pages/Compliance/ContentScreenerPage.tsx (1239 lines) - content screener page (pages  compliance)
 - `scoreOf` (const) L105
 - `isFailing` (const) L106
 - `hasCritical` (const) L110
@@ -44,38 +44,34 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `caption` (fn) L192
 - `escapeRe` (const) L213
 - `HighlightedCaption` (export function) L216 - The caption with every flagged phrase highlighted.
-- `TimelinePart` (interface) L237
-- `timelineOf` (export function) L245 - The video split into its checked parts, each coloured by what was found there.
-- `FlaggedMoments` (export function) L257 - Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times.
-    - `count` (fn) L274
-- `PostView` (function) L366
-    - `toggle` (fn) L421
-    - `step` (fn) L427
-- `PanelTab` (type) L554
-- `ReviewPanel` (function) L556
-    - `suggestions` (fn) L598
-- `useFlags` (function) L955 - Flags, with this version's dismissals, for one post.
-    - `flags` (fn) L956
-    - `dismissed` (fn) L958
-- `Workspace` (function) L963 - The selected post: media in the middle, the review panel on the right.
-    - `suggestions` (fn) L978
-    - `seek` (fn) L990
-- `QueueStrip` (function) L1065 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
-- `ContentScreenerPage` (export function) L1117
-    - `navigate` (fn) L1124
-    - `options` (fn) L1141
-    - `labels` (fn) L1142
-    - `items` (fn) L1151
-    - `visible` (fn) L1153
-    - `rows` (fn) L1154
-    - `paged` (fn) L1156 - 20 to a page; a new tab, search, filter or order starts from the first page.
-    - `shownLinked` (fn) L1158 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
-    - `renderPostRow` (fn) L1171
-    - `brands` (fn) L1207
-    - `platforms` (fn) L1208
-    - `brandLabel` (fn) L1209
-    - `setCollapsed` (fn) L1213
-    - `pick` (fn) L1222
+- `PostView` (function) L237
+    - `toggle` (fn) L292
+    - `step` (fn) L298
+- `PanelTab` (type) L425
+- `ReviewPanel` (function) L427
+    - `suggestions` (fn) L469
+- `useFlags` (function) L826 - Flags, with this version's dismissals, for one post.
+    - `flags` (fn) L827
+    - `dismissed` (fn) L829
+- `Workspace` (function) L834 - The selected post: media in the middle, the review panel on the right.
+    - `suggestions` (fn) L849
+    - `seek` (fn) L861
+- `QueueStrip` (function) L936 - The queue collapsed to a slim strip of thumbnails, each with a dot for how its check went.
+- `ContentScreenerPage` (export function) L988
+    - `navigate` (fn) L996
+    - `options` (fn) L1013
+    - `labels` (fn) L1014
+    - `items` (fn) L1023
+    - `visible` (fn) L1025
+    - `rows` (fn) L1026
+    - `paged` (fn) L1028 - 20 to a page; a new tab, search, filter or order starts from the first page.
+    - `shownLinked` (fn) L1030 - A post opened from a link (?id=...) shows on its page once the queue has loaded.
+    - `renderPostRow` (fn) L1043
+    - `brands` (fn) L1079
+    - `platforms` (fn) L1080
+    - `brandLabel` (fn) L1081
+    - `setCollapsed` (fn) L1085
+    - `pick` (fn) L1094
 
 ## src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - `MessagingContextPage` (export function) L22 - Messaging Context: the background the content analysis is given, so it judges tone against the brand's voice,  the platform and the audie...

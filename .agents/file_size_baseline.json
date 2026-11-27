@@ -34,7 +34,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/ContentScreenerPage.tsx": {
-      "max_lines": 1368,
+      "max_lines": 1238,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Compliance/VideoComplianceScannerPage.tsx": {
@@ -70,7 +70,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2345,
+      "max_lines": 2332,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -82,7 +82,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/types/submission.ts": {
-      "max_lines": 549,
+      "max_lines": 519,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     }
   },
@@ -136,7 +136,7 @@
       "kind": "jsx_return"
     },
     "src/components/script/ScriptFindings.tsx#ScriptFindings": {
-      "max_lines": 139,
+      "max_lines": 136,
       "kind": "jsx_return"
     },
     "src/components/script/ScriptReviewWorkspace.tsx#Editor": {
@@ -211,10 +211,6 @@
       "max_lines": 151,
       "kind": "jsx_return"
     },
-    "src/components/ui/date-time-picker.tsx#DateTimePicker": {
-      "max_lines": 98,
-      "kind": "jsx_return"
-    },
     "src/components/video/VideoUploadQueueDrawer.tsx#VideoUploadQueueDrawer": {
       "max_lines": 366,
       "kind": "jsx_return"
@@ -225,10 +221,6 @@
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#ContentScreenerPage": {
       "max_lines": 135,
-      "kind": "jsx_return"
-    },
-    "src/pages/Compliance/ContentScreenerPage.tsx#FlaggedMoments": {
-      "max_lines": 89,
       "kind": "jsx_return"
     },
     "src/pages/Compliance/ContentScreenerPage.tsx#PostView": {
@@ -324,7 +316,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/SubmissionsListPage.tsx#ReviewCard": {
-      "max_lines": 226,
+      "max_lines": 223,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/SubmissionsListPage.tsx#SubmissionsListPage": {

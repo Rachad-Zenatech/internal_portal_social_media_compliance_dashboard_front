@@ -43,7 +43,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/compliance/context/kinds.ts (71 lines) - A value and its display name, as used by the brand, audience and platform pickers.
 - src/components/compliance/screener/CaptionChangeDialog.tsx (20 lines) - caption change dialog (components compliance screener)
 - src/components/compliance/screener/CaptionComparison.tsx (33 lines) - caption comparison (components compliance screener)
-- src/components/compliance/screener/CaptionEditHistory.tsx (37 lines) - caption edit history (components compliance screener)
+- src/components/compliance/screener/CaptionEditHistory.tsx (40 lines) - caption edit history (components compliance screener)
 - src/components/compliance/screener/CaptionEditor.tsx (25 lines) - caption editor (components compliance screener)
 - src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
 - src/components/compliance/screener/MarkedReviewerCaption.tsx (33 lines) - Show saved caption paragraphs and lists, retaining clickable rule highlights.
@@ -53,19 +53,19 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/compliance/screener/ReviewerCaption.tsx (45 lines) - reviewer caption (components compliance screener)
 - src/components/compliance/screener/ReviewerComplianceRecheck.tsx (20 lines) - Keep a manual retry beside the reviewer's compliance results.
 - src/components/compliance/screener/ReviewerComplianceSources.tsx (18 lines) - Source comparisons and the manual text-post retry belong to the compliance tab.
-- src/components/compliance/screener/ReviewerPostMeta.tsx (61 lines) - Separate publishing details from the approval deadline so both are easy to scan.
+- src/components/compliance/screener/ReviewerPostMeta.tsx (63 lines) - Separate publishing details from the approval deadline so both are easy to scan.
 - src/components/compliance/screener/ReviewerPostText.tsx (24 lines) - reviewer post text (components compliance screener)
 - src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)
 - src/components/dashboard/CreatorDashboard.tsx (447 lines) - creator dashboard (components dashboard)
 - src/components/dashboard/CreatorStats.tsx (96 lines) - creator stats (components dashboard)
 - src/components/dashboard/DashboardHeader.tsx (13 lines) - Page title with a one-line subtitle on the left and controls on the right (they wrap under the title on phones)
-- src/components/dashboard/DayAgenda.tsx (112 lines) - One day of posts at a time, in time order, with arrows to step through days.
+- src/components/dashboard/DayAgenda.tsx (114 lines) - One day of posts at a time, in time order, with arrows to step through days.
 - src/components/dashboard/ReviewSlideshow.tsx (132 lines) - Where the row is: which "screen" of cards shows, and whether it can move either way.
 - src/components/dashboard/ReviewerStats.tsx (71 lines) - Which part of the review queue the list shows: all of it, what is late, or what has a failing check.
 - src/components/dashboard/SuggesterDashboard.tsx (281 lines) - What they have done on an item so far, as a short chip.
-- src/components/dashboard/dashboardParts.tsx (449 lines) - Pieces shared by the reviewer and creator dashboards.
+- src/components/dashboard/dashboardParts.tsx (450 lines) - Pieces shared by the reviewer and creator dashboards.
 - src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
-- src/components/script/BatchDetailsForm.tsx (143 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+- src/components/script/BatchDetailsForm.tsx (146 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - src/components/script/BatchItemCard.tsx (333 lines) - batch item card (components script)
 - src/components/script/BatchReviewerFields.tsx (81 lines) - batch reviewer fields (components script)
 - src/components/script/BulkScriptDialog.tsx (132 lines) - bulk script dialog (components script)
@@ -141,7 +141,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/DelegateReview.tsx (157 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
-- src/components/submissions/FinalPublishDate.tsx (21 lines) - final publish date (components submissions)
+- src/components/submissions/FinalPublishDate.tsx (23 lines) - final publish date (components submissions)
 - src/components/submissions/FindingExplanation.tsx (32 lines) - Keep the saved evidence and reason visible, including when the finding has no trigger words.
 - src/components/submissions/FindingStatus.tsx (222 lines) - What a finding amounts to; checks saved before statuses existed only had violations.
 - src/components/submissions/FlagDismissalSummary.tsx (19 lines) - Keep dismissal metadata readable without encoding-dependent punctuation.
@@ -157,6 +157,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
 - src/components/submissions/MarkedUpImageSlideshow.tsx (89 lines) - marked up image slideshow (components submissions)
+- src/components/submissions/MediaDeclarationFields.tsx (36 lines) - Image/person and mixed-video declarations share the media details area.
 - src/components/submissions/MediaFindingOverlay.tsx (84 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.
@@ -165,15 +166,15 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/PendingDismissalScore.tsx (27 lines) - Pending requests can unlock review routing; a reviewer still decides whether to dismiss them.
 - src/components/submissions/PlatformCaptions.tsx (103 lines) - Platform → its own caption (plain text).
 - src/components/submissions/PlatformCaptionsView.tsx (37 lines) - Read-only: the caption each platform publishes, for reviewers and the post page.
-- src/components/submissions/PostApprovalSuggestionNotice.tsx (26 lines) - post approval suggestion notice (components submissions)
+- src/components/submissions/PostApprovalSuggestionNotice.tsx (28 lines) - post approval suggestion notice (components submissions)
 - src/components/submissions/PostDetailParts.tsx (83 lines) - post detail parts (components submissions)
 - src/components/submissions/PostPreview.tsx (356 lines) - post preview (components submissions)
 - src/components/submissions/PostStepNav.tsx (170 lines) - Pinned flush under the top bar: the negative offsets cancel the page's padding (AppShell's <main> p-2.5/3.5/4), so
 - src/components/submissions/PostSteps.tsx (103 lines) - lg: the dots grow on wide screens (the My posts rows).
-- src/components/submissions/PostTextChanges.tsx (37 lines) - post text changes (components submissions)
+- src/components/submissions/PostTextChanges.tsx (40 lines) - post text changes (components submissions)
 - src/components/submissions/PostTextPreview.tsx (24 lines) - A formatted script document, or the post's caption with its flagged words marked.
 - src/components/submissions/PostTextReview.tsx (44 lines) - post text review (components submissions)
-- src/components/submissions/PostTextVersions.tsx (31 lines) - post text versions (components submissions)
+- src/components/submissions/PostTextVersions.tsx (34 lines) - post text versions (components submissions)
 - src/components/submissions/PostTypePicker.tsx (55 lines) - post type picker (components submissions)
 - src/components/submissions/PrePublishMood.tsx (33 lines) - Optional final timing check for approved content immediately before publication.
 - src/components/submissions/ProcessLog.tsx (40 lines) - How this post's public mood was made, step by step (what was read, searched, found, matched and scored).
@@ -212,6 +213,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/StaleComplianceNotice.tsx (8 lines) - stale compliance notice (components submissions)
 - src/components/submissions/SubmissionReviewStatus.tsx (24 lines) - Keep the suggestion countdown on the creator's current post page.
 - src/components/submissions/SubmissionReviewUpdates.tsx (30 lines) - submission review updates (components submissions)
+- src/components/submissions/SubmissionSection.tsx (17 lines) - submission section (components submissions)
 - src/components/submissions/SubmissionSendActions.tsx (62 lines) - submission send actions (components submissions)
 - src/components/submissions/SubmissionStartAnotherButton.tsx (12 lines) - submission start another button (components submissions)
 - src/components/submissions/SyntheticMediaFixNote.tsx (13 lines) - synthetic media fix note (components submissions)
@@ -219,6 +221,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/TopicTrend.tsx (490 lines) - topic trend (components submissions)
 - src/components/submissions/UnavailableCompliance.tsx (25 lines) - A note below the calculated score when some review stages did not finish.
 - src/components/submissions/UnmatchedSourceClaims.tsx (25 lines) - unmatched source claims (components submissions)
+- src/components/submissions/VideoFootageField.tsx (21 lines) - video footage field (components submissions)
 - src/components/submissions/VideoScriptModeCheckbox.tsx (27 lines) - video script mode checkbox (components submissions)
 - src/components/submissions/VideoScriptTemplate.tsx (15 lines) - video script template (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
@@ -233,11 +236,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/ui/alert-dialog.tsx (198 lines) - alert dialog (components ui)
 - src/components/ui/badge.tsx (50 lines) - badge (components ui)
 - src/components/ui/button.tsx (68 lines) - button (components ui)
-- src/components/ui/calendar.tsx (223 lines) - calendar (components ui)
+- src/components/ui/calendar.tsx (225 lines) - calendar (components ui)
 - src/components/ui/card.tsx (104 lines) - card (components ui)
 - src/components/ui/checkbox.tsx (32 lines) - checkbox (components ui)
 - src/components/ui/data-table-pagination.tsx (99 lines) - data table pagination (components ui)
-- src/components/ui/date-time-picker.tsx (177 lines) - Every half hour, 6 AM to 10 PM; a time picked elsewhere (e.g.
+- src/components/ui/date-time-picker.tsx (187 lines) - Every half hour, 6 AM to 10 PM; a time picked elsewhere (e.g.
 - src/components/ui/dialog.tsx (172 lines) - dialog (components ui)
 - src/components/ui/dropdown-menu.tsx (268 lines) - dropdown menu (components ui)
 - src/components/ui/input.tsx (20 lines) - input (components ui)
@@ -253,14 +256,15 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/ui/tooltip.tsx (56 lines) - tooltip (components ui)
 - src/components/video/DemoPoster.tsx (64 lines) - demo poster (components video)
 - src/components/video/PlatformIcon.tsx (105 lines) - Small brand mark for a platform (lucide ships no brand icons).
+- src/components/video/VideoCheckTimeline.tsx (82 lines) - Shared creator/reviewer timeline; observations and unchecked gaps stay distinct.
 - src/components/video/VideoUploadQueueDrawer.tsx (515 lines) - video upload queue drawer (components video)
 - src/context/VideoUploadQueueContext.tsx (802 lines) - video upload queue context (context)
 - src/hooks/useAiOverview.ts (16 lines) - use ai overview (hooks)
-- src/hooks/useApprovedPublishing.ts (37 lines) - Confirm timing and add approved content to the existing simulated calendar.
+- src/hooks/useApprovedPublishing.ts (40 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - src/hooks/useBrandManualSections.ts (13 lines) - Read the selected brand's full manual independently of AI extraction status.
 - src/hooks/useBulkScriptDetails.ts (53 lines) - Prepare all post details before starting any of the batch's compliance checks.
-- src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
+- src/hooks/useCalendarSelection.ts (22 lines) - Open a calendar link on the selected post's week.
 - src/hooks/useCalendarSend.ts (16 lines) - Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
 - src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
 - src/hooks/useCaptionEdit.ts (41 lines) - Keep unsaved wording isolated while other reviewers' saved edits refresh in the background.
@@ -271,7 +275,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
 - src/hooks/useEmailTimezone.ts (19 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
-- src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
+- src/hooks/useFinalPublishDate.ts (28 lines) - Keep the creator's final timing separate from the approved, intended date.
 - src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
 - src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
@@ -288,7 +292,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useReviewRichTextEditor.ts (44 lines) - Seed once without emitting a change; typing never replaces the DOM or resets the caret.
 - src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
 - src/hooks/useReviewerComplianceCheck.ts (28 lines) - Share the request state between reviewer text and compliance actions.
-- src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
+- src/hooks/useRevisionPublishing.ts (30 lines) - Confirm timing before the corrected post is checked and submitted.
 - src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - src/hooks/useScreenerMediaNavigation.ts (33 lines) - Selecting a finding navigates its image; selecting it again clears the highlight.
 - src/hooks/useScreenerQueue.ts (46 lines) - Keep the screener aligned with the creator's existing calendar scheduling workflow.
@@ -308,6 +312,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - src/hooks/useUserTimezone.ts (7 lines) - use user timezone (hooks)
+- src/hooks/useVideoFootageDeclaration.ts (14 lines) - Keep an unsaved answer while polling, and send an explicit false as well as true.
 - src/lib/AuthContext.tsx (357 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - src/lib/captionChanges.ts (65 lines) - Preserve the exact text and highlight the changed span between shared word boundaries.
@@ -322,7 +327,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 - src/lib/creatorReviewUpdates.ts (22 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
-- src/lib/findingCopy.ts (40 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
+- src/lib/findingCopy.ts (41 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
 - src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
 - src/lib/findingImage.ts (38 lines) - A rule can produce separate caption and image findings, so its ID alone is not a selection key.
 - src/lib/highlightChange.ts (31 lines) - The change is inside the highlighted wording.
@@ -336,7 +341,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/postApprovalSuggestions.ts (26 lines) - post approval suggestions (lib)
 - src/lib/postContentTypes.ts (115 lines) - Static presentation config (allowed values themselves come from the API)
 - src/lib/postSignals.ts (39 lines) - Cashtags, hashtags and @mentions in a caption, read live as the writer types.
-- src/lib/postSteps.ts (106 lines) - post steps (lib)
+- src/lib/postSteps.ts (107 lines) - post steps (lib)
 - src/lib/preparationFreshness.ts (18 lines) - preparation freshness (lib)
 - src/lib/replaceQuote.ts (77 lines) - Put a suggested revision in place of the wording a finding quotes.
 - src/lib/reviewOutcome.ts (11 lines) - Approval with creator edits is still approved; editing permission is a separate workflow concern.
@@ -364,7 +369,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/sourceClaimGroups.ts (33 lines) - An omission in an unrelated article is not a finding about that article.
 - src/lib/sourceCoverage.ts (35 lines) - Match the backend assertion comparison: ignore spacing and list separators,
 - src/lib/submissionProgress.ts (46 lines) - Use one state for the dots, count and resume link, including script-only requirements.
-- src/lib/submissionRequiredFields.ts (15 lines) - Required post-detail fields, as shown in the creator checklist.
+- src/lib/submissionRequiredFields.ts (16 lines) - Required post-detail fields, as shown in the creator checklist.
 - src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
 - src/lib/submissionSchedule.ts (26 lines) - An intended date alone does not mean the creator scheduled the post.
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
@@ -372,6 +377,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
 - src/lib/userTimezone.ts (41 lines) - The signed-in person's display zone.
 - src/lib/utils.ts (7 lines) - utils (lib)
+- src/lib/videoCheckTimeline.ts (31 lines) - Keep point observations as points; never extend a sampled clear result across unseen footage.
 - src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
 - src/main.tsx (54 lines) - Create a client
@@ -379,7 +385,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
 - src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
-- src/pages/Compliance/ContentScreenerPage.tsx (1367 lines) - content screener page (pages  compliance)
+- src/pages/Compliance/ContentScreenerPage.tsx (1239 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
 - src/pages/Compliance/VideoComplianceScannerPage.tsx (2858 lines) - video compliance scanner page (pages  compliance)
 - src/pages/Configurations/AiStatusPage.tsx (85 lines) - ai status page (pages  configurations)
@@ -407,7 +413,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/aiStatus/statusStyles.ts (31 lines) - status styles (pages  configurations ai status)
 - src/pages/ContentCalendar/ContentCalendarPage.tsx (628 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (308 lines) - publish draft page (pages  content calendar)
-- src/pages/Dashboard/Dashboard.tsx (353 lines) - dashboard (pages  dashboard)
+- src/pages/Dashboard/Dashboard.tsx (355 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
 - src/pages/Logs/SystemLogsPage.tsx (1065 lines) - system logs page (pages  logs)
@@ -418,16 +424,16 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/SearchDetails.tsx (57 lines) - Dropdown showing what the scraper searched for to find this topic's items, and a quick open of the source post.
 - src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
-- src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
+- src/pages/Scripts/ScriptBatchPage.tsx (383 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
 - src/pages/Scripts/ScriptDocPage.tsx (17 lines) - script doc page (pages  scripts)
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2346 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2333 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.
-- src/pages/Submissions/SubmissionsListPage.tsx (1584 lines) - submissions list page (pages  submissions)
+- src/pages/Submissions/SubmissionsListPage.tsx (1586 lines) - submissions list page (pages  submissions)
 - src/services/apiClient.ts (355 lines) - api client (services)
 - src/services/approvalPathService.ts (11 lines) - approval path service (services)
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
@@ -476,10 +482,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/sentiment.ts (220 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).
 - src/types/sourceLink.ts (69 lines) - As the server's source check gives it: the source says it, says otherwise, doesn't say it, or a person decides.
 - src/types/sourceTrust.ts (42 lines) - People's calls on the sources a post was checked against, and the standing a site earns from reviewers' calls.
-- src/types/submission.ts (533 lines) - submission (types)
+- src/types/submission.ts (520 lines) - submission (types)
 - src/types/submissionContent.ts (5 lines) - AD: paid social ad.
+- src/types/submissionOptions.ts (18 lines) - Brand and publishing account choices used by submission forms.
 - src/types/submissionSchedule.ts (7 lines) - Calendar timing displayed alongside the server's review status.
 - src/types/submissionSteps.ts (22 lines) - The five steps a creator works through on a post.
-- src/types/submissionUpdate.ts (29 lines) - Every brand and audience, primary first.
+- src/types/submissionUpdate.ts (30 lines) - Every brand and audience, primary first.
 - src/types/videoScript.ts (5 lines) - Whether this video needs the platform's script review before upload.
 - vite.config.ts (50 lines) - Pin the dev server to 5179 so it matches the backend's Microsoft SSO

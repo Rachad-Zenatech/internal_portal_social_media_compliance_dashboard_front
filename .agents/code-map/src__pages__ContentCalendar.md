@@ -5,22 +5,22 @@
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
 ## src/pages/ContentCalendar/ContentCalendarPage.tsx (628 lines) - content calendar page (pages  content calendar)
-- `SproutState` (type) L44
-- `stateOf` (function) L46
-- `View` (type) L84
-- `platformName` (const) L85
-- `scoreTone` (const) L86
-- `profileKey` (const) L92
-- `profileLabel` (const) L93
-- `Thumb` (function) L99
-- `Networks` (function) L111
-- `PostCard` (function) L124 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
-- `ContentCalendarPage` (export function) L158
-    - `navigate` (fn) L159
-    - `sent` (fn) L172
-    - `published` (fn) L173
-    - `brandName` (fn) L183
-    - `items` (fn) L185
+- `SproutState` (type) L45
+- `stateOf` (function) L47
+- `View` (type) L85
+- `platformName` (const) L86
+- `scoreTone` (const) L87
+- `profileKey` (const) L93
+- `profileLabel` (const) L94
+- `Thumb` (function) L100
+- `Networks` (function) L112
+- `PostCard` (function) L125 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
+- `ContentCalendarPage` (export function) L159
+    - `navigate` (fn) L161
+    - `sent` (fn) L174
+    - `published` (fn) L175
+    - `brandName` (fn) L184
+    - `items` (fn) L186
     - `profiles` (fn) L191
     - `platforms` (fn) L196
     - `onDay` (fn) L212

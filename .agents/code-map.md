@@ -62,6 +62,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__LegacyApprovedSuggestions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ManuallyCheckedClaims.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MarkedUpImageSlideshow.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__MediaDeclarationFields.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MediaFindingOverlay.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MoodVisuals.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PanelComposer.md | 1 | 1 KB |
@@ -117,6 +118,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__StaleComplianceNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionReviewStatus.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionReviewUpdates.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SubmissionSection.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSendActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionStartAnotherButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SyntheticMediaFixNote.md | 1 | 1 KB |
@@ -124,6 +126,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__TopicTrend.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__UnavailableCompliance.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__UnmatchedSourceClaims.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__VideoFootageField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoScriptModeCheckbox.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoScriptTemplate.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__VideoTranscript.md | 1 | 1 KB |
@@ -133,10 +136,10 @@ to find the right file.
 | .agents/code-map/src__components__submissions__submissionUi.md | 1 | 3 KB |
 | .agents/code-map/src__components__submissions__topicTrendSignals.md | 1 | 1 KB |
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
-| .agents/code-map/src__components__video.md | 3 | 1 KB |
+| .agents/code-map/src__components__video.md | 4 | 2 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 53 | 15 KB |
-| .agents/code-map/src__lib.md | 66 | 28 KB |
+| .agents/code-map/src__hooks.md | 54 | 15 KB |
+| .agents/code-map/src__lib.md | 67 | 29 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -151,4 +154,4 @@ to find the right file.
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
 | .agents/code-map/src__services.md | 21 | 7 KB |
-| .agents/code-map/src__types.md | 33 | 17 KB |
+| .agents/code-map/src__types.md | 34 | 18 KB |

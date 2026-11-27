@@ -7,8 +7,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useAiOverview.ts (16 lines) - use ai overview (hooks)
 - `useAiOverview` (export function) L5
 
-## src/hooks/useApprovedPublishing.ts (37 lines) - Confirm timing and add approved content to the existing simulated calendar.
-- `useApprovedPublishing` (export function) L8 - Confirm timing and add approved content to the existing simulated calendar.
+## src/hooks/useApprovedPublishing.ts (40 lines) - Confirm timing and add approved content to the existing simulated calendar.
+- `useApprovedPublishing` (export function) L10 - Confirm timing and add approved content to the existing simulated calendar.
 
 ## src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - `useBackgroundSourceChecks` (export function) L6 - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
@@ -19,8 +19,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useBulkScriptDetails.ts (53 lines) - Prepare all post details before starting any of the batch's compliance checks.
 - `useBulkScriptDetails` (export function) L8 - Prepare all post details before starting any of the batch's compliance checks.
 
-## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
-- `useCalendarSelection` (export function) L6 - Open a calendar link on the selected post's week.
+## src/hooks/useCalendarSelection.ts (22 lines) - Open a calendar link on the selected post's week.
+- `useCalendarSelection` (export function) L7 - Open a calendar link on the selected post's week.
 
 ## src/hooks/useCalendarSend.ts (16 lines) - Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
 - `useCalendarSend` (export function) L7
@@ -52,8 +52,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useEmailTimezone.ts (19 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - `useEmailTimezone` (export function) L7 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 
-## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
-- `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
+## src/hooks/useFinalPublishDate.ts (28 lines) - Keep the creator's final timing separate from the approved, intended date.
+- `useFinalPublishDate` (export function) L7 - Keep the creator's final timing separate from the approved, intended date.
 
 ## src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
@@ -124,8 +124,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useReviewerComplianceCheck.ts (28 lines) - Share the request state between reviewer text and compliance actions.
 - `useReviewerComplianceCheck` (export function) L6 - Share the request state between reviewer text and compliance actions.
 
-## src/hooks/useRevisionPublishing.ts (27 lines) - Confirm timing before the corrected post is checked and submitted.
-- `useRevisionPublishing` (export function) L6 - Confirm timing before the corrected post is checked and submitted.
+## src/hooks/useRevisionPublishing.ts (30 lines) - Confirm timing before the corrected post is checked and submitted.
+- `useRevisionPublishing` (export function) L8 - Confirm timing before the corrected post is checked and submitted.
 
 ## src/hooks/useScheduledSubmissions.ts (11 lines) - Refresh tags, counts and filters as soon as calendar scheduling changes.
 - `useScheduledSubmissions` (export function) L7 - Refresh tags, counts and filters as soon as calendar scheduling changes.
@@ -199,3 +199,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 
 ## src/hooks/useUserTimezone.ts (7 lines) - use user timezone (hooks)
 - `useUserTimezone` (export function) L4
+
+## src/hooks/useVideoFootageDeclaration.ts (14 lines) - Keep an unsaved answer while polling, and send an explicit false as well as true.
+- `useVideoFootageDeclaration` (export function) L5 - Keep an unsaved answer while polling, and send an explicit false as well as true.
