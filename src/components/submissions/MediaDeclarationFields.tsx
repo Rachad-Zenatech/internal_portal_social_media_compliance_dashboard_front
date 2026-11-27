@@ -20,6 +20,7 @@ interface Props {
 /** Image/person and mixed-video declarations share the media details area. */
 export default function MediaDeclarationFields({ files, image, video, post, disabled, submissionId, onRefresh }: Props) {
   const [pendingFlags, setPendingFlags] = useState<Record<string, boolean>>({});
+  const [pendingSameConfirmed, setPendingSameConfirmed] = useState<Record<string, boolean>>({});
   useEffect(() => {
     const saved = post?.face_employee_flags;
     if (!saved) return;
@@ -35,25 +36,78 @@ export default function MediaDeclarationFields({ files, image, video, post, disa
       return changed ? next : prev;
     });
   }, [post?.face_employee_flags]);
+  useEffect(() => {
+    const saved = post?.face_same_person_confirmed;
+    if (!saved) return;
+    setPendingSameConfirmed((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const [k, v] of Object.entries(prev)) {
+        if (Boolean(saved[k]) === v) {
+          delete next[k];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [post?.face_same_person_confirmed]);
   const save = (fields: SubmissionUpdate) => {
     if (submissionId) void submissionService.update(submissionId, fields).then(onRefresh)
       .catch((error: Error) => {
         setPendingFlags({});
+        setPendingSameConfirmed({});
         toast.error(`Couldn't save the answer: ${error.message}`);
       });
   };
   const onPeople = (answer: boolean) => save({ people_in_images: answer });
   const onEmployee = (answer: boolean) => save({ employee_in_images: answer });
   const currentFlags = { ...(post?.face_employee_flags || {}), ...pendingFlags };
+  const currentSameConfirmed = { ...(post?.face_same_person_confirmed || {}), ...pendingSameConfirmed };
   const onFace = (key: string, answer: boolean) => {
-    const next = { ...currentFlags, [key]: answer };
-    setPendingFlags((prev) => ({ ...prev, [key]: answer }));
+    const linked = currentSameConfirmed[key] ? (post?.face_same_person_keys?.[key] ?? []) : [];
+    const updates: Record<string, boolean> = { [key]: answer };
+    for (const dupKey of linked) updates[dupKey] = answer;
+    const next = { ...currentFlags, ...updates };
+    setPendingFlags((prev) => ({ ...prev, ...updates }));
     save({ face_employee_flags: next });
+  };
+  const onConfirmSamePerson = (key: string, confirmed: boolean) => {
+    const nextConfirmed = { ...currentSameConfirmed, [key]: confirmed };
+    setPendingSameConfirmed((prev) => ({ ...prev, [key]: confirmed }));
+    const payload: SubmissionUpdate = { face_same_person_confirmed: nextConfirmed };
+    if (confirmed && currentFlags[key] !== undefined) {
+      const updates: Record<string, boolean> = {};
+      for (const dupKey of post?.face_same_person_keys?.[key] ?? []) updates[dupKey] = currentFlags[key];
+      if (Object.keys(updates).length) {
+        setPendingFlags((prev) => ({ ...prev, ...updates }));
+        payload.face_employee_flags = { ...currentFlags, ...updates };
+      }
+    }
+    save(payload);
   };
   return (
     <>
       <ImageProvenanceField files={files} {...image} disabled={disabled} />
-      {image.value !== true && <ImagePersonField files={files} value={post?.people_in_images_confirmed ? Boolean(post.people_in_images) : null} employeeValue={post?.employee_in_images_confirmed ? Boolean(post.employee_in_images) : null} faceFlags={currentFlags} faceAutoMatched={post?.face_auto_matched} faceSamePerson={post?.face_same_person} detected={post?.people_in_images_detected} disabled={disabled} submissionId={submissionId} onRefresh={onRefresh} onChange={onPeople} onEmployeeChange={onEmployee} onFaceFlagChange={onFace} />}
+      {image.value !== true && (
+        <ImagePersonField
+          files={files}
+          value={post?.people_in_images_confirmed ? Boolean(post.people_in_images) : null}
+          employeeValue={post?.employee_in_images_confirmed ? Boolean(post.employee_in_images) : null}
+          faceFlags={currentFlags}
+          faceAutoMatched={post?.face_auto_matched}
+          faceSamePerson={post?.face_same_person}
+          faceSamePersonKeys={post?.face_same_person_keys}
+          faceSamePersonConfirmed={currentSameConfirmed}
+          detected={post?.people_in_images_detected}
+          disabled={disabled}
+          submissionId={submissionId}
+          onRefresh={onRefresh}
+          onChange={onPeople}
+          onEmployeeChange={onEmployee}
+          onFaceFlagChange={onFace}
+          onConfirmSamePerson={onConfirmSamePerson}
+        />
+      )}
       <VideoFootageField {...video} disabled={disabled} />
     </>
   );

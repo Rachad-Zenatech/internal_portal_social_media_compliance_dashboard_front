@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { authedFileUrl } from "@/components/submissions/submissionUi";
 import { hasPostImages } from "@/lib/imageProvenance";
@@ -39,13 +39,79 @@ function FaceCropPreview({ url, box, size = 128 }: { url: string; box: number[];
   return <canvas ref={canvasRef} width={size} height={size} aria-label="Detected face preview" className="size-full" />;
 }
 
-export default function ImagePersonField({ files, value: _value, employeeValue, faceFlags, faceAutoMatched, faceSamePerson, detected, disabled, submissionId, onRefresh, onChange: _onChange, onEmployeeChange, onFaceFlagChange }: {
+function FaceCard({ faceKey, file, box, faceIndex, id, answer, autoMatched, sameFiles, isOriginal, originalConfirmed, confirmedFromOriginal, onZoom, onFaceFlagChange, onConfirmSamePerson }: {
+  faceKey: string;
+  file: SubmissionFile;
+  box: number[];
+  faceIndex: number;
+  id: string;
+  answer: boolean | undefined;
+  autoMatched: boolean;
+  sameFiles: string[];
+  isOriginal: boolean;
+  originalConfirmed: boolean;
+  confirmedFromOriginal: number | null;
+  onZoom: () => void;
+  onFaceFlagChange?: (faceKey: string, answer: boolean) => void;
+  onConfirmSamePerson?: (faceKey: string, confirmed: boolean) => void;
+}) {
+  return (
+    <div className="flex items-stretch gap-3 rounded-lg border border-border/70 bg-background p-2">
+      <button type="button" onClick={onZoom} title="Click to enlarge face" className="size-16 shrink-0 self-center cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted">
+        <FaceCropPreview url={file.url} box={box} />
+      </button>
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
+        <div className="space-y-0.5">
+          <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
+          {autoMatched && (
+            <span className="inline-block rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+              Matched saved employee
+            </span>
+          )}
+          {sameFiles.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="inline-block rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
+                Same person in: {sameFiles.join(", ")}
+              </span>
+              {isOriginal && onConfirmSamePerson && (
+                <button
+                  type="button"
+                  onClick={() => onConfirmSamePerson(faceKey, !originalConfirmed)}
+                  aria-pressed={originalConfirmed}
+                  className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold transition-colors ${originalConfirmed ? "bg-emerald-600 text-white hover:bg-emerald-700" : "border border-sky-500/40 bg-sky-500/5 text-sky-700 hover:bg-sky-500/15 dark:text-sky-300"}`}
+                >
+                  {originalConfirmed ? (<><Check className="size-2.5" /> Confirmed <X className="ml-0.5 size-2.5" /></>) : "Confirm"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="space-y-1">
+          {confirmedFromOriginal != null ? (
+            <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+              Confirmed same as Person {confirmedFromOriginal}
+            </p>
+          ) : (
+            <>
+              <p className="text-[11px] text-muted-foreground">Employee?</p>
+              <div className="flex gap-1.5">{[true, false].map((opt) => <label key={`${faceKey}-${String(opt)}`} className="flex min-h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-emp-${faceKey}`} checked={answer === opt} onChange={() => onFaceFlagChange?.(faceKey, opt)} className="size-3 accent-primary" />{opt ? "Yes" : "No"}</label>)}</div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ImagePersonField({ files, value: _value, employeeValue, faceFlags, faceAutoMatched, faceSamePerson, faceSamePersonKeys, faceSamePersonConfirmed, detected, disabled, submissionId, onRefresh, onChange: _onChange, onEmployeeChange, onFaceFlagChange, onConfirmSamePerson }: {
   files: SubmissionFile[];
   value?: boolean | null;
   employeeValue: boolean | null;
   faceFlags?: Record<string, boolean>;
   faceAutoMatched?: Record<string, number>;
   faceSamePerson?: Record<string, string[]>;
+  faceSamePersonKeys?: Record<string, string[]>;
+  faceSamePersonConfirmed?: Record<string, boolean>;
   detected?: boolean | null;
   disabled: boolean;
   submissionId: string | null;
@@ -53,11 +119,13 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
   onChange?: (answer: boolean) => void;
   onEmployeeChange: (answer: boolean) => void;
   onFaceFlagChange?: (faceKey: string, answer: boolean) => void;
+  onConfirmSamePerson?: (faceKey: string, confirmed: boolean) => void;
 }) {
   const id = useId();
   const [retrying, setRetrying] = useState(false);
   const [zoomedFace, setZoomedFace] = useState<{ file: SubmissionFile; box: number[]; faceIndex: number } | null>(null);
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
+  const indexByKey = useMemo(() => new Map(faces.map((f, i) => [f.key, i])), [faces]);
   const imageFiles = files.filter((file) => ["MAIN", "IMAGE"].includes(file.kind) && file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
   const pending = imageFiles.some((file) => file.image_text_status !== "FAILED" && file.image_text_status !== "COMPLETED" && (file.face_detection_version || 0) < 2);
@@ -101,30 +169,33 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
         <div className="space-y-2">
           <p className="text-xs font-medium text-foreground">Detected people ({faces.length}) — mark whether each person is an employee:</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            {faces.map(({ key, file, box }, faceIndex) => (
-              <div key={key} className="flex items-stretch gap-3 rounded-lg border border-border/70 bg-background p-2">
-                <button type="button" onClick={() => setZoomedFace({ file, box, faceIndex })} title="Click to enlarge face" className="size-16 shrink-0 self-center cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></button>
-                <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
-                  <div className="space-y-0.5">
-                    <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
-                    {faceAutoMatched?.[key] != null && (
-                      <span className="inline-block rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-                        Matched saved employee
-                      </span>
-                    )}
-                    {(faceSamePerson?.[key]?.length ?? 0) > 0 && (
-                      <span className="inline-block rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
-                        Same person in: {faceSamePerson![key].join(", ")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-muted-foreground">Employee?</p>
-                    <div className="flex gap-1.5">{[true, false].map((answer) => <label key={`${key}-${String(answer)}`} className="flex min-h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-emp-${key}`} checked={faceFlags?.[key] === answer} onChange={() => onFaceFlagChange?.(key, answer)} className="size-3 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {faces.map(({ key, file, box }, faceIndex) => {
+              const linkedKeys = faceSamePersonKeys?.[key] ?? [];
+              const earlierKey = linkedKeys.find((k) => { const idx = indexByKey.get(k); return idx !== undefined && idx < faceIndex; });
+              const sameFiles = faceSamePerson?.[key] ?? [];
+              const isOriginal = !earlierKey && (linkedKeys.length > 0 || sameFiles.length > 0);
+              const originalConfirmed = Boolean(isOriginal && faceSamePersonConfirmed?.[key]);
+              const confirmedFromOriginal = earlierKey && faceSamePersonConfirmed?.[earlierKey] ? indexByKey.get(earlierKey)! + 1 : null;
+              return (
+                <FaceCard
+                  key={key}
+                  faceKey={key}
+                  file={file}
+                  box={box}
+                  faceIndex={faceIndex}
+                  id={id}
+                  answer={faceFlags?.[key]}
+                  autoMatched={faceAutoMatched?.[key] != null}
+                  sameFiles={sameFiles}
+                  isOriginal={isOriginal}
+                  originalConfirmed={originalConfirmed}
+                  confirmedFromOriginal={confirmedFromOriginal}
+                  onZoom={() => setZoomedFace({ file, box, faceIndex })}
+                  onFaceFlagChange={onFaceFlagChange}
+                  onConfirmSamePerson={onConfirmSamePerson}
+                />
+              );
+            })}
           </div>
         </div>
       )}

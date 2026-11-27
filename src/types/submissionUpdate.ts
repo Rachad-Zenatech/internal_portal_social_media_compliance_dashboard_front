@@ -19,7 +19,7 @@ export interface SubmissionUpdate extends SubmissionSourceFields, VideoScriptOpt
   caption_text?: string;
   /** Messaging Context chosen for the analysis, by kind (entry ids); a kind left out is automatic. */
   context_picks?: Record<string, string[]>;
-  ai_generated_images?: boolean; people_in_images?: boolean; employee_in_images?: boolean; face_employee_flags?: Record<string, boolean>;
+  ai_generated_images?: boolean; people_in_images?: boolean; employee_in_images?: boolean; face_employee_flags?: Record<string, boolean>; face_same_person_confirmed?: Record<string, boolean>;
   video_third_party_footage?: boolean | null;
   platform_captions?: Record<string, string>;
   rule_sets?: string[];
