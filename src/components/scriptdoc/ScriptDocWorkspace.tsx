@@ -12,6 +12,7 @@ import DocHeader, { DocStatusStrip } from "@/components/scriptdoc/DocHeader";
 import DocSidePanel, { type PanelTab } from "@/components/scriptdoc/DocSidePanel";
 import PagesRail from "@/components/scriptdoc/PagesRail";
 import ScriptWorkspacePlacement from "@/components/scriptdoc/ScriptWorkspacePlacement";
+import ScriptImportNotice from "@/components/scriptdoc/ScriptImportNotice";
 import { useAuth } from "@/lib/AuthContext";
 import { scriptReviewDocument } from "@/lib/scriptReviewAccess";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
@@ -397,10 +398,11 @@ export default function ScriptDocWorkspace({ scriptId: id, embedded = false }: {
       </div>
   );
   const dialogs = <DocDialogs doc={doc} open={open} onOpen={onOpen} busy={run.isPending || pageBusy} changedBy={changedBy} handlers={handlers} />;
-  if (embedded) return <div className="flex min-w-0 flex-col rounded-lg border bg-background">{workspace}{dialogs}</div>;
+  if (embedded) return <div className="flex min-w-0 flex-col rounded-lg border bg-background"><ScriptImportNotice messages={doc.import_warnings ?? []} />{workspace}{dialogs}</div>;
 
   return (
     <div className={`flex ${isCreator && detailsAccordionOpen ? "min-h-[calc(100dvh-9rem)]" : "h-[calc(100dvh-9rem)] overflow-hidden"} min-h-[34rem] flex-col rounded-xl border bg-background shadow-sm`}>
+      <ScriptImportNotice messages={doc.import_warnings ?? []} />
       <DocHeader doc={doc} live={status} people={presence} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
       <DocStatusStrip doc={doc} myCheckIn={myCheckIn} changedBy={changedBy} />
       {isCreator ? (

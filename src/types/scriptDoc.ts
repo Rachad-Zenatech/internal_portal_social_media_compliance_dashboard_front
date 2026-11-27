@@ -56,6 +56,7 @@ export interface DocPost {
 }
 
 export interface DocDetail {
+  import_warnings?: string[];
   id: string;
   /** Set when the script is edited in the Share Document portal's editor (shown in an iframe) instead of this portal's. */
   share_document_id?: string | null;
