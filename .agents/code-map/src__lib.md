@@ -41,7 +41,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `captionTextId` (export const) L25
 - `highlightCaptionNote` (export function) L28 - A comment click must only highlight its caption, never its own quoted comment body.
 
-## src/lib/captionPreviewHtml.ts (65 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
+## src/lib/captionPreviewHtml.ts (68 lines) - Render rich captions using HTML whitespace rules; only add highlights to safe text nodes.
 - `CaptionPart` (export interface) L3
 - `TextRun` (interface) L4
 - `compact` (const) L6
@@ -53,10 +53,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `recoverChunkLoad` (export function) L7
 - `installChunkRecovery` (export function) L24
 
-## src/lib/complianceFinding.ts (27 lines) - Unavailable and rule-based checks have no model confidence estimate.
+## src/lib/complianceFinding.ts (31 lines) - Unavailable and rule-based checks have no model confidence estimate.
 - `isVisibleFinding` (export function) L4 - Unavailable and rule-based checks have no model confidence estimate.
-- `findingConfidence` (export function) L12
-- `evidenceRequestExplanation` (export function) L20 - Explain an unresolved evidence request without implying that no source was attached.
+- `findingConfidence` (export function) L16
+- `evidenceRequestExplanation` (export function) L24 - Explain an unresolved evidence request without implying that no source was attached.
 
 ## src/lib/complianceSources.ts (15 lines) - Compare inputs, including checks saved before explicit source snapshots existed.
 - `sourceLinksKey` (export function) L3
@@ -107,6 +107,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ComparedClaim` (type) L9
 - `sourceFeedback` (function) L11
 - `contextSourceFacts` (export function) L25 - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
+
+## src/lib/creatorReviewUpdates.ts (22 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
+- `IncomingTextChange` (export interface) L4
+- `incomingCaptionChanges` (export function) L7 - Compare each platform's submitted text with the final incoming revision, retaining attribution.
+- `incomingPostTextChanges` (export function) L17
 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.
@@ -180,10 +185,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `finished` (const) L3
 - `pendingCheckProgress` (export function) L6 - Saved pending counts describe the earlier check; current file states describe the work still running.
 
-## src/lib/postApprovalSuggestions.ts (24 lines) - post approval suggestions (lib)
+## src/lib/postApprovalSuggestions.ts (26 lines) - post approval suggestions (lib)
 - `SuggestionPost` (export type) L3
 - `postSuggestionState` (export function) L5
-- `suggestionTimeLabel` (export function) L16
+- `suggestionTimeLabel` (export function) L18
 
 ## src/lib/postContentTypes.ts (115 lines) - Static presentation config (allowed values themselves come from the API)
 - `CONTENT_TYPES` (export const) L5 - Static presentation config (allowed values themselves come from the API)
@@ -218,7 +223,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `stepStatusText` (export function) L65 - What a step is up to, as a sentence for the hover.
 - `missingText` (export function) L102
 
-## src/lib/preparationFreshness.ts (15 lines) - preparation freshness (lib)
+## src/lib/preparationFreshness.ts (18 lines) - preparation freshness (lib)
 - `preparationCheckState` (export function) L4
 
 ## src/lib/replaceQuote.ts (77 lines) - Put a suggested revision in place of the wording a finding quotes.
@@ -228,8 +233,20 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `replaceInText` (export function) L35 - The text with the quoted wording replaced, or null when it isn't there.
 - `replaceInEditable` (export function) L44 - Replace the quoted wording inside a rich-text (contentEditable) editor, keeping its formatting elsewhere.
 
+## src/lib/reviewOutcome.ts (11 lines) - Approval with creator edits is still approved; editing permission is a separate workflow concern.
+- `ReviewOutcomePost` (type) L1
+- `approvedForFinalEdits` (export function) L4 - Approval with creator edits is still approved; editing permission is a separate workflow concern.
+- `reviewOutcomeStatus` (export function) L8
+
 ## src/lib/reviewSendScore.ts (22 lines) - A routing threshold only: pending requests never change the actual approval score.
 - `reviewSendScore` (export function) L5 - A routing threshold only: pending requests never change the actual approval score.
+
+## src/lib/reviewText.ts (7 lines) - Formatting is part of the draft, not something rebuilt from its plain text.
+- `ReviewTextValue` (export interface) L1
+- `reviewTextChanged` (export function) L4 - Formatting is part of the draft, not something rebuilt from its plain text.
+
+## src/lib/reviewerFindingSelection.ts (14 lines) - Highlight only the clicked finding, including when several findings share a rule.
+- `reviewerFindingSelection` (export function) L6 - Highlight only the clicked finding, including when several findings share a rule.
 
 ## src/lib/reviewerSentiment.ts (47 lines) - Preserve the creator's findings and put the most serious points first.
 - `REVIEW_ASSESSMENTS` (export const) L3
@@ -261,9 +278,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `copyClean` (function) L22
 - `sanitizeCaptionHtml` (export function) L52 - The HTML with only safe formatting left, as a string for innerHTML or insertHTML.
 
-## src/lib/screenerApprovalQueue.ts (20 lines) - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
-- `ScreenerTab` (export type) L4
-- `splitApprovedQueue` (export function) L7 - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
+## src/lib/screenerApprovalQueue.ts (21 lines) - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
+- `ScreenerTab` (export type) L5
+- `splitApprovedQueue` (export function) L8 - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
+
+## src/lib/screenerQueueLayout.ts (11 lines) - Keep the post and review controls visible on laptop-width screens.
+- `queueStartsCollapsed` (export function) L2 - Keep the post and review controls visible on laptop-width screens.
+- `initialQueueCollapsed` (export function) L6
+
+## src/lib/screenerQueueOrder.ts (22 lines) - Earliest deadlines first by default; missing dates always follow dated posts.
+- `SortOrder` (export type) L1
+- `QueueDates` (interface) L3
+- `dateValue` (function) L8
+- `orderScreenerQueue` (export function) L14 - Earliest deadlines first by default; missing dates always follow dated posts.
 
 ## src/lib/scriptDoc.ts (229 lines) - script doc (lib)
 - `Mark` (type) L19
@@ -310,6 +337,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/lib/selectedTextHighlight.ts (29 lines) - Highlight selected comment wording until its owner explicitly clears it.
 - `holdTextHighlight` (export function) L4 - Highlight selected comment wording until its owner explicitly clears it.
 
+## src/lib/sentimentPolicy.ts (5 lines) - Text posts and script-only video drafts do not use sentiment analysis.
+- `usesSentiment` (export function) L2 - Text posts and script-only video drafts do not use sentiment analysis.
+
 ## src/lib/sourceCheckVisibility.ts (12 lines) - Show verified newsroom evidence and full-article read failures.
 - `visibleSourceChecks` (export function) L4 - Show verified newsroom evidence and full-article read failures.
 
@@ -339,10 +369,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `EditorStep` (export type) L18
 - `submissionRevisionSteps` (export function) L29 - Every revision starts with feedback; only explicitly authorized revisions end at Publish.
 
-## src/lib/submissionSchedule.ts (25 lines) - An intended date alone does not mean the creator scheduled the post.
-- `applySubmissionSchedule` (export function) L6 - An intended date alone does not mean the creator scheduled the post.
-- `stageOf` (export function) L13
-- `scheduleCorrectedPost` (export function) L19 - Schedule a corrected post only after its submission has passed server checks.
+## src/lib/submissionSchedule.ts (26 lines) - An intended date alone does not mean the creator scheduled the post.
+- `applySubmissionSchedule` (export function) L7 - An intended date alone does not mean the creator scheduled the post.
+- `stageOf` (export function) L14
+- `scheduleCorrectedPost` (export function) L20 - Schedule a corrected post only after its submission has passed server checks.
 
 ## src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).

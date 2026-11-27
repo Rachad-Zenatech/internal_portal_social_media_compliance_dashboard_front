@@ -1,3 +1,4 @@
+import { usesSentiment } from "@/lib/sentimentPolicy";
 import { Check, Loader2 } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,19 +16,19 @@ export default function PostSteps({
   onOpen,
   size = "md",
   className = "",
-  scriptOnly = false,
+  scriptOnly = false, contentType,
 }: {
   steps: SubmissionSteps;
   onOpen: (step: CreatorStepKey) => void;
   /** lg: the dots grow on wide screens (the My posts rows). */
   size?: "md" | "lg";
   className?: string;
-  scriptOnly?: boolean;
+  scriptOnly?: boolean; contentType?: string | null;
 }) {
   return (
     <TooltipProvider delayDuration={150}>
       <ol aria-label="Steps" className={`flex items-center gap-1.5 ${size === "lg" ? "2xl:gap-2.5" : ""} ${className}`}>
-        {creatorPreparationSteps(scriptOnly, steps.revision).map((step, i) => {
+        {creatorPreparationSteps(!usesSentiment(contentType, scriptOnly), steps.revision).map((step, i) => {
           const state: PostStepState = steps[step.key] ?? "todo";
           const ran = RAN_STEP_STATES.has(state);
           const current = !steps.locked && steps.next === step.key;

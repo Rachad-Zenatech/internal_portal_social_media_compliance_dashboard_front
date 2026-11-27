@@ -1,4 +1,6 @@
 export interface CaptionRevision {
+  before_html?: string | null;
+  after_html?: string | null;
   id: number;
   before: string;
   after: string;
@@ -20,6 +22,8 @@ export interface CaptionReview {
 }
 
 export interface CaptionEditRequest {
+  caption_html?: string | null;
+  base_caption_html?: string | null;
   base_caption: string;
   caption_text: string;
   platform: string | null;

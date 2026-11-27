@@ -10,14 +10,14 @@ export default function MarkedReviewerCaption({ text, html, terms, picked, onFla
   onFlag: (ruleId: string) => void; onComment: () => void;
 }) {
   const parts = useMemo(() => {
-    const byTerm = new Map(terms.filter((item) => item.term.trim()).map((item) => [item.term.toLowerCase(), item]));
+    const byTerm = new Map(terms.filter((item) => picked && item.ruleId === picked && item.term.trim()).map((item) => [item.term.toLowerCase(), item]));
     const pieces = byTerm.size ? text.split(new RegExp(`(${[...byTerm.keys()].sort((a, b) => b.length - a.length).map(escapePattern).join("|")})`, "gi")) : [text];
     return pieces.map((part, index): CaptionPart => {
       const hit = index % 2 ? byTerm.get(part.toLowerCase()) : undefined;
       return { text: part, tone: hit ? (picked === hit.ruleId ? "chosen" : "flag") : "", ruleId: hit?.ruleId, dismissed: hit?.dismissed };
     });
   }, [text, terms, picked]);
-  const formatted = useMemo(() => captionPreviewHtml(html ?? undefined, parts), [html, parts]);
+  const formatted = useMemo(() => captionPreviewHtml(html ?? undefined, parts, { allowLegacyTextContent: true }), [html, parts]);
   const onClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target instanceof Element ? event.target : null;
     const ruleId = target?.closest<HTMLElement>("mark[data-rule-id]")?.dataset.ruleId;

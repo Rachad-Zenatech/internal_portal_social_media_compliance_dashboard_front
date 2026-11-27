@@ -23,6 +23,8 @@ interface Props {
   disabled: boolean;
   publishDate?: Date;
   dateError: boolean;
+  requiredChecks?: ("compliance" | "sentiment")[];
+  onOpenCheck?: (step: "compliance" | "sentiment") => void;
   onPublishDateChange: (date: Date | undefined) => void;
   onSubmit: () => void;
 }

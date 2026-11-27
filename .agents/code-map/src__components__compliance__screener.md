@@ -15,8 +15,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CaptionRevisionEntry` (function) L8
 - `CaptionEditHistory` (export function) L25
 
-## src/components/compliance/screener/CaptionEditor.tsx (24 lines) - caption editor (components compliance screener)
-- `CaptionEditor` (export function) L5
+## src/components/compliance/screener/CaptionEditor.tsx (25 lines) - caption editor (components compliance screener)
+- `CaptionEditor` (export function) L7
 
 ## src/components/compliance/screener/CaptionNoteDialog.tsx (32 lines) - caption note dialog (components compliance screener)
 - `CaptionNoteDialog` (export function) L5
@@ -26,12 +26,11 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `MarkedReviewerCaption` (export function) L8 - Show saved caption paragraphs and lists, retaining clickable rule highlights.
 
 ## src/components/compliance/screener/QueueFilters.tsx (196 lines) - Brand codes and platforms to show; none picked means all.
-- `DueFilter` (export type) L11
-- `CheckFilter` (export type) L12
-- `Filters` (export interface) L13
-- `NO_FILTERS` (export const) L20
-- `DUE_LABELS` (export const) L22
-- `SortOrder` (export type) L30 - The list is ordered by when each item was sent for review (deadlines have their own filter).
+- `DueFilter` (export type) L13
+- `CheckFilter` (export type) L14
+- `Filters` (export interface) L15
+- `NO_FILTERS` (export const) L22
+- `DUE_LABELS` (export const) L24
 - `SORT_LABELS` (export const) L31
 - `CHECK_LABELS` (export const) L32
 - `platformName` (export const) L39
@@ -43,10 +42,30 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ActiveFilterChips` (export function) L170 - The filters in use, each as a chip that clears it.
 - `FilterChip` (function) L186
 
+## src/components/compliance/screener/QueueThumbnail.tsx (36 lines) - A simple, recognizable icon for posts without media.
+- `TextPostThumbnail` (function) L7 - A simple, recognizable icon for posts without media.
+- `QueueThumbnail` (export function) L15
+
+## src/components/compliance/screener/ReviewRichTextEditor.tsx (38 lines) - Review the actual formatted caption, preserving links, emphasis and whitespace while editing.
+- `Props` (interface) L7
+- `ReviewRichTextEditor` (export function) L13 - Review the actual formatted caption, preserving links, emphasis and whitespace while editing.
+
 ## src/components/compliance/screener/ReviewerCaption.tsx (45 lines) - reviewer caption (components compliance screener)
 - `ReviewerCaption` (export function) L9
 
-## src/components/compliance/screener/ReviewerPostText.tsx (25 lines) - reviewer post text (components compliance screener)
+## src/components/compliance/screener/ReviewerComplianceRecheck.tsx (20 lines) - Keep a manual retry beside the reviewer's compliance results.
+- `ReviewerComplianceRecheck` (export function) L6 - Keep a manual retry beside the reviewer's compliance results.
+
+## src/components/compliance/screener/ReviewerComplianceSources.tsx (18 lines) - Source comparisons and the manual text-post retry belong to the compliance tab.
+- `ReviewerComplianceSources` (export function) L6 - Source comparisons and the manual text-post retry belong to the compliance tab.
+
+## src/components/compliance/screener/ReviewerPostMeta.tsx (61 lines) - Separate publishing details from the approval deadline so both are easy to scan.
+- `Props` (interface) L6
+- `ReviewerPostMeta` (export function) L16 - Separate publishing details from the approval deadline so both are easy to scan.
+- `MetaField` (function) L36
+- `ApprovalDeadline` (function) L45
+
+## src/components/compliance/screener/ReviewerPostText.tsx (24 lines) - reviewer post text (components compliance screener)
 - `ReviewerPostText` (export function) L8
 
 ## src/components/compliance/screener/ScriptReviewNotice.tsx (18 lines) - script review notice (components compliance screener)

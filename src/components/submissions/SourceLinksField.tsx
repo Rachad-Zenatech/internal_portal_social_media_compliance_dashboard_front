@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import PastedArticleCheck from "@/components/submissions/PastedArticleCheck";
 import ScanImageButton from "@/components/submissions/ScanImageButton";
 import SourceCheckResult from "@/components/submissions/SourceCheckResult";
+import SourceFallback from "@/components/submissions/SourceFallback";
 import { SourceConfirmationsProvider } from "@/components/submissions/sourceConfirmationsContext";
 import { submissionService } from "@/services/submissionService";
 import type { ImageSourceScanJob, SourceLinkCheck } from "@/types/sourceLink";
@@ -41,6 +42,7 @@ function SourceLinkRow({
   result,
   checking,
   readOnly,
+  submissionId,
   onCheck,
   onRemove,
 }: {
@@ -48,6 +50,7 @@ function SourceLinkRow({
   result?: SourceLinkCheck;
   checking: boolean;
   readOnly?: boolean;
+  submissionId: string | null;
   onCheck: () => void;
   onRemove: () => void;
 }) {
@@ -87,6 +90,9 @@ function SourceLinkRow({
       </div>
 
       {result && <SourceCheckResult result={result} />}
+      {result && result.status !== "READ" && !readOnly && submissionId && (
+        <SourceFallback submissionId={submissionId} sourceName={result.title || url} sourceKey={url} />
+      )}
     </div>
   );
 }
@@ -317,7 +323,18 @@ export default function SourceLinksField({
     autoScanRef.current(autoScanImageId);
   }, [autoScanImageId]);
 
-  const removeLink = (url: string) => {
+  const removeLink = async (url: string) => {
+    if (submissionId) {
+      const keys = [...new Set([url, results[url]?.title].filter(Boolean).map((name) => `source-upload:${submissionId}:${name}`))];
+      const ids = [...new Set(keys.map((key) => sessionStorage.getItem(key)).filter((id): id is string => !!id))];
+      try {
+        for (const id of ids) await submissionService.removeFile(submissionId, id);
+        keys.forEach((key) => sessionStorage.removeItem(key));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not remove the source copy. Please try again.");
+        return;
+      }
+    }
     onChange(links.filter((item) => item !== url));
     setResults((prev) => {
       const copy = { ...prev };
@@ -376,8 +393,9 @@ export default function SourceLinksField({
               result={results[url]}
               checking={checkingUrl === url}
               readOnly={readOnly}
+              submissionId={submissionId}
               onCheck={() => void runQuickCheck(url)}
-              onRemove={() => removeLink(url)}
+              onRemove={() => void removeLink(url)}
             />
           ))}
         </div>

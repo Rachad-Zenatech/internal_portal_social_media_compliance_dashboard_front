@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ReviewDecisionBar.tsx (46 lines) - review decision bar (components submissions)
+## src/components/submissions/ReviewDecisionBar.tsx (38 lines) - review decision bar (components submissions)
 - `ReviewDecisionBar` (export function) L7

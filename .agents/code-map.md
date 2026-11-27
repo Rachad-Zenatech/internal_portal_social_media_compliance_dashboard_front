@@ -10,15 +10,16 @@ to find the right file.
 | Folder map | Files | Size |
 | --- | --- | --- |
 | .agents/code-map/_root.md | 1 | 1 KB |
+| .agents/code-map/scripts.md | 1 | 1 KB |
 | .agents/code-map/src.md | 2 | 1 KB |
 | .agents/code-map/src__components__AppShell.md | 12 | 4 KB |
 | .agents/code-map/src__components__common.md | 5 | 1 KB |
 | .agents/code-map/src__components__compliance.md | 6 | 3 KB |
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
-| .agents/code-map/src__components__compliance__screener.md | 10 | 3 KB |
+| .agents/code-map/src__components__compliance__screener.md | 15 | 4 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
 | .agents/code-map/src__components__script.md | 26 | 12 KB |
-| .agents/code-map/src__components__scriptdoc.md | 18 | 9 KB |
+| .agents/code-map/src__components__scriptdoc.md | 21 | 10 KB |
 | .agents/code-map/src__components__submissions__AnalysisRunControls.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovalActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovedPostChecks.md | 1 | 1 KB |
@@ -34,6 +35,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ClaimVsSource.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CommentCard.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__CommentThread.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__CompliancePreviewActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ComplianceScoreSummary.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ComplianceStep.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ComplianceView.md | 1 | 1 KB |
@@ -64,6 +66,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__MoodVisuals.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PanelComposer.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PastedArticleCheck.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__PendingCheckNotice.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PendingDismissalScore.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PlatformCaptionsView.md | 1 | 1 KB |
@@ -81,6 +84,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ProcessLog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__PublishPostButton.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewCaptionPreview.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ReviewChecksHeader.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewCommentsPanel.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewConversation.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewDecisionBar.md | 1 | 1 KB |
@@ -92,7 +96,9 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ReviewerSentimentConcerns.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerSentimentOverview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ReviewerSentimentPanel.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__RevisionCheckRequirements.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionGuide.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__RevisionMediaReplace.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionPublishActions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionTimelinePicker.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__RevisionWorkspace.md | 1 | 1 KB |
@@ -104,6 +110,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SentimentPanel.md | 1 | 3 KB |
 | .agents/code-map/src__components__submissions__SourceCheckResult.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceChecks.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SourceFallback.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceLinksField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
@@ -128,8 +135,8 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 3 | 1 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 45 | 14 KB |
-| .agents/code-map/src__lib.md | 56 | 24 KB |
+| .agents/code-map/src__hooks.md | 52 | 15 KB |
+| .agents/code-map/src__lib.md | 63 | 26 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
@@ -143,5 +150,5 @@ to find the right file.
 | .agents/code-map/src__pages__Scripts.md | 4 | 2 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
-| .agents/code-map/src__services.md | 20 | 7 KB |
-| .agents/code-map/src__types.md | 32 | 17 KB |
+| .agents/code-map/src__services.md | 21 | 7 KB |
+| .agents/code-map/src__types.md | 33 | 17 KB |

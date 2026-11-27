@@ -20,7 +20,7 @@ export default function CheckCoverage({ check, className = "" }: { check: Stored
   const docsPending = check.documents_pending ?? 0;
   const docsFailed = check.documents_failed ?? [];
 
-  const sources = ["title", "caption"];
+  const sources = ["title", "text"];
   if (check.includes_script) sources.push("script");
   else if ((check.documents_read ?? 0) > 0) sources.push("article");
   if (check.includes_transcript) sources.push("video transcript");

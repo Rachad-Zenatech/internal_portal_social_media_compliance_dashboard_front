@@ -7,7 +7,7 @@ const compact = (text: string) => text.replace(/\s+/g, " ").trim();
 const escapePattern = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Render rich captions using HTML whitespace rules; only add highlights to safe text nodes. */
-export function captionPreviewHtml(html: string | undefined, parts: CaptionPart[]): string | null {
+export function captionPreviewHtml(html: string | undefined, parts: CaptionPart[], options: { allowLegacyTextContent?: boolean } = {}): string | null {
   if (!html?.trim()) return null;
   const doc = new DOMParser().parseFromString(sanitizeCaptionHtml(html), "text/html");
   const runs: TextRun[] = [];
@@ -26,7 +26,10 @@ export function captionPreviewHtml(html: string | undefined, parts: CaptionPart[
   }
   collect(doc.body);
   // Never show saved HTML in place of newer wording still being edited.
-  if (compact(text) !== compact(parts.map((part) => part.text).join(""))) return null;
+  const caption = compact(parts.map((part) => part.text).join(""));
+  // Saved legacy captions used textContent, which joins adjacent paragraphs without adding spaces.
+  const legacyMatch = options.allowLegacyTextContent && compact(doc.body.textContent ?? "") === caption;
+  if (compact(text) !== caption && !legacyMatch) return null;
   const matches = parts.filter((part) => part.tone && part.text.trim()).flatMap((part) => {
     const pattern = part.text.trim().split(/\s+/).map(escapePattern).join("\\s+");
     return [...text.matchAll(new RegExp(pattern, "gi"))].map((match) => ({

@@ -34,8 +34,8 @@ export default function ReviewerCaption({ submissionId, canComment, captionText,
           <option value="">Default text</option>{platformOptions}
         </select>
       </label> : <p className="text-xs text-muted-foreground">The text that will appear with this post.</p>}
-      {editor ? <CaptionEditor base={editor.base} draft={editor.draft} onDraft={state.setDraft} onSave={state.save} onCancel={state.cancel} saving={state.saving} error={state.error} />
-        : <div id={captionTextId(submissionId)} className="min-w-0 max-w-prose text-foreground/90">{current ? caption : <span className="text-sm text-muted-foreground">No text yet. Add it using Edit text.</span>}</div>}
+      {editor ? <CaptionEditor rich={!platform} html={editor.html} changed={state.changed} base={editor.base} draft={editor.draft} onDraft={state.setDraft} onSave={state.save} onCancel={state.cancel} saving={state.saving} error={state.error} />
+        : <div id={captionTextId(submissionId)} className="w-full min-w-0 text-foreground/90">{current ? caption : <span className="text-sm text-muted-foreground">No text yet. Add it using Edit text.</span>}</div>}
       {query.isError && <p role="alert" className="text-sm text-destructive">Text history could not load. <button type="button" className="underline" onClick={() => void query.refetch()}>Retry</button></p>}
       {state.saved && !editor && <div role="status" className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"><Check className="mt-0.5 size-3.5 shrink-0" /><p><span className="font-medium">Text saved.</span> Ready for review. Compliance will run again before approval.</p></div>}
       <CaptionEditHistory revisions={query.data?.revisions ?? []} />

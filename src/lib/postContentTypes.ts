@@ -103,7 +103,7 @@ export const EDITOR_COPY = {
     title: "Text", noun: "text",
     description: "Required. Write or paste your text, or have text suggested for your post.",
     placeholder: "Write your text here...", suggest: "Suggest text",
-    missing: "Add text. Compliance and sentiment analysis use this text.",
+    missing: "Add text. The compliance check uses this text.",
   },
   DEFAULT: {
     title: "Text", noun: "text",

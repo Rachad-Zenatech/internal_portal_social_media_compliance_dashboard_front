@@ -1,3 +1,4 @@
+import CompliancePreviewActions from "@/components/submissions/CompliancePreviewActions";
 import GroupedComplianceFindings from "@/components/submissions/GroupedComplianceFindings";
 import { previewFindings } from "@/lib/rule18Presentation";
 import { pendingCheckProgress } from "@/lib/pendingCheckProgress";
@@ -40,7 +41,7 @@ interface Finding {
   v: ComplianceViolation;
   key: string;
   /** Where in the post it was found. */
-  where: "Caption" | "Script" | "Title" | "Video" | "Image or on-screen text" | "Missing disclaimer";
+  where: "Text" | "Script" | "Title" | "Video" | "Image or on-screen text" | "Missing disclaimer";
   /** The first moment of the video it was found at. */
   at: number | null;
   /** The final matching moment, so video evidence can show its complete range. */
@@ -71,6 +72,7 @@ export default function ComplianceStep({
   caption,
   captionHtml,
   scriptText = "",
+  textOnly = false,
   mainFile,
   files,
   editable,
@@ -89,6 +91,7 @@ export default function ComplianceStep({
   caption: string;
   captionHtml?: string;
   scriptText?: string;
+  textOnly?: boolean;
   mainFile?: SubmissionFile;
   files?: SubmissionFile[];
   editable: boolean;
@@ -134,7 +137,7 @@ export default function ComplianceStep({
           .map((r) => `${r.start_sec}-${r.end_sec}`)).size;
         const terms = findingEvidence(v).map((t) => t.toLowerCase());
         const where: Finding["where"] = terms.some((t) => scriptText.toLowerCase().includes(t)) ? "Script" : terms.some((t) => cap.includes(t))
-          ? "Caption"
+          ? "Text"
           : seg
           ? "Video"
           : terms.some((t) => ttl.includes(t))
@@ -301,7 +304,7 @@ export default function ComplianceStep({
             const critical = f.v.traffic_light === "RED";
             const on = f.key === picked;
             const tone = critical || st === "VIOLATION" ? "red" : "amber";
-            const edit = f.where === "Caption" || f.where === "Title";
+            const edit = f.where === "Text" || f.where === "Title";
             return (
               <article
                 key={f.key}
@@ -335,9 +338,9 @@ export default function ComplianceStep({
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
                     <SyntheticMediaFixNote finding={f.v} />
-                    {editable && (
+                    {editable && (!textOnly || edit) && (
                       <Button type="button" variant="outline" size="sm" className="self-start rounded-lg text-[13px] font-semibold text-blue-700" onClick={edit ? onEditCaption : onReplaceMedia}>
-                        {f.where === "Script" ? "Replace the script" : edit ? "Fix in caption" : f.where === "Video" ? "Edit the video" : "Fix in image"}
+                        {f.where === "Script" ? "Replace the script" : edit ? "Edit text" : f.where === "Video" ? "Edit the video" : "Fix in image"}
                       </Button>
                     )}
                     {reviewState && (canRequestDismissal || canDismiss) && f.v.rule_id && <FlagReviewControl submissionId={reviewState.id} ruleId={f.v.rule_id} ruleNumber={f.v.rule_number} currentVersion={reviewState.current_version} canDismiss={canDismiss} canRequest={canRequestDismissal} evidence={f.v.status === "EVIDENCE_REQUIRED"} />}
@@ -410,7 +413,7 @@ export default function ComplianceStep({
           )}
         </section>
 
-        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} className={`${card} flex flex-col gap-3`} />
+        <SourcesCheckedSection checks={check.source_checks} savedChecks={sub?.source_link_checks} checking={sourceChecking} submissionId={sub?.id} editable={editable} className={`${card} flex flex-col gap-3`} />
       </div>
 
       <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 xl:sticky xl:top-4">
@@ -444,19 +447,12 @@ export default function ComplianceStep({
             <p className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-[13px] text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-100">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                Rule {selected.v.rule_number}: found in {selected.where === "Caption" ? "the caption" : selected.where === "Video" ? "the video" : selected.where.toLowerCase()}.
+                Rule {selected.v.rule_number}: found in {selected.where === "Text" ? "the text" : selected.where === "Video" ? "the video" : selected.where.toLowerCase()}.
               </span>
             </p>
           )}
           {editable && (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" className="rounded-lg text-[13px] font-semibold" onClick={onEditCaption}>
-                {scriptText ? "Edit post details" : "Edit caption"}
-              </Button>
-              <Button type="button" variant="outline" size="sm" className="rounded-lg text-[13px] font-semibold" onClick={onReplaceMedia}>
-                {scriptText ? "Replace script" : isVideo ? "Replace video" : "Replace image"}
-              </Button>
-            </div>
+            <CompliancePreviewActions textOnly={textOnly} script={Boolean(scriptText)} video={isVideo} onEditText={onEditCaption} onReplaceMedia={onReplaceMedia} />
           )}
         </section>
 

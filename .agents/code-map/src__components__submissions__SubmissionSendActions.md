@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SubmissionSendActions.tsx (60 lines) - submission send actions (components submissions)
+## src/components/submissions/SubmissionSendActions.tsx (62 lines) - submission send actions (components submissions)
 - `Props` (interface) L8
-- `SubmissionSendActions` (export function) L31 - The final action, including timing for reviewer-authorized direct publishing.
+- `SubmissionSendActions` (export function) L33 - The final action, including timing for reviewer-authorized direct publishing.

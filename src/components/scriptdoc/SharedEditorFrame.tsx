@@ -27,6 +27,7 @@ export default function SharedEditorFrame({
   activeNoteId = null,
   goToNote = null,
   focusRequest,
+  lazy = false,
   toolbarExtra,
   onSelectionChange,
   onSelectNote,
@@ -37,6 +38,7 @@ export default function SharedEditorFrame({
   activeNoteId?: string | null;
   goToNote?: { id: string; seq: number } | null;
   focusRequest?: ScriptFocusRequest;
+  lazy?: boolean;
   toolbarExtra?: React.ReactNode;
   onSelectionChange?: (sel: { quote: string; start: number } | null) => void;
   onSelectNote?: (id: string) => void;
@@ -222,6 +224,7 @@ export default function SharedEditorFrame({
         src={src}
         onLoad={handleLoad}
         title="Script editor"
+        loading={lazy ? "lazy" : "eager"}
         className="min-h-[24rem] w-full flex-1 border-0"
         allow="clipboard-read; clipboard-write"
       />

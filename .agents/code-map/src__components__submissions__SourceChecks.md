@@ -4,9 +4,9 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SourceChecks.tsx (274 lines) - source checks (components submissions)
-- `ClaimRow` (function) L38 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
-- `Row` (function) L66
-- `SourceCheckingNotice` (export function) L159 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
-- `SourcesCheckedSection` (export function) L179 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
-- `SourceChecks` (export function) L208 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...
+## src/components/submissions/SourceChecks.tsx (280 lines) - source checks (components submissions)
+- `ClaimRow` (function) L39 - The AI's verdict on one claim, then the post's words next to the source's, for the reviewer to confirm.
+- `Row` (function) L67
+- `SourceCheckingNotice` (export function) L161 - Banner shown on the compliance step when a source link or image-source scan is running in the background.
+- `SourcesCheckedSection` (export function) L181 - Card rendered on the compliance step when source checks exist or a source is being checked in the background.
+- `SourceChecks` (export function) L212 - The sources a post cites (links in the caption, "Source:" lines on the image, attached documents), and for each one  which of the post's ...

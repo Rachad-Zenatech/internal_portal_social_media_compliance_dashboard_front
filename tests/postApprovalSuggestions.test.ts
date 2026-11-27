@@ -29,3 +29,18 @@ test("countdown includes days and stops at zero", () => {
   assert.equal(suggestionTimeLabel(90061000), "1d 1h 1m 1s");
   assert.equal(suggestionTimeLabel(-1), "0h 0m 0s");
 });
+
+test("undecided reviews show their approval countdown without granting permissions", () => {
+  const state = postSuggestionState({ status: "IN_REVIEW", approval_needed_by: new Date(end).toISOString() }, end - 1000);
+  assert.equal(state.reviewing, true);
+  assert.equal(state.remainingMs, 1000);
+  assert.equal(state.pending, false);
+  assert.equal(state.open, false);
+  assert.equal(state.canComment, false);
+});
+test("undecided overdue reviews show elapsed time and remain undecided", () => {
+  const state = postSuggestionState({ status: "IN_REVIEW", approval_needed_by: new Date(end).toISOString() }, end + 5000);
+  assert.equal(state.overdueMs, 5000);
+  assert.equal(state.remainingMs, 0);
+  assert.equal(state.approved, false);
+});

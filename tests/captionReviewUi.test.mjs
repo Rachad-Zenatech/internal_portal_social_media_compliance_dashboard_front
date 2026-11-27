@@ -23,15 +23,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReviewerCaption from '../../src/components/compliance/screener/ReviewerCaption';
 import MarkedReviewerCaption from '../../src/components/compliance/screener/MarkedReviewerCaption';
 const client = new QueryClient({defaultOptions:{queries:{retry:false}}});
-let data = {caption_text:'Old caption.',caption_html:'<p>Old <strong>caption</strong>.</p>',platforms:['FACEBOOK'],platform_captions:{},can_edit:true,needs_recheck:false,revisions:[]};
+let data = {caption_text:'Old caption.',caption_html:'<p>Old <strong><a href="https://example.com/report">caption</a></strong>.</p><p><br></p>',platforms:['FACEBOOK'],platform_captions:{},can_edit:true,needs_recheck:false,revisions:[]};
 let saves=0, abortedGets=0, pauseNextGet=false, waitingGet=false;
 window.fetch = async (input, init={}) => {
   if(!String(input).includes('/caption-review')) throw Error('Unexpected network request was blocked');
   if(init.method==='PATCH') {
     const body=JSON.parse(init.body);
-    if(body.base_caption!=='Old caption.' || body.caption_text!=='New caption.') throw Error('Incorrect caption save payload');
+    if(body.base_caption!==data.caption_text || body.base_caption_html!==data.caption_html || body.caption_text.trim()!=='New caption.') throw Error('Incorrect caption save payload');
+    const rich=new DOMParser().parseFromString(body.caption_html,'text/html');
+    check(rich.querySelector('strong a')?.getAttribute('href')==='https://example.com/report','Saved edit lost the original bold link');
+    check(rich.querySelector('p br'),'Saved edit lost its blank paragraph');
     saves++;
-    data={...data,caption_text:body.caption_text,caption_html:'<p>New caption.</p>',needs_recheck:true,revisions:[{
+    data={...data,caption_text:body.caption_text,caption_html:body.caption_html,needs_recheck:true,revisions:[{
       id:1,before:'Old caption.',after:'New caption.',platform:null,version:1,actor_id:'reviewer',actor_name:'Arifa Mansoor',created_at:'2026-11-24T20:00:00Z'
     }]};
   } else if(pauseNextGet) {
@@ -43,19 +46,40 @@ window.fetch = async (input, init={}) => {
 const check=(condition,message)=>{if(!condition)throw Error(message)};
 const until=async(predicate)=>{for(let i=0;i<200;i++){if(predicate())return;await new Promise(r=>setTimeout(r,20))}throw Error('Timed out waiting for UI')};
 const button=(label)=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===label);
-const type=(value)=>{const el=document.querySelector('textarea');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el,value);el.dispatchEvent(new Event('input',{bubbles:true}))};
-createRoot(document.getElementById('root')).render(<QueryClientProvider client={client}>
-  <ReviewerCaption submissionId="post" canComment captionText="Old caption.">{(text,html,showFlags)=><MarkedReviewerCaption text={text} html={html} terms={showFlags?[{term:'caption',ruleId:'rule-18',dismissed:false}]:[]} picked={null} onFlag={id=>document.body.dataset.flag=id} onComment={()=>{}}/>}</ReviewerCaption>
-</QueryClientProvider>);
+const type=(value)=>{const el=document.querySelector('[contenteditable="true"]');
+  if(value==='New caption.') {el.focus();const range=document.createRange();range.setStart(el.querySelector('p').firstChild,0);range.setEnd(el.querySelector('p').firstChild,3);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);document.execCommand('insertText',false,'New');}
+  else el.textContent=value;
+  el.dispatchEvent(new Event('input',{bubbles:true}));};
+function Preview() {
+ const [picked,setPicked]=React.useState(null);
+ return <QueryClientProvider client={client}>
+  <button onClick={()=>setPicked('rule-18')}>Select flag</button><button onClick={()=>setPicked(null)}>Clear flag</button>
+  <ReviewerCaption submissionId="post" canComment captionText="Old caption.">{(text,html,showFlags)=><MarkedReviewerCaption text={text} html={html} terms={showFlags?[{term:'caption',ruleId:'rule-18',dismissed:false},{term:'Old',ruleId:'rule-4',dismissed:false}]:[]} picked={picked} onFlag={id=>document.body.dataset.flag=id} onComment={()=>{}}/>}</ReviewerCaption>
+ </QueryClientProvider>;
+}
+createRoot(document.getElementById('root')).render(<Preview/>);
 (async()=>{
   try {
     await until(()=>button('Edit text'));
-    check(document.querySelector('strong mark')?.textContent==='caption','Formatted clickable highlight is missing');
+    check(!document.querySelector('mark'),'Opening a reviewer post must not highlight findings automatically');
+    button('Select flag').click();await until(()=>document.querySelector('strong mark'));
+    check(document.querySelectorAll('mark').length===1,'Only the selected flag should be highlighted');
+    check(document.querySelector('strong mark')?.textContent==='caption','Selected rich-text finding is missing');
+    button('Clear flag').click();await until(()=>!document.querySelector('mark'));
+    button('Select flag').click();await until(()=>document.querySelector('strong mark'));
+    const widthStyle=document.createElement('style');widthStyle.textContent='.max-w-prose{max-width:65ch}.w-full{width:100%}';document.head.append(widthStyle);
+    document.getElementById('root').style.width='1000px';
+    const preview=document.querySelector('[aria-label="Text"] div[id]');
+    check(preview.getBoundingClientRect().width>900,'Read-only caption is squeezed into a narrow left column');
     document.querySelector('mark').click();check(document.body.dataset.flag==='rule-18','Rule highlight does not open its finding');
-    button('Edit text').click();await until(()=>document.querySelector('textarea'));
+    button('Edit text').click();await until(()=>document.querySelector('[contenteditable="true"]'));
+    const opened=document.querySelector('[contenteditable="true"]');
+    check(opened.querySelector('strong a')?.getAttribute('href')==='https://example.com/report','Opening Edit lost links or bold formatting');
+    check(opened.querySelector('p br'),'Opening Edit lost the blank paragraph');
+    check(button('Save changes').disabled,'Opening Edit must not create an unsaved change');
     type('New caption.');await until(()=>!button('Save changes').disabled);
     pauseNextGet=true;void client.invalidateQueries({queryKey:['caption-review','post']});await until(()=>waitingGet);
-    button('Save changes').click();await until(()=>saves===1&&!document.querySelector('textarea'));
+    button('Save changes').click();await until(()=>saves===1&&!document.querySelector('[contenteditable="true"]'));
     check(abortedGets===1,'Older polling request was not cancelled before saving');
     check(document.querySelector('[aria-label="Text"]').textContent.includes('New caption.'),'Saved caption is not shown');
     check(!document.querySelector('mark'),'Old compliance highlights should wait for a new check');
@@ -66,10 +90,18 @@ createRoot(document.getElementById('root')).render(<QueryClientProvider client={
     check(dialog.querySelector('[aria-label="Text before changes"]').textContent.includes('Old caption.'),'Previous caption is missing');
     check(dialog.querySelector('[aria-label="Text after changes"]').textContent.includes('New caption.'),'Updated caption is missing');
     button('Close').click();await until(()=>!document.querySelector('[role="dialog"]'));
-    button('Edit text').click();await until(()=>document.querySelector('textarea'));
+    button('Edit text').click();await until(()=>document.querySelector('[contenteditable="true"]'));
     type('   ');await until(()=>button('Save changes').disabled);
-    button('Cancel').click();await until(()=>!document.querySelector('textarea'));
+    button('Cancel').click();await until(()=>!document.querySelector('[contenteditable="true"]'));
     check(saves===1,'Cancel must not save a second edit');
+    button('Edit text').click();await until(()=>document.querySelector('[contenteditable="true"]'));
+    const edit=document.querySelector('[contenteditable="true"]');edit.focus();
+    const range=document.createRange();range.selectNodeContents(edit.querySelector('a'));const selected=window.getSelection();selected.removeAllRanges();selected.addRange(range);
+    document.execCommand('italic');edit.dispatchEvent(new Event('input',{bubbles:true}));
+    await until(()=>!button('Save changes').disabled);
+    const beforeFormatting=data.caption_text;button('Save changes').click();await until(()=>saves===2&&!document.querySelector('[contenteditable="true"]'));
+    check(data.caption_text===beforeFormatting,'Formatting-only edit changed the wording or spacing');
+    check(new DOMParser().parseFromString(data.caption_html,'text/html').querySelector('i,em'),'Formatting-only edit was not saved');
     document.body.innerHTML='<pre>CAPTION_UI_PASS</pre>';
   }catch(error){document.body.innerHTML='';const pre=document.createElement('pre');pre.textContent='CAPTION_UI_FAIL:'+error.stack;document.body.append(pre)}
 })();`);

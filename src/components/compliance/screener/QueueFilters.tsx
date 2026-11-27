@@ -1,3 +1,5 @@
+import type { SortOrder } from "@/lib/screenerQueueOrder";
+export type { SortOrder } from "@/lib/screenerQueueOrder";
 import type { Dispatch, SetStateAction } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -26,9 +28,7 @@ export const DUE_LABELS: Record<DueFilter, string> = {
   week: "Due this week",
   none: "No deadline",
 };
-// The list is ordered by when each item was sent for review (deadlines have their own filter).
-export type SortOrder = "newest" | "oldest";
-export const SORT_LABELS: Record<SortOrder, string> = { newest: "Newest first", oldest: "Oldest first" };
+export const SORT_LABELS: Record<SortOrder, string> = { deadline: "Deadline: earliest first", newest: "Sent: newest first", oldest: "Sent: oldest first" };
 export const CHECK_LABELS: Record<CheckFilter, string> = {
   any: "Any result",
   failing: "Failing (red or under 60)",
@@ -79,7 +79,7 @@ export function QueueFiltersButton({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 gap-3 p-3">
-        <SelectField id="f-sort" label="Date sent" value={sort} onChange={(v) => setSort(v as SortOrder)} options={Object.entries(SORT_LABELS)} />
+        <SelectField id="f-sort" label="Sort by" value={sort} onChange={(v) => setSort(v as SortOrder)} options={Object.entries(SORT_LABELS)} />
         <FilterField label="Brand">
           <MultiSelectFilter
             options={brands.map((b) => ({ value: b, label: brandLabel(b) }))}

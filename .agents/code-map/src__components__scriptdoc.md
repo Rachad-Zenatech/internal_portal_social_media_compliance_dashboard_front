@@ -4,8 +4,11 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/scriptdoc/BulkScriptCompliance.tsx (31 lines) - bulk script compliance (components scriptdoc)
+## src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
 - `BulkScriptCompliance` (export function) L7
+
+## src/components/scriptdoc/BulkScriptDetailsPanel.tsx (42 lines) - bulk script details panel (components scriptdoc)
+- `BulkScriptDetailsPanel` (export function) L8
 
 ## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - `CollabEditorHandle` (export interface) L20
@@ -19,13 +22,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - `DeleteScriptMenu` (export function) L16 - The three dots on a script (or a document of scripts) with a Delete script action.
 
-## src/components/scriptdoc/DocDetailsPanel.tsx (210 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
-- `useDocDetails` (function) L18 - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
-- `DocDetailsStatusBadges` (function) L50
-- `DocDetailsBody` (function) L64
-- `DocDetailsButton` (export function) L118 - The button that opens or toggles the details, with how many are still to fill in.
-- `DocDetailsAccordion` (export function) L134 - Creator-side collapsible accordion at the top of the script page, expanded by default.
-- `DocDetailsDialog` (export function) L178 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
+## src/components/scriptdoc/DocDetailsPanel.tsx (218 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+- `useDocDetails` (function) L19 - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+- `DocDetailsStatusBadges` (function) L56
+- `DocDetailsBody` (function) L70
+- `DocDetailsButton` (export function) L124 - The button that opens or toggles the details, with how many are still to fill in.
+- `DocDetailsAccordion` (export function) L140 - Creator-side collapsible accordion at the top of the script page, expanded by default.
+- `DocDetailsDialog` (export function) L186 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
 
 ## src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - `DialogName` (export type) L4
@@ -46,20 +49,18 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocHeader` (export function) L83 - What this is and where it stands on the left; who is here and what to do next on the right.
 - `DocStatusStrip` (export function) L121 - One slim strip that says what is going on and what is needed.
 
-## src/components/scriptdoc/DocSidePanel.tsx (447 lines) - doc side panel (components scriptdoc)
+## src/components/scriptdoc/DocSidePanel.tsx (440 lines) - doc side panel (components scriptdoc)
 - `PanelTab` (export type) L24
 - `NoteComposer` (function) L27 - Unified Highlight & Comment composer on the selected wording (comment text is optional).
 - `NotesTab` (function) L89 - The notes on the script, live: each person's highlights and comments in their own colour, replies, resolving.
 - `ChecksTab` (function) L191 - The rulebook flags on the script as it reads now, with the same finding cards a post shows.
-- `HistoryTab` (function) L245
-- `ReviewersTab` (function) L281
-- `DocSidePanel` (export function) L323 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
-    - `pickTab` (fn) L343
-    - `queryClient` (fn) L348
-    - `sources` (fn) L349
-    - `runCheck` (fn) L352
-    - `historyQuery` (fn) L360
-    - `openNotes` (fn) L365
+- `HistoryTab` (function) L248
+- `ReviewersTab` (function) L284
+- `DocSidePanel` (export function) L326 - Everything beside the script, in four tabs with counts so nothing is hidden: the notes people left, the rulebook flags,  who has checked ...
+    - `pickTab` (fn) L346
+    - `sources` (fn) L351
+    - `historyQuery` (fn) L353
+    - `openNotes` (fn) L358
 
 ## src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - `EditorLayoutBar` (export function) L9 - A slim strip above the shared editor: shows or hides the pages list and the review panel, so the script gets the room it needs  (on a nar...
@@ -76,6 +77,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `CheckInDialog` (export function) L164 - Shown to each reviewer when someone else changed the script: say when you've finished looking.
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
+
+## src/components/scriptdoc/ScriptDetailsSection.tsx (30 lines) - Keep a script's own post details immediately above its editor.
+- `ScriptDetailsSection` (export function) L9 - Keep a script's own post details immediately above its editor.
 
 ## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L27
@@ -113,7 +117,10 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/ScriptUploadDropzone.tsx (77 lines) - script upload dropzone (components scriptdoc)
 - `ScriptUploadDropzone` (export function) L8
 
-## src/components/scriptdoc/SharedEditorFrame.tsx (244 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
+## src/components/scriptdoc/ScriptWorkspacePlacement.tsx (8 lines) - Render the active review workspace once, inside its script's section when paired.
+- `ScriptWorkspacePlacement` (export function) L5 - Render the active review workspace once, inside its script's section when paired.
+
+## src/components/scriptdoc/SharedEditorFrame.tsx (247 lines) - Fallback refresh interval when the server doesn't specify expires_in (15-minute token -> refresh at 10 minutes).
 - `SharedEditorFrame` (export function) L23 - The script's editor from the Share Document portal, in an iframe, so scripts look and behave the same in both portals.
 
 ## src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.

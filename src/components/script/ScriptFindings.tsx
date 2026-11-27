@@ -48,6 +48,13 @@ export default function ScriptFindings({
   const cleared = all.filter((v) => statusOf(v) === "CLEARED");
   const keyOf = (v: ComplianceViolation) => `${v.rule_id}-${v.kind ?? ""}`;
   const quoteOf = (v: ComplianceViolation) => (v.passage || v.flagged_terms[0] || "").trim();
+  const pickFinding = (v: ComplianceViolation) => {
+    const key = keyOf(v);
+    const on = picked === key;
+    setPicked(on ? null : key);
+    if (onGo) onGo(v);
+    else if (!on && v.kind !== "MISSING_DISCLAIMER" && v.flagged_terms[0]) onFind?.(v.flagged_terms[0]);
+  };
 
   const suggest = async (v: ComplianceViolation) => {
     const key = keyOf(v);
@@ -114,11 +121,7 @@ export default function ScriptFindings({
             <button
               type="button"
               aria-expanded={on}
-              onClick={() => {
-                setPicked(on ? null : key);
-                if (onGo) onGo(v);
-                else if (!on && !missing && v.flagged_terms[0]) onFind?.(v.flagged_terms[0]);
-              }}
+              onClick={() => pickFinding(v)}
               className="flex w-full gap-3 p-3 text-left"
             >
               <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold text-white", red ? "bg-red-600" : "bg-amber-600")}>

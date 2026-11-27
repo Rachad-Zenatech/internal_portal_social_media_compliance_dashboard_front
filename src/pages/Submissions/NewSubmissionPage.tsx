@@ -1,3 +1,7 @@
+import PendingCheckNotice from "@/components/submissions/PendingCheckNotice";
+import { usePendingComplianceRefresh } from "@/hooks/usePendingComplianceRefresh";
+import { usesSentiment } from "@/lib/sentimentPolicy";
+import RevisionMediaReplace from "@/components/submissions/RevisionMediaReplace";
 import { CONTENT_TYPES, VISIBLE_CONTENT_TYPES, MAIN_UPLOAD, MAIN_REQUIRED, ADS_RULE_SET, EDITOR_COPY, UPLOAD_FORMAT_HINTS, ACCEPT_ALL, ACCEPT_SCRIPT, SCRIPT_RE, classifyFile } from "@/lib/postContentTypes";
 import { preparationCheckState } from "@/lib/preparationFreshness";
 import SubmissionReviewStatus from "@/components/submissions/SubmissionReviewStatus";
@@ -24,7 +28,6 @@ import {
   CalendarCheck,
   CalendarDays,
   Check,
-  ChevronDown,
   ClipboardList,
   ShieldCheck,
   Clock,
@@ -62,7 +65,6 @@ import ReviewerPicker from "@/components/submissions/ReviewerPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
 import {
-  ANALYSING_REFETCH_MS,
   MISSING_LABELS,
   SubmissionFileRow,
   audienceCodes,
@@ -97,7 +99,6 @@ import HashtagPicker from "@/components/submissions/HashtagPicker";
 import CaptionExtras from "@/components/submissions/CaptionExtras";
 import { useHashtagLibrary } from "@/hooks/useHashtagLibrary";
 import { useBackgroundSourceChecks } from "@/hooks/useBackgroundSourceChecks";
-import RevisionWorkspace from "@/components/submissions/RevisionWorkspace";
 import ReviewConversation from "@/components/submissions/ReviewConversation";
 import { useReviewComments } from "@/hooks/useReview";
 import { useSubmissionReviewState } from "@/hooks/useSubmissionReviewState";
@@ -286,7 +287,6 @@ export default function NewSubmissionPage() {
   const [replacingMain, setReplacingMain] = useState(false);
   const [dueAt, setDueAt] = useState<string | null>(null);
   // After changes are requested, only the content, caption and comments are shown until asked for the rest.
-  const [showAllDetails, setShowAllDetails] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [editCounter, setEditCounter] = useState(0);
@@ -378,7 +378,8 @@ export default function NewSubmissionPage() {
   const videoLocked = scriptFirst && scriptStage.data?.status !== "APPROVED";
   const scriptOnly = scriptFirst && !files.some((file) => file.kind === "MAIN" && file.mime_type.startsWith("video/"));
   const checkedSub = scriptOnly && videoLocked && storedSub && scriptStage.data?.precheck ? { ...storedSub, latest_check: scriptStage.data.precheck } : storedSub;
-  const preparationSteps = postPreparationSteps(scriptOnly);
+  const skipSentiment = !usesSentiment(contentType, scriptOnly);
+  const preparationSteps = postPreparationSteps(skipSentiment);
   // Posts already sent for approval with the same content and caption, looked up again after every save and upload.
   const scriptUploaded = Boolean(scriptStage.data?.file_name);
   const duplicatesQuery = useQuery({
@@ -414,7 +415,7 @@ export default function NewSubmissionPage() {
   });
 
   const { mood } = usePublicMood(submissionId, Boolean(submissionId), readOnly);
-  const { analysis: sentimentAnalysis } = useSentiment(scriptOnly ? null : submissionId);
+  const { analysis: sentimentAnalysis } = useSentiment(skipSentiment ? null : submissionId);
   // After a reviewer asks for changes: their decision (who, when, their note) and the comments still open.
   const inRevision = status === "CHANGES_REQUESTED";
   const { data: revisionHistory } = useQuery({
@@ -426,7 +427,7 @@ export default function NewSubmissionPage() {
   const sentBack = useMemo(
     () =>
       (revisionHistory?.review_jobs ?? [])
-        .filter((j) => j.decision === "REQUEST_CHANGES" && j.decided_at)
+        .filter((j) => (j.decision === "REQUEST_CHANGES" || j.decision === "APPROVE") && j.decided_at)
         .sort((a, b) => new Date(b.decided_at!).getTime() - new Date(a.decided_at!).getTime())[0] ?? null,
     [revisionHistory]
   );
@@ -500,7 +501,6 @@ export default function NewSubmissionPage() {
         setReviewerIds(s.reviewer_ids ?? []);
         setLockedReviewerIds(s.status === "CHANGES_REQUESTED" || s.script_status === "APPROVED" ? s.reviewer_ids ?? [] : []);
         // Sent back: every detail is open, so any file (image, video, script) can be uploaded again.
-        if (s.status === "CHANGES_REQUESTED") setShowAllDetails(true);
         // The editor mounts after the loading state clears; the effect below fills it in.
         pendingCaptionHtml.current = s.caption_html || "";
         setCaption(s.caption_text || "");
@@ -550,7 +550,8 @@ export default function NewSubmissionPage() {
       ...(publishDate ? { publish_at: publishDate.toISOString() } : {}),
       ...(approvalBy ? { approval_needed_by: approvalBy.toISOString() } : {}),
       caption_html: editorRef.current?.innerHTML || "",
-      caption_text: editorRef.current?.innerText.trim() || "",
+      // innerText changes when the details editor is hidden; only user edits update this state.
+      caption_text: caption,
       // Only for platforms it still goes to; a platform that was taken off loses its caption.
       platform_captions: Object.fromEntries(Object.entries(platformCaptions).filter(([p]) => platforms.includes(p))),
       source_links: sourceLinks,
@@ -838,11 +839,10 @@ export default function NewSubmissionPage() {
   const errorFor = (field: keyof typeof clientMissing, text = "Required") => (isMissing(field) ? text : false);
 
   const resubmitting = status === "CHANGES_REQUESTED";
-  const showDetails = !resubmitting || showAllDetails;
-  const revisionSteps = submissionRevisionSteps(scriptOnly, publishAfterChanges);
+  const revisionSteps = submissionRevisionSteps(skipSentiment, publishAfterChanges);
   const revisionTitles = Object.fromEntries(revisionSteps.map((step) => [step.key, step.label])) as Record<EditorStep, string>;
 
-  const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? (scriptOnly && stepParam === "sentiment" ? "compliance" : stepParam) : "details";
+  const stepView: PostStepKey = isStepKey(stepParam) && submissionId ? (skipSentiment && stepParam === "sentiment" ? "compliance" : stepParam) : "details";
   const stepNumber = Math.max(1, preparationSteps.findIndex((step) => step.key === stepView) + 1);
   // Sent back, the first step is the reviewers' suggestions (where it opens unless another step is asked for).
   const onSuggestions = resubmitting && Boolean(submissionId) && (stepParam === "suggestions" || !stepParam);
@@ -970,17 +970,8 @@ export default function NewSubmissionPage() {
   };
 
   const checkAnalysing = isAnalysing(checkedSub?.latest_check);
-  useEffect(() => {
-    if (!checkAnalysing || !submissionId) return;
-    const t = window.setInterval(async () => {
-      try {
-        setCheckedSub(await submissionService.get(submissionId));
-      } catch {
-        // Try again on the next tick.
-      }
-    }, ANALYSING_REFETCH_MS);
-    return () => window.clearInterval(t);
-  }, [checkAnalysing, submissionId]);
+  const pendingRefresh = usePendingComplianceRefresh(submissionId, checkAnalysing,
+    checkedSub?.latest_check?.manual_requested_at ?? checkedSub?.latest_check?.checked_at, setCheckedSub);
 
   const sourceChecking = useBackgroundSourceChecks(submissionId, stepView === "compliance", localSourceChecking);
 
@@ -993,8 +984,8 @@ export default function NewSubmissionPage() {
     : !checkIsCurrent(checkedSub?.latest_check, checkedSub?.media_edited_at)));
   const checkStale = inputCheckStale || Boolean(hasCheck && checkedSub?.check_outdated);
   const sentBackAt = sentBack?.decided_at ? new Date(sentBack.decided_at).getTime() : null;
-  const recheck = preparationCheckState({ hasCheck, inputCheckStale, sentiment: sentimentAnalysis,
-    mediaEditedAt: checkedSub?.media_edited_at, mediaChanged: localMediaChanged, hasMood: Boolean(mood) });
+  const recheck = preparationCheckState({ skipSentiment, hasCheck: hasCheck && !isAnalysing(checkedSub?.latest_check) && !checkedSub?.latest_check?.ai_unavailable, inputCheckStale, sentiment: sentimentAnalysis,
+    contentEditedAt: storedSub?.content_edited_at, checkedAt: checkedSub?.latest_check?.checked_at, mediaEditedAt: checkedSub?.media_edited_at, mediaChanged: localMediaChanged, hasMood: Boolean(mood) });
   const changesMade = editCounter > 0 || recheck.compliance || Boolean(sentBackAt && checkedSub?.content_edited_at && Date.parse(checkedSub.content_edited_at) > sentBackAt);
 
   const submit = async (confirmRepost = false) => {
@@ -1014,7 +1005,6 @@ export default function NewSubmissionPage() {
     }
     if (missingNow.length) {
       setShowErrors(true);
-      setShowAllDetails(true);
       toast.error(`Please add: ${missingNow.map((m) => (m === "caption" ? editorCopy.title : MISSING_LABELS[m] || m)).join(", ")}.`);
       return;
     }
@@ -1069,7 +1059,7 @@ export default function NewSubmissionPage() {
       openStep("compliance");
       return;
     }
-    if (resubmitting && !scriptOnly && !recheck.sentiment) {
+    if (resubmitting && !skipSentiment && !recheck.sentiment) {
       toast.error("Run the sentiment analysis on your changes before resubmitting.");
       openStep("sentiment");
       return;
@@ -1087,7 +1077,7 @@ export default function NewSubmissionPage() {
         openStep("compliance");
         return;
       }
-      if (steps?.sentiment === "stale") {
+      if (!skipSentiment && steps?.sentiment === "stale") {
         toast.error("The media has changed. Run the sentiment analysis again before sending.");
         openStep("sentiment");
         return;
@@ -1120,8 +1110,7 @@ export default function NewSubmissionPage() {
         const missing = (err.detail as { missing: string[] }).missing;
         setServerMissing(missing);
         setShowErrors(true);
-        setShowAllDetails(true);
-        toast.error(`Please add: ${missing.map((m) => (m === "caption" ? editorCopy.title : MISSING_LABELS[m] || m)).join(", ")}.`);
+          toast.error(`Please add: ${missing.map((m) => (m === "caption" ? editorCopy.title : MISSING_LABELS[m] || m)).join(", ")}.`);
       } else if (err instanceof ApiError && err.status === 409 && err.detail && typeof err.detail === "object" && "duplicates" in err.detail) {
         // The saved post repeats one already sent (the list on the page may have been a save behind).
         const detail = err.detail as { code: string; message: string; duplicates: DuplicateReport };
@@ -1288,15 +1277,13 @@ export default function NewSubmissionPage() {
         />
       )}
 
-      {/* Once decided, the creator gets a copy of the review conversation (reviewers and suggesting reviewers) on
-          every step: read-only once approved; sent back, they can reply. On the details step of a post sent back it
-          is beside the edits instead (RevisionWorkspace), so it isn't shown twice. */}
+      {/* Show the review conversation and incoming edits before the creator updates the post. */}
       {submissionId && (status === "APPROVED" || onSuggestions) && (
         <ReviewConversation
           submissionId={submissionId} caption={caption}
           files={files}
           canReply={status === "CHANGES_REQUESTED"}
-          emptyText="The reviewers didn't leave any comments on this post."
+          emptyText="No reviewer comments on this post."
           header={
             status === "APPROVED" ? (
               <div>
@@ -1308,29 +1295,13 @@ export default function NewSubmissionPage() {
                 </p>
               </div>
             ) : (
-              <SentBackHeader reviewer={sentBack?.decided_by_name} note={sentBack?.decision_notes} dueAt={dueAt} />
+              publishAfterChanges ? <div><h2 className="text-base font-bold">Approved! Check the suggestions</h2>{sentBack?.decision_notes && <p className="text-sm text-muted-foreground">{sentBack.decision_notes}</p>}</div> : <SentBackHeader reviewer={sentBack?.decided_by_name} note={sentBack?.decision_notes} dueAt={dueAt} />
             )
           }
         />
       )}
-      {(status === "APPROVED" || resubmitting) && <SubmissionReviewUpdates suggestions={onSuggestions} textOnly={contentType === "TEXT_POST"} submissionId={submissionId} onContinue={() => goToStep("details")} />}
-      {resubmitting && submissionId && onDetails && (
-        <RevisionWorkspace
-          submissionId={submissionId}
-          dueAt={dueAt} textOnly={contentType === "TEXT_POST"}
-          mainFile={files.find((f) => f.kind === "MAIN")}
-          caption={caption}
-          accept={ACCEPT_ALL}
-          replacing={replacingMain}
-          submitting={submitting}
-          onReplace={replaceMain}
-          onEditCaption={() => {
-            captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            window.setTimeout(() => editorRef.current?.focus(), 350);
-          }}
-          onDone={() => openStep("compliance")}
-        />
-      )}
+      {(status === "APPROVED" || resubmitting) && <SubmissionReviewUpdates suggestions={onSuggestions} textOnly={contentType === "TEXT_POST"} submissionId={submissionId} version={storedSub?.current_version ?? 0} hasFeedback={reviewComments.length > 0 || Boolean(sentBack?.decision_notes?.trim())} onPublish={publishAfterChanges && recheck.compliance && recheck.sentiment ? () => goToStep("send") : undefined} onContinue={() => goToStep("details")} />}
+      {resubmitting && onDetails && contentType !== "TEXT_POST" && <RevisionMediaReplace accept={ACCEPT_ALL} busy={replacingMain || uploading.length > 0} onReplace={replaceMain} />}
       {resubmitting && canvaMain && onDetails && (
         <CanvaReimportBar file={canvaMain} resubmitting busy={reimporting || submitting} onReimport={reimportCanva} />
       )}
@@ -1341,9 +1312,9 @@ export default function NewSubmissionPage() {
           {/* Sent for review: the details can be read, not changed. */}
           {/* A real box (not "contents") so its sections get the page's gap; hidden off the details step (empty, it adds a stray gap). */}
           <fieldset disabled={readOnly || changingPostType} className={`m-0 min-w-0 flex-col gap-4 border-0 p-0 ${onDetails ? "flex" : "hidden"}`}>
-            {showDetails && (
+            {onDetails && (
               <div className={onDetails ? "space-y-4" : "hidden"}>
-                <Section step={1} title="The basics" description="What the post is, who it is for, and the rules it is checked against.">
+                <fieldset disabled={resubmitting} inert={resubmitting} className="min-w-0 space-y-4 border-0 p-0"><Section step={1} title="The basics" description={resubmitting ? "These reviewed basics are locked. You can update text, images and supporting sources below." : "What the post is, who it is for, and the rules it is checked against."}>
                   <div className="flex flex-col gap-5">
                     <Field label="Title" required error={errorFor("title")}>
                       <Input
@@ -1645,7 +1616,7 @@ export default function NewSubmissionPage() {
                       </Popover>
                     </Field>
                   </div>
-                </Section>
+                </Section></fieldset>
 
 
                 {contentType !== "TEXT_POST" && <Section
@@ -1820,20 +1791,6 @@ export default function NewSubmissionPage() {
               </div>
             )}
 
-            {resubmitting && (
-              <div className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-4 py-2.5 ${onDetails ? "" : "hidden"}`}>
-                <p className="text-xs text-muted-foreground">
-                  {showAllDetails
-                    ? "All details are open. Anything you change is part of the next version."
-                    : "Type, brand, platforms, files and rule sets stay as they were. Open them only if the reviewer asked."}
-                </p>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAllDetails((v) => !v)}>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllDetails ? "rotate-180" : ""}`} />
-                  {showAllDetails ? "Hide details" : "Show all details"}
-                </Button>
-              </div>
-            )}
-
             <div ref={captionSectionRef} className={`scroll-mt-4 ${onDetails ? "" : "hidden"}`}>
               <Section
                 step={4}
@@ -1990,7 +1947,8 @@ export default function NewSubmissionPage() {
               {duplicates && (duplicates.blocked || duplicates.repost) && (
                 <DuplicateNotice report={duplicates} publishAt={publishDate ?? null} />
               )}
-              <ComplianceStep
+              <PendingCheckNotice pending={checkAnalysing} failed={pendingRefresh.failed} requestedAt={checkedSub?.latest_check?.manual_requested_at ?? checkedSub?.latest_check?.checked_at} onRetry={pendingRefresh.retry} />
+              <ComplianceStep textOnly={contentType === "TEXT_POST"}
                 sub={checkedSub}
                 reviewState={reviewState}
                 title={title}
@@ -2077,7 +2035,7 @@ export default function NewSubmissionPage() {
                       )}
                     </div>
 
-                    {!scriptOnly && <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
+                    {!skipSentiment && <div id="step-sentiment" className={`scroll-mt-4 ${toolView("sentiment") ? "" : "hidden"}`}>
                       <SentimentPanel
                         submissionId={submissionId}
                         sourceChecks={checkedSub?.latest_check?.source_checks ?? []}
@@ -2155,7 +2113,8 @@ export default function NewSubmissionPage() {
                   <SubmissionSendActions submissionId={submissionId} platform={platforms[0]} intended={storedSub?.publish_at} beforeMoodCheck={() => save({ force: true })}
                     publishAfterChanges={publishAfterChanges} videoLocked={videoLocked} resubmitting={resubmitting}
                     hasCheck={hasCheck} checkStale={inputCheckStale} submitting={submitting} check={checkedSub?.latest_check} currentVersion={checkedSub?.current_version ?? 0} score={inputCheckStale || isAnalysing(checkedSub?.latest_check) || checkedSub?.latest_check?.ai_unavailable ? undefined : checkedSub?.latest_check?.score} minimumScore={Math.max(90, reviewState?.min_approval_score ?? 0)}
-                    disabled={submitting || checking || uploading.length > 0}
+                    disabled={submitting || checking || uploading.length > 0 || (publishAfterChanges && (!recheck.compliance || !recheck.sentiment))}
+                    requiredChecks={[...(!recheck.compliance ? ["compliance" as const] : []), ...(!recheck.sentiment ? ["sentiment" as const] : [])]} onOpenCheck={openStep}
                     publishDate={publishDate} onPublishDateChange={setPublishDate} dateError={isMissing("publish_at")}
                     onSubmit={() => void submit()}
                   />

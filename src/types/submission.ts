@@ -1,3 +1,5 @@
+import type { SubmissionSteps } from "./submissionSteps";
+export type { PostStepKey, PostStepState, SubmissionSteps } from "./submissionSteps";
 import type { CheckAttempt } from "@/types/checkAttempt";
 import type { PostApprovalSuggestionFields } from "./postApprovalSuggestions";
 import type { ReviewScoreFields } from "@/types/reviewScore";
@@ -98,7 +100,9 @@ export type { ScriptMatch } from "@/types/scriptMatch";
 export type StoredCheck = ComplianceCheckResponse & {
   /** Evidence saved for this script when its compliance check ran. */
   checked_script_sources?: string;
+  script_check_stale?: boolean;
   checked_at?: string;
+  manual_requested_at?: string;
   checked_media_edited_at?: string | null;
   /** Which AI models answered during this check, and how long it took. Missing on checks saved before this was kept. */
   models?: { attempts: CheckAttempt[]; duration_ms: number } | null;
@@ -106,7 +110,6 @@ export type StoredCheck = ComplianceCheckResponse & {
   /** A video whose transcript isn't ready yet; it's re-checked automatically when it is. */
   transcript_pending?: boolean;
   segment_flags?: SegmentFlag[];
-  /** The AI couldn't read part of the post (out of credits, quota, down): no score is shown. */
   ai_unavailable?: boolean;
   /** How closely the video's speech follows the approved script (once both are read); null before then. */
   script_match?: ScriptMatch | null;
@@ -220,28 +223,6 @@ export interface Submission extends PostApprovalSuggestionFields, SubmissionSour
   updated_at: string;
   content_edited_at?: string | null;
   media_edited_at?: string | null;
-}
-
-/** The five steps a creator works through on a post. */
-export type PostStepKey = "details" | "compliance" | "sentiment" | "mood" | "send";
-
-/** done; stale (run before the post was last edited, so run it again); running; todo (not done yet). */
-export type PostStepState = "done" | "stale" | "running" | "unavailable" | "todo";
-
-/** How far a post has got through its steps (see the server's post_steps_service). */
-export interface SubmissionSteps {
-  details: PostStepState;
-  compliance: PostStepState;
-  sentiment: PostStepState;
-  mood: PostStepState;
-  send: PostStepState;
-  revision?: boolean;
-  suggestions?: PostStepState;
-  next: PostStepKey | "suggestions" | null;
-  ready_to_send: boolean;
-  locked: boolean;
-  /** What the details step still lacks, by field name. */
-  missing: string[];
 }
 
 export interface SubmissionSummary extends PostApprovalSuggestionFields, ReviewScoreFields {
@@ -366,7 +347,7 @@ export interface ReviewDecisionRequest {
   publish_now?: boolean;
   /** Request changes, but let the creator publish the corrected version without another review round. */
   publish_after_changes?: boolean;
-  /** Approve: the rules (by number) the reviewer confirmed by hand; must cover the check's manual_review_rules. */
+  /** Approve: optional explicit confirmations from older clients; not required for approval. */
   confirmed_rules?: string[];
   /** Request changes: working days the creator has to resubmit... */
   revision_days?: 1 | 2 | 3 | 5;

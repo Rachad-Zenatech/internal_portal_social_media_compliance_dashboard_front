@@ -266,7 +266,7 @@ export default function PostPreview({
         {media ? <Media file={media} vertical /> : mediaEl ?? <div className="w-full h-full bg-gradient-to-b from-neutral-800 to-black" />}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 pr-12 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white space-y-1">
           <p className="text-[12px] font-bold">{handle ?? name}</p>
-          {text ? <p className="text-[11px] leading-snug line-clamp-3">{text}</p> : <p className="text-[11px] italic opacity-60">No caption yet</p>}
+          {text ? <p className="text-[11px] leading-snug line-clamp-3">{text}</p> : <p className="text-[11px] italic opacity-60">No text yet</p>}
           <p className="flex items-center gap-1 text-[10px] opacity-80">
             <Music2 className="w-3 h-3" /> Original sound · {name}
           </p>
@@ -330,7 +330,7 @@ export default function PostPreview({
       </div>
       {!mediaFirst && (
         <div className="px-3 pb-3 text-[13px] leading-relaxed">
-          {text ? <Caption text={text} /> : <p className="italic text-muted-foreground">No caption yet</p>}
+          {text ? <Caption text={text} /> : <p className="italic text-muted-foreground">No text yet</p>}
         </div>
       )}
       {hasMedia && (
@@ -341,7 +341,7 @@ export default function PostPreview({
           {text ? (
             <Caption text={`${handle ?? name}  ${text}`} />
           ) : (
-            <p className="italic text-muted-foreground">No caption yet</p>
+            <p className="italic text-muted-foreground">No text yet</p>
           )}
         </div>
       )}

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck, Loader2, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 
 import type { CollabEditorHandle } from "@/components/scriptdoc/CollabEditor";
 import { HIGHLIGHT_COLORS } from "@/components/scriptdoc/DocEditorColumn";
@@ -16,10 +15,11 @@ import { cn } from "@/lib/utils";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { DocDetail, DocHistory, DocNote } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
+import { findingEvidence } from "@/lib/findingEvidence";
 import ScriptSourcesPanel from "@/components/scriptdoc/ScriptSourcesPanel";
 import { useScriptDocSources } from "@/hooks/useScriptDocSources";
-import { scriptSourceEntries, scriptSourcesMatch } from "@/lib/scriptSources";
-import { findingEvidence } from "@/lib/findingEvidence";
+import { scriptSourceEntries } from "@/lib/scriptSources";
+import { useScriptDocCompliance } from "@/hooks/useScriptDocCompliance";
 
 export type PanelTab = "notes" | "checks" | "history" | "reviewers" | "sources";
 
@@ -194,16 +194,18 @@ function ChecksTab({
   check,
   running,
   onRun,
-  disabledReason,
   onFind,
+  disabledReason,
+  stale,
 }: {
   doc: DocDetail;
   editor: React.RefObject<CollabEditorHandle | null>;
   check: StoredCheck | null;
   running: boolean;
   onRun: () => void;
-  disabledReason?: string;
   onFind: (terms: string[]) => void;
+  disabledReason?: string;
+  stale: boolean;
 }) {
   const flags = activeFlagCount(check);
   return (
@@ -216,6 +218,7 @@ function ChecksTab({
         {check && <span className="text-xs text-muted-foreground">{flags} to look at</span>}
       </div>
       <p className="text-xs text-muted-foreground">Checks this script against the rules and its saved sources.</p>
+      {stale && <p role="status" className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-sm text-amber-800 dark:text-amber-200">Changes have been made. Please rerun compliance. The score below is from the previous check.</p>}
       {disabledReason && <p className="text-xs text-amber-700 dark:text-amber-300">{disabledReason}</p>}
       {check && <div className="space-y-2"><h3 className="text-sm font-semibold">Compliance score</h3><ScriptCompliance check={check} onFind={onFind} /></div>}
       {check && (
@@ -345,18 +348,8 @@ export default function DocSidePanel(props: {
     onTab(t);
   };
 
-  const queryClient = useQueryClient();
   const sources = useScriptDocSources(doc);
-  const { data: savedCheck = null } = useQuery<StoredCheck | null>({ queryKey: ["script-doc-check", doc.id], queryFn: async () => null, enabled: false });
-  const check = savedCheck && scriptSourcesMatch(savedCheck.checked_script_sources, doc.sources_text ?? "") ? savedCheck : null;
-  const runCheck = useMutation({
-    mutationFn: () => {
-      if (sources.dirty || sources.saving) throw new Error("Save sources before running compliance.");
-      return scriptDocService.check(doc.id, props.editor.current?.getText());
-    },
-    onSuccess: (result) => queryClient.setQueryData(["script-doc-check", doc.id], result),
-    onError: (e: any) => toast.error(e?.message ?? "The check couldn't run"),
-  });
+  const { check, stale, runCheck } = useScriptDocCompliance(doc, props.editor, sources);
   const historyQuery = useQuery({
     queryKey: ["script-doc-history", doc.id, doc.status, doc.round],
     queryFn: () => scriptDocService.history(doc.id),
@@ -387,9 +380,9 @@ export default function DocSidePanel(props: {
     {
       key: "checks",
       label: "Flags",
-      value: check?.ai_unavailable ? "No check" : check ? (flags > 0 ? `${flags} open` : "Nothing open") : "Not run",
-      sub: check?.ai_unavailable ? "The check couldn't run" : check ? flagWords.join(" · ") || "No flags on the script" : "Check rules and sources",
-      tone: check?.ai_unavailable ? "muted" : criticalCount > 0 ? "bad" : flags > 0 ? "warn" : check ? "ok" : "muted",
+      value: check?.ai_unavailable ? "No check" : check?.score != null ? `${check.score}% compliance` : check ? `${flags} open` : "Not run",
+      sub: stale ? "Changes made - rerun compliance" : check?.ai_unavailable ? "The check couldn't run" : check ? flagWords.join(" · ") || "No flags on the script" : "Check rules and sources",
+      tone: stale ? "warn" : check?.ai_unavailable ? "muted" : criticalCount > 0 ? "bad" : flags > 0 ? "warn" : check ? "ok" : "muted",
       seen: seen.has("checks"),
     },
     {
@@ -436,7 +429,7 @@ export default function DocSidePanel(props: {
           />
         )}
         {tab === "checks" && (
-          <ChecksTab doc={doc} editor={props.editor} check={check} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} disabledReason={sources.saving ? "Saving sources…" : sources.dirty ? "Save your source changes in Sources before checking compliance." : undefined} />
+          <ChecksTab doc={doc} editor={props.editor} check={check} stale={stale} running={runCheck.isPending} onRun={() => runCheck.mutate()} onFind={props.onFind} disabledReason={sources.saving ? "Saving sources…" : sources.dirty ? "Save your source changes in Sources before checking compliance." : undefined} />
         )}
         {tab === "reviewers" && <ReviewersTab doc={doc} online={props.online} />}
         {tab === "history" && <HistoryTab data={historyQuery.data} isLoading={historyQuery.isLoading} />}

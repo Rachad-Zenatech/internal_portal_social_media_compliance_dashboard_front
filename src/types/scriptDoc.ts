@@ -1,4 +1,5 @@
 import type { BatchDetails } from "@/types/scriptBatch";
+import type { StoredCheck } from "@/types/submission";
 
 export type DocStatus = "DRAFT" | "IN_REVIEW" | "LEVEL2_REVIEW" | "CHANGES_REQUESTED" | "APPROVED";
 export type Capacity = "EDIT" | "VIEW";
@@ -68,6 +69,9 @@ export interface DocDetail {
   body_html: string;
   body_text: string;
   sources_text: string;
+  latest_check?: StoredCheck | null;
+  compliance_stale?: boolean;
+  shared_details?: boolean;
   details: DocDetails;
   send_note: string | null;
   decision_note: string | null;
@@ -89,7 +93,7 @@ export interface DocDetail {
   created_at: string;
 }
 
-/** A local navigation request sent to the embedded script editor. */
+/** A navigation request sent to the embedded script editor. */
 export interface ScriptFocusRequest {
   requestId: number;
   terms: string[];

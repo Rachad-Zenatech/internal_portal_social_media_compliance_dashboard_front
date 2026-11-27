@@ -4,5 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/SubmissionReviewUpdates.tsx (14 lines) - submission review updates (components submissions)
-- `SubmissionReviewUpdates` (export function) L4
+## src/components/submissions/SubmissionReviewUpdates.tsx (30 lines) - submission review updates (components submissions)
+- `IncomingChange` (function) L8
+- `SubmissionReviewUpdates` (export function) L15

@@ -11,6 +11,7 @@ import EditorLayoutBar from "@/components/scriptdoc/EditorLayoutBar";
 import DocHeader, { DocStatusStrip } from "@/components/scriptdoc/DocHeader";
 import DocSidePanel, { type PanelTab } from "@/components/scriptdoc/DocSidePanel";
 import PagesRail from "@/components/scriptdoc/PagesRail";
+import ScriptWorkspacePlacement from "@/components/scriptdoc/ScriptWorkspacePlacement";
 import { useAuth } from "@/lib/AuthContext";
 import { scriptReviewDocument } from "@/lib/scriptReviewAccess";
 import { LiveProvider, type LiveStatus } from "@/lib/scriptDocLive";
@@ -45,6 +46,7 @@ export default function ScriptDocPage() {
   const { user: authUser, creatorView } = useAuth();
   const qc = useQueryClient();
   const editor = useRef<CollabEditorHandle>(null);
+  const [workspaceHost, setWorkspaceHost] = useState<HTMLDivElement | null>(null);
 
   const { data: doc, isLoading, error } = useQuery({ queryKey: ["script-doc", id], queryFn: () => scriptDocService.get(id), select: (data) => scriptReviewDocument(data, authUser?.id, creatorView), refetchOnWindowFocus: false });
   const setDoc = useCallback((d: DocDetail) => qc.setQueryData(["script-doc", id], d), [qc, id]);
@@ -164,15 +166,18 @@ export default function ScriptDocPage() {
 
   // Save the script as it reads (for lists, flags and history) a moment after someone stops typing.
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preparePostDetails = useRef<(() => Promise<void>) | null>(null);
+  const registerPostDetails = useCallback((prepare: (() => Promise<void>) | null) => { preparePostDetails.current = prepare; }, []);
   const canEdit = Boolean(doc?.access.can_edit) && !shared; // a shared script is saved from its own editor
   const onEdited = useCallback(() => {
     if (!canEdit) return;
+    qc.setQueryData<DocDetail>(["script-doc", id], (previous) => previous?.latest_check ? { ...previous, compliance_stale: true } : previous);
     if (snapTimer.current) clearTimeout(snapTimer.current);
     snapTimer.current = setTimeout(() => {
       const h = editor.current;
-      if (h) void scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
+      if (h) void scriptDocService.snapshot(id, h.getHtml(), h.getText()).then(() => qc.invalidateQueries({ queryKey: ["script-doc", id] })).catch(() => undefined);
     }, SNAPSHOT_DELAY_MS);
-  }, [canEdit, id]);
+  }, [canEdit, id, qc]);
   useEffect(() => () => { if (snapTimer.current) clearTimeout(snapTimer.current); }, []);
 
   // Notes live in the shared notes document.
@@ -234,6 +239,7 @@ export default function ScriptDocPage() {
     const h = editor.current;
     if (h && doc?.access.can_edit && !shared) await scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
   };
+  const beforeBulkCheck = async () => { await flush(); await preparePostDetails.current?.(); };
   const addPage = async () => {
     setPageBusy(true);
     try {
@@ -330,14 +336,14 @@ export default function ScriptDocPage() {
       <DocHeader doc={doc} live={status} people={presence} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
       <DocStatusStrip doc={doc} myCheckIn={myCheckIn} changedBy={changedBy} />
       {isCreator ? (
-        <DocDetailsAccordion key={doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} />
+        <DocDetailsAccordion key={doc.set_id ?? doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} onPrepare={registerPostDetails} onWorkspaceHost={setWorkspaceHost} />
       ) : (
         <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
       )}
 
-      <div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
+      <ScriptWorkspacePlacement host={isCreator && detailsAccordionOpen ? workspaceHost : null}><div className="flex min-h-[30rem] flex-1 flex-col lg:flex-row">
         {doc.pages.length > 0 && showPages && (
-          <PagesRail doc={doc} onBeforeCheck={flush} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
+          <PagesRail doc={doc} onBeforeCheck={beforeBulkCheck} busy={pageBusy} onAdd={addPage} sendDisabledReason={sendHint} onSendAll={() => setOpen("bulk", true)} onDeletePage={deletePage} />
         )}
         <DocEditorColumn
           provider={provider}
@@ -400,7 +406,7 @@ export default function ScriptDocPage() {
         />}
       </div>
 
-      <DocDialogs doc={doc} open={open} onOpen={onOpen} busy={run.isPending || pageBusy} changedBy={changedBy} handlers={handlers} />
+      </ScriptWorkspacePlacement><DocDialogs doc={doc} open={open} onOpen={onOpen} busy={run.isPending || pageBusy} changedBy={changedBy} handlers={handlers} />
     </div>
   );
 }

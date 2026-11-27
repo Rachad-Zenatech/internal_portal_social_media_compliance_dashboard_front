@@ -13,7 +13,8 @@ export default function BulkScriptCompliance({ doc, disabled, beforeCheck }: {
   const summaries = doc.pages.flatMap((page, index) => {
     const check = results[index]?.data;
     if (!check) return [];
-    const score = check.ai_unavailable || check.score == null ? "Check incomplete" : `Score: ${check.score}%`;
+    const savedScore = check.ai_unavailable || check.score == null ? "Check incomplete" : `Score: ${check.score}%`;
+    const score = check.script_check_stale ? `${savedScore} (changes made - rerun compliance)` : savedScore;
     return [{ id: page.id, title: page.title, score }];
   });
   return (

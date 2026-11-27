@@ -1,3 +1,4 @@
+import SourceFallback from "@/components/submissions/SourceFallback";
 import { useState } from "react";
 import { AlertTriangle, Check, CheckCircle2, ChevronDown, ExternalLink, FileText, Link2, Loader2, XCircle } from "lucide-react";
 
@@ -63,7 +64,7 @@ function ClaimRow({ claim, sourceUrl, creator }: { claim: CoveredSourceClaim; so
   );
 }
 
-function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean }) {
+function Row({ source, creator, submissionId, editable }: { source: CoveredSourceCheck; creator: boolean; submissionId?: string | null; editable: boolean }) {
   const { ok, wrong } = counts(source.claims);
   const problem = source.status !== "READ";
   const needsLook = problem || wrong > 0;
@@ -88,14 +89,14 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
         onClick={() => setOpen((v) => !v)}
         disabled={!hasDetail}
         aria-expanded={hasDetail ? open : undefined}
-        className="flex w-full items-start gap-1.5 text-left"
+        className="flex min-w-0 flex-1 items-start gap-1.5 text-left"
       >
         <Icon className={`mt-px h-3.5 w-3.5 shrink-0 ${tone}`} />
         <span className="min-w-0 flex-1">
-          <span className={creator ? "break-words font-semibold text-foreground" : "block truncate font-semibold text-foreground"} title={source.reference}>
+          <span className={creator ? "break-words [overflow-wrap:anywhere] font-semibold text-foreground" : "block truncate font-semibold text-foreground"} title={source.reference}>
             {name}
           </span>
-          <span className="block text-[10px] text-muted-foreground">
+          <span className="block break-words [overflow-wrap:anywhere] text-[10px] text-muted-foreground">
             {[
               (source.origins ?? [source.where]).map((where) => WHERE[where]).join(", "),
               source.authority ? AUTHORITY[source.authority] : null,
@@ -130,6 +131,7 @@ function Row({ source, creator }: { source: CoveredSourceCheck; creator: boolean
               {source.message || "The checker couldn't reach or read this source. Attach a copy as a supporting document."}
             </p>
           )}
+          {problem && editable && submissionId && <SourceFallback submissionId={submissionId} sourceName={name} sourceKey={source.url || source.reference} />}
           {primaryClaims.map((claim, index) => (
             <ClaimRow key={`${claim.claim}-${index}`} claim={claim} sourceUrl={source.url} creator={creator} />
           ))}
@@ -181,6 +183,7 @@ export function SourcesCheckedSection({
   savedChecks,
   checking,
   submissionId,
+  editable = false,
   className = "",
 }: {
   checks?: SourceCheck[] | null;
@@ -188,6 +191,7 @@ export function SourcesCheckedSection({
   savedChecks?: Record<string, SourceLinkCheck>;
   checking?: string[];
   submissionId?: string | null;
+  editable?: boolean;
   className?: string;
 }) {
   const sourceChecks = mergeSourceChecks(checks, savedChecks);
@@ -196,7 +200,7 @@ export function SourcesCheckedSection({
     <section className={className}>
       <h2 className="text-lg font-bold text-foreground">Sources checked</h2>
       <SourceCheckingNotice items={checking} />
-      <SourceChecks checks={sourceChecks} submissionId={submissionId} creator />
+      <SourceChecks checks={sourceChecks} submissionId={submissionId} editable={editable} creator />
     </section>
   );
 }
@@ -211,6 +215,7 @@ export default function SourceChecks({
   submissionId,
   className = "",
   onViewChange,
+  editable = false,
   creator = false,
 }: {
   checks?: SourceCheck[] | null;
@@ -221,6 +226,7 @@ export default function SourceChecks({
   className?: string;
   /** Lets a parent show source checks separately from its compliance findings. */
   onViewChange?: (view: "checks" | "review") => void;
+  editable?: boolean;
   creator?: boolean;
 }) {
   const grouped = sourceClaimGroups(mergeSourceChecks(checks, savedChecks));
@@ -261,7 +267,7 @@ export default function SourceChecks({
       {activeTab !== "unmatched" && (!onViewChange || activeTab === "checks") && (visibleChecks.length > 0 ? (
         <ul role="tabpanel" className={creator ? "space-y-3" : "space-y-1.5"}>
           {visibleChecks.map((c, index) => (
-            <Row key={`${c.kind}-${c.reference}-${index}`} source={c} creator={creator} />
+            <Row key={`${c.kind}-${c.reference}-${index}`} source={c} creator={creator} submissionId={submissionId} editable={editable} />
           ))}
         </ul>
       ) : (

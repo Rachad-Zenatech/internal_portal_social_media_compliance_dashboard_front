@@ -7,7 +7,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/script/ApprovedScriptNextStep.tsx (23 lines) - approved script next step (components script)
 - `ApprovedScriptNextStep` (export function) L5
 
-## src/components/script/BatchDetailsForm.tsx (141 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
+## src/components/script/BatchDetailsForm.tsx (143 lines) - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `toLocalInput` (const) L14 - An ISO time as the value of a datetime-local input (the viewer's own time zone), and back.
 - `BatchDetailsForm` (export function) L27 - The details every post made from the batch shares: the same fields as a post's details, and they look and work the  same as on a new subm...
 
@@ -112,7 +112,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Toolbar` (function) L111
 - `ScriptEditor` (export function) L193 - A script as a document, edited like in Word or Google Docs: a toolbar, headings, bold and italic, lists, tables and  page breaks.
 
-## src/components/script/ScriptFindings.tsx (232 lines) - script findings (components script)
+## src/components/script/ScriptFindings.tsx (235 lines) - script findings (components script)
 - `Fix` (type) L15
 - `ScriptFindings` (export function) L22 - A script's compliance findings the way a post shows them: numbered, most serious first, with the points each costs.
 

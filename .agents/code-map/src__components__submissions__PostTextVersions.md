@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostTextVersions.tsx (29 lines) - post text versions (components submissions)
-- `PostTextVersions` (export function) L4
+## src/components/submissions/PostTextVersions.tsx (31 lines) - post text versions (components submissions)
+- `PostTextVersions` (export function) L5

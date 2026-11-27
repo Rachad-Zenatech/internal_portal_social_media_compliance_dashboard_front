@@ -10,35 +10,37 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptBatchPage` (export function) L44 - A batch of scripts.
 - `BatchView` (function) L60
 
-## src/pages/Scripts/ScriptDocPage.tsx (407 lines) - The notes document as a list, kept up to date as anyone changes it.
-- `errText` (const) L21
-- `useNotes` (function) L26 - The notes document as a list, kept up to date as anyone changes it.
-    - `read` (fn) L31
-- `ScriptDocPage` (export function) L43 - A script open for review.
-    - `qc` (fn) L46
-    - `setDoc` (fn) L50
-    - `setOpen` (fn) L72
-    - `level2Dismissed` (fn) L73
-    - `read` (fn) L127
-    - `later` (fn) L137 - deferred rather than made from inside that render.
-    - `notes` (fn) L143
-    - `flagFocus` (fn) L144
-    - `onEdited` (fn) L168
-    - `putNote` (fn) L182
-    - `addNote` (fn) L183
-    - `startNote` (fn) L200
-    - `mutateNote` (fn) L214
-    - `navigate` (fn) L221 - The creator's pages: every script is its own page with its own review.
-    - `toggle` (fn) L227
-    - `flush` (fn) L233 - Keep what is on screen: the page being edited is saved before leaving it or sending.
-    - `addPage` (fn) L237
-    - `deletePage` (fn) L251 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
-    - `rest` (fn) L255
-    - `sendAll` (fn) L259
-    - `run` (fn) L276
-    - `presence` (fn) L282
-    - `onlineIds` (fn) L283
-    - `onOpen` (fn) L300
+## src/pages/Scripts/ScriptDocPage.tsx (413 lines) - script doc page (pages  scripts)
+- `errText` (const) L22
+- `useNotes` (function) L27 - The notes document as a list, kept up to date as anyone changes it.
+    - `read` (fn) L32
+- `ScriptDocPage` (export function) L44 - A script open for review.
+    - `qc` (fn) L47
+    - `setDoc` (fn) L52
+    - `setOpen` (fn) L74
+    - `level2Dismissed` (fn) L75
+    - `read` (fn) L129
+    - `later` (fn) L139 - deferred rather than made from inside that render.
+    - `notes` (fn) L145
+    - `flagFocus` (fn) L146
+    - `registerPostDetails` (fn) L170
+    - `onEdited` (fn) L172
+    - `putNote` (fn) L187
+    - `addNote` (fn) L188
+    - `startNote` (fn) L205
+    - `mutateNote` (fn) L219
+    - `navigate` (fn) L226 - The creator's pages: every script is its own page with its own review.
+    - `toggle` (fn) L232
+    - `flush` (fn) L238 - Keep what is on screen: the page being edited is saved before leaving it or sending.
+    - `beforeBulkCheck` (fn) L242
+    - `addPage` (fn) L243
+    - `deletePage` (fn) L257 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
+    - `rest` (fn) L261
+    - `sendAll` (fn) L265
+    - `run` (fn) L282
+    - `presence` (fn) L288
+    - `onlineIds` (fn) L289
+    - `onOpen` (fn) L306
 
 ## src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - `ScriptReviewPage` (export function) L7 - Script review: start a blank script or attach one from a file, and filter scripts by scope and status.

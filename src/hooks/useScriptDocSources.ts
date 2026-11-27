@@ -17,7 +17,7 @@ export function useScriptDocSources(doc: DocDetail) {
     mutationFn: () => scriptDocService.saveSources(doc.id, current.draft, current.baseline),
     onSuccess: (updated) => {
       queryClient.setQueryData(["script-doc", doc.id], updated);
-      queryClient.setQueryData(["script-doc-check", doc.id], null);
+      queryClient.setQueryData(["script-doc-check", doc.id], updated.latest_check ?? null);
       queryClient.invalidateQueries({ queryKey: ["script-doc-history", doc.id] });
       setLocal({ id: doc.id, baseline: updated.sources_text, draft: updated.sources_text });
       toast.success("Sources saved. Run compliance again to check the updated evidence.");

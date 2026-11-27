@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/PostTextReview.tsx (38 lines) - post text review (components submissions)
-- `PostTextReview` (export function) L6
-- `TextReviewEditor` (function) L27
+## src/components/submissions/PostTextReview.tsx (44 lines) - post text review (components submissions)
+- `PostTextReview` (export function) L10
+- `TextReviewEditor` (function) L34

@@ -95,6 +95,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `OAuthConnectResponse` (export interface) L111
 - `oauthService` (export const) L121
 
+## src/services/pendingCheckPolling.ts (33 lines) - One status request at a time; late responses cannot update a closed or superseded check.
+- `pollPendingCheck` (export function) L2 - One status request at a time; late responses cannot update a closed or superseded check.
+
 ## src/services/performanceService.ts (14 lines) - Left out, the server picks: the team's posts for reviewers and managers, your own for creators.
 - `performanceService` (export const) L4
 

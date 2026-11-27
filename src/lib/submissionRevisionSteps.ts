@@ -19,7 +19,7 @@ export type EditorStep = PostStepKey | "suggestions";
 
 const REVISION_STEPS: { key: EditorStep; label: string; purpose: string }[] = [
   { key: "suggestions", label: "Check the suggestions", purpose: "Read what the reviewers said and see where each comment is on the post. Reply to any of them." },
-  { key: "details", label: "Make the changes", purpose: "Change the post as asked: upload a new image, video or script, and edit the caption or details." },
+  { key: "details", label: "Make the changes", purpose: "Change the post as asked: upload a new image, video or script, and edit the text. The reviewed basics stay locked." },
   { key: "compliance", label: "Compliance", purpose: "Check the changed post against the rulebook again." },
   { key: "sentiment", label: "Sentiment", purpose: "Run the sentiment analysis again on the changed post." },
   { key: "send", label: "Reviewers", purpose: "The reviewers stay on the post. Add more people if you like, then resubmit." },

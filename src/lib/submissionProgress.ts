@@ -16,7 +16,7 @@ export function creatorSubmissionSteps(s: SubmissionSummary): SubmissionSteps | 
     return { ...steps, revision: true, suggestions: "todo", details: "todo", compliance: "todo",
       sentiment: "todo", send: "todo", locked: false, next: "suggestions", ready_to_send: false };
   }
-  if (!scriptOnly) return ranOnce(steps);
+  if (!scriptOnly) return ranOnce(steps, s.content_type === "TEXT_POST");
   if (s.script_status === "IN_REVIEW" || s.script_status === "APPROVED") {
     return { ...steps, details: "done", compliance: "done", send: "done",
       locked: s.script_status === "IN_REVIEW", ready_to_send: false, next: null, missing: [] };
@@ -33,7 +33,7 @@ export function creatorProgressText(s: SubmissionSummary, lockedLabel: string): 
   const steps = s.steps;
   if (!steps) return "";
   if (isScriptPreparation(s) && s.script_status === "APPROVED") return "Script approved \u00b7 Upload video";
-  const preparation = creatorPreparationSteps(isScriptPreparation(s), steps.revision);
+  const preparation = creatorPreparationSteps(isScriptPreparation(s) || s.content_type === "TEXT_POST", steps.revision);
   const done = preparation.filter((step) => RAN_STEP_STATES.has(steps[step.key] ?? "todo")).length;
   if (steps.locked) {
     return s.script_status === "IN_REVIEW"

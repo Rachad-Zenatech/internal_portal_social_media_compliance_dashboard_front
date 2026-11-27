@@ -174,7 +174,7 @@ export function useReviewDecision(submissionId: string, referenceCode: string) {
         toast.success(`${referenceCode}: decision saved. Reviewer suggestions stay open until the approval deadline; the creator receives the outcome afterward.`);
       } else if (data.publish_after_changes && saved.publish_after_changes !== true) {
         toast.error(`${referenceCode}: the backend did not save permission to publish after changes. This decision still requires another review. The backend needs updating before this action can work.`);
-      } else if (data.publish_after_changes) toast.success(`${referenceCode} sent back with your comments. The creator can publish after making the changes.`);
+      } else if (data.publish_after_changes) toast.success(`${referenceCode} approved. The creator can review suggestions, update the post and publish after rerunning checks.`);
       else if (data.decision === "REQUEST_CHANGES") toast.success(`${referenceCode} sent back with your comments. The creator has been notified.`);
       else if (data.publish_now) toast.success(`${referenceCode} approved and ready for the creator to publish.`);
       else toast.success(`${referenceCode} approved and added to the content calendar.`);
