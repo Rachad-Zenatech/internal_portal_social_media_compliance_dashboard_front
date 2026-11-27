@@ -59,7 +59,7 @@ function ReviewDecisionHeader({ mode, reference }: { mode: Mode; reference: stri
     ? `Send ${reference} back for changes` : `Approve ${reference} for creator to publish`;
   const description = mode === "changes"
     ? "Request another review round. The creator receives the feedback after the suggestion deadline."
-    : "Approve the content and send all suggestions to the creator after the suggestion deadline. They can edit text and media, rerun compliance and sentiment, then publish without another review round.";
+    : "Approve the content and send all suggestions to the creator after the suggestion deadline. Posts without outstanding comments stay locked and can be scheduled without rerunning checks. If there are outstanding comments, the creator can make those changes and check the updated content.";
   return (
     <DialogHeader>
       <DialogTitle className="text-base">{title}</DialogTitle>
@@ -124,7 +124,7 @@ export default function ReviewDecisionPanel({
       );
     } else if (mode === "schedule") {
       decide.mutate(
-        { decision: "APPROVE", notes: notes.trim() || undefined, publish_after_changes: true },
+        { decision: "APPROVE", notes: notes.trim() || undefined, publish_after_changes: openComments > 0 },
         { onSuccess: () => setMode(null) }
       );
     }

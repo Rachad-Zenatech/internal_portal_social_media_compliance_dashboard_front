@@ -1,3 +1,5 @@
+import { creatorContentReadOnly } from "@/lib/creatorPostAccess";
+import ApprovedCreatorPost from "@/components/submissions/ApprovedCreatorPost";
 import PendingCheckNotice from "@/components/submissions/PendingCheckNotice";
 import { usePendingComplianceRefresh } from "@/hooks/usePendingComplianceRefresh";
 import { usesSentiment } from "@/lib/sentimentPolicy";
@@ -20,7 +22,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { addBusinessDays, format, isFuture, isSameDay, isValid, zonedDate, withWallTime as withTime } from "@/lib/userDates";
 import { useUserTimezone } from "@/hooks/useUserTimezone";
 import SubmissionSendActions from "@/components/submissions/SubmissionSendActions";
-import SubmissionStartAnotherButton from "@/components/submissions/SubmissionStartAnotherButton";
 import { scheduleCorrectedPost } from "@/lib/submissionSchedule";
 import { toast } from "sonner";
 import {
@@ -54,7 +55,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import SubmissionPageHeader, { LoadingSubmission } from "@/components/submissions/SubmissionPageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -285,7 +286,8 @@ export default function NewSubmissionPage() {
   const reviewState = useSubmissionReviewState(storedSub);
   const publishAfterChanges = reviewState?.status === "CHANGES_REQUESTED" && reviewState.publish_after_changes === true;
   // Sent for review: every step can be looked at, nothing can be changed or run again.
-  const [readOnly, setReadOnly] = useState(false);
+  const [serverReadOnly, setReadOnly] = useState(false);
+  const readOnly = creatorContentReadOnly(status, serverReadOnly);
   useEffect(() => {
     if (!reviewState) return;
     setStatus(reviewState.status);
@@ -1219,21 +1221,13 @@ export default function NewSubmissionPage() {
     else { submit(true); }
   };
 
-  if (loadingExisting) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading draft...
-      </div>
-    );
-  }
+  if (loadingExisting) return <LoadingSubmission />;
+
+  if (reviewState?.status === "APPROVED" && !reviewState.review_decision_pending) return <ApprovedCreatorPost post={reviewState} />;
 
   return (
     <div className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 pb-6 animate-in fade-in duration-300 min-[112.5rem]:max-w-[1800px]">
-      <DashboardHeader
-        title={referenceCode ? "Edit Submission" : "New Submission"}
-        subtitle={referenceCode ? `${referenceCode} · Create a new content submission for compliance review and approval.` : "Create a new content submission for compliance review and approval."}
-        actions={submissionId ? <SubmissionStartAnotherButton /> : undefined}
-      />
+      <SubmissionPageHeader referenceCode={referenceCode} submissionId={submissionId} />
 
       <SubmissionReviewStatus readOnly={readOnly} submissionId={submissionId} status={status} />
 
