@@ -53,10 +53,6 @@
       "max_lines": 691,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
-    "src/pages/ContentCalendar/ContentCalendarPage.tsx": {
-      "max_lines": 627,
-      "reason": "Over the limit when the check was introduced; split it when you next work on it."
-    },
     "src/pages/Logs/SystemLogsPage.tsx": {
       "max_lines": 1064,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
@@ -272,7 +268,7 @@
       "kind": "jsx_return"
     },
     "src/pages/ContentCalendar/ContentCalendarPage.tsx#ContentCalendarPage": {
-      "max_lines": 290,
+      "max_lines": 169,
       "kind": "jsx_return"
     },
     "src/pages/ContentCalendar/PublishDraftPage.tsx#PublishDraftPage": {

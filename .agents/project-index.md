@@ -106,7 +106,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDetailsSection.tsx (32 lines) - Keep a script's own post details immediately above its editor.
 - src/components/scriptdoc/ScriptDocHub.tsx (406 lines) - script doc hub (components scriptdoc)
-- src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
+- src/components/scriptdoc/ScriptDocWorkspace.tsx (418 lines) - script doc workspace (components scriptdoc)
 - src/components/scriptdoc/ScriptImportNotice.tsx (16 lines) - script import notice (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSectionCompliance.tsx (31 lines) - script section compliance (components scriptdoc)
@@ -383,7 +383,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/main.tsx (54 lines) - Create a client
 - src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
-- src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
+- src/pages/Auth/TestLoginAccounts.tsx (32 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - src/pages/Compliance/ContentScreenerPage.tsx (1239 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
@@ -411,8 +411,13 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Configurations/aiStatus/AiPipelineTelemetry.tsx (179 lines) - ai pipeline telemetry (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/AiSummaryCards.tsx (140 lines) - ai summary cards (pages  configurations ai status)
 - src/pages/Configurations/aiStatus/statusStyles.ts (31 lines) - status styles (pages  configurations ai status)
-- src/pages/ContentCalendar/ContentCalendarPage.tsx (628 lines) - content calendar page (pages  content calendar)
+- src/pages/ContentCalendar/CalendarDayPosts.tsx (42 lines) - Collisions stay together while every post keeps its own selectable card.
+- src/pages/ContentCalendar/CalendarPostCard.tsx (86 lines) - calendar post card (pages  content calendar)
+- src/pages/ContentCalendar/CalendarViews.tsx (89 lines) - calendar views (pages  content calendar)
+- src/pages/ContentCalendar/ContentCalendarPage.tsx (408 lines) - content calendar page (pages  content calendar)
 - src/pages/ContentCalendar/PublishDraftPage.tsx (308 lines) - publish draft page (pages  content calendar)
+- src/pages/ContentCalendar/calendarPresentation.ts (52 lines) - calendar presentation (pages  content calendar)
+- src/pages/ContentCalendar/groupPublishTimes.ts (14 lines) - Compare instants so equivalent timestamps with different offsets share a deck.
 - src/pages/Dashboard/Dashboard.tsx (355 lines) - dashboard (pages  dashboard)
 - src/pages/Delegations/DelegationsPage.tsx (141 lines) - What happened to the delegated version: still waiting, or who decided and how.
 - src/pages/Logs/AuditLog.tsx (482 lines) - audit log (pages  logs)
@@ -425,7 +430,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (383 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (17 lines) - script doc page (pages  scripts)
+- src/pages/Scripts/ScriptDocPage.tsx (12 lines) - script doc page (pages  scripts)
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
@@ -476,7 +481,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/reviewScore.ts (6 lines) - Effective score after dismissed flags, and the minimum required for approval.
 - src/types/script.ts (152 lines) - Where a video post's script is: not sent yet, with a reviewer, back with the reviewer's edits, sent back with a
 - src/types/scriptBatch.ts (98 lines) - Several scripts uploaded in one document, reviewed together; each approved one becomes a post (see the backend's script_batch_service).
-- src/types/scriptDoc.ts (215 lines) - script doc (types)
+- src/types/scriptDoc.ts (216 lines) - script doc (types)
 - src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - src/types/scriptQueue.ts (4 lines) - script queue (types)
 - src/types/sentiment.ts (220 lines) - Gemini sentiment analysis of a submission (advisory; mirrors backend models/sentiment_model.py).

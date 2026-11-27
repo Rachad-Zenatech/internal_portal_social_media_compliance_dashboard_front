@@ -1,3 +1,6 @@
+import CalendarViews from "./CalendarViews";
+import { PostCard, Thumb, CalendarSummaryPost } from "./CalendarPostCard";
+import { STATE, LEGEND, stateOf, platformName, type SproutState } from "./calendarPresentation";
 import { useCalendarSend } from "@/hooks/useCalendarSend";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,8 +15,6 @@ import {
   endOfWeek,
   format,
   isSameDay,
-  isSameMonth,
-  isToday,
   startOfMonth,
   startOfWeek,
 } from "@/lib/userDates";
@@ -22,9 +23,7 @@ import { ChevronLeft, ChevronRight, Crown, ExternalLink, FlaskConical, Plus, Rot
 
 import { Button } from "@/components/ui/button";
 import MultiSelectFilter from "@/components/ui/MultiSelectFilter";
-import PlatformIcon, { PLATFORM_LABELS, type SocialPlatform } from "@/components/video/PlatformIcon";
-import DemoPoster from "@/components/video/DemoPoster";
-import { CoverThumb } from "@/components/submissions/PostPreview";
+import PlatformIcon, { type SocialPlatform } from "@/components/video/PlatformIcon";
 import {
   clearPublished,
   clearSproutSends,
@@ -42,111 +41,13 @@ import type { CalendarItem } from "@/types/calendar";
 // Where each approved post stands with Sprout Social
 // ---------------------------------------------------------------------------
 
-type SproutState = "NOT_SENT" | "SCHEDULED" | "PUBLISHED" | "MISSED";
-
-function stateOf(item: CalendarItem, sent: Record<string, SproutRecord>, now: Date): SproutState {
-  const due = new Date(item.scheduled_for) <= now;
-  if (sent[item.id]) return due ? "PUBLISHED" : "SCHEDULED";
-  return due ? "MISSED" : "NOT_SENT";
-}
-
-const STATE: Record<SproutState, { label: string; short: string; dot: string; text: string; box: string }> = {
-  NOT_SENT: {
-    label: "Approved · not sent to Sprout",
-    short: "Not sent",
-    dot: "bg-amber-500",
-    text: "text-amber-700 dark:text-amber-400",
-    box: "bg-amber-50 dark:bg-amber-500/10",
-  },
-  SCHEDULED: {
-    label: "Scheduled in Sprout",
-    short: "Scheduled",
-    dot: "bg-blue-600",
-    text: "text-blue-700 dark:text-blue-300",
-    box: "bg-blue-50 dark:bg-blue-500/10",
-  },
-  PUBLISHED: {
-    label: "Published",
-    short: "Published",
-    dot: "bg-zinc-500",
-    text: "text-muted-foreground",
-    box: "bg-muted",
-  },
-  MISSED: {
-    label: "Past publish time · not sent",
-    short: "Not sent",
-    dot: "bg-red-600",
-    text: "text-red-700 dark:text-red-400",
-    box: "bg-red-50 dark:bg-red-500/10",
-  },
-};
-const LEGEND: SproutState[] = ["NOT_SENT", "SCHEDULED", "PUBLISHED", "MISSED"];
-
 type View = "list" | "week" | "month";
-const platformName = (p: string) => PLATFORM_LABELS[p as SocialPlatform] ?? p;
-const scoreTone = (s: number) =>
-  s >= 90
-    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
-    : s >= 60
-    ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
-    : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
 const profileKey = (i: CalendarItem) => i.account?.id ?? "";
 const profileLabel = (i: CalendarItem) => (i.account ? `${i.account.account_name} · ${platformName(i.account.platform)}` : "");
 
 // ---------------------------------------------------------------------------
 // Pieces
 // ---------------------------------------------------------------------------
-
-function Thumb({ item, className = "" }: { item: CalendarItem; className?: string }) {
-  return (
-    <div className={`relative overflow-hidden rounded-md bg-muted ${className}`}>
-      {item.primary_file ? (
-        <CoverThumb cover={item.primary_file} contentType={item.content_type} caption={item.caption} showPlay={false} />
-      ) : (
-        <DemoPoster variant={item.poster_variant ?? "dusk"} className="h-full w-full" />
-      )}
-    </div>
-  );
-}
-
-function Networks({ platforms, size = "w-3.5 h-3.5" }: { platforms: string[]; size?: string }) {
-  return (
-    <span className="flex flex-wrap items-center gap-1">
-      {platforms.map((p) => (
-        <span key={p} className="grid h-5 w-5 place-items-center rounded border border-border/70 bg-background" title={platformName(p)}>
-          <PlatformIcon platform={p as SocialPlatform} className={size} />
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** One post in a day column, Sprout-calendar style: time and status, networks, caption, picture. */
-function PostCard({ item, state, selected, onSelect }: { item: CalendarItem; state: SproutState; selected: boolean; onSelect: () => void }) {
-  const st = STATE[state];
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={`flex w-full flex-col gap-1.5 rounded-lg border bg-card p-2 text-left transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-        selected ? "border-blue-600 ring-2 ring-blue-600/20" : "border-border/70"
-      }`}
-    >
-      <span className="flex items-center justify-between gap-1.5">
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-          <span className={`h-2 w-2 rounded-full ${st.dot}`} aria-hidden />
-          {format(new Date(item.scheduled_for), "h:mm a")}
-        </span>
-        {item.score != null && <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${scoreTone(item.score)}`}>{item.score}</span>}
-      </span>
-      <Networks platforms={item.platforms} size="w-3 h-3" />
-      <span className="line-clamp-2 text-xs leading-snug text-foreground/90">{item.caption || item.title}</span>
-      <Thumb item={item} className="aspect-video w-full" />
-      <span className={`text-[11px] font-medium ${st.text}`}>{st.label}</span>
-    </button>
-  );
-}
 
 /** The look of a filter in the bar above the calendar: flush cells separated by a rule, title over the choice. */
 const BAR_FILTER =
@@ -370,133 +271,12 @@ export default function ContentCalendarPage() {
             </div>
           </div>
 
-          {/* Views */}
-          {view === "week" && (
-            <div className="overflow-x-auto">
-              <div className="grid min-w-[960px] grid-cols-[repeat(7,minmax(0,1fr))]">
-                {days.map((day) => {
-                  const today = isToday(day);
-                  const dayItems = onDay(day);
-                  return (
-                    <div key={day.toISOString()} className={`flex min-h-[560px] flex-col border-r border-border/50 last:border-r-0 ${today ? "bg-blue-50/40 dark:bg-blue-500/5" : ""}`}>
-                      <div className={`flex items-center justify-between border-b border-border/70 px-2.5 py-2 ${today ? "bg-blue-50 dark:bg-blue-500/10" : ""}`}>
-                        <span className="flex items-baseline gap-1.5">
-                          <span className={`text-[13px] font-semibold ${today ? "text-blue-700 dark:text-blue-300" : "text-foreground"}`}>{format(day, "EEE")}</span>
-                          <span className={`text-[13px] ${today ? "font-bold text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}>{format(day, "d")}</span>
-                        </span>
-                        {!isReviewer && (
-                          <Link to="/submissions/new" className="grid h-6 w-6 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`New post for ${format(day, "EEEE, MMM d")}`}>
-                            <Plus className="w-3.5 h-3.5" />
-                          </Link>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 p-1.5">
-                        {dayItems.map((i) => (
-                          <PostCard key={i.id} item={i} state={stateOf(i, sent, now)} selected={selected?.id === i.id} onSelect={() => setSelectedId(i.id)} />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {view === "month" && (
-            <div className="overflow-x-auto">
-              <div className="min-w-[760px]">
-                <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] border-b border-border/70 bg-muted/30 text-center text-xs font-medium text-muted-foreground">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                    <div key={d} className="py-1.5">
-                      {d}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-[repeat(7,minmax(0,1fr))]">
-                  {days.map((day) => {
-                    const dayItems = onDay(day);
-                    return (
-                      <div key={day.toISOString()} className={`min-h-[118px] min-w-0 border-b border-r border-border/50 p-1.5 ${isSameMonth(day, month) ? "" : "bg-muted/20"}`}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setWeekStart(startOfWeek(day, { weekStartsOn: 1 }));
-                            setView("week");
-                          }}
-                          title="Open this week"
-                          className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${
-                            isToday(day) ? "bg-blue-700 text-white" : isSameMonth(day, month) ? "text-foreground hover:bg-muted" : "text-muted-foreground/60 hover:bg-muted"
-                          }`}
-                        >
-                          {format(day, "d")}
-                        </button>
-                        <div className="mt-1 flex flex-col gap-1">
-                          {dayItems.slice(0, 3).map((i) => {
-                            const st = stateOf(i, sent, now);
-                            return (
-                              <button
-                                key={i.id}
-                                type="button"
-                                onClick={() => setSelectedId(i.id)}
-                                className={`flex min-w-0 items-center gap-1.5 rounded-md border px-1.5 py-1 text-left text-[11px] ${
-                                  selected?.id === i.id ? "border-blue-600 bg-blue-50/60 dark:bg-blue-500/10" : "border-border/70 bg-card hover:bg-muted/40"
-                                }`}
-                                title={`${i.title} · ${STATE[st].label}`}
-                              >
-                                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATE[st].dot}`} aria-hidden />
-                                <span className="shrink-0 tabular-nums text-muted-foreground">{format(new Date(i.scheduled_for), "h:mma").toLowerCase()}</span>
-                                <span className="truncate font-medium text-foreground">{i.title}</span>
-                              </button>
-                            );
-                          })}
-                          {dayItems.length > 3 && <span className="px-1 text-[11px] text-muted-foreground">+{dayItems.length - 3} more</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {view === "list" && (
-            <div className="divide-y divide-border/60">
-              {days.map((day) => {
-                const dayItems = onDay(day);
-                if (!dayItems.length) return null;
-                return (
-                  <div key={day.toISOString()}>
-                    <p className={`bg-muted/30 px-4 py-1.5 text-xs font-semibold ${isToday(day) ? "text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}>
-                      {format(day, "EEEE, MMM d")}
-                      {isToday(day) && " · Today"}
-                    </p>
-                    {dayItems.map((i) => {
-                      const st = stateOf(i, sent, now);
-                      return (
-                        <button
-                          key={i.id}
-                          type="button"
-                          onClick={() => setSelectedId(i.id)}
-                          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/40 ${selected?.id === i.id ? "bg-blue-50/60 dark:bg-blue-500/10" : ""}`}
-                        >
-                          <span className="w-16 shrink-0 text-xs font-semibold tabular-nums">{format(new Date(i.scheduled_for), "h:mm a")}</span>
-                          <Thumb item={i} className="aspect-video w-16 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium text-foreground">{i.title}</span>
-                            <span className="block truncate text-xs text-muted-foreground">{i.caption}</span>
-                          </span>
-                          <Networks platforms={i.platforms} />
-                          {i.score != null && <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${scoreTone(i.score)}`}>{i.score}</span>}
-                          <span className={`hidden w-44 shrink-0 text-xs font-medium sm:block ${STATE[st].text}`}>{STATE[st].label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-              {inRange.length === 0 && <p className="px-4 py-12 text-center text-sm text-muted-foreground">Nothing approved for this week.</p>}
-            </div>
-          )}
+          <CalendarViews
+            view={view} days={days} month={month} isReviewer={isReviewer} onDay={onDay}
+            openWeek={(day) => { setWeekStart(startOfWeek(day, { weekStartsOn: 1 })); setView("week"); }}
+            renderPost={(item) => <PostCard item={item} state={stateOf(item, sent, now)} selected={selected?.id === item.id} onSelect={() => setSelectedId(item.id)} />}
+            renderSummary={(item, compact) => <CalendarSummaryPost item={item} state={stateOf(item, sent, now)} selected={selected?.id === item.id} compact={compact} onSelect={() => setSelectedId(item.id)} />}
+          />
         </div>
 
         {/* ===== Selected post ===== */}

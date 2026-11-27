@@ -4,32 +4,56 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/ContentCalendar/ContentCalendarPage.tsx (628 lines) - content calendar page (pages  content calendar)
-- `SproutState` (type) L45
-- `stateOf` (function) L47
-- `View` (type) L85
-- `platformName` (const) L86
-- `scoreTone` (const) L87
-- `profileKey` (const) L93
-- `profileLabel` (const) L94
-- `Thumb` (function) L100
-- `Networks` (function) L112
-- `PostCard` (function) L125 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
-- `ContentCalendarPage` (export function) L159
-    - `navigate` (fn) L161
-    - `sent` (fn) L174
-    - `published` (fn) L175
-    - `brandName` (fn) L184
-    - `items` (fn) L186
-    - `profiles` (fn) L191
-    - `platforms` (fn) L196
-    - `onDay` (fn) L212
-    - `step` (fn) L222
-    - `goToday` (fn) L224
-    - `send` (fn) L229
-- `SelectedPost` (function) L523
+## src/pages/ContentCalendar/CalendarDayPosts.tsx (42 lines) - Collisions stay together while every post keeps its own selectable card.
+- `Props` (interface) L7
+- `CalendarDayPosts` (export function) L13 - Collisions stay together while every post keeps its own selectable card.
+- `CollisionDeck` (function) L24
+
+## src/pages/ContentCalendar/CalendarPostCard.tsx (86 lines) - calendar post card (pages  content calendar)
+- `Thumb` (export function) L8
+- `Networks` (export function) L20
+- `PostCard` (export function) L33 - One post in a day column, Sprout-calendar style: time and status, networks, caption, picture.
+- `CalendarSummaryPost` (export function) L59
+
+## src/pages/ContentCalendar/CalendarViews.tsx (89 lines) - calendar views (pages  content calendar)
+- `Props` (interface) L8
+- `CalendarViews` (export function) L19
+- `WeekView` (function) L25
+- `WeekHeader` (function) L40
+- `MonthView` (function) L50
+- `MonthDay` (function) L65
+- `ListView` (function) L75
+
+## src/pages/ContentCalendar/ContentCalendarPage.tsx (408 lines) - content calendar page (pages  content calendar)
+- `View` (type) L44
+- `profileKey` (const) L45
+- `profileLabel` (const) L46
+- `ContentCalendarPage` (export function) L60
+    - `navigate` (fn) L62
+    - `sent` (fn) L75
+    - `published` (fn) L76
+    - `brandName` (fn) L85
+    - `items` (fn) L87
+    - `profiles` (fn) L92
+    - `platforms` (fn) L97
+    - `onDay` (fn) L113
+    - `step` (fn) L123
+    - `goToday` (fn) L125
+    - `send` (fn) L130
+- `SelectedPost` (function) L303
 
 ## src/pages/ContentCalendar/PublishDraftPage.tsx (308 lines) - publish draft page (pages  content calendar)
 - `platformName` (const) L34
 - `stepsFor` (function) L37 - Mock steps; each becomes a real API call once the platform is connected.
 - `PublishDraftPage` (export function) L48
+
+## src/pages/ContentCalendar/calendarPresentation.ts (52 lines) - calendar presentation (pages  content calendar)
+- `SproutState` (export type) L5
+- `stateOf` (export function) L7
+- `STATE` (export const) L13
+- `LEGEND` (export const) L43
+- `platformName` (export const) L45
+- `scoreTone` (export const) L46
+
+## src/pages/ContentCalendar/groupPublishTimes.ts (14 lines) - Compare instants so equivalent timestamps with different offsets share a deck.
+- `groupPublishTimes` (export function) L4 - Compare instants so equivalent timestamps with different offsets share a deck.

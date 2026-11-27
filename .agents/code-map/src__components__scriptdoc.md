@@ -106,38 +106,38 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `sets` (fn) L320
     - `removeSet` (fn) L329
 
-## src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
-- `errText` (const) L22
-- `useNotes` (function) L27 - The notes document as a list, kept up to date as anyone changes it.
-    - `read` (fn) L32
-- `ScriptDocWorkspace` (export function) L44 - A script open for review.
-    - `qc` (fn) L46
-    - `setDoc` (fn) L51
-    - `setOpen` (fn) L73
-    - `level2Dismissed` (fn) L74
-    - `read` (fn) L128
-    - `later` (fn) L138 - deferred rather than made from inside that render.
-    - `notes` (fn) L144
-    - `flagFocus` (fn) L145
-    - `registerPostDetails` (fn) L169
-    - `onEdited` (fn) L171
-    - `putNote` (fn) L186
-    - `addNote` (fn) L187
-    - `startNote` (fn) L204
-    - `mutateNote` (fn) L218
-    - `navigate` (fn) L225 - The creator's pages: every script is its own page with its own review.
-    - `toggle` (fn) L231
-    - `flush` (fn) L237 - Keep what is on screen: the page being edited is saved before leaving it or sending.
-    - `beforeBulkCheck` (fn) L241
-    - `addPage` (fn) L242
-    - `deletePage` (fn) L256 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
-    - `rest` (fn) L260
-    - `sendAll` (fn) L264
-    - `run` (fn) L281
-    - `presence` (fn) L287
-    - `onlineIds` (fn) L288
-    - `onOpen` (fn) L305
-    - `workspace` (fn) L333
+## src/components/scriptdoc/ScriptDocWorkspace.tsx (418 lines) - script doc workspace (components scriptdoc)
+- `errText` (const) L23
+- `useNotes` (function) L28 - The notes document as a list, kept up to date as anyone changes it.
+    - `read` (fn) L33
+- `ScriptDocWorkspace` (export function) L45 - A script open for review.
+    - `qc` (fn) L47
+    - `setDoc` (fn) L52
+    - `setOpen` (fn) L74
+    - `level2Dismissed` (fn) L75
+    - `read` (fn) L129
+    - `later` (fn) L139 - deferred rather than made from inside that render.
+    - `notes` (fn) L145
+    - `flagFocus` (fn) L146
+    - `registerPostDetails` (fn) L170
+    - `onEdited` (fn) L172
+    - `putNote` (fn) L187
+    - `addNote` (fn) L188
+    - `startNote` (fn) L205
+    - `mutateNote` (fn) L219
+    - `navigate` (fn) L226 - The creator's pages: every script is its own page with its own review.
+    - `toggle` (fn) L232
+    - `flush` (fn) L238 - Keep what is on screen: the page being edited is saved before leaving it or sending.
+    - `beforeBulkCheck` (fn) L242
+    - `addPage` (fn) L243
+    - `deletePage` (fn) L257 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
+    - `rest` (fn) L261
+    - `sendAll` (fn) L265
+    - `run` (fn) L282
+    - `presence` (fn) L288
+    - `onlineIds` (fn) L289
+    - `onOpen` (fn) L306
+    - `workspace` (fn) L334
 
 ## src/components/scriptdoc/ScriptImportNotice.tsx (16 lines) - script import notice (components scriptdoc)
 - `ScriptImportNotice` (export function) L3

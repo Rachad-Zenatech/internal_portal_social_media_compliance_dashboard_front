@@ -144,7 +144,7 @@ to find the right file.
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |
 | .agents/code-map/src__pages__Configurations__aiStatus.md | 6 | 2 KB |
-| .agents/code-map/src__pages__ContentCalendar.md | 2 | 1 KB |
+| .agents/code-map/src__pages__ContentCalendar.md | 7 | 3 KB |
 | .agents/code-map/src__pages__Dashboard.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Delegations.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Logs.md | 2 | 1 KB |
