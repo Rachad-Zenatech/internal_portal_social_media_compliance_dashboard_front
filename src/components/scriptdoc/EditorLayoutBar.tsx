@@ -21,7 +21,7 @@ export default function EditorLayoutBar({
   total: number;
   showPages: boolean;
   showPanel: boolean;
-  onTogglePages: () => void;
+  onTogglePages?: () => void;
   onTogglePanel: () => void;
   /** For the writer of a script edited in the Share Document portal: the editor, or the reviewers' highlights on the text. */
   view?: "edit" | "marks";
@@ -30,10 +30,10 @@ export default function EditorLayoutBar({
 }) {
   return (
     <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-2 py-1">
-      <Button size="sm" variant={showPages ? "secondary" : "ghost"} className="h-7 gap-1.5 text-xs" onClick={onTogglePages} aria-pressed={showPages}>
+      {onTogglePages && <Button size="sm" variant={showPages ? "secondary" : "ghost"} className="h-7 gap-1.5 text-xs" onClick={onTogglePages} aria-pressed={showPages}>
         <PanelLeft className="h-3.5 w-3.5" />
         Pages
-      </Button>
+      </Button>}
       {onView ? (
         <span className="flex items-center gap-1" role="group" aria-label="What to show">
           <Button size="sm" variant={view === "edit" ? "secondary" : "ghost"} className="h-7 gap-1.5 text-xs" onClick={() => onView("edit")} aria-pressed={view === "edit"}>

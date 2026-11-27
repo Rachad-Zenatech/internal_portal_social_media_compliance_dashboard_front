@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import BatchDetailsForm from "@/components/script/BatchDetailsForm";
-import ScriptDocumentPreview from "@/components/script/ScriptDocumentPreview";
-import SharedEditorFrame from "@/components/scriptdoc/SharedEditorFrame";
+import ScriptDocWorkspace from "@/components/scriptdoc/ScriptDocWorkspace";
 import type { BatchDetails } from "@/types/scriptBatch";
 import type { DocDetail } from "@/types/scriptDoc";
 import ScriptSectionCompliance from "@/components/scriptdoc/ScriptSectionCompliance";
@@ -25,9 +24,7 @@ export default function ScriptDetailsSection({ script, active, details, missing,
         <h3 className="text-base font-semibold">{script.title}</h3>
         {!active && <Link to={`/script-docs/${script.id}`} className="text-sm text-primary underline">Open review</Link>}
       </div>
-      {active ? <div ref={onWorkspaceHost} className="min-w-0" data-active-script-workspace /> : script.share_document_id ? (
-        <div className="flex min-h-[30rem] min-w-0 flex-col"><SharedEditorFrame docId={script.id} readOnly={!script.access.can_edit} lazy /></div>
-      ) : <ScriptDocumentPreview text={script.body_text} terms={[]} />}
+      {active ? <div ref={onWorkspaceHost} className="min-w-0" data-active-script-workspace /> : <ScriptDocWorkspace scriptId={script.id} embedded />}
       <ScriptSectionCompliance doc={singleScript} dirty={dirty} disabled={busy} beforeCheck={beforeCheck} />
     </section>
   );

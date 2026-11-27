@@ -35,7 +35,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Reviewers` (type) L6
 - `DocDialogs` (export function) L9 - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 
-## src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
+## src/components/scriptdoc/DocEditorColumn.tsx (217 lines) - Highlight color palette (preset swatches + custom color picker).
 - `HIGHLIGHT_COLORS` (export const) L12
 - `HighlightColorMenu` (function) L24 - Highlight color palette (preset swatches + custom color picker).
 - `NoteButtons` (function) L94 - Combined Highlight & Comment control in the editor's toolbar.
@@ -78,8 +78,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDetailsSection.tsx (35 lines) - Keep a script's own post details immediately above its editor.
-- `ScriptDetailsSection` (export function) L10 - Keep a script's own post details immediately above its editor.
+## src/components/scriptdoc/ScriptDetailsSection.tsx (32 lines) - Keep a script's own post details immediately above its editor.
+- `ScriptDetailsSection` (export function) L9 - Keep a script's own post details immediately above its editor.
 
 ## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L27
@@ -105,6 +105,39 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `docs` (fn) L329
     - `sets` (fn) L336
     - `removeSet` (fn) L345
+
+## src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
+- `errText` (const) L22
+- `useNotes` (function) L27 - The notes document as a list, kept up to date as anyone changes it.
+    - `read` (fn) L32
+- `ScriptDocWorkspace` (export function) L44 - A script open for review.
+    - `qc` (fn) L46
+    - `setDoc` (fn) L51
+    - `setOpen` (fn) L73
+    - `level2Dismissed` (fn) L74
+    - `read` (fn) L128
+    - `later` (fn) L138 - deferred rather than made from inside that render.
+    - `notes` (fn) L144
+    - `flagFocus` (fn) L145
+    - `registerPostDetails` (fn) L169
+    - `onEdited` (fn) L171
+    - `putNote` (fn) L186
+    - `addNote` (fn) L187
+    - `startNote` (fn) L204
+    - `mutateNote` (fn) L218
+    - `navigate` (fn) L225 - The creator's pages: every script is its own page with its own review.
+    - `toggle` (fn) L231
+    - `flush` (fn) L237 - Keep what is on screen: the page being edited is saved before leaving it or sending.
+    - `beforeBulkCheck` (fn) L241
+    - `addPage` (fn) L242
+    - `deletePage` (fn) L256 - Delete a draft page, then go to the page beside it (or back to the hub when it was the last).
+    - `rest` (fn) L260
+    - `sendAll` (fn) L264
+    - `run` (fn) L281
+    - `presence` (fn) L287
+    - `onlineIds` (fn) L288
+    - `onOpen` (fn) L305
+    - `workspace` (fn) L333
 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16

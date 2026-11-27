@@ -95,14 +95,15 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - src/components/scriptdoc/DocDetailsPanel.tsx (220 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
-- src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
+- src/components/scriptdoc/DocEditorColumn.tsx (217 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
 - src/components/scriptdoc/DocSidePanel.tsx (440 lines) - doc side panel (components scriptdoc)
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
-- src/components/scriptdoc/ScriptDetailsSection.tsx (35 lines) - Keep a script's own post details immediately above its editor.
+- src/components/scriptdoc/ScriptDetailsSection.tsx (32 lines) - Keep a script's own post details immediately above its editor.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
+- src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSectionCompliance.tsx (31 lines) - script section compliance (components scriptdoc)
 - src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
@@ -411,7 +412,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/PublicMood/TrendItem.tsx (353 lines) - trend item (pages  public mood)
 - src/pages/PublicMood/postMoodGroups.ts (114 lines) - post mood groups (pages  public mood)
 - src/pages/Scripts/ScriptBatchPage.tsx (381 lines) - What a reviewer can approve straight away: a score that reaches the minimum, no critical flag, and the AI read it.
-- src/pages/Scripts/ScriptDocPage.tsx (413 lines) - script doc page (pages  scripts)
+- src/pages/Scripts/ScriptDocPage.tsx (8 lines) - script doc page (pages  scripts)
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)

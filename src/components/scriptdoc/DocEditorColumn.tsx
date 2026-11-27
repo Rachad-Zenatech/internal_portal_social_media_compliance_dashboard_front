@@ -190,6 +190,7 @@ export default function DocEditorColumn({
   }
   return (
     <div className="flex min-h-[24rem] min-w-0 flex-1 flex-col">
+      {bar}
       {provider && ready ? (
         <CollabEditor
           ref={editorRef}
