@@ -108,6 +108,8 @@ export interface ImageFindingRegion {
 }
 
 export interface ComplianceViolation {
+  script_review_only?: boolean;
+  script_sections?: string[];
   rule_id: string;
   rule_number: string;
   title: string;

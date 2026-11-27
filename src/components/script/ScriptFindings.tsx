@@ -46,7 +46,7 @@ export default function ScriptFindings({
     .filter((v) => isVisibleFinding(v) && statusOf(v) !== "CLEARED")
     .sort((a, b) => Number(b.traffic_light === "RED") - Number(a.traffic_light === "RED") || (b.penalty ?? 0) - (a.penalty ?? 0));
   const cleared = all.filter((v) => statusOf(v) === "CLEARED");
-  const keyOf = (v: ComplianceViolation) => `${v.rule_id}-${v.kind ?? ""}`;
+  const keyOf = (v: ComplianceViolation) => JSON.stringify([v.rule_id, v.kind, v.script_review_only ?? false, v.script_sections ?? [], v.passage ?? v.flagged_terms]);
   const quoteOf = (v: ComplianceViolation) => (v.passage || v.flagged_terms[0] || "").trim();
   const pickFinding = (v: ComplianceViolation) => {
     const key = keyOf(v);

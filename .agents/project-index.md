@@ -444,7 +444,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/backgroundScriptChecks.ts (61 lines) - Own the promise outside React: unmounting a page only unsubscribes its display.
 - src/services/canvaService.ts (29 lines) - The mock connects straight away; the live Canva will start its sign-in flow here instead.
 - src/services/captionReviewService.ts (10 lines) - caption review service (services)
-- src/services/complianceService.ts (396 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
+- src/services/complianceService.ts (398 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/documentScriptChecks.ts (31 lines) - Share in-flight work and re-read saved inputs before spending credits.
 - src/services/emailTimezoneService.ts (28 lines) - Browser detection seeds a new account; the API preserves a manual preference.
