@@ -22,6 +22,7 @@ to find the right file.
 | .agents/code-map/src__components__scriptdoc.md | 24 | 11 KB |
 | .agents/code-map/src__components__submissions__AnalysisRunControls.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovalActions.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__ApprovedCreatorPost.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovedPostChecks.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovedPostPublishing.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovedPublishActions.md | 1 | 1 KB |
@@ -60,6 +61,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ImageAnnotator.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImagePersonField.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ImageProvenanceField.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__IncomingTextComparison.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__LegacyApprovedSuggestions.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ManuallyCheckedClaims.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__MarkedUpImageSlideshow.md | 1 | 1 KB |
@@ -117,6 +119,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__SourceTrustBar.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StageTabs.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__StaleComplianceNotice.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__SubmissionPageHeader.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionReviewStatus.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionReviewUpdates.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__SubmissionSection.md | 1 | 1 KB |
@@ -140,7 +143,7 @@ to find the right file.
 | .agents/code-map/src__components__video.md | 4 | 2 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
 | .agents/code-map/src__hooks.md | 55 | 16 KB |
-| .agents/code-map/src__lib.md | 67 | 29 KB |
+| .agents/code-map/src__lib.md | 68 | 29 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
 | .agents/code-map/src__pages__Configurations.md | 17 | 7 KB |

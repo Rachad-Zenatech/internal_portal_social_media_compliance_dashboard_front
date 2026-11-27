@@ -108,10 +108,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `sourceFeedback` (function) L11
 - `contextSourceFacts` (export function) L25 - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
 
-## src/lib/creatorReviewUpdates.ts (22 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
+## src/lib/creatorPostAccess.ts (5 lines) - A creator's saved edit permission never overrides a locked workflow status.
+- `creatorContentReadOnly` (export function) L2 - A creator's saved edit permission never overrides a locked workflow status.
+
+## src/lib/creatorReviewUpdates.ts (26 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
 - `IncomingTextChange` (export interface) L4
 - `incomingCaptionChanges` (export function) L7 - Compare each platform's submitted text with the final incoming revision, retaining attribution.
-- `incomingPostTextChanges` (export function) L17
+- `incomingPostTextChanges` (export function) L19
 
 ## src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - `sendWindowsNotification` (export function) L2 - A desktop (Windows) notification, when the user allowed them.

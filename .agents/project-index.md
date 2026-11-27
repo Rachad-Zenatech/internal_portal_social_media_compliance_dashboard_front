@@ -117,7 +117,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/scriptNoteMarks.ts (163 lines) - What an editor's plugins read when they draw: always the latest notes, without rebuilding the editor.
 - src/components/submissions/AnalysisRunControls.tsx (29 lines) - Consistent run and stop actions for the post's analysis panels.
 - src/components/submissions/ApprovalActions.tsx (146 lines) - The submission fields these actions need (a full Submission or a Content Portal summary).
-- src/components/submissions/ApprovedPostChecks.tsx (16 lines) - approved post checks (components submissions)
+- src/components/submissions/ApprovedCreatorPost.tsx (38 lines) - A clean approval permits scheduling, not changes to the approved content.
+- src/components/submissions/ApprovedPostChecks.tsx (11 lines) - approved post checks (components submissions)
 - src/components/submissions/ApprovedPostPublishing.tsx (21 lines) - approved post publishing (components submissions)
 - src/components/submissions/ApprovedPublishActions.tsx (58 lines) - Confirm the creator's final timing before leaving an approved post to publish.
 - src/components/submissions/CanvaImportDialog.tsx (246 lines) - Which content types a design can be the main file of (mirrors the server's allowed file types).
@@ -155,6 +156,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/ImagePersonField.tsx (216 lines) - image person field (components submissions)
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
+- src/components/submissions/IncomingTextComparison.tsx (25 lines) - incoming text comparison (components submissions)
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
 - src/components/submissions/MarkedUpImageSlideshow.tsx (89 lines) - marked up image slideshow (components submissions)
@@ -212,8 +214,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/SourceTrustBar.tsx (50 lines) - source trust bar (components submissions)
 - src/components/submissions/StageTabs.tsx (48 lines) - The row of status pills above a list, each with its count; click the chosen one again to clear it.
 - src/components/submissions/StaleComplianceNotice.tsx (8 lines) - stale compliance notice (components submissions)
+- src/components/submissions/SubmissionPageHeader.tsx (15 lines) - submission page header (components submissions)
 - src/components/submissions/SubmissionReviewStatus.tsx (24 lines) - Keep the suggestion countdown on the creator's current post page.
-- src/components/submissions/SubmissionReviewUpdates.tsx (30 lines) - submission review updates (components submissions)
+- src/components/submissions/SubmissionReviewUpdates.tsx (41 lines) - submission review updates (components submissions)
 - src/components/submissions/SubmissionSection.tsx (17 lines) - submission section (components submissions)
 - src/components/submissions/SubmissionSendActions.tsx (62 lines) - submission send actions (components submissions)
 - src/components/submissions/SubmissionStartAnotherButton.tsx (12 lines) - submission start another button (components submissions)
@@ -327,7 +330,8 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/contentCalendar.ts (436 lines) - Content Calendar mock layer: sample approved posts, what each platform's API can create, and a browser-only record of simulated publishes.
 - src/lib/contextFeedback.ts (49 lines) - context feedback (lib)
 - src/lib/contextSourceFacts.ts (37 lines) - Read the actual compliance source comparisons, including the newsroom, without inventing new checks.
-- src/lib/creatorReviewUpdates.ts (22 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
+- src/lib/creatorPostAccess.ts (5 lines) - A creator's saved edit permission never overrides a locked workflow status.
+- src/lib/creatorReviewUpdates.ts (26 lines) - Compare each platform's submitted text with the final incoming revision, retaining attribution.
 - src/lib/desktopNotification.ts (39 lines) - A desktop (Windows) notification, when the user allowed them.
 - src/lib/findingCopy.ts (41 lines) - Simplify saved boilerplate without changing the evidence, decision or confidence.
 - src/lib/findingEvidence.ts (17 lines) - Locate the judged passage; a repeated trigger elsewhere is not evidence of this finding.
@@ -436,7 +440,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - src/pages/Scripts/ScriptReviewScriptPage.tsx (55 lines) - script review script page (pages  scripts)
 - src/pages/SocialMedia/SocialMediaPage.tsx (832 lines) - social media page (pages  social media)
-- src/pages/Submissions/NewSubmissionPage.tsx (2314 lines) - new submission page (pages  submissions)
+- src/pages/Submissions/NewSubmissionPage.tsx (2308 lines) - new submission page (pages  submissions)
 - src/pages/Submissions/PostRedirect.tsx (16 lines) - post redirect (pages  submissions)
 - src/pages/Submissions/ScriptChangesPage.tsx (557 lines) - script changes page (pages  submissions)
 - src/pages/Submissions/SubmissionsLayout.tsx (11 lines) - One content area: the portal and the new-submission form.

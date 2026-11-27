@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/ApprovedPostChecks.tsx (16 lines) - approved post checks (components submissions)
-- `ApprovedPostChecks` (export function) L5
+## src/components/submissions/ApprovedPostChecks.tsx (11 lines) - approved post checks (components submissions)
+- `ApprovedPostChecks` (export function) L3
