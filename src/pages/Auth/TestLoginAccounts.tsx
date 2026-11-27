@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 const ACCOUNTS = [
+  { id: "creator", label: "Standard user", email: "test.creator@example.com" },
   { id: "manager", label: "Content manager", email: "test.manager@example.com" },
   { id: "reviewer", label: "Test reviewer", email: "test.reviewer@example.com" },
   { id: "reviewer2", label: "Test reviewer 2", email: "test.reviewer2@example.com" },
