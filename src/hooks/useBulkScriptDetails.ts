@@ -22,15 +22,18 @@ export function useBulkScriptDetails(doc: DocDetail) {
     setDrafts((previous) => ({ ...previous, [id]: details }));
     setMissing((previous) => ({ ...previous, [id]: [] }));
   };
-  const save = async () => {
+  const save = async (onlyId?: string) => {
     if (loading || failed || scripts.length !== doc.pages.length) throw new Error("Couldn't load every script. Close this dialog and try again.");
-    const anchor = editable.find((script) => script.id === doc.id) ?? editable[0];
+    const targets = onlyId ? editable.filter((script) => script.id === onlyId) : editable;
+    const anchor = targets.find((script) => script.id === doc.id) ?? targets[0];
     if (anchor) {
       if (sameForAll) {
-        await scriptDocService.update(anchor.id, { shared_details: true, details: shared });
+        if (anchor.shared_details !== true || JSON.stringify(shared) !== JSON.stringify(anchor.details)) {
+          await scriptDocService.update(anchor.id, { shared_details: true, details: shared });
+        }
       } else {
-        await scriptDocService.update(anchor.id, { shared_details: false });
-        await Promise.all(editable.map((script) => scriptDocService.update(script.id, {
+        if (anchor.shared_details !== false) await scriptDocService.update(anchor.id, { shared_details: false });
+        await Promise.all(targets.filter((script) => JSON.stringify(drafts[script.id] ?? script.details) !== JSON.stringify(script.details)).map((script) => scriptDocService.update(script.id, {
           shared_details: false, details: drafts[script.id] ?? script.details,
         })));
       }
@@ -40,7 +43,7 @@ export function useBulkScriptDetails(doc: DocDetail) {
       client.setQueryData(["script-doc", script.id], script);
       void client.invalidateQueries({ queryKey: ["script-doc-check", script.id] });
     }
-    const incomplete = saved.filter((script) => script.access.can_submit && script.missing_details.length);
+    const incomplete = saved.filter((script) => (!onlyId || script.id === onlyId) && script.access.can_submit && script.missing_details.length);
     setMissing(Object.fromEntries(incomplete.map((script) => [script.id, script.missing_details])));
     if (incomplete.length) throw new Error(`Complete post details for: ${incomplete.map((script) => script.title).join(", ")}.`);
   };

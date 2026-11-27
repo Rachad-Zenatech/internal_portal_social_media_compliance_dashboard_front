@@ -46,7 +46,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - `useDashboardSummary` (export function) L5 - Returning from a workflow action must show its activity; polling catches other sessions too.
 
-## src/hooks/useDocumentScriptChecks.ts (48 lines) - use document script checks (hooks)
+## src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
 - `useDocumentScriptChecks` (export function) L12
 
 ## src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.

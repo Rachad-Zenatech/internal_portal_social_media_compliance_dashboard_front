@@ -7,7 +7,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
 - `BulkScriptCompliance` (export function) L7
 
-## src/components/scriptdoc/BulkScriptDetailsPanel.tsx (45 lines) - bulk script details panel (components scriptdoc)
+## src/components/scriptdoc/BulkScriptDetailsPanel.tsx (53 lines) - bulk script details panel (components scriptdoc)
 - `BulkScriptDetailsPanel` (export function) L9
 
 ## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
@@ -78,7 +78,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDetailsSection.tsx (33 lines) - Keep a script's own post details immediately above its editor.
+## src/components/scriptdoc/ScriptDetailsSection.tsx (35 lines) - Keep a script's own post details immediately above its editor.
 - `ScriptDetailsSection` (export function) L10 - Keep a script's own post details immediately above its editor.
 
 ## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
@@ -109,6 +109,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...
+
+## src/components/scriptdoc/ScriptSectionCompliance.tsx (31 lines) - script section compliance (components scriptdoc)
+- `ScriptSectionCompliance` (export function) L7
 
 ## src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
 - `SourceEntry` (function) L12

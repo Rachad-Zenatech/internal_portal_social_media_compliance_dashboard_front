@@ -144,6 +144,7 @@ export function DocDetailsAccordion({
   onDoc,
   onPrepare,
   onWorkspaceHost,
+  onBeforeCheck,
 }: {
   doc: DocDetail;
   open: boolean;
@@ -151,6 +152,7 @@ export function DocDetailsAccordion({
   onDoc: (d: DocDetail) => void;
   onPrepare?: (prepare: (() => Promise<void>) | null) => void;
   onWorkspaceHost?: (host: HTMLDivElement | null) => void;
+  onBeforeCheck?: () => Promise<void>;
 }) {
   const { editable, details, missing, saving, change, makePosts } = useDocDetails(doc, onDoc);
   const scripts = Math.max(doc.pages.length, 1);
@@ -172,7 +174,7 @@ export function DocDetailsAccordion({
         </span>
       </button>
       <div hidden={!open} className={cn("space-y-3 border-t bg-background/80 px-4 py-3", scripts === 1 && "max-h-[42vh] overflow-y-auto")}>
-        {scripts > 1 ? <BulkScriptDetailsPanel doc={doc} onPrepare={onPrepare} onWorkspaceHost={onWorkspaceHost} /> : <DocDetailsBody doc={doc} editable={editable} details={details} missing={missing} onChange={change} makePosts={makePosts} />}
+        {scripts > 1 ? <BulkScriptDetailsPanel doc={doc} onPrepare={onPrepare} onWorkspaceHost={onWorkspaceHost} onBeforeCheck={onBeforeCheck} /> : <DocDetailsBody doc={doc} editable={editable} details={details} missing={missing} onChange={change} makePosts={makePosts} />}
       </div>
     </section>
   );

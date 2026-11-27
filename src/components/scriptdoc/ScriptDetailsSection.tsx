@@ -4,13 +4,17 @@ import ScriptDocumentPreview from "@/components/script/ScriptDocumentPreview";
 import SharedEditorFrame from "@/components/scriptdoc/SharedEditorFrame";
 import type { BatchDetails } from "@/types/scriptBatch";
 import type { DocDetail } from "@/types/scriptDoc";
+import ScriptSectionCompliance from "@/components/scriptdoc/ScriptSectionCompliance";
 
 /** Keep a script's own post details immediately above its editor. */
-export default function ScriptDetailsSection({ script, active, details, missing, busy, onChange, onWorkspaceHost }: {
+export default function ScriptDetailsSection({ script, active, details, missing, busy, onChange, onWorkspaceHost, beforeCheck }: {
   script: DocDetail; active: boolean; details: BatchDetails; missing: string[]; busy: boolean;
   onChange: (value: BatchDetails) => void; onWorkspaceHost?: (host: HTMLDivElement | null) => void;
+  beforeCheck: () => Promise<void>;
 }) {
   const disabled = busy || !script.access.can_submit;
+  const dirty = JSON.stringify(details) !== JSON.stringify(script.details);
+  const singleScript = { ...script, pages: script.pages.filter((page) => page.id === script.id) };
   return (
     <section className="space-y-4 rounded-lg border p-4" aria-label={`Post details and script: ${script.title}`} data-script-section={script.id}>
       <h2 className="text-base font-semibold">Post details for {script.title}</h2>
@@ -24,6 +28,7 @@ export default function ScriptDetailsSection({ script, active, details, missing,
       {active ? <div ref={onWorkspaceHost} className="min-w-0" data-active-script-workspace /> : script.share_document_id ? (
         <div className="flex min-h-[30rem] min-w-0 flex-col"><SharedEditorFrame docId={script.id} readOnly={!script.access.can_edit} lazy /></div>
       ) : <ScriptDocumentPreview text={script.body_text} terms={[]} />}
+      <ScriptSectionCompliance doc={singleScript} dirty={dirty} disabled={busy} beforeCheck={beforeCheck} />
     </section>
   );
 }

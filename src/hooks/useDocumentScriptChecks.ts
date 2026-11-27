@@ -29,6 +29,7 @@ export function useDocumentScriptChecks(doc: DocDetail, beforeCheck: () => Promi
       await prepareDetails?.();
       const running = runDocumentScriptCompliance(key, doc.pages.map((page) => page.id), (id, check) => {
         queryClient.setQueryData(["script-doc-check", id], check);
+        void queryClient.invalidateQueries({ queryKey: ["script-doc-check", id] });
         void queryClient.invalidateQueries({ queryKey: ["script-doc", id] });
       });
       addJob("Checking script compliance", running, {

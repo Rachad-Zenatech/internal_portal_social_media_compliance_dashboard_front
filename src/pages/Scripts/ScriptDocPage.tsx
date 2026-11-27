@@ -237,7 +237,7 @@ export default function ScriptDocPage() {
   /** Keep what is on screen: the page being edited is saved before leaving it or sending. */
   const flush = async () => {
     const h = editor.current;
-    if (h && doc?.access.can_edit && !shared) await scriptDocService.snapshot(id, h.getHtml(), h.getText()).catch(() => undefined);
+    if (h && doc?.access.can_edit && !shared) await scriptDocService.snapshot(id, h.getHtml(), h.getText());
   };
   const beforeBulkCheck = async () => { await flush(); await preparePostDetails.current?.(); };
   const addPage = async () => {
@@ -336,7 +336,7 @@ export default function ScriptDocPage() {
       <DocHeader doc={doc} live={status} people={presence} myCheckIn={myCheckIn} sendHint={sendHint} actions={actions} />
       <DocStatusStrip doc={doc} myCheckIn={myCheckIn} changedBy={changedBy} />
       {isCreator ? (
-        <DocDetailsAccordion key={doc.set_id ?? doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} onPrepare={registerPostDetails} onWorkspaceHost={setWorkspaceHost} />
+        <DocDetailsAccordion key={doc.set_id ?? doc.id} doc={doc} open={detailsAccordionOpen} onToggle={() => setDetailsAccordionOpen((v) => !v)} onDoc={setDoc} onPrepare={registerPostDetails} onWorkspaceHost={setWorkspaceHost} onBeforeCheck={flush} />
       ) : (
         <DocDetailsDialog key={doc.id} doc={doc} open={detailsOpen} onOpenChange={setDetailsOpen} onDoc={setDoc} />
       )}

@@ -89,7 +89,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/script/scriptPreview.ts (10 lines) - Prefer the attached script's extracted text, with the latest reviewed version as fallback.
 - src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
-- src/components/scriptdoc/BulkScriptDetailsPanel.tsx (45 lines) - bulk script details panel (components scriptdoc)
+- src/components/scriptdoc/BulkScriptDetailsPanel.tsx (53 lines) - bulk script details panel (components scriptdoc)
 - src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
@@ -101,9 +101,10 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
-- src/components/scriptdoc/ScriptDetailsSection.tsx (33 lines) - Keep a script's own post details immediately above its editor.
+- src/components/scriptdoc/ScriptDetailsSection.tsx (35 lines) - Keep a script's own post details immediately above its editor.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
+- src/components/scriptdoc/ScriptSectionCompliance.tsx (31 lines) - script section compliance (components scriptdoc)
 - src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
 - src/components/scriptdoc/ScriptUploadDropzone.tsx (77 lines) - script upload dropzone (components scriptdoc)
 - src/components/scriptdoc/ScriptWorkspacePlacement.tsx (8 lines) - Render the active review workspace once, inside its script's section when paired.
@@ -263,7 +264,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useComplianceRules.ts (13 lines) - Every compliance rule, fetched once and shared, for looking up a flag's rule text.
 - src/hooks/useCreatorReviewUpdates.ts (12 lines) - use creator review updates (hooks)
 - src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
-- src/hooks/useDocumentScriptChecks.ts (48 lines) - use document script checks (hooks)
+- src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
 - src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
