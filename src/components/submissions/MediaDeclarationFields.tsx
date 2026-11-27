@@ -64,7 +64,7 @@ export default function MediaDeclarationFields({ files, image, video, post, disa
   const currentFlags = { ...(post?.face_employee_flags || {}), ...pendingFlags };
   const currentSameConfirmed = { ...(post?.face_same_person_confirmed || {}), ...pendingSameConfirmed };
   const onFace = (key: string, answer: boolean) => {
-    const linked = currentSameConfirmed[key] ? (post?.face_same_person_keys?.[key] ?? []) : [];
+    const linked = currentSameConfirmed[key] !== false ? (post?.face_same_person_keys?.[key] ?? []) : [];
     const updates: Record<string, boolean> = { [key]: answer };
     for (const dupKey of linked) updates[dupKey] = answer;
     const next = { ...currentFlags, ...updates };

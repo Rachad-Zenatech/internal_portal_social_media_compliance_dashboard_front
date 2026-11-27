@@ -174,8 +174,8 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
               const earlierKey = linkedKeys.find((k) => { const idx = indexByKey.get(k); return idx !== undefined && idx < faceIndex; });
               const sameFiles = faceSamePerson?.[key] ?? [];
               const isOriginal = !earlierKey && (linkedKeys.length > 0 || sameFiles.length > 0);
-              const originalConfirmed = Boolean(isOriginal && faceSamePersonConfirmed?.[key]);
-              const confirmedFromOriginal = earlierKey && faceSamePersonConfirmed?.[earlierKey] ? indexByKey.get(earlierKey)! + 1 : null;
+              const originalConfirmed = isOriginal && faceSamePersonConfirmed?.[key] !== false;
+              const confirmedFromOriginal = earlierKey && faceSamePersonConfirmed?.[earlierKey] !== false ? indexByKey.get(earlierKey)! + 1 : null;
               return (
                 <FaceCard
                   key={key}
