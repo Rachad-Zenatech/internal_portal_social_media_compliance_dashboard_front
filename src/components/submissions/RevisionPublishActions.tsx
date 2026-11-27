@@ -1,5 +1,5 @@
 import RevisionCheckRequirements from "@/components/submissions/RevisionCheckRequirements";
-import { format } from "date-fns";
+import { format, zonedDate } from "@/lib/userDates";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -24,7 +24,7 @@ export default function RevisionPublishActions(props: {
   const timing = useRevisionPublishing(props.publishDate, props.intended, props.onSubmit);
   const disabled = props.disabled || !props.submissionId || !props.platform || !timing.validDate || timing.needsConfirmation;
   const when = timing.validDate && props.publishDate ? format(props.publishDate, "EEE, MMM d, yyyy · h:mm a") : "";
-  const onDateChange = (value: string) => props.onPublishDateChange(value ? new Date(value) : undefined);
+  const onDateChange = (value: string) => props.onPublishDateChange(value ? zonedDate(value) : undefined);
   return (
     <div className="space-y-4">
       {props.submissionId && <PrePublishMood submissionId={props.submissionId} canRun={!props.disabled} beforeCheck={props.beforeMoodCheck} />}

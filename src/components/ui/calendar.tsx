@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useUserTimezone } from "@/hooks/useUserTimezone"
 import {
   DayPicker,
   getDefaultClassNames,
@@ -25,10 +26,11 @@ function Calendar({
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
+  const { time_zone } = useUserTimezone()
   const defaultClassNames = getDefaultClassNames()
 
   return (
-    <DayPicker
+    <DayPicker timeZone={time_zone}
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",

@@ -1,16 +1,19 @@
+import { zonedDate } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { useState } from "react";
-import { format, isFuture, isValid } from "date-fns";
+import { format, isFuture, isValid } from "@/lib/userDates";
 import { toast } from "sonner";
 import { recordSproutSend, useSentToSprout } from "@/lib/contentCalendar";
 import { useFinalPublishDate } from "@/hooks/useFinalPublishDate";
 
 /** Confirm timing and add approved content to the existing simulated calendar. */
 export function useApprovedPublishing(submissionId: string, intended?: string | null) {
+  useUserTimezone();
   const itemId = `sub-${submissionId}`;
   const scheduled = useSentToSprout()[itemId]?.scheduled_for;
   const finalDate = useFinalPublishDate(submissionId, intended ?? undefined, scheduled);
   const [confirmedDate, setConfirmedDate] = useState<string>();
-  const intendedValue = intended && isValid(new Date(intended)) ? format(new Date(intended), "yyyy-MM-dd'T'HH:mm") : undefined;
+  const intendedValue = intended && isValid(zonedDate(intended)) ? format(zonedDate(intended), "yyyy-MM-dd'T'HH:mm") : undefined;
   const usesIntendedDate = Boolean(intendedValue && finalDate.value === intendedValue);
   const dateConfirmed = confirmedDate === finalDate.value;
   const needsDateConfirmation = usesIntendedDate && !dateConfirmed && !scheduled;

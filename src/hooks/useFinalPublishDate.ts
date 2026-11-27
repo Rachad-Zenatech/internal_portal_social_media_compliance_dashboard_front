@@ -1,15 +1,17 @@
+import { zonedDate } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { useState } from "react";
-import { format, isFuture, isValid } from "date-fns";
+import { format, isFuture, isValid } from "@/lib/userDates";
 
 /** Keep the creator's final timing separate from the approved, intended date. */
 export function useFinalPublishDate(key: string, intended?: string, saved?: string) {
-  const [selection, setSelection] = useState<{ key: string; value: string }>();
-  const initial = intended && isValid(new Date(intended))
-    ? format(new Date(intended), "yyyy-MM-dd'T'HH:mm") : "";
-  const value = selection?.key === key ? selection.value : initial;
-  const date = new Date(saved ?? value);
+  useUserTimezone();
+  const [selection, setSelection] = useState<{ key: string; iso: string }>();
+  const instant = saved ?? (selection?.key === key ? selection.iso : intended ?? "");
+  const date = zonedDate(instant);
   const valid = isValid(date);
-  const error = !value ? "Choose a final publish date and time."
+  const value = valid ? format(date, "yyyy-MM-dd'T'HH:mm") : "";
+  const error = !instant ? "Choose a final publish date and time."
     : !valid ? "Choose a valid final publish date and time."
     : !isFuture(date) ? "Choose a final publish date and time in the future." : undefined;
 
@@ -17,6 +19,9 @@ export function useFinalPublishDate(key: string, intended?: string, saved?: stri
     value: saved && valid ? format(date, "yyyy-MM-dd'T'HH:mm") : value,
     date: valid ? date : undefined,
     error: saved ? undefined : error,
-    onChange: (next: string) => setSelection({ key, value: next }),
+    onChange: (next: string) => {
+      const picked = zonedDate(next);
+      setSelection({ key, iso: isValid(picked) ? picked.toISOString() : "" });
+    },
   };
 }

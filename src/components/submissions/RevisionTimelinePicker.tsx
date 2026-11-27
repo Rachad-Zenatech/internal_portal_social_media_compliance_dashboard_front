@@ -1,4 +1,5 @@
-import { addDays, format, isWeekend, setHours, setMinutes } from "date-fns";
+import { addDays, isWeekend } from "date-fns";
+import { format, withWallTime, zonedDate } from "@/lib/userDates";
 import { CalendarDays, Clock } from "lucide-react";
 
 import { Calendar } from "@/components/ui/calendar";
@@ -75,13 +76,12 @@ export default function RevisionTimelinePicker({
 
   const setDay = (d: Date | undefined) => {
     if (!d) return;
-    const [h, m] = time.split(":").map(Number);
-    onChange({ kind: "date", at: setMinutes(setHours(d, h), m) });
+    onChange({ kind: "date", at: withWallTime(d, time) });
   };
   const setTime = (hhmm: string) => {
     const [h, m] = hhmm.split(":").map(Number);
     if (Number.isNaN(h) || Number.isNaN(m)) return;
-    onChange({ kind: "date", at: setMinutes(setHours(picked ?? addDays(new Date(), 1), h), m) });
+    onChange({ kind: "date", at: withWallTime(picked ?? addDays(zonedDate(), 1), hhmm) });
   };
 
   return (
@@ -104,7 +104,7 @@ export default function RevisionTimelinePicker({
           type="button"
           role="radio"
           aria-checked={value.kind === "date"}
-          onClick={() => onChange({ kind: "date", at: picked ?? setMinutes(setHours(addDays(new Date(), 1), 17), 0) })}
+          onClick={() => onChange({ kind: "date", at: picked ?? withWallTime(addDays(zonedDate(), 1), "17:00") })}
           className={pill(value.kind === "date")}
         >
           Pick a date

@@ -1,7 +1,7 @@
 import PostApprovalSuggestionNotice from "./PostApprovalSuggestionNotice";
 import { useApprovedPostAccess } from "@/hooks/usePostApprovalSuggestions";
 import { useId } from "react";
-import { format } from "date-fns";
+import { format } from "@/lib/userDates";
 import { Link } from "react-router-dom";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Button } from "@/components/ui/button";

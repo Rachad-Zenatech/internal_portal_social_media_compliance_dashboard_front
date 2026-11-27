@@ -1,13 +1,16 @@
+import { zonedDate } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { useState } from "react";
-import { format, isFuture, isValid } from "date-fns";
+import { format, isFuture, isValid } from "@/lib/userDates";
 import { toast } from "sonner";
 
 /** Confirm timing before the corrected post is checked and submitted. */
 export function useRevisionPublishing(publishDate: Date | undefined, intended: string | null | undefined, onSubmit: () => void) {
+  useUserTimezone();
   const [confirmedValue, setConfirmedValue] = useState<string>();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const value = publishDate && isValid(publishDate) ? format(publishDate, "yyyy-MM-dd'T'HH:mm") : "";
-  const intendedValue = intended && isValid(new Date(intended)) ? format(new Date(intended), "yyyy-MM-dd'T'HH:mm") : undefined;
+  const intendedValue = intended && isValid(zonedDate(intended)) ? format(zonedDate(intended), "yyyy-MM-dd'T'HH:mm") : undefined;
   const usesIntendedDate = Boolean(intendedValue && value === intendedValue);
   const dateConfirmed = confirmedValue === value;
   const validDate = Boolean(value && publishDate && isFuture(publishDate));

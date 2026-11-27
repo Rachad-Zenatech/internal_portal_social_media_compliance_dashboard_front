@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { format, isPast } from "date-fns";
+import { format, isPast, zonedDate } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { CalendarClock, Loader2, MessageSquareWarning } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,8 +25,6 @@ export interface ApprovalTarget {
 
 type Mode = "reopen" | "reschedule" | null;
 
-const toLocalInput = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm");
-
 /**
  * What can still happen to approved content before it goes out: a reviewer reschedules it or reopens it for changes.
  * Its creator can't pull it back (content sent for review isn't withdrawn). Renders nothing for anyone else or any
@@ -40,6 +39,7 @@ export default function ApprovalActions({
   isCreator?: boolean;
   buttonClassName?: string;
 }) {
+  useUserTimezone();
   const { reopen, reschedule } = useApprovalActions(target.id, target.reference_code);
   const [mode, setMode] = useState<Mode>(null);
   const [notes, setNotes] = useState("");
@@ -60,7 +60,7 @@ export default function ApprovalActions({
   const start = (m: Mode) => {
     setNotes("");
     setTimeline(DEFAULT_TIMELINE);
-    setWhen(toLocalInput(planned && !isPast(planned) ? planned : new Date(Date.now() + 24 * 3600 * 1000)));
+    setWhen((planned && !isPast(planned) ? planned : new Date(Date.now() + 24 * 3600 * 1000)).toISOString());
     setMode(m);
   };
 
@@ -104,7 +104,7 @@ export default function ApprovalActions({
           {mode === "reschedule" && (
             <div className="space-y-1.5">
               <Label htmlFor="approval-when" className="text-xs font-semibold">Publish on</Label>
-              <DateTimePicker id="approval-when" withTime disablePast value={when} onChange={setWhen} />
+              <DateTimePicker id="approval-when" withTime disablePast value={whenDate ? format(whenDate, "yyyy-MM-dd'T'HH:mm") : ""} onChange={value => setWhen(value ? zonedDate(value).toISOString() : "")} />
               {planned && <p className="text-[11px] text-muted-foreground">Currently {format(planned, "EEE MMM d, h:mm a")}.</p>}
               {whenInPast && <p className="text-[11px] text-red-600">Pick a time in the future.</p>}
             </div>

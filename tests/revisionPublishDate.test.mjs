@@ -14,13 +14,20 @@ function load(path, imports) {
   vm.runInNewContext(outputText, context);
   return context.exports;
 }
-const timing = load("../src/hooks/useRevisionPublishing.ts", { sonner: { toast: { error() {} } } });
+const timezone = load("../src/lib/userTimezone.ts", {});
+const dates = load("../src/lib/userDates.ts", { "./userTimezone": timezone });
+const zoneHook = load("../src/hooks/useUserTimezone.ts", { "@/lib/userTimezone": timezone });
+const timing = load("../src/hooks/useRevisionPublishing.ts", {
+  "@/lib/userDates": dates, "@/hooks/useUserTimezone": zoneHook,
+  sonner: { toast: { error() {} } },
+});
 const { default: Requirements } = load("../src/components/submissions/RevisionCheckRequirements.tsx", {
   "@/components/ui/button": { Button: ({ children, onClick, ...props }) => React.createElement("button", props, children) },
 });
 let dateProps, checkboxProps, publishProps;
 const dialog = new Proxy({}, { get: (_, name) => name === "__esModule" ? true : () => null });
 const { default: Actions } = load("../src/components/submissions/RevisionPublishActions.tsx", {
+  "@/lib/userDates": dates,
   "@/hooks/useRevisionPublishing": timing,
   "@/components/submissions/RevisionCheckRequirements": { __esModule: true, default: Requirements },
   "@/components/ui/date-time-picker": { DateTimePicker: props => { dateProps = props; return React.createElement("input", { disabled: props.disabled }); } },
