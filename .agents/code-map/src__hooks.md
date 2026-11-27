@@ -55,6 +55,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useFinalPublishDate.ts (28 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L7 - Keep the creator's final timing separate from the approved, intended date.
 
+## src/hooks/useFlagOutcomes.ts (12 lines) - use flag outcomes (hooks)
+- `useFlagOutcomes` (export function) L4
+
 ## src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - `useHashtagLibrary` (export function) L6 - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 
@@ -106,14 +109,14 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `useNavPublicMood` (export function) L111 - Shared nav public mood: both Financial ZenaTech sentiment and Today's Posts public mood.
 - `useScrapeTwitter` (export function) L121 - Trigger live scraping of ZenaTech financial and/or today's posts (scope=all|financial|today) and refresh queries.
 
-## src/hooks/useReview.ts (209 lines) - The comment being replied to, per post.
+## src/hooks/useReview.ts (210 lines) - The comment being replied to, per post.
 - `subscribeReply` (const) L12
 - `useCommentReply` (export function) L18 - The comment being replied to on this post, and setting or clearing it.
 - `invalidateSubmission` (function) L30 - Everything that shows a submission's status or review state.
 - `useReviewComments` (export function) L38 - Saved review comments for a submission, with add / resolve / delete.
 - `useFlagReviews` (export function) L72 - Reviewers' dismissals of automated flags, and the calls to dismiss or restore one on the version in review.
-- `useReviewDecision` (export function) L166
-- `useApprovalActions` (export function) L187 - Approved content: a reviewer reschedules it or reopens it for changes.
+- `useReviewDecision` (export function) L167
+- `useApprovalActions` (export function) L188 - Approved content: a reviewer reschedules it or reopens it for changes.
 
 ## src/hooks/useReviewRichTextEditor.ts (44 lines) - Seed once without emitting a change; typing never replaces the DOM or resets the caret.
 - `useReviewRichTextEditor` (export function) L6 - Seed once without emitting a change; typing never replaces the DOM or resets the caret.

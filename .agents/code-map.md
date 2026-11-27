@@ -43,6 +43,7 @@ to find the right file.
 | .agents/code-map/src__components__submissions__ContextReferenceDetails.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ContextReportView.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ConversationMedia.md | 1 | 1 KB |
+| .agents/code-map/src__components__submissions__CreatorFlagOutcomes.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DelegateReview.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DeleteDraftDialog.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__DuplicateNotice.md | 1 | 1 KB |
@@ -138,7 +139,7 @@ to find the right file.
 | .agents/code-map/src__components__ui.md | 24 | 6 KB |
 | .agents/code-map/src__components__video.md | 4 | 2 KB |
 | .agents/code-map/src__context.md | 1 | 2 KB |
-| .agents/code-map/src__hooks.md | 54 | 15 KB |
+| .agents/code-map/src__hooks.md | 55 | 16 KB |
 | .agents/code-map/src__lib.md | 67 | 29 KB |
 | .agents/code-map/src__pages__Auth.md | 3 | 1 KB |
 | .agents/code-map/src__pages__Compliance.md | 4 | 7 KB |
@@ -153,5 +154,5 @@ to find the right file.
 | .agents/code-map/src__pages__Scripts.md | 4 | 1 KB |
 | .agents/code-map/src__pages__SocialMedia.md | 1 | 1 KB |
 | .agents/code-map/src__pages__Submissions.md | 5 | 7 KB |
-| .agents/code-map/src__services.md | 21 | 7 KB |
-| .agents/code-map/src__types.md | 34 | 18 KB |
+| .agents/code-map/src__services.md | 22 | 7 KB |
+| .agents/code-map/src__types.md | 35 | 18 KB |

@@ -85,6 +85,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `BrandVoiceInput` (export interface) L125 - What can be edited by hand.
 - `BrandVoice` (export interface) L136 - A brand's voice, read from its brand manual (PDF) or written by hand.
 
+## src/types/flagOutcome.ts (11 lines) - flag outcome (types)
+- `FlagOutcome` (export interface) L1
+
 ## src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - `FlagDismissReason` (export type) L1
 - `FlagReview` (export interface) L4 - A reviewer's dismissal of an automated compliance flag on one version.

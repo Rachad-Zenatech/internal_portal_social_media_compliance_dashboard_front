@@ -34,3 +34,12 @@ export default function GroupedComplianceFindings<T extends Finding>({ findings,
     );
   })}</>;
 }
+
+export function FindingsHeader({ stale, hasFindings }: { stale: boolean; hasFindings: boolean }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 className="text-lg font-bold text-foreground">{stale ? "Previous findings" : "What the check found"}</h2>
+      {hasFindings && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
+    </div>
+  );
+}

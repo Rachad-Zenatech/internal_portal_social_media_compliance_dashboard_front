@@ -138,6 +138,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/ContextReferenceDetails.tsx (33 lines) - context reference details (components submissions)
 - src/components/submissions/ContextReportView.tsx (57 lines) - context report view (components submissions)
 - src/components/submissions/ConversationMedia.tsx (129 lines) - The post's image with each comment's area marked, and thumbnails (with their open-comment counts) for a carousel.
+- src/components/submissions/CreatorFlagOutcomes.tsx (50 lines) - creator flag outcomes (components submissions)
 - src/components/submissions/DelegateReview.tsx (157 lines) - delegate review (components submissions)
 - src/components/submissions/DeleteDraftDialog.tsx (96 lines) - delete draft dialog (components submissions)
 - src/components/submissions/DuplicateNotice.tsx (104 lines) - Each dropdown: what both posts share, and what only this post adds.
@@ -149,7 +150,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/FlaggedVideo.tsx (44 lines) - Video frame with the compliance checker’s yellow finding boxes.
 - src/components/submissions/FormFields.tsx (160 lines) - Select-style box that holds removable chips; options open in a popover.
 - src/components/submissions/FormattedCaptionPreview.tsx (15 lines) - Preserve editor paragraphs, emphasis and links without treating HTML source wrapping as line breaks.
-- src/components/submissions/GroupedComplianceFindings.tsx (37 lines) - grouped compliance findings (components submissions)
+- src/components/submissions/GroupedComplianceFindings.tsx (46 lines) - grouped compliance findings (components submissions)
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
 - src/components/submissions/ImagePersonField.tsx (216 lines) - image person field (components submissions)
@@ -276,6 +277,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
 - src/hooks/useEmailTimezone.ts (19 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (28 lines) - Keep the creator's final timing separate from the approved, intended date.
+- src/hooks/useFlagOutcomes.ts (12 lines) - use flag outcomes (hooks)
 - src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
 - src/hooks/useMessagingContext.ts (137 lines) - The brand, audience and platform names the pickers and "Applies to" lines use.
@@ -288,7 +290,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/usePostTextReview.ts (58 lines) - use post text review (hooks)
 - src/hooks/usePostTypeChange.ts (53 lines) - Remove saved attachments before switching to another post type.
 - src/hooks/usePublicMood.ts (166 lines) - This GET runs analysis; focus, mount, invalidation and edits must never invoke it.
-- src/hooks/useReview.ts (209 lines) - The comment being replied to, per post.
+- src/hooks/useReview.ts (210 lines) - The comment being replied to, per post.
 - src/hooks/useReviewRichTextEditor.ts (44 lines) - Seed once without emitting a change; typing never replaces the DOM or resets the caret.
 - src/hooks/useReviewSendScore.ts (16 lines) - Share the creator-request cache so sending updates immediately after a request is saved.
 - src/hooks/useReviewerComplianceCheck.ts (28 lines) - Share the request state between reviewer text and compliance actions.
@@ -449,6 +451,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/documentScriptChecks.ts (31 lines) - Share in-flight work and re-read saved inputs before spending credits.
 - src/services/emailTimezoneService.ts (28 lines) - Browser detection seeds a new account; the API preserves a manual preference.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
+- src/services/flagOutcomeService.ts (7 lines) - flag outcome service (services)
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)
 - src/services/pendingCheckPolling.ts (33 lines) - One status request at a time; late responses cannot update a closed or superseded check.
@@ -471,6 +474,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/types/checkAttempt.ts (16 lines) - One model attempt, including its optional document-reading progress.
 - src/types/checkDiagnostics.ts (6 lines) - check diagnostics (types)
 - src/types/context.ts (152 lines) - Kinds of Messaging Context the content analysis is given.
+- src/types/flagOutcome.ts (11 lines) - flag outcome (types)
 - src/types/flagReview.ts (45 lines) - A reviewer's dismissal of an automated compliance flag on one version.
 - src/types/imageProvenance.ts (16 lines) - Saved answer to the post's required AI-image disclosure question.
 - src/types/performance.ts (124 lines) - Post performance: how live posts are doing on each platform, and whether the reaction is still positive.

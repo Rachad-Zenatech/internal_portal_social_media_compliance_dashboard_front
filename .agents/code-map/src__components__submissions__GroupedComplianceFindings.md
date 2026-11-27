@@ -4,6 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/GroupedComplianceFindings.tsx (37 lines) - grouped compliance findings (components submissions)
+## src/components/submissions/GroupedComplianceFindings.tsx (46 lines) - grouped compliance findings (components submissions)
 - `Finding` (type) L7
 - `GroupedComplianceFindings` (export function) L9
+- `FindingsHeader` (export function) L38

@@ -1,5 +1,6 @@
+import CreatorFlagOutcomes, { InlineFlagOutcome } from "@/components/submissions/CreatorFlagOutcomes";
 import CompliancePreviewActions from "@/components/submissions/CompliancePreviewActions";
-import GroupedComplianceFindings from "@/components/submissions/GroupedComplianceFindings";
+import GroupedComplianceFindings, { FindingsHeader } from "@/components/submissions/GroupedComplianceFindings";
 import { previewFindings } from "@/lib/rule18Presentation";
 import { pendingCheckProgress } from "@/lib/pendingCheckProgress";
 import ComplianceScoreSummary from "@/components/submissions/ComplianceScoreSummary";
@@ -288,11 +289,9 @@ export default function ComplianceStep({
           {!analysing && <ScoreBreakdown check={check} provisional={stale} />}
         </section>
 
+        {ownsSubmission && reviewState && <CreatorFlagOutcomes submissionId={reviewState.id} currentVersion={reviewState.current_version} />}
         <section className={`${card} flex flex-col gap-3`}>
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-bold text-foreground">{stale ? "Previous findings" : "What the check found"}</h2>
-            {findings.length > 0 && <span className="text-xs text-muted-foreground">Click a rule to see where it is on your post</span>}
-          </div>
+          <FindingsHeader stale={stale} hasFindings={findings.length > 0} />
           {!stale && !check.ai_unavailable && !analysing && findings.length === 0 && checkedClaims.length === 0 && (
             <p className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
               <Check className="h-4 w-4" strokeWidth={3} /> Nothing to fix in the text we could check.
@@ -335,6 +334,7 @@ export default function ComplianceStep({
                   </span>
                 </button>
                 <FindingExplanation v={f.v} />
+                {ownsSubmission && reviewState && f.v.rule_id && <InlineFlagOutcome submissionId={reviewState.id} ruleId={f.v.rule_id} currentVersion={reviewState.current_version} />}
                 {on && (
                   <div className="flex flex-col gap-2.5 px-4 pb-4 pl-[58px]">
                     <SyntheticMediaFixNote finding={f.v} />

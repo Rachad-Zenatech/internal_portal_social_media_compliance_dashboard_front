@@ -94,6 +94,7 @@ export function useFlagReviews(submissionId: string, currentVersion: number) {
     (verdicts.data ?? []).filter((v) => v.version_number === currentVersion && v.verdict === "CORRECT").map((v): [string, FlagVerdict] => [v.rule_id, v])
   );
   const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["flag-outcomes", submissionId] });
     queryClient.invalidateQueries({ queryKey: key });
     queryClient.invalidateQueries({ queryKey: creatorRequestKey });
     queryClient.invalidateQueries({ queryKey: verdictKey });

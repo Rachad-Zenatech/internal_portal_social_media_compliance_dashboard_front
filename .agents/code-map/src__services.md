@@ -77,6 +77,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `reportClientError` (export function) L33
 - `installGlobalErrorReporting` (export function) L67
 
+## src/services/flagOutcomeService.ts (7 lines) - flag outcome service (services)
+- `flagOutcomeService` (export const) L4
+
 ## src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - `ApiError` (export class) L1
 - `detailMessage` (function) L13
