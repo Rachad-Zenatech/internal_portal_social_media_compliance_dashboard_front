@@ -165,7 +165,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ItemResult` (export interface) L85
 - `BatchReviewResult` (export interface) L94
 
-## src/types/scriptDoc.ts (210 lines) - script doc (types)
+## src/types/scriptDoc.ts (215 lines) - script doc (types)
 - `DocStatus` (export type) L4
 - `Capacity` (export type) L5
 - `Vote` (export type) L6
@@ -178,15 +178,16 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `DocDetail` (export interface) L58
 - `ScriptFocusRequest` (export interface) L97 - A navigation request sent to the embedded script editor.
 - `DocPage` (export interface) L103 - One script (page) of a creator's document.
-- `DocSetSummary` (export interface) L114 - A creator's document in the hub.
-- `BulkResult` (export interface) L127
-- `DocSummary` (export interface) L132
-- `DocEvent` (export interface) L152
-- `DocVersion` (export interface) L161
-- `DocHistory` (export interface) L172
-- `ReviewerOption` (export interface) L177
-- `DocLiveState` (export interface) L186 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
-- `DocNote` (export interface) L196 - A highlight or comment on a stretch of the script, shared live through the notes document.
+- `ScriptUploadResult` (export interface) L113
+- `DocSetSummary` (export interface) L119 - A creator's document in the hub.
+- `BulkResult` (export interface) L132
+- `DocSummary` (export interface) L137
+- `DocEvent` (export interface) L157
+- `DocVersion` (export interface) L166
+- `DocHistory` (export interface) L177
+- `ReviewerOption` (export interface) L182
+- `DocLiveState` (export interface) L191 - What every open editor is told as the review moves (see the backend's script_doc_service._state).
+- `DocNote` (export interface) L201 - A highlight or comment on a stretch of the script, shared live through the notes document.
 
 ## src/types/scriptMatch.ts (13 lines) - Result of comparing a video with its retained approved script.
 - `ScriptMatch` (export type) L2 - Result of comparing a video with its retained approved script.

@@ -1,6 +1,6 @@
 import { apiClient } from "@/services/apiClient";
 import type {
-  BulkResult, Capacity, DefaultScriptTemplate, DocDetail, DocDetails, DocHistory, DocPage, DocSetSummary, DocSummary, ReviewerOption, ScriptTemplate, Vote,
+  BulkResult, Capacity, DefaultScriptTemplate, DocDetail, DocDetails, DocHistory, DocSetSummary, DocSummary, ReviewerOption, ScriptTemplate, ScriptUploadResult, Vote,
 } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
 
@@ -25,7 +25,7 @@ export const scriptDocService = {
   attach: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return apiClient.post<{ created: DocPage[] }>("/api/script-docs/upload", form, quiet);
+    return apiClient.post<ScriptUploadResult>("/api/script-docs/upload", form, quiet);
   },
   /** Send the document's scripts for review together (each is reviewed on its own). */
   submitPages: (id: string, data: { reviewers: { user_id: string; capacity: Capacity }[]; note?: string; ids?: string[] }) =>

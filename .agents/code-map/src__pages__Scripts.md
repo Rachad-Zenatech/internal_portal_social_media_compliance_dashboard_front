@@ -10,8 +10,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `ScriptBatchPage` (export function) L44 - A batch of scripts.
 - `BatchView` (function) L60
 
-## src/pages/Scripts/ScriptDocPage.tsx (8 lines) - script doc page (pages  scripts)
-- `ScriptDocPage` (export function) L4
+## src/pages/Scripts/ScriptDocPage.tsx (17 lines) - script doc page (pages  scripts)
+- `ScriptDocPage` (export function) L5
 
 ## src/pages/Scripts/ScriptReviewPage.tsx (26 lines) - script review page (pages  scripts)
 - `ScriptReviewPage` (export function) L7 - Script review: start a blank script or attach one from a file, and filter scripts by scope and status.

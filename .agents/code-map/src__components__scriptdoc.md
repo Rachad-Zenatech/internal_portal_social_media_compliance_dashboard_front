@@ -139,6 +139,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `onOpen` (fn) L305
     - `workspace` (fn) L333
 
+## src/components/scriptdoc/ScriptImportNotice.tsx (16 lines) - script import notice (components scriptdoc)
+- `ScriptImportNotice` (export function) L3
+
 ## src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - `Props` (interface) L16
 - `ScriptMirrorEditor` (const) L31 - A reviewer's page of a script that is written in the Share Document portal: a read-only copy of the text, with every  highlight and comme...

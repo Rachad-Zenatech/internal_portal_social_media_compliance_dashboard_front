@@ -110,6 +110,11 @@ export interface DocPage {
   required: number;
 }
 
+export interface ScriptUploadResult {
+  created: DocPage[];
+  warnings?: string[];
+}
+
 /** A creator's document in the hub. */
 export interface DocSetSummary {
   id: string;
