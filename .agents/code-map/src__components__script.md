@@ -171,7 +171,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `same` (const) L9
 - `ScriptSuggestPanel` (export function) L16 - The bottom of the script panel for a suggesting reviewer, in place of the reviewer's decision: they edit the script and  leave notes on w...
 
-## src/components/script/ScriptTemplateExport.tsx (15 lines) - Use the same template download wherever creators start a script.
+## src/components/script/ScriptTemplateExport.tsx (29 lines) - Use the same template download wherever creators start a script.
 - `ScriptTemplateExport` (export function) L5 - Use the same template download wherever creators start a script.
 
 ## src/components/script/ScriptWorkspaceState.tsx (21 lines) - Loading, error and empty states shared by the script review workspace.

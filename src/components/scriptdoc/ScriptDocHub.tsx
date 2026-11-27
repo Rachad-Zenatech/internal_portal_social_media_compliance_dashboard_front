@@ -228,9 +228,7 @@ function TemplateGrid({
           Upload a PDF, Word or text file. It is split into scripts, each on its own page to review.
         </span>
       </button>
-      <div className="flex items-center justify-end rounded-lg border bg-card p-3">
-        <ScriptTemplateExport />
-      </div>
+      <ScriptTemplateExport card />
     </div>
   );
 }
