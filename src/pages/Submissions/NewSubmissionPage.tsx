@@ -1743,25 +1743,6 @@ export default function NewSubmissionPage() {
                     </div>
                   )}
                   <MediaDeclarationFields files={files} image={{ value: aiGeneratedImages, invalid: Boolean(errorFor("ai_generated_images")), onChange: answer => { setAiGeneratedImages(answer); markEdited(); } }} video={{ ...videoFootage, invalid: Boolean(errorFor("video_third_party_footage")) }} post={checkedSub} disabled={readOnly || checking} submissionId={submissionId} onRefresh={applyServer} />
-                  {mainFiles.length > 0 && !caption.trim() && !suggesterOpen && (
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-500/30 bg-violet-500/5 px-3 py-2">
-                      <p className="text-xs text-foreground">
-                        <span className="font-semibold">Your post is in.</span>{" "}
-                        <span className="text-muted-foreground">It needs text: write it in section 4, or have text suggested from it.</span>
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-[11px] gap-1"
-                        onClick={() => {
-                          setSuggesterOpen(true);
-                          captionSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }}
-                      >
-                        <Sparkles className="w-3 h-3 text-violet-500" /> Create text
-                      </Button>
-                    </div>
-                  )}
                   {canvaMain && !resubmitting && (
                     <div className="mt-3">
                       <CanvaReimportBar file={canvaMain} resubmitting={false} busy={reimporting} onReimport={reimportCanva} />

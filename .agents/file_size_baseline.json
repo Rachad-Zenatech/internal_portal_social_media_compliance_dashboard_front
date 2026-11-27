@@ -66,7 +66,7 @@
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/NewSubmissionPage.tsx": {
-      "max_lines": 2332,
+      "max_lines": 2313,
       "reason": "Over the limit when the check was introduced; split it when you next work on it."
     },
     "src/pages/Submissions/ScriptChangesPage.tsx": {
@@ -304,7 +304,7 @@
       "kind": "jsx_return"
     },
     "src/pages/Submissions/NewSubmissionPage.tsx#NewSubmissionPage": {
-      "max_lines": 1102,
+      "max_lines": 1083,
       "kind": "jsx_return"
     },
     "src/pages/Submissions/ScriptChangesPage.tsx#Changes": {

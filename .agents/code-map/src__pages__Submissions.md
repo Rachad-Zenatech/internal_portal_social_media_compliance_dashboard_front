@@ -4,7 +4,7 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/pages/Submissions/NewSubmissionPage.tsx (2333 lines) - new submission page (pages  submissions)
+## src/pages/Submissions/NewSubmissionPage.tsx (2314 lines) - new submission page (pages  submissions)
 - `SaveState` (type) L153
 - `timeOptions` (const) L160
 - `timeLabel` (function) L163 - 17:00" -> "5:00 PM".
