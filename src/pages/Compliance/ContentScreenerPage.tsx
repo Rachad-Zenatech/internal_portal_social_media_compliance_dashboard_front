@@ -1,3 +1,6 @@
+import { FlaggedMoments } from "@/components/video/VideoCheckTimeline";
+import { timelineOf } from "@/lib/videoCheckTimeline";
+export { FlaggedMoments, timelineOf };
 import { approvedForFinalEdits } from "@/lib/reviewOutcome";
 import ReviewerComplianceSources from "@/components/compliance/screener/ReviewerComplianceSources";
 import { orderScreenerQueue } from "@/lib/screenerQueueOrder";
@@ -16,7 +19,8 @@ import { reviewerFindingSelection } from "@/lib/reviewerFindingSelection";
 import { usePaged } from "@/hooks/usePaged";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "date-fns";
+import { endOfDay, endOfWeek, format, formatDistanceToNow, isPast, isToday } from "@/lib/userDates";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 import {
   CheckCircle2,
   Clock,
@@ -24,11 +28,7 @@ import {
   Loader2,
   PanelLeftClose,
   PanelLeftOpen,
-  Pause,
-  Play,
   Search,
-  SkipBack,
-  SkipForward,
 } from "lucide-react";
 
 import {
@@ -197,7 +197,7 @@ function flagsOf(s: ReviewQueueItem): Flag[] {
         .filter((f) => f.rule_numbers.includes(v.rule_number))
         .sort((a, b) => a.start_sec - b.start_sec)[0];
       const terms = findingEvidence(v).map((t) => t.toLowerCase());
-      const where = terms.some((t) => caption.includes(t))
+      const where = v.category === "Video disclosure" ? "Video" : terms.some((t) => caption.includes(t))
         ? "Text"
         : seg
         ? "Video"
@@ -233,135 +233,6 @@ export function HighlightedCaption({ text, terms }: { text: string; terms: strin
 
 /** Platforms whose videos are usually vertical: the frame's shape until the video's real shape is known. */
 const VERTICAL_PLATFORMS = ["TIKTOK", "INSTAGRAM", "YOUTUBE_SHORTS"];
-
-interface TimelinePart {
-  start: number;
-  end: number;
-  risk: "RED" | "YELLOW" | "GREEN";
-}
-
-/** The video split into its checked parts, each coloured by what was found there. A part covering the whole video
- * (the title and caption check) is left out when there are finer parts. */
-export function timelineOf(s: Pick<ReviewQueueItem, "latest_check">, duration: number): TimelinePart[] {
-  const segs = s.latest_check?.segment_flags ?? [];
-  const total = duration || Math.max(0, ...segs.map((f) => f.end_sec));
-  if (!total) return [];
-  const fine = segs.filter((f) => f.end_sec - f.start_sec < total * 0.95);
-  return (fine.length ? fine : segs)
-    .filter((f) => f.start_sec < total)
-    .map((f) => ({ start: f.start_sec, end: Math.min(f.end_sec, total), risk: f.traffic_light }))
-    .sort((a, b) => a.start - b.start);
-}
-
-/** "Flagged Moments": the video's parts as a coloured bar with play controls, a legend and flagged times. */
-export function FlaggedMoments({
-  parts,
-  now,
-  duration,
-  playing,
-  onToggle,
-  onStep,
-  seek,
-}: {
-  parts: TimelinePart[];
-  now: number;
-  duration: number;
-  playing: boolean;
-  onToggle: () => void;
-  onStep: (by: number) => void;
-  seek: (t: number) => void;
-}) {
-  const count = (r: TimelinePart["risk"]) => parts.filter((p) => p.risk === r).length;
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
-          <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Flagged moments
-          <span className="hidden font-normal text-muted-foreground sm:inline">(click the bar or press play to preview)</span>
-        </span>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-red-600" /> Critical ({count("RED")})
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-amber-500" /> Needs review ({count("YELLOW")})
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-emerald-500" /> Clear ({count("GREEN")})
-          </span>
-        </div>
-      </div>
-      <div className="flex items-start gap-1.5 sm:gap-2.5">
-        <Button type="button" size="icon" variant="ghost" onClick={() => onStep(-1)} className="hidden h-8 w-8 shrink-0 text-muted-foreground sm:inline-flex" title="Back 1 second">
-          <SkipBack className="w-4 h-4" />
-        </Button>
-        <Button type="button" size="icon" onClick={onToggle} className="-mt-0.5 h-9 w-9 shrink-0 rounded-full" title={playing ? "Pause" : "Play"}>
-          {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="ml-0.5 w-4 h-4 fill-current" />}
-        </Button>
-        <Button type="button" size="icon" variant="ghost" onClick={() => onStep(1)} className="hidden h-8 w-8 shrink-0 text-muted-foreground sm:inline-flex" title="Forward 1 second">
-          <SkipForward className="w-4 h-4" />
-        </Button>
-        <span className="min-w-[34px] shrink-0 text-right font-mono text-xs font-bold leading-8 text-foreground">{formatSec(now)}</span>
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="relative h-8 select-none">
-            <div className="absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 rounded-full bg-muted" />
-            {duration > 0 &&
-              parts.map((p, i) => (
-                <div
-                  key={i}
-                  style={{ left: `${(p.start / duration) * 100}%`, width: `calc(${((p.end - p.start) / duration) * 100}% - 3px)` }}
-                  className={`absolute top-1/2 h-3 -translate-y-1/2 rounded-full ${
-                    p.risk === "RED" ? "bg-red-600" : p.risk === "YELLOW" ? "bg-amber-500" : "bg-emerald-500/80"
-                  }`}
-                />
-              ))}
-            <input
-              type="range"
-              min={0}
-              max={duration || 1}
-              step={0.01}
-              value={Math.min(now, duration || 1)}
-              onChange={(e) => seek(parseFloat(e.target.value))}
-              className="absolute inset-0 z-10 w-full cursor-pointer opacity-0"
-              aria-label="Seek video"
-            />
-            {duration > 0 && (
-              <div
-                style={{ left: `${(Math.min(now, duration) / duration) * 100}%` }}
-                className="pointer-events-none absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
-              >
-                <div className="flex h-6 w-2.5 items-center justify-center rounded-full bg-zinc-950 shadow-md ring-2 ring-background dark:bg-zinc-100">
-                  <div className="h-3 w-0.5 rounded-full bg-zinc-500" />
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="relative h-4 font-mono text-[10px] text-muted-foreground">
-            {duration > 0 &&
-              parts
-                .filter((p) => p.start > 0 && p.start / duration < 0.92)
-                // Labels need room: skip one that would sit on top of the last shown, unless it's a critical part.
-                .reduce<TimelinePart[]>((shown, p) => {
-                  const last = shown[shown.length - 1];
-                  if (!last || p.risk === "RED" || (p.start - last.start) / duration >= 0.08) shown.push(p);
-                  return shown;
-                }, [])
-                .map((p, i) => (
-                  <span
-                    key={i}
-                    style={{ left: `${(p.start / duration) * 100}%` }}
-                    className={`absolute hidden -translate-x-1/2 sm:block ${p.risk === "RED" ? "font-semibold text-red-600 dark:text-red-400" : ""}`}
-                  >
-                    {formatSec(p.start)}
-                  </span>
-                ))}
-          </div>
-        </div>
-        <span className="min-w-[34px] shrink-0 font-mono text-xs leading-8 text-muted-foreground">{formatSec(duration)}</span>
-      </div>
-    </div>
-  );
-}
 
 function PostView({
   s,
@@ -1115,6 +986,7 @@ function QueueStrip({
 }
 
 export default function ContentScreenerPage() {
+  const { time_zone } = useUserTimezone();
   const { creatorView, hasPermission } = useAuth();
   const isReviewer = hasPermission("CONTENT_REVIEW_VIEW") && !creatorView;
   const scope = isReviewer ? "all" : "mine";
@@ -1150,7 +1022,7 @@ export default function ContentScreenerPage() {
 
   const items = useMemo(() => queue.data ?? [], [queue.data]);
   const q = search.trim().toLowerCase();
-  const visible = useMemo(() => items.filter((s) => matches(s, filters, q)), [items, filters, q]);
+  const visible = useMemo(() => items.filter((s) => matches(s, filters, q)), [items, filters, q, time_zone]);
   const rows = useMemo(() => orderScreenerQueue(visible, sort), [visible, sort]);
   // 20 to a page; a new tab, search, filter or order starts from the first page.
   const paged = usePaged(rows, 20, [postTab, scope, q, filters, sort]);
