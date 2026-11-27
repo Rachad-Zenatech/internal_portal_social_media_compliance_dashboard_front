@@ -60,7 +60,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
   const faces = useMemo(() => files.flatMap((file) => (file.face_boxes || []).map((box, index) => ({ key: `${file.id}-${index}`, file, box }))), [files]);
   const imageFiles = files.filter((file) => ["MAIN", "IMAGE"].includes(file.kind) && file.mime_type.startsWith("image/"));
   const failedFiles = imageFiles.filter((file) => file.image_text_status === "FAILED");
-  const pending = imageFiles.some((file) => file.image_text_status == null || file.image_text_status === "PROCESSING" || (file.face_detection_version || 0) < 1);
+  const pending = imageFiles.some((file) => file.image_text_status !== "FAILED" && file.image_text_status !== "COMPLETED" && (file.face_detection_version || 0) < 2);
   useEffect(() => {
     if (!submissionId || !pending) return;
     const timer = window.setInterval(() => { void submissionService.get(submissionId).then(onRefresh).catch(() => undefined); }, 2000);
@@ -76,7 +76,7 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
     } finally { setRetrying(false); }
   };
   const scanning = retrying || pending;
-  const doneCount = imageFiles.filter((file) => !retrying && file.image_text_status != null && file.image_text_status !== "PROCESSING" && (file.face_detection_version || 0) >= 1).length;
+  const doneCount = imageFiles.filter((file) => !retrying && (file.image_text_status === "COMPLETED" || file.image_text_status === "FAILED" || (file.face_detection_version || 0) >= 2)).length;
   const statusText = !scanning && failedFiles.length ? `Face detection could not finish for ${failedFiles.length} image${failedFiles.length === 1 ? "" : "s"}.` : !scanning && faces.length === 0 && detected === false ? "No people detected in the uploaded image(s)." : null;
   return (
     <fieldset disabled={disabled} className="mt-4 space-y-2 rounded-xl border border-border/70 px-4 pb-3 pt-2.5">
