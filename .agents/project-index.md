@@ -152,12 +152,12 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/GroupedComplianceFindings.tsx (37 lines) - grouped compliance findings (components submissions)
 - src/components/submissions/HashtagPicker.tsx (88 lines) - hashtag picker (components submissions)
 - src/components/submissions/ImageAnnotator.tsx (261 lines) - A box drawn on the image, as fractions (0 to 1) of its width and height.
-- src/components/submissions/ImagePersonField.tsx (141 lines) - image person field (components submissions)
+- src/components/submissions/ImagePersonField.tsx (145 lines) - image person field (components submissions)
 - src/components/submissions/ImageProvenanceField.tsx (35 lines) - image provenance field (components submissions)
 - src/components/submissions/LegacyApprovedSuggestions.tsx (16 lines) - legacy approved suggestions (components submissions)
 - src/components/submissions/ManuallyCheckedClaims.tsx (39 lines) - manually checked claims (components submissions)
 - src/components/submissions/MarkedUpImageSlideshow.tsx (89 lines) - marked up image slideshow (components submissions)
-- src/components/submissions/MediaDeclarationFields.tsx (49 lines) - Image/person and mixed-video declarations share the media details area.
+- src/components/submissions/MediaDeclarationFields.tsx (61 lines) - Image/person and mixed-video declarations share the media details area.
 - src/components/submissions/MediaFindingOverlay.tsx (84 lines) - Only measured regions are shown; never place a finding in an arbitrary area.
 - src/components/submissions/MoodVisuals.tsx (46 lines) - Mentions per day over the window, as a tiny line.
 - src/components/submissions/PanelComposer.tsx (85 lines) - The comment box under the comments: write a note, file it under a category (reviewers), pin it to a moment, reply.

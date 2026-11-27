@@ -102,22 +102,26 @@ export default function ImagePersonField({ files, value: _value, employeeValue, 
           <p className="text-xs font-medium text-foreground">Detected people ({faces.length}) — mark whether each person is an employee:</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {faces.map(({ key, file, box }, faceIndex) => (
-              <div key={key} className="flex items-center gap-3 rounded-lg border border-border/70 bg-background p-2">
-                <button type="button" onClick={() => setZoomedFace({ file, box, faceIndex })} title="Click to enlarge face" className="size-16 shrink-0 cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></button>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
-                  {faceAutoMatched?.[key] != null && (
-                    <span className="inline-block rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-                      Matched saved employee
-                    </span>
-                  )}
-                  {(faceSamePerson?.[key]?.length ?? 0) > 0 && (
-                    <span className="inline-block rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
-                      Same person in: {faceSamePerson![key].join(", ")}
-                    </span>
-                  )}
-                  <p className="text-[11px] text-muted-foreground">Employee?</p>
-                  <div className="flex gap-1.5">{[true, false].map((answer) => <label key={`${key}-${String(answer)}`} className="flex min-h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-emp-${key}`} checked={faceFlags?.[key] === answer} onChange={() => onFaceFlagChange?.(key, answer)} className="size-3 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div>
+              <div key={key} className="flex items-stretch gap-3 rounded-lg border border-border/70 bg-background p-2">
+                <button type="button" onClick={() => setZoomedFace({ file, box, faceIndex })} title="Click to enlarge face" className="size-16 shrink-0 self-center cursor-zoom-in overflow-hidden rounded-md border border-border bg-muted"><FaceCropPreview url={file.url} box={box} /></button>
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
+                  <div className="space-y-0.5">
+                    <p className="truncate text-xs font-medium text-foreground">Person {faceIndex + 1} · {file.original_name}</p>
+                    {faceAutoMatched?.[key] != null && (
+                      <span className="inline-block rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                        Matched saved employee
+                      </span>
+                    )}
+                    {(faceSamePerson?.[key]?.length ?? 0) > 0 && (
+                      <span className="inline-block rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
+                        Same person in: {faceSamePerson![key].join(", ")}
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-muted-foreground">Employee?</p>
+                    <div className="flex gap-1.5">{[true, false].map((answer) => <label key={`${key}-${String(answer)}`} className="flex min-h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium has-checked:border-primary has-checked:bg-primary/5"><input type="radio" name={`${id}-emp-${key}`} checked={faceFlags?.[key] === answer} onChange={() => onFaceFlagChange?.(key, answer)} className="size-3 accent-primary" />{answer ? "Yes" : "No"}</label>)}</div>
+                  </div>
                 </div>
               </div>
             ))}

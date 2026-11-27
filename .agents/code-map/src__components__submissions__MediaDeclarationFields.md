@@ -4,6 +4,6 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/MediaDeclarationFields.tsx (49 lines) - Image/person and mixed-video declarations share the media details area.
+## src/components/submissions/MediaDeclarationFields.tsx (61 lines) - Image/person and mixed-video declarations share the media details area.
 - `Props` (interface) L10
 - `MediaDeclarationFields` (export function) L21 - Image/person and mixed-video declarations share the media details area.

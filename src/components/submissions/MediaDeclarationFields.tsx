@@ -19,23 +19,35 @@ interface Props {
 
 /** Image/person and mixed-video declarations share the media details area. */
 export default function MediaDeclarationFields({ files, image, video, post, disabled, submissionId, onRefresh }: Props) {
-  const [optimisticFlags, setOptimisticFlags] = useState<Record<string, boolean> | null>(null);
+  const [pendingFlags, setPendingFlags] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    setOptimisticFlags(null);
+    const saved = post?.face_employee_flags;
+    if (!saved) return;
+    setPendingFlags((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const [k, v] of Object.entries(prev)) {
+        if (saved[k] === v) {
+          delete next[k];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   }, [post?.face_employee_flags]);
   const save = (fields: SubmissionUpdate) => {
     if (submissionId) void submissionService.update(submissionId, fields).then(onRefresh)
       .catch((error: Error) => {
-        setOptimisticFlags(null);
+        setPendingFlags({});
         toast.error(`Couldn't save the answer: ${error.message}`);
       });
   };
   const onPeople = (answer: boolean) => save({ people_in_images: answer });
   const onEmployee = (answer: boolean) => save({ employee_in_images: answer });
-  const currentFlags = optimisticFlags ?? post?.face_employee_flags;
+  const currentFlags = { ...(post?.face_employee_flags || {}), ...pendingFlags };
   const onFace = (key: string, answer: boolean) => {
-    const next = { ...(currentFlags || {}), [key]: answer };
-    setOptimisticFlags(next);
+    const next = { ...currentFlags, [key]: answer };
+    setPendingFlags((prev) => ({ ...prev, [key]: answer }));
     save({ face_employee_flags: next });
   };
   return (
