@@ -4,5 +4,5 @@
 
 Each symbol shows its start line (`L<n>`); read from there to the next symbol's line, not the whole file.
 
-## src/components/submissions/VideoScriptTemplate.tsx (20 lines) - video script template (components submissions)
+## src/components/submissions/VideoScriptTemplate.tsx (15 lines) - video script template (components submissions)
 - `VideoScriptTemplate` (export function) L4

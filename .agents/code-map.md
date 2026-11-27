@@ -18,7 +18,7 @@ to find the right file.
 | .agents/code-map/src__components__compliance__context.md | 9 | 3 KB |
 | .agents/code-map/src__components__compliance__screener.md | 15 | 4 KB |
 | .agents/code-map/src__components__dashboard.md | 8 | 6 KB |
-| .agents/code-map/src__components__script.md | 26 | 12 KB |
+| .agents/code-map/src__components__script.md | 27 | 13 KB |
 | .agents/code-map/src__components__scriptdoc.md | 23 | 11 KB |
 | .agents/code-map/src__components__submissions__AnalysisRunControls.md | 1 | 1 KB |
 | .agents/code-map/src__components__submissions__ApprovalActions.md | 1 | 1 KB |

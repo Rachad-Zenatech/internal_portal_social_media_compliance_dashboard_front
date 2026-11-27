@@ -1,5 +1,5 @@
-import { Download, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import ScriptTemplateExport from "@/components/script/ScriptTemplateExport";
 
 export default function VideoScriptTemplate() {
   return (
@@ -8,12 +8,7 @@ export default function VideoScriptTemplate() {
         <FileText className="w-3.5 h-3.5 shrink-0" />
         Writing a script? Start from the template: title, storyline, hook and a timed shot table.
       </p>
-      <Button asChild variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
-        <a href={import.meta.env.BASE_URL + "templates/script-template.docx"} download="script-template.docx">
-          <Download className="w-3.5 h-3.5" />
-          Export template (.docx)
-        </a>
-      </Button>
+      <ScriptTemplateExport />
     </div>
   );
 }

@@ -84,6 +84,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/ScriptSourcesChecked.tsx (18 lines) - script sources checked (components script)
 - src/components/script/ScriptStageCard.tsx (287 lines) - script stage card (components script)
 - src/components/script/ScriptSuggestPanel.tsx (89 lines) - The script as it was sent (what a suggestion is measured against).
+- src/components/script/ScriptTemplateExport.tsx (15 lines) - Use the same template download wherever creators start a script.
 - src/components/script/ScriptWorkspaceState.tsx (21 lines) - Loading, error and empty states shared by the script review workspace.
 - src/components/script/SharedScriptReviewEntry.tsx (37 lines) - Opening a submitted upload explicitly adopts it into the shared review workflow.
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
@@ -102,7 +103,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
 - src/components/scriptdoc/ScriptDetailsSection.tsx (32 lines) - Keep a script's own post details immediately above its editor.
-- src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
+- src/components/scriptdoc/ScriptDocHub.tsx (408 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSectionCompliance.tsx (31 lines) - script section compliance (components scriptdoc)
@@ -216,7 +217,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/submissions/UnavailableCompliance.tsx (25 lines) - A note below the calculated score when some review stages did not finish.
 - src/components/submissions/UnmatchedSourceClaims.tsx (25 lines) - unmatched source claims (components submissions)
 - src/components/submissions/VideoScriptModeCheckbox.tsx (27 lines) - video script mode checkbox (components submissions)
-- src/components/submissions/VideoScriptTemplate.tsx (20 lines) - video script template (components submissions)
+- src/components/submissions/VideoScriptTemplate.tsx (15 lines) - video script template (components submissions)
 - src/components/submissions/VideoTranscript.tsx (67 lines) - video transcript (components submissions)
 - src/components/submissions/ZoomableImageDialog.tsx (54 lines) - Full-size image preview that zooms toward the point under the mouse wheel.
 - src/components/submissions/commentParts.tsx (32 lines) - The numbers shown on image boxes and beside their comments, in the order the comments were written.

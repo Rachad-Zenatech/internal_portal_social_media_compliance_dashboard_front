@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { FilePlus2, FileText, Paperclip, Upload, Users } from "lucide-react";
+import { FilePlus2, FileText, Paperclip, Users } from "lucide-react";
 import { toast } from "sonner";
 
-import DefaultTemplateDialog from "@/components/scriptdoc/DefaultTemplateDialog";
+import ScriptTemplateExport from "@/components/script/ScriptTemplateExport";
 import DeleteScriptMenu from "@/components/scriptdoc/DeleteScriptMenu";
 import { UploadPagesDialog } from "@/components/scriptdoc/PagesRail";
 import { Button } from "@/components/ui/button";
@@ -185,19 +185,17 @@ function NewScriptDialog({ template, onClose }: { template: ScriptTemplate | nul
   );
 }
 
-/** Start a blank script, attach a script from a file, or replace the default script template. */
+/** Start a blank script, attach a script from a file, or export the script template. */
 function TemplateGrid({
   templates,
   defaultTemplate,
   onPick,
   onAttach,
-  onReplaceTemplate,
 }: {
   templates: ScriptTemplate[];
   defaultTemplate?: DefaultScriptTemplate;
   onPick: (t: ScriptTemplate) => void;
   onAttach: () => void;
-  onReplaceTemplate: () => void;
 }) {
   const blank = templates.find((t) => t.key === "blank") ?? templates[0];
   return (
@@ -230,20 +228,9 @@ function TemplateGrid({
           Upload a PDF, Word or text file. It is split into scripts, each on its own page to review.
         </span>
       </button>
-      <button
-        type="button"
-        onClick={onReplaceTemplate}
-        className="flex flex-col gap-0.5 rounded-lg border border-dashed bg-card p-3 text-left transition-colors hover:border-blue-300 hover:bg-muted/30"
-      >
-        <span className="flex items-center gap-1.5 text-sm font-medium">
-          <Upload className="h-3.5 w-3.5" /> Replace Template
-        </span>
-        <span className="line-clamp-2 text-xs text-muted-foreground">
-          {defaultTemplate?.is_custom && defaultTemplate.filename
-            ? `Current: ${defaultTemplate.filename} (${defaultTemplate.headers.length} columns)`
-            : "Upload a script template (.docx, .pdf, .txt) to replace the default Share Document script table."}
-        </span>
-      </button>
+      <div className="flex items-center justify-end rounded-lg border bg-card p-3">
+        <ScriptTemplateExport />
+      </div>
     </div>
   );
 }
@@ -316,7 +303,6 @@ export default function ScriptDocHub() {
   const scope = tabs.find((tab) => tab.v === selectedScope)?.v ?? (reviewer ? "review" : "mine");
   const [picked, setPicked] = useState<ScriptTemplate | null>(null);
   const [attachOpen, setAttachOpen] = useState(false);
-  const [templateOpen, setTemplateOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -360,7 +346,6 @@ export default function ScriptDocHub() {
           defaultTemplate={defaultTemplate.data}
           onPick={setPicked}
           onAttach={() => setAttachOpen(true)}
-          onReplaceTemplate={() => setTemplateOpen(true)}
         />
       )}
       <UploadPagesDialog
@@ -417,7 +402,6 @@ export default function ScriptDocHub() {
         <DocLists scope={scope} statusFilter={statusFilter} sets={sets} docs={docs} onDeleteSet={removeSet} />
       </div>
       <NewScriptDialog key={picked?.key ?? "none"} template={picked} onClose={() => setPicked(null)} />
-      <DefaultTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} current={defaultTemplate.data} />
     </section>
   );
 }

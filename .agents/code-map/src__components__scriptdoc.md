@@ -81,7 +81,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/ScriptDetailsSection.tsx (32 lines) - Keep a script's own post details immediately above its editor.
 - `ScriptDetailsSection` (export function) L9 - Keep a script's own post details immediately above its editor.
 
-## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
+## src/components/scriptdoc/ScriptDocHub.tsx (408 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L27
 - `StatusFilter` (type) L28
 - `matchesStatus` (const) L38
@@ -92,19 +92,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
     - `navigate` (fn) L138
     - `queryClient` (fn) L139
     - `create` (fn) L141
-- `TemplateGrid` (function) L189 - Start a blank script, attach a script from a file, or replace the default script template.
-- `DocLists` (function) L255 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
-    - `filteredSets` (fn) L269
-    - `uploads` (fn) L270
-    - `filteredDocs` (fn) L288
-- `ScriptDocHub` (export function) L305 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
-    - `navigate` (fn) L320
-    - `queryClient` (fn) L321
-    - `templates` (fn) L323
-    - `defaultTemplate` (fn) L324
-    - `docs` (fn) L329
-    - `sets` (fn) L336
-    - `removeSet` (fn) L345
+- `TemplateGrid` (function) L189 - Start a blank script, attach a script from a file, or export the script template.
+- `DocLists` (function) L242 - The cards for the tab: the creator's documents, or the scripts sent to a reviewer / every script for a manager.
+    - `filteredSets` (fn) L256
+    - `uploads` (fn) L257
+    - `filteredDocs` (fn) L275
+- `ScriptDocHub` (export function) L292 - The script documents hub: start a script from a template, open the ones you wrote, the ones sent to you for review, and  (Content Manager...
+    - `navigate` (fn) L306
+    - `queryClient` (fn) L307
+    - `templates` (fn) L309
+    - `defaultTemplate` (fn) L310
+    - `docs` (fn) L315
+    - `sets` (fn) L322
+    - `removeSet` (fn) L331
 
 ## src/components/scriptdoc/ScriptDocWorkspace.tsx (416 lines) - script doc workspace (components scriptdoc)
 - `errText` (const) L22
