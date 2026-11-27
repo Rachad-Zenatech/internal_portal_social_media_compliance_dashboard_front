@@ -381,9 +381,48 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `encodePart` (function) L7 - Characters a text fragment can't hold as they are ("-", "," and "&" separate its parts).
 - `textFragmentUrl` (export function) L16 - The page's address with a text fragment for the quote, or the plain address when there is no quote.
 
+## src/lib/userDates.ts (57 lines) - Calendar math and formatting in the saved user zone; instants remain UTC.
+- `context` (const) L7
+- `format` (export const) L8
+- `parse` (export const) L9
+- `addDays` (export const) L10
+- `addWeeks` (export const) L11
+- `addMonths` (export const) L12
+- `addBusinessDays` (export const) L13
+- `setHours` (export const) L14
+- `setMinutes` (export const) L15
+- `startOfDay` (export const) L16
+- `endOfDay` (export const) L17
+- `startOfWeek` (export const) L18
+- `endOfWeek` (export const) L19
+- `startOfMonth` (export const) L20
+- `endOfMonth` (export const) L21
+- `startOfHour` (export const) L22
+- `isSameDay` (export const) L23
+- `isSameMonth` (export const) L24
+- `isToday` (export const) L25
+- `isTomorrow` (export const) L26
+- `isYesterday` (export const) L27
+- `isWeekend` (export const) L28
+- `differenceInCalendarDays` (export const) L29
+- `eachDayOfInterval` (export const) L30
+- `wallTimeDate` (export function) L33 - Parse wall-clock input in a named zone, rejecting times skipped by daylight saving.
+- `zonedDate` (export function) L48 - Explicit-offset ISO input preserves its instant; offset-free picker input is local to the user.
+- `withWallTime` (export function) L54 - Set a picked calendar day's clock time without using the device's zone.
+
 ## src/lib/userDepartment.ts (162 lines) - user department (lib)
 - `isGenericRole` (function) L14
 - `resolveUserDepartment` (export function) L25 - Resolves a user's department by matching their assigned roles against the configured Roles list.
+
+## src/lib/userTimezone.ts (41 lines) - The signed-in person's display zone.
+- `TimezonePreference` (export type) L2 - The signed-in person's display zone.
+- `browserTimezone` (export function) L3
+- `timezoneOptionLabel` (export function) L8 - Use the abbreviation and offset in effect on this date, including daylight saving.
+- `getUserTimezone` (export const) L22
+- `getTimezonePreference` (export const) L23
+- `subscribeTimezone` (export function) L24
+- `activateTimezoneUser` (export function) L28
+- `applyTimezone` (export function) L34
 
 ## src/lib/utils.ts (7 lines) - utils (lib)
 - `cn` (export function) L4

@@ -1,3 +1,4 @@
+import { activateTimezoneUser } from "@/lib/userTimezone";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { syncEmailTimezone } from "@/services/emailTimezoneService";
@@ -7,6 +8,7 @@ export function useEmailTimezone(): void {
   const { user } = useAuth();
   const userId = user?.id;
   useEffect(() => {
+    activateTimezoneUser(userId);
     if (!userId) return;
     const sync = () => { void syncEmailTimezone(userId).catch(() => undefined); };
     sync();

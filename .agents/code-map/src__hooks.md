@@ -49,8 +49,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
 - `useDocumentScriptChecks` (export function) L12
 
-## src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
-- `useEmailTimezone` (export function) L6 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
+## src/hooks/useEmailTimezone.ts (19 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
+- `useEmailTimezone` (export function) L7 - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 
 ## src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - `useFinalPublishDate` (export function) L5 - Keep the creator's final timing separate from the approved, intended date.
@@ -196,3 +196,6 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
 - `SubmitTarget` (interface) L10
 - `useSubmitForReview` (export function) L18 - Quick "send for review" for a draft (or resubmit after changes), outside the New Submission form.
+
+## src/hooks/useUserTimezone.ts (7 lines) - use user timezone (hooks)
+- `useUserTimezone` (export function) L4

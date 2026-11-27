@@ -1,23 +1,27 @@
 import { apiClient } from "@/services/apiClient";
-
-const saved = new Map<string, string>();
+import { applyTimezone, browserTimezone, type TimezonePreference } from "@/lib/userTimezone";
 const pending = new Map<string, Promise<void>>();
+const revisions = new Map<string, number>();
 
-/** Save the signed-in person's browser time zone; the API identifies the user from their session. */
-export async function syncEmailTimezone(userId: string): Promise<void> {
-  let timeZone: string;
-  try {
-    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return;
-  }
-  if (!timeZone || saved.get(userId) === timeZone) return;
-  const key = `${userId}:${timeZone}`;
-  if (pending.has(key)) return pending.get(key);
-  const request = apiClient
-    .put("/api/notifications/email-timezone", { time_zone: timeZone }, { skipGlobalLoading: true })
-    .then(() => { saved.set(userId, timeZone); })
-    .finally(() => { pending.delete(key); });
-  pending.set(key, request);
+/** Browser detection seeds a new account; the API preserves a manual preference. */
+export function syncEmailTimezone(userId: string): Promise<void> {
+  const existing = pending.get(userId);
+  if (existing) return existing;
+  const revision = revisions.get(userId) ?? 0;
+  const request = apiClient.put<TimezonePreference>("/api/notifications/timezone", {
+    time_zone: browserTimezone(), source: "BROWSER",
+  }, { skipGlobalLoading: true }).then(result => {
+    if ((revisions.get(userId) ?? 0) === revision) applyTimezone(userId, result);
+  })
+    .finally(() => { pending.delete(userId); });
+  pending.set(userId, request);
   return request;
+}
+export async function saveUserTimezone(userId: string, timeZone: string): Promise<void> {
+  const revision = (revisions.get(userId) ?? 0) + 1;
+  revisions.set(userId, revision);
+  const result = await apiClient.put<TimezonePreference>("/api/notifications/timezone", {
+    time_zone: timeZone, source: "MANUAL",
+  }, { skipGlobalLoading: true });
+  if (revisions.get(userId) === revision) applyTimezone(userId, result);
 }

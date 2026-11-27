@@ -1,5 +1,7 @@
+import TopBarClock from "./TopBarClock";
+import TimeZoneSettings from "./TimeZoneSettings";
 import { ConnectionStatusLight } from "./ConnectionStatusLight";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Bell, Menu, LogOut, User as UserIcon, BellRing, Settings2, Laptop, ShieldCheck, PenLine } from "lucide-react";
 import { MessageHubStatusDropdown } from "./MessageHubStatusDropdown";
@@ -67,36 +69,6 @@ function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (mode: V
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function TopBarClock() {
-  const [currentTime, setCurrentTime] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const dayName = currentTime.toLocaleDateString("en-US", { weekday: "short" });
-  const monthName = currentTime.toLocaleDateString("en-US", { month: "short" });
-  const formattedDate = `${monthName}, ${currentTime.getDate()} ${currentTime.getFullYear()} (${dayName})`;
-  const formattedTime = currentTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  return (
-    <div className="hidden laptop:flex flex-col items-end justify-center mr-1">
-      <span className="text-xs font-bold text-foreground leading-tight tracking-tight">
-        {formattedTime}
-      </span>
-      <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-        {formattedDate}
-      </span>
     </div>
   );
 }
@@ -360,8 +332,8 @@ export default function TopBar({ onToggleSidebar }: { onToggleSidebar?: () => vo
                   </div>
                 </div>
               </TabsContent>
-
               <TabsContent value="preferences" className="space-y-6 mt-0 border-none outline-none">
+                <TimeZoneSettings />
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Settings2 className="h-4 w-4 text-muted-foreground" /> App Settings

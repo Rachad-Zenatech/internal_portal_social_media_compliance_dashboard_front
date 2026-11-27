@@ -17,7 +17,9 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/AppShell/NotificationDropdown.tsx (180 lines) - notification dropdown (components  app shell)
 - src/components/AppShell/Sidebar.tsx (291 lines) - The page an item stands for, as the address bar shows it.
 - src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
-- src/components/AppShell/TopBar.tsx (488 lines) - top bar (components  app shell)
+- src/components/AppShell/TimeZoneSettings.tsx (42 lines) - time zone settings (components  app shell)
+- src/components/AppShell/TopBar.tsx (460 lines) - top bar (components  app shell)
+- src/components/AppShell/TopBarClock.tsx (18 lines) - top bar clock (components  app shell)
 - src/components/AppShell/messageHubDefaults.ts (25 lines) - Development-only Message Hub addresses.
 - src/components/common/CheckingNotice.tsx (50 lines) - What is being checked, as it reads in "Checking for …": "compliance", "sentiment", "public mood".
 - src/components/common/ErrorBoundary.tsx (50 lines) - error boundary (components common)
@@ -268,7 +270,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useCreatorReviewUpdates.ts (12 lines) - use creator review updates (hooks)
 - src/hooks/useDashboardSummary.ts (16 lines) - Returning from a workflow action must show its activity; polling catches other sessions too.
 - src/hooks/useDocumentScriptChecks.ts (49 lines) - use document script checks (hooks)
-- src/hooks/useEmailTimezone.ts (17 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
+- src/hooks/useEmailTimezone.ts (19 lines) - Refresh on app entry and focus so travel or a device time-zone change is picked up.
 - src/hooks/useFinalPublishDate.ts (23 lines) - Keep the creator's final timing separate from the approved, intended date.
 - src/hooks/useHashtagLibrary.ts (14 lines) - The hashtag library for a post's brand, audience, region, platforms and rule sets.
 - src/hooks/useImageSlideshow.ts (22 lines) - Main carousel slides first, followed by extra images; preserve the upload order within each kind.
@@ -305,6 +307,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useSourceDocumentStatus.ts (38 lines) - use source document status (hooks)
 - src/hooks/useSubmissionReviewState.ts (19 lines) - Refresh review permissions without replacing the creator's unsaved form fields.
 - src/hooks/useSubmitForReview.ts (53 lines) - Videos show up in the Content Screener queue; other content goes to review only.
+- src/hooks/useUserTimezone.ts (7 lines) - use user timezone (hooks)
 - src/lib/AuthContext.tsx (357 lines) - Set when the session ends mid-use: why, and the page to return to after signing in again (read by Login).
 - src/lib/GlobalProgressContext.tsx (178 lines) - When it started, for "running for 0:42".
 - src/lib/captionChanges.ts (65 lines) - Preserve the exact text and highlight the changed span between shared word boundaries.
@@ -365,14 +368,16 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/submissionRevisionSteps.ts (36 lines) - submission revision steps (lib)
 - src/lib/submissionSchedule.ts (26 lines) - An intended date alone does not mean the creator scheduled the post.
 - src/lib/textFragment.ts (25 lines) - A link that opens a page scrolled to (and highlighting) a piece of its text: a URL text fragment, `#:~:text=start,end`.
+- src/lib/userDates.ts (57 lines) - Calendar math and formatting in the saved user zone; instants remain UTC.
 - src/lib/userDepartment.ts (162 lines) - user department (lib)
+- src/lib/userTimezone.ts (41 lines) - The signed-in person's display zone.
 - src/lib/utils.ts (7 lines) - utils (lib)
 - src/lib/videoThumbnail.ts (139 lines) - JPEG data URL of the most representative frame, or null if none could be read.
 - src/lib/wordDiff.ts (137 lines) - Word-by-word comparison of two versions of a script, for showing what a reviewer (or creator) changed.
 - src/main.tsx (54 lines) - Create a client
 - src/pages/Auth/Login.tsx (228 lines) - Why the last session ended mid-use and where the user was, if it did (see AuthProvider).
 - src/pages/Auth/PendingAccess.tsx (62 lines) - If user somehow gets another role, maybe redirect them to home
-- src/pages/Auth/TestLoginAccounts.tsx (32 lines) - test login accounts (pages  auth)
+- src/pages/Auth/TestLoginAccounts.tsx (31 lines) - test login accounts (pages  auth)
 - src/pages/Compliance/ComplianceRulesPage.tsx (1703 lines) - compliance rules page (pages  compliance)
 - src/pages/Compliance/ContentScreenerPage.tsx (1367 lines) - content screener page (pages  compliance)
 - src/pages/Compliance/MessagingContextPage.tsx (87 lines) - messaging context page (pages  compliance)
@@ -431,7 +436,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/complianceService.ts (396 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - src/services/documentScriptChecks.ts (31 lines) - Share in-flight work and re-read saved inputs before spending credits.
-- src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
+- src/services/emailTimezoneService.ts (28 lines) - Browser detection seeds a new account; the API preserves a manual preference.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.
 - src/services/oauthService.ts (165 lines) - oauth service (services)

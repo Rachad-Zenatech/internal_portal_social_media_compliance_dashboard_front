@@ -65,14 +65,19 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/AppShell/ThemeSwitch.tsx (41 lines) - theme switch (components  app shell)
 - `ThemeSwitch` (export function) L5
 
-## src/components/AppShell/TopBar.tsx (488 lines) - top bar (components  app shell)
-- `ViewModeToggle` (function) L46 - Super admins only: switch between seeing the app as a reviewer and as a content creator.
-- `TopBarClock` (function) L74
-- `TopBar` (export function) L104
-    - `handleToggleWindowsNotifications` (fn) L118
-    - `handleTestWindowsNotification` (fn) L162
-    - `navigate` (fn) L182
-    - `location` (fn) L183
+## src/components/AppShell/TimeZoneSettings.tsx (42 lines) - time zone settings (components  app shell)
+- `TimeZoneSettings` (export function) L10
+
+## src/components/AppShell/TopBar.tsx (460 lines) - top bar (components  app shell)
+- `ViewModeToggle` (function) L48 - Super admins only: switch between seeing the app as a reviewer and as a content creator.
+- `TopBar` (export function) L76
+    - `handleToggleWindowsNotifications` (fn) L90
+    - `handleTestWindowsNotification` (fn) L134
+    - `navigate` (fn) L154
+    - `location` (fn) L155
+
+## src/components/AppShell/TopBarClock.tsx (18 lines) - top bar clock (components  app shell)
+- `TopBarClock` (export function) L4
 
 ## src/components/AppShell/messageHubDefaults.ts (25 lines) - Development-only Message Hub addresses.
 - `HUB_SERVERS` (export const) L4

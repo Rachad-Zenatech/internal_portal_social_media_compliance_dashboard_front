@@ -65,8 +65,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `checkDocumentScript` (export function) L7 - Share in-flight work and re-read saved inputs before spending credits.
 - `runDocumentScriptCompliance` (export function) L16 - Check each page independently; continue after a failure and keep running across navigation.
 
-## src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
-- `syncEmailTimezone` (export function) L7 - Save the signed-in person's browser time zone; the API identifies the user from their session.
+## src/services/emailTimezoneService.ts (28 lines) - Browser detection seeds a new account; the API preserves a manual preference.
+- `syncEmailTimezone` (export function) L7 - Browser detection seeds a new account; the API preserves a manual preference.
+- `saveUserTimezone` (export function) L20
 
 ## src/services/errorReporting.ts (75 lines) - error reporting (services)
 - `ClientErrorType` (export type) L3
