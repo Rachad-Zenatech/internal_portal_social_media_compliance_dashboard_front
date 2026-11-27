@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { captionPreviewHtml, type CaptionPart } from "@/lib/captionPreviewHtml";
 
 /** Preserve editor paragraphs, emphasis and links without treating HTML source wrapping as line breaks. */
-export default function FormattedCaptionPreview({ html, parts }: { html?: string; parts: CaptionPart[] }) {
-  const formatted = useMemo(() => captionPreviewHtml(html, parts), [html, parts]);
+export default function FormattedCaptionPreview({ html, parts, allowLegacyTextContent = false }: { html?: string; parts: CaptionPart[]; allowLegacyTextContent?: boolean }) {
+  const formatted = useMemo(() => captionPreviewHtml(html, parts, { allowLegacyTextContent }), [html, parts, allowLegacyTextContent]);
   const plain = parts.map((part, index) => {
     if (!part.tone) return <span key={index}>{part.text}</span>;
     const color = part.tone === "chosen" ? "bg-red-200 ring-2 ring-red-500 dark:bg-red-500/40" : "bg-amber-200/70 dark:bg-amber-500/30";

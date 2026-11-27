@@ -1,20 +1,31 @@
+import CreatorFlagOutcomes from "./CreatorFlagOutcomes";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepFooter } from "./PostStepNav";
-import { CaptionComparison } from "@/components/compliance/screener/CaptionComparison";
+import IncomingTextComparison from "./IncomingTextComparison";
 import { useCreatorReviewUpdates } from "@/hooks/useCreatorReviewUpdates";
 import type { IncomingTextChange } from "@/lib/creatorReviewUpdates";
 
 function IncomingChange({ change }: { change: IncomingTextChange }) {
   return <section className="min-w-0 space-y-3 rounded-xl border bg-card p-4">
     <div><h3 className="font-semibold">{change.label}</h3><p className="text-xs text-muted-foreground">Edited by {change.authors.join(", ")}. Compare your original text with the incoming changes.</p></div>
-    <CaptionComparison before={change.before} after={change.after} />
+    <IncomingTextComparison change={change} />
   </section>;
 }
 
-export default function SubmissionReviewUpdates({ suggestions, textOnly, submissionId, version, hasFeedback, onPublish, onContinue }: {
+interface Props {
   suggestions: boolean; textOnly: boolean; submissionId: string | null; version: number; hasFeedback: boolean; onPublish?: () => void; onContinue: () => void;
-}) {
+}
+
+export default function SubmissionReviewUpdates(props: Props) {
+  if (!props.suggestions) return null;
+  return <div className="space-y-4">
+    {props.submissionId && <CreatorFlagOutcomes submissionId={props.submissionId} currentVersion={props.version} />}
+    <ReviewTextUpdates {...props} />
+  </div>;
+}
+
+function ReviewTextUpdates({ suggestions, textOnly, submissionId, version, hasFeedback, onPublish, onContinue }: Props) {
   const updates = useCreatorReviewUpdates(suggestions ? submissionId : null, textOnly, version);
   if (!suggestions) return null;
   if (updates.isPending) return <p role="status" className="p-4 text-sm text-muted-foreground">Loading reviewer edits...</p>;
