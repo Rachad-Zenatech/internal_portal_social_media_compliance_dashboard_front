@@ -18,6 +18,7 @@ const imports = {
   "react": { ...React, useState: initial => React.useState(typeof initial === "string" && selectedTab ? selectedTab : initial) },
   "@/components/submissions/ClaimVsSource": { __esModule: true, default: () => null },
   "@/components/submissions/SourceTrustBar": { __esModule: true, default: () => null },
+  "@/components/submissions/SourceFallback": { __esModule: true, default: () => null },
   "@/components/submissions/sourceConfirmationsContext": {
     SourceConfirmationsProvider: ({ children }) => children,
     useSourceCalls: () => null,
@@ -94,4 +95,13 @@ test("two newsroom articles are both shown when each has confirmed evidence", ()
   assert.match(html, /Rattler announcement/);
   assert.match(html, /Development announcement/);
   assert.match(html, /All sources \(2\)/);
+});
+
+test("a completed check does not display a removed link's old quick-check evidence", () => {
+  selectedTab = "checks";
+  const html = renderToStaticMarkup(React.createElement(SourceChecks, {
+    checks: [], creator: true,
+    savedChecks: { old: article("Old manually attached result", [claim("Old supported claim", "SUPPORTED")]) },
+  }));
+  assert.doesNotMatch(html, /Old manually attached result|Old supported claim/);
 });

@@ -53,10 +53,27 @@ test("prefers readable metadata without hiding conflicting verdicts or post loca
 
 test("deduplicates saved-only sources and handles missing results", () => {
   assert.deepEqual(mergeSourceChecks(), []);
-  const result = mergeSourceChecks([], {
+  const result = mergeSourceChecks(undefined, {
     first: source("https://example.com/article", [claim("One")]),
     second: source("http://www.example.com/article/", [claim("Two")]),
   });
   assert.equal(result.length, 1);
   assert.equal(result[0].claims.length, 2);
+});
+
+test("an empty full-check source list does not resurrect a removed attached source", () => {
+  assert.deepEqual(mergeSourceChecks([], {
+    old: source("https://example.com/removed-link", [claim("Previous post claim")]),
+  }), []);
+});
+
+test("current automatic newsroom provenance is not replaced or supplemented by older quick results", () => {
+  const url = "https://example.com/newsroom-article";
+  const result = mergeSourceChecks([source(url, [claim("Current")], "newsroom")], {
+    old: source(url, [claim("Previous")]),
+    removed: source("https://example.com/removed", [claim("Removed")]),
+  });
+  assert.equal(result.length, 1);
+  assert.equal(result[0].where, "newsroom");
+  assert.deepEqual(result[0].claims.map(c => c.claim), ["Current"]);
 });

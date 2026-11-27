@@ -35,7 +35,7 @@ function uniqueClaims(claims: SourceClaim[]): SourceClaim[] {
   });
 }
 
-/** Full compliance results take precedence over older quick checks for the same article. */
+/** A completed check owns its source list, including an empty list; quick checks are a pre-check fallback. */
 export function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: Record<string, SourceLinkCheck>): SourceCheck[] {
   const merged = new Map<string, SourceCheck>();
   for (const source of checks ?? []) {
@@ -53,7 +53,7 @@ export function mergeSourceChecks(checks?: SourceCheck[] | null, savedChecks?: R
     });
   }
   const additions: SourceCheck[] = [];
-  for (const [url, saved] of Object.entries(savedChecks ?? {})) {
+  for (const [url, saved] of Object.entries(checks == null ? savedChecks ?? {} : {})) {
     if (!saved) continue;
     const source: SourceCheck = { ...saved, reference: saved.reference || url, where: saved.where ?? "caption",
       claims: (saved.claims ?? []).map((claim) => ({ ...claim, where: claim.where ?? "caption", confidence: claim.confidence ?? 0 })),
