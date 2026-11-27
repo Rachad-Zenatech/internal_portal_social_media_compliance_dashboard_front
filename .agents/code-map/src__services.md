@@ -61,8 +61,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
 - `contextService` (export const) L13
 
-## src/services/documentScriptChecks.ts (21 lines) - Check each page independently; continue after a failure and keep running across navigation.
-- `runDocumentScriptCompliance` (export function) L6 - Check each page independently; continue after a failure and keep running across navigation.
+## src/services/documentScriptChecks.ts (31 lines) - Share in-flight work and re-read saved inputs before spending credits.
+- `checkDocumentScript` (export function) L7 - Share in-flight work and re-read saved inputs before spending credits.
+- `runDocumentScriptCompliance` (export function) L16 - Check each page independently; continue after a failure and keep running across navigation.
 
 ## src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - `syncEmailTimezone` (export function) L7 - Save the signed-in person's browser time zone; the API identifies the user from their session.

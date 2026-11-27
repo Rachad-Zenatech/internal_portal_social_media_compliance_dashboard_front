@@ -16,7 +16,7 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useBrandManualSections.ts (13 lines) - Read the selected brand's full manual independently of AI extraction status.
 - `useBrandManualSections` (export function) L5 - Read the selected brand's full manual independently of AI extraction status.
 
-## src/hooks/useBulkScriptDetails.ts (50 lines) - Prepare all post details before starting any of the batch's compliance checks.
+## src/hooks/useBulkScriptDetails.ts (53 lines) - Prepare all post details before starting any of the batch's compliance checks.
 - `useBulkScriptDetails` (export function) L8 - Prepare all post details before starting any of the batch's compliance checks.
 
 ## src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
@@ -153,8 +153,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
 - `useScriptCheckStatus` (export function) L5 - Reconnect to checks already running when a script or batch page is opened again.
 
-## src/hooks/useScriptDocCompliance.ts (36 lines) - use script doc compliance (hooks)
-- `useScriptDocCompliance` (export function) L10
+## src/hooks/useScriptDocCompliance.ts (37 lines) - use script doc compliance (hooks)
+- `useScriptDocCompliance` (export function) L11
 
 ## src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
 - `useScriptDocSources` (export function) L7

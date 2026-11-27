@@ -7,8 +7,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
 - `BulkScriptCompliance` (export function) L7
 
-## src/components/scriptdoc/BulkScriptDetailsPanel.tsx (42 lines) - bulk script details panel (components scriptdoc)
-- `BulkScriptDetailsPanel` (export function) L8
+## src/components/scriptdoc/BulkScriptDetailsPanel.tsx (45 lines) - bulk script details panel (components scriptdoc)
+- `BulkScriptDetailsPanel` (export function) L9
 
 ## src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - `CollabEditorHandle` (export interface) L20
@@ -22,13 +22,13 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 ## src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
 - `DeleteScriptMenu` (export function) L16 - The three dots on a script (or a document of scripts) with a Delete script action.
 
-## src/components/scriptdoc/DocDetailsPanel.tsx (218 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+## src/components/scriptdoc/DocDetailsPanel.tsx (220 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - `useDocDetails` (function) L19 - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - `DocDetailsStatusBadges` (function) L56
 - `DocDetailsBody` (function) L70
 - `DocDetailsButton` (export function) L124 - The button that opens or toggles the details, with how many are still to fill in.
 - `DocDetailsAccordion` (export function) L140 - Creator-side collapsible accordion at the top of the script page, expanded by default.
-- `DocDetailsDialog` (export function) L186 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
+- `DocDetailsDialog` (export function) L188 - The details every post made from this document shares (brand, audience, region, platforms, accounts, rule sets,  reviewers, and when appr...
 
 ## src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - `DialogName` (export type) L4
@@ -78,8 +78,8 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `Level2Dialog` (export function) L235 - Everyone has checked in: where does the script go next?
 - `DecisionDialog` (export function) L292 - The Content Manager's final decision.
 
-## src/components/scriptdoc/ScriptDetailsSection.tsx (30 lines) - Keep a script's own post details immediately above its editor.
-- `ScriptDetailsSection` (export function) L9 - Keep a script's own post details immediately above its editor.
+## src/components/scriptdoc/ScriptDetailsSection.tsx (33 lines) - Keep a script's own post details immediately above its editor.
+- `ScriptDetailsSection` (export function) L10 - Keep a script's own post details immediately above its editor.
 
 ## src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - `Scope` (type) L27

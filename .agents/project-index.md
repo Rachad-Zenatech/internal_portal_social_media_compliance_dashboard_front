@@ -89,11 +89,11 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/script/UploadScriptDialog.tsx (187 lines) - upload script dialog (components script)
 - src/components/script/scriptPreview.ts (10 lines) - Prefer the attached script's extracted text, with the latest reviewed version as fallback.
 - src/components/scriptdoc/BulkScriptCompliance.tsx (32 lines) - bulk script compliance (components scriptdoc)
-- src/components/scriptdoc/BulkScriptDetailsPanel.tsx (42 lines) - bulk script details panel (components scriptdoc)
+- src/components/scriptdoc/BulkScriptDetailsPanel.tsx (45 lines) - bulk script details panel (components scriptdoc)
 - src/components/scriptdoc/CollabEditor.tsx (215 lines) - Put the rewrite in place of the quoted wording; false when that wording isn't in the script any more.
 - src/components/scriptdoc/DefaultTemplateDialog.tsx (108 lines) - Upload a .docx, .pdf, or .txt script template to replace the default script template used in Share Document.
 - src/components/scriptdoc/DeleteScriptMenu.tsx (81 lines) - delete script menu (components scriptdoc)
-- src/components/scriptdoc/DocDetailsPanel.tsx (218 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
+- src/components/scriptdoc/DocDetailsPanel.tsx (220 lines) - Shared state and auto-save mutation for document details (used by both the creator accordion and reviewer dialog).
 - src/components/scriptdoc/DocDialogs.tsx (48 lines) - Every dialog of the review: send (one script or all), check in, where it goes next, and the manager's decision.
 - src/components/scriptdoc/DocEditorColumn.tsx (216 lines) - Highlight color palette (preset swatches + custom color picker).
 - src/components/scriptdoc/DocHeader.tsx (175 lines) - doc header (components scriptdoc)
@@ -101,7 +101,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/components/scriptdoc/EditorLayoutBar.tsx (65 lines) - editor layout bar (components scriptdoc)
 - src/components/scriptdoc/PagesRail.tsx (175 lines) - pages rail (components scriptdoc)
 - src/components/scriptdoc/ReviewDialogs.tsx (327 lines) - Who has checked in and who hasn't: shown in the dialogs and the review panel.
-- src/components/scriptdoc/ScriptDetailsSection.tsx (30 lines) - Keep a script's own post details immediately above its editor.
+- src/components/scriptdoc/ScriptDetailsSection.tsx (33 lines) - Keep a script's own post details immediately above its editor.
 - src/components/scriptdoc/ScriptDocHub.tsx (424 lines) - script doc hub (components scriptdoc)
 - src/components/scriptdoc/ScriptMirrorEditor.tsx (108 lines) - The script as the writer has it now (this portal keeps it in step with the Share Document editor).
 - src/components/scriptdoc/ScriptSourcesPanel.tsx (52 lines) - script sources panel (components scriptdoc)
@@ -253,7 +253,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useApprovedPublishing.ts (37 lines) - Confirm timing and add approved content to the existing simulated calendar.
 - src/hooks/useBackgroundSourceChecks.ts (41 lines) - Polls active background image-source scan jobs while viewing the compliance step, merged with any local check activity.
 - src/hooks/useBrandManualSections.ts (13 lines) - Read the selected brand's full manual independently of AI extraction status.
-- src/hooks/useBulkScriptDetails.ts (50 lines) - Prepare all post details before starting any of the batch's compliance checks.
+- src/hooks/useBulkScriptDetails.ts (53 lines) - Prepare all post details before starting any of the batch's compliance checks.
 - src/hooks/useCalendarSelection.ts (15 lines) - Open a calendar link on the selected post's week.
 - src/hooks/useCalendarSend.ts (16 lines) - Keep it open, so the panel shows it as scheduled rather than jumping to the next one.
 - src/hooks/useCaptionCommentSelection.ts (29 lines) - Keep caption highlights tied to comment selection, including outside-click and unmount cleanup.
@@ -289,7 +289,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/hooks/useScript.ts (239 lines) - A post's script stage, refreshed while its file is still being read.
 - src/hooks/useScriptBatches.ts (116 lines) - The batches a person uploaded, or (reviewers) those sent for review.
 - src/hooks/useScriptCheckStatus.ts (9 lines) - Reconnect to checks already running when a script or batch page is opened again.
-- src/hooks/useScriptDocCompliance.ts (36 lines) - use script doc compliance (hooks)
+- src/hooks/useScriptDocCompliance.ts (37 lines) - use script doc compliance (hooks)
 - src/hooks/useScriptDocSources.ts (36 lines) - use script doc sources (hooks)
 - src/hooks/useScriptFlagFocus.ts (21 lines) - A flag's highlight is local navigation, never a saved reviewer comment or document edit.
 - src/hooks/useScriptReviewQueue.ts (15 lines) - use script review queue (hooks)
@@ -344,6 +344,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/lib/screenerApprovalQueue.ts (21 lines) - Approval alone leaves the post with its creator; only their scheduling confirmation moves it.
 - src/lib/screenerQueueLayout.ts (11 lines) - Keep the post and review controls visible on laptop-width screens.
 - src/lib/screenerQueueOrder.ts (22 lines) - Earliest deadlines first by default; missing dates always follow dated posts.
+- src/lib/scriptComplianceEligibility.ts (10 lines) - Only a completed check for the current saved inputs can be reused.
 - src/lib/scriptDoc.ts (229 lines) - script doc (lib)
 - src/lib/scriptDocLive.ts (176 lines) - The connection is open and the document rebuilt; `seed` means this browser gives the editor its starting text.
 - src/lib/scriptReviewAccess.ts (18 lines) - A document creator may write and submit, but cannot review or decide on their own script.
@@ -425,7 +426,7 @@ For function and route definitions with their line numbers, grep `.agents/code-m
 - src/services/captionReviewService.ts (10 lines) - caption review service (services)
 - src/services/complianceService.ts (396 lines) - Phrases that make the disclaimer necessary; empty means it's needed on everything the rule covers.
 - src/services/contextService.ts (46 lines) - The newsroom sync running now, or the last one (null before the first).
-- src/services/documentScriptChecks.ts (21 lines) - Check each page independently; continue after a failure and keep running across navigation.
+- src/services/documentScriptChecks.ts (31 lines) - Share in-flight work and re-read saved inputs before spending credits.
 - src/services/emailTimezoneService.ts (24 lines) - Save the signed-in person's browser time zone; the API identifies the user from their session.
 - src/services/errorReporting.ts (75 lines) - error reporting (services)
 - src/services/helper.ts (56 lines) - Raw `detail` from the response: a string, an object such as `{ message, missing }`, or FastAPI's validation list.

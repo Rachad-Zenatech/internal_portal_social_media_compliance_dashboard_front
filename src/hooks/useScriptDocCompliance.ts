@@ -6,6 +6,7 @@ import { scriptDocService } from "@/services/scriptDocService";
 import { scriptSourcesMatch } from "@/lib/scriptSources";
 import type { DocDetail } from "@/types/scriptDoc";
 import type { StoredCheck } from "@/types/submission";
+import { checkDocumentScript } from "@/services/documentScriptChecks";
 
 export function useScriptDocCompliance(doc: DocDetail, editor: RefObject<CollabEditorHandle | null>, sources: { dirty: boolean; saving: boolean }) {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ export function useScriptDocCompliance(doc: DocDetail, editor: RefObject<CollabE
       if (current && !doc.share_document_id && doc.access.can_edit) {
         await scriptDocService.snapshot(doc.id, current.getHtml(), current.getText());
       }
-      return scriptDocService.check(doc.id, current?.getText());
+      return checkDocumentScript(doc.id);
     },
     onSuccess: async (result) => {
       queryClient.setQueryData(["script-doc-check", doc.id], result);

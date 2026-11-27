@@ -1,6 +1,16 @@
 import { track } from "@/services/backgroundScriptChecks";
 import { scriptDocService } from "@/services/scriptDocService";
 import type { StoredCheck } from "@/types/submission";
+import { hasCurrentScriptCheck } from "@/lib/scriptComplianceEligibility";
+
+/** Share in-flight work and re-read saved inputs before spending credits. */
+export function checkDocumentScript(id: string): Promise<StoredCheck> {
+  return track(`script-doc:${id}`, [id], async () => {
+    const saved = await scriptDocService.get(id);
+    if (hasCurrentScriptCheck(saved)) return saved.latest_check!;
+    return scriptDocService.check(id);
+  });
+}
 
 /** Check each page independently; continue after a failure and keep running across navigation. */
 export function runDocumentScriptCompliance(setId: string, ids: string[], onSaved: (id: string, check: StoredCheck) => void): Promise<void> {
@@ -9,7 +19,7 @@ export function runDocumentScriptCompliance(setId: string, ids: string[], onSave
     const failures: string[] = [];
     const worker = async () => {
       for (let id = queue.shift(); id; id = queue.shift()) {
-        try { onSaved(id, await scriptDocService.check(id)); }
+        try { onSaved(id, await checkDocumentScript(id)); }
         catch (error) { failures.push(error instanceof Error ? error.message : "Couldn't check the script"); }
         finally { complete(id); }
       }

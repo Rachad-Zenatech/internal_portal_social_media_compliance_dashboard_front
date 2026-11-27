@@ -292,6 +292,9 @@ Each symbol shows its start line (`L<n>`); read from there to the next symbol's 
 - `dateValue` (function) L8
 - `orderScreenerQueue` (export function) L14 - Earliest deadlines first by default; missing dates always follow dated posts.
 
+## src/lib/scriptComplianceEligibility.ts (10 lines) - Only a completed check for the current saved inputs can be reused.
+- `hasCurrentScriptCheck` (export function) L4 - Only a completed check for the current saved inputs can be reused.
+
 ## src/lib/scriptDoc.ts (229 lines) - script doc (lib)
 - `Mark` (type) L19
 - `displayText` (export function) L25 - A piece of a script for showing in a list (what changed): the wording alone, without the page, heading, bold, italic,  list or table marks.
