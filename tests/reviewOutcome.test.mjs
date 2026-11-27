@@ -13,8 +13,10 @@ test("approved final-edit posts belong to Approved while remaining editable",()=
  assert.equal(reviewOutcomeStatus(post),"APPROVED");assert.equal(approvedForFinalEdits(post),true);
  assert.equal(post.status,"CHANGES_REQUESTED");
 });
-test("approval is shown during the suggestion window too",()=>{
- assert.equal(reviewOutcomeStatus({status:"IN_REVIEW",publish_after_changes:true}),"APPROVED");
+test("approval stays in review during the suggestion window",()=>{
+ assert.equal(reviewOutcomeStatus({status:"IN_REVIEW",publish_after_changes:true}),"IN_REVIEW");
+ assert.equal(approvedForFinalEdits({status:"IN_REVIEW",publish_after_changes:true}),false);
+ assert.equal(reviewOutcomeStatus({status:"APPROVED",review_decision_pending:true}),"IN_REVIEW");
 });
 test("explicit requests for another review stay in Needs changes",()=>{
  assert.equal(reviewOutcomeStatus({status:"CHANGES_REQUESTED",publish_after_changes:false}),"CHANGES_REQUESTED");
@@ -28,7 +30,7 @@ test("screener approved grouping includes final edits without accidentally sched
  const posts=[{id:"edits",status:"CHANGES_REQUESTED",publish_after_changes:true,publish_at:"2026-12-01T12:00:00Z"},
  {id:"held",status:"IN_REVIEW",publish_after_changes:true},{id:"back",status:"CHANGES_REQUESTED",publish_after_changes:false}];
  const split=splitApprovedQueue(posts,{"sub-edits":{scheduled_for:"2026-12-01T12:00:00Z"}});
- assert.deepEqual(split.approved.map(p=>p.id),["edits","held"]);assert.equal(split.scheduled.length,0);
+ assert.deepEqual(split.approved.map(p=>p.id),["edits"]);assert.equal(split.scheduled.length,0);
 });
 test("a creator's confirmed schedule still moves final approved content to Scheduled",()=>{
  const split=splitApprovedQueue([{id:"done",status:"APPROVED"}],{"sub-done":{scheduled_for:"2026-12-01T12:00:00Z"}});
